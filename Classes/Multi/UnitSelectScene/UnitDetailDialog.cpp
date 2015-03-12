@@ -73,9 +73,9 @@ void UnitDetailDialog::closeDialog()
 void UnitDetailDialog::displayUnitInfo(Sprite *parent)
 {
 	auto image = Sprite::create(_unitInfo._imagePath);
-	image->setPosition(Vec2(image->getContentSize().width / 2+80, parent->getContentSize().height / 2));
+	image->setPosition(Vec2(150, parent->getContentSize().height / 2));
 	parent->addChild(image, 10);
-	image->setScale(1.5);
+	image->setScale(2);
 
 	std::stringstream info;
 	info << "Name: " <<_unitInfo._name  << "\nAttack: "<<_unitInfo._attack << "\nDefense: "<<_unitInfo._defence<<"\nSpeed: "<<_unitInfo._hp;

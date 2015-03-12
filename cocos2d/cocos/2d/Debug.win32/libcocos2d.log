@@ -1,5 +1,44 @@
-﻿Build started 12/03/2015 15:02:50.
+﻿Build started 12/03/2015 19:18:42.
+     1>Project "C:\CocosPro\Boileague\cocos2d\cocos\2d\libcocos2d.vcxproj" on node 2 (Build target(s)).
+     1>PreLinkEvent:
+         if not exist "C:\CocosPro\Boileague\proj.win32\Debug.win32\" mkdir "C:\CocosPro\Boileague\proj.win32\Debug.win32\"
+         xcopy /Y /Q "C:\CocosPro\Boileague\cocos2d\cocos\2d\..\..\external\freetype2\prebuilt\win32\*.*" "C:\CocosPro\Boileague\proj.win32\Debug.win32\"
+         xcopy /Y /Q "C:\CocosPro\Boileague\cocos2d\cocos\2d\..\..\external\glfw3\prebuilt\win32\*.*" "C:\CocosPro\Boileague\proj.win32\Debug.win32\"
+         xcopy /Y /Q "C:\CocosPro\Boileague\cocos2d\cocos\2d\..\..\external\curl\prebuilt\win32\*.*" "C:\CocosPro\Boileague\proj.win32\Debug.win32\"
+         xcopy /Y /Q "C:\CocosPro\Boileague\cocos2d\cocos\2d\..\..\external\jpeg\prebuilt\win32\*.*" "C:\CocosPro\Boileague\proj.win32\Debug.win32\"
+         xcopy /Y /Q "C:\CocosPro\Boileague\cocos2d\cocos\2d\..\..\external\png\prebuilt\win32\*.*" "C:\CocosPro\Boileague\proj.win32\Debug.win32\"
+         xcopy /Y /Q "C:\CocosPro\Boileague\cocos2d\cocos\2d\..\..\external\tiff\prebuilt\win32\*.*" "C:\CocosPro\Boileague\proj.win32\Debug.win32\"
+         xcopy /Y /Q "C:\CocosPro\Boileague\cocos2d\cocos\2d\..\..\external\webp\prebuilt\win32\*.*" "C:\CocosPro\Boileague\proj.win32\Debug.win32\"
+         xcopy /Y /Q "C:\CocosPro\Boileague\cocos2d\cocos\2d\..\..\external\websockets\prebuilt\win32\*.*" "C:\CocosPro\Boileague\proj.win32\Debug.win32\"
+         xcopy /Y /Q "C:\CocosPro\Boileague\cocos2d\cocos\2d\..\..\external\win32-specific\zlib\prebuilt\*.*" "C:\CocosPro\Boileague\proj.win32\Debug.win32\"
+         xcopy /Y /Q "C:\CocosPro\Boileague\cocos2d\cocos\2d\..\..\external\win32-specific\icon\prebuilt\*.*" "C:\CocosPro\Boileague\proj.win32\Debug.win32\"
+         xcopy /Y /Q "C:\CocosPro\Boileague\cocos2d\cocos\2d\..\..\external\win32-specific\gles\prebuilt\*.*" "C:\CocosPro\Boileague\proj.win32\Debug.win32\"
+         xcopy /Y /Q "C:\CocosPro\Boileague\cocos2d\cocos\2d\..\..\external\win32-specific\OpenalSoft\prebuilt\*.*" "C:\CocosPro\Boileague\proj.win32\Debug.win32\"
+         xcopy /Y /Q "C:\CocosPro\Boileague\cocos2d\cocos\2d\..\..\external\win32-specific\MP3Decoder\prebuilt\*.*" "C:\CocosPro\Boileague\proj.win32\Debug.win32\"
+         xcopy /Y /Q "C:\CocosPro\Boileague\cocos2d\cocos\2d\..\..\external\win32-specific\OggDecoder\prebuilt\*.*" "C:\CocosPro\Boileague\proj.win32\Debug.win32\"
+         xcopy /Y /Q "C:\CocosPro\Boileague\cocos2d\cocos\2d\..\..\external\sqlite3\libraries\win32\*.*" "C:\CocosPro\Boileague\proj.win32\Debug.win32\"
+         xcopy /Y /Q "C:\CocosPro\Boileague\cocos2d\cocos\2d\..\..\external\chipmunk\prebuilt\win32\debug-lib\*.*" "C:\CocosPro\Boileague\proj.win32\Debug.win32\"
+         :VCEnd
+         1 個のファイルをコピーしました
+         1 個のファイルをコピーしました
+         4 個のファイルをコピーしました
+         1 個のファイルをコピーしました
+         1 個のファイルをコピーしました
+         2 個のファイルをコピーしました
+         1 個のファイルをコピーしました
+         2 個のファイルをコピーしました
+         2 個のファイルをコピーしました
+         2 個のファイルをコピーしました
+         2 個のファイルをコピーしました
+         2 個のファイルをコピーしました
+         2 個のファイルをコピーしました
+         6 個のファイルをコピーしました
+         2 個のファイルをコピーしました
+         1 個のファイルをコピーしました
+       Link:
+         libcocos2d.vcxproj -> C:\CocosPro\Boileague\proj.win32\Debug.win32\libcocos2d.dll
+     1>Done Building Project "C:\CocosPro\Boileague\cocos2d\cocos\2d\libcocos2d.vcxproj" (Build target(s)).
 
 Build succeeded.
 
-Time Elapsed 00:00:00.46
+Time Elapsed 00:00:03.91

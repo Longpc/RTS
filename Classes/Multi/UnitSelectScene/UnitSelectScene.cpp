@@ -229,10 +229,10 @@ void MultiUnitSelectScene::onBackButtonClick(Ref *pSender)
 }
 void MultiUnitSelectScene::createAllUnitView()
 {
-	for (int i = 1; i < 9; i++)
+	for (int i = 1; i < 6; i++)
 	{
 		std::stringstream path;
-		path << "image/unit/" << i<<i<<".png";
+		path << "image/unit/" << i<<".png";
 
 		UnitInfo temp;
 		temp._name = "long";
@@ -290,6 +290,7 @@ void MultiUnitSelectScene::createAllUnitView()
 				sprite->setTag(_allUnitInfo[j + i * 4 - 1]._unitId);
 				sprite->loadTextureNormal(_allUnitInfo[j+i*4 - 1]._imagePath);
 				sprite->setSwallowTouches(false);
+				sprite->setScale(1.5);
 				sprite->addTouchEventListener(CC_CALLBACK_2(MultiUnitSelectScene::onTouchUnit, this));
 				int yValue = lay->getContentSize().height / 2 + 20;
 				sprite->setPosition(Vec2(baseX + spaceX *(j-1), yValue));
@@ -438,6 +439,15 @@ Sprite* MultiUnitSelectScene::createUnitNameBg(Vec2 pos)
 	return sp;
 }
 
+LabelTTF* MultiUnitSelectScene::createUniNameLabel(Vec2 pos)
+{
+	auto lb = LabelTTF::create("", "fonts/Marker Felt.ttf", 20);
+	lb->setPosition(pos);
+	lb->setHorizontalAlignment(TextHAlignment::CENTER);
+	lb->setColor(Color3B::BLACK);
+	return lb;
+}
+
 void MultiUnitSelectScene::pageViewEvent(Ref *pSender, PageView::EventType type)
 {
 
@@ -494,14 +504,6 @@ void MultiUnitSelectScene::setSelectedSlot(int slotNum)
 	}
 }
 
-LabelTTF* MultiUnitSelectScene::createUniNameLabel(Vec2 pos)
-{
-	auto lb = LabelTTF::create("", "fonts/Marker Felt.ttf", 20);
-	lb->setPosition(pos);
-	lb->setHorizontalAlignment(TextHAlignment::CENTER);
-	lb->setColor(Color3B::BLACK);
-	return lb;
-}
 
 
 

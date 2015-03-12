@@ -16,12 +16,24 @@ private:
 	virtual void nextButtonCallback(Ref *pSender, Widget::TouchEventType type);
 	virtual void statusButtonCallback(Ref *pSender, Widget::TouchEventType type);
 	virtual void skillButonCallback(Ref *pSEnder, Widget::TouchEventType type);
-	
+
+	virtual Button* createSlotBaseSprite(Vec2 pos);
+	virtual Sprite* createUnitNameBg(Vec2 pos);
+	virtual LabelTTF* createUniNameLabel(Vec2 pos);
 	
 	Sprite *statusTab;
 	Sprite *skillTab;
-	Button *statusButton;
-	Button *skillButton;
+	Button *_blueTeamButton;
+	Button *_redTeamButton;
+
+	Button *_slot1BackgroundButon;
+	Button *_slot2BackgroundButon;
+	Button *_slot3BackgroundButon;
+
+	LabelTTF *selectedUnit1Name;
+	LabelTTF *selectedUnit2Name;
+	LabelTTF *selectedUnit3Name;
+
 	ClippingNode *_slot1;
 	ClippingNode *_slot2;
 	ClippingNode *_slot3;
