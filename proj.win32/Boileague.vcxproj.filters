@@ -1,0 +1,155 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="win32">
+      <UniqueIdentifier>{84a8ebd7-7cf0-47f6-b75e-d441df67da40}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="resource">
+      <UniqueIdentifier>{715254bc-d70b-4ec5-bf29-467dd3ace079}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src">
+      <UniqueIdentifier>{bb6c862e-70e9-49d9-81b7-3829a6f50471}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\base">
+      <UniqueIdentifier>{88ec56cf-9739-4cc2-b9d0-42a45316713c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\ModeSelectScene">
+      <UniqueIdentifier>{caecfe95-c853-4a6b-bba8-73a38bfe2f40}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\Multi">
+      <UniqueIdentifier>{939427f1-f50d-4be1-8a6d-6974a8227f99}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\Multi\TeamSelectScene">
+      <UniqueIdentifier>{953bc6d4-3864-4c1e-bf20-6207c8936b58}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\Multi\UnitSelectScene">
+      <UniqueIdentifier>{055a3a52-72d9-4bfd-b91f-664f50e8176c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\Multi\SkillSelectScene">
+      <UniqueIdentifier>{62ffbed9-e5a9-4a73-9743-d947d368c55b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\Multi\BatleScene">
+      <UniqueIdentifier>{7da87dc7-68be-4cb5-83bd-ab6626ac6c9f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\Multi\BalteResultScene">
+      <UniqueIdentifier>{0d7ef3b7-d2a8-490e-9b3a-0ccd09ef54e0}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\base\dialogBase">
+      <UniqueIdentifier>{611086f9-b6a2-44f9-8e5e-a2617b1afc71}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\base\baseButton">
+      <UniqueIdentifier>{63a7e673-8aa3-463e-bc00-e73534d1adcf}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\base\pageViewBase">
+      <UniqueIdentifier>{1fae0e35-1ac0-4017-b5c8-9b3598685eac}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="main.cpp">
+      <Filter>win32</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Classes\AppDelegate.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Classes\HelloWorldScene.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Classes\base\LayerBase.cpp">
+      <Filter>src\base</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Classes\ModeSelectScene\ModeSelectScene.cpp">
+      <Filter>src\ModeSelectScene</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Classes\Multi\TeamSelectScene\MultiTeamSelectScene.cpp">
+      <Filter>src\Multi\TeamSelectScene</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Classes\Multi\UnitSelectScene\UnitSelectScene.cpp">
+      <Filter>src\Multi\UnitSelectScene</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Classes\Multi\MemberFullDialogLayer.cpp">
+      <Filter>src\Multi</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Classes\Multi\UnitSelectScene\UnitDetailDialog.cpp">
+      <Filter>src\Multi\UnitSelectScene</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Classes\Multi\SkillSelectScene\SkillSelectScene.cpp">
+      <Filter>src\Multi\SkillSelectScene</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Classes\Multi\SkillSelectScene\SkillDetailDialog.cpp">
+      <Filter>src\Multi\SkillSelectScene</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Classes\Multi\BatleScene\BatleScene.cpp">
+      <Filter>src\Multi\BatleScene</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Classes\Multi\BatleResultScene\BatleResultScene.cpp">
+      <Filter>src\Multi\BalteResultScene</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Classes\base\dialogBase\DialogBase.cpp">
+      <Filter>src\base\dialogBase</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Classes\base\baseButton\ClippingButtonBase.cpp">
+      <Filter>src\base\baseButton</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Classes\base\pageViewBase\PageViewBase.cpp">
+      <Filter>src\base\pageViewBase</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="main.h">
+      <Filter>win32</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Classes\AppDelegate.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Classes\HelloWorldScene.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Classes\base\LayerBase.h">
+      <Filter>src\base</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Classes\ModeSelectScene\ModeSelectScene.h">
+      <Filter>src\ModeSelectScene</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Classes\Multi\TeamSelectScene\MultiTeamSelectScene.h">
+      <Filter>src\Multi\TeamSelectScene</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Classes\base\Define.h">
+      <Filter>src\base</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Classes\Multi\UnitSelectScene\UnitSelectScene.h">
+      <Filter>src\Multi\UnitSelectScene</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Classes\Multi\MemberFullDialogLayer.h">
+      <Filter>src\Multi</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Classes\Multi\UnitSelectScene\UnitDetailDialog.h">
+      <Filter>src\Multi\UnitSelectScene</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Classes\Multi\SkillSelectScene\SkillSelectScene.h">
+      <Filter>src\Multi\SkillSelectScene</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Classes\Multi\SkillSelectScene\SkillDetailDialog.h">
+      <Filter>src\Multi\SkillSelectScene</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Classes\Multi\BatleScene\BatleScene.h">
+      <Filter>src\Multi\BatleScene</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Classes\Multi\BatleResultScene\BatleResultScene.h">
+      <Filter>src\Multi\BalteResultScene</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Classes\base\dialogBase\DialogBase.h">
+      <Filter>src\base\dialogBase</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Classes\base\baseButton\ClippingButtonBase.h">
+      <Filter>src\base\baseButton</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Classes\base\pageViewBase\PageViewBase.h">
+      <Filter>src\base\pageViewBase</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="game.rc">
+      <Filter>resource</Filter>
+    </ResourceCompile>
+  </ItemGroup>
+</Project>
