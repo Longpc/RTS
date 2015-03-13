@@ -102,6 +102,9 @@
     <ClCompile Include="..\Classes\base\animationBase\AnimationFromImage.cpp">
       <Filter>src\base\AnimationBase</Filter>
     </ClCompile>
+    <ClCompile Include="..\Classes\base\MyBodyParser.cpp">
+      <Filter>src\base</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="main.h">
@@ -160,6 +163,9 @@
     </ClInclude>
     <ClInclude Include="..\Classes\base\animationBase\AnimationFromImage.h">
       <Filter>src\base\AnimationBase</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Classes\base\MyBodyParser.h">
+      <Filter>src\base</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

@@ -22,7 +22,8 @@ LOCAL_SRC_FILES := hellocpp/main.cpp \
 				   ../../Classes/Multi/TeamSelectScene/MultiTeamSelectScene.cpp \
 				   ../../Classes/Multi/UnitSelectScene/UnitDetailDialog.cpp \
 				   ../../Classes/Multi/UnitSelectScene/UnitSelectScene.cpp \
-				   ../../Classes/Multi/MemberFullDialogLayer.cpp
+				   ../../Classes/Multi/MemberFullDialogLayer.cpp \
+				   ../../Classes/base/MyBodyParser.cpp
 
 LOCAL_C_INCLUDES := $(LOCAL_PATH)/../../Classes
 

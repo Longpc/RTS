@@ -1,5 +1,16 @@
 #include "BatleScene.h"
 
+
+#define MOVE_SPEED 250
+#define IMAGE_SCALE 0.6
+#define ANIMETE_DELAY 0.25
+
+#define LOW 1
+#define MID 2
+#define HIGH 3
+
+#define ICON 10
+
 Scene* BatleScene::createScene()
 {
 	auto scene = Scene::createWithPhysics();
@@ -20,7 +31,7 @@ bool BatleScene::init()
 	_pageTitleSprite->setVisible(false);
 	_usernameBg->setVisible(false);
 
-
+	_imagePath = "image/unit_new/move/red/";
 
 	auto nextButton = Button::create();
 	nextButton->loadTextureNormal("CloseNormal.png");
@@ -56,20 +67,58 @@ void BatleScene::nextButtonCallback(Ref *pSender, Widget::TouchEventType type)
 void BatleScene::onEnter()
 {
 	LayerBase::onEnter();
-
+	srand(time(NULL));
+	time(&timer);
+	timeinfo = localtime(&timer);
 	scheduleUpdate();
 }
 
 void BatleScene::update(float delta)
 {
 	updateMiniMap();
+	updateTime();
 }
 
 void BatleScene::updateTime()
 {
+	time_t currTimer;
+	time(&currTimer);
+
+	int seconds = ceil(difftime(currTimer, timer));
+	log("%d", seconds);
+	_timeViewLabel->setString(makeTimeString(seconds).c_str());
+
 
 }
+string BatleScene::makeTimeString(int second) {
+	stringstream timeString;
+	int remainSecond = second % 60;
+	int minus = (second / 60);
+	int hous = (second / 3600);
+	
+	if (hous >= 10) {
+		timeString << hous << ":";
+	}
+	else {
+		timeString << "0" << hous << ":";
+	}
 
+	if (minus >= 10) {
+		timeString << minus << ":";
+	}
+	else {
+		timeString << "0" << minus << ":";
+	}
+
+	if (remainSecond >= 10) {
+		timeString << remainSecond;
+	}
+	else {
+		timeString << "0" << remainSecond;
+	}
+
+	return timeString.str().c_str();
+}
 void BatleScene::createContent()
 {
 	_battleBackround = Node::create();
@@ -93,11 +142,11 @@ void BatleScene::createContent()
 	createPhysicBolder();
 
 	testObject = Sprite::create("image/unit_new/move/red/unit_00_08_1.png");
-	_battleBackround->addChild(testObject);
+	_battleBackround->addChild(testObject,MID);
 	testObject->setPosition(Vec2(100, 100));
-	testObject->setPhysicsBody(PhysicsBody::createCircle(45, PhysicsMaterial(1, 1, 1)));
+	testObject->setPhysicsBody(PhysicsBody::createCircle(45, PhysicsMaterial(1, 0, 1)));
 	testObject->getPhysicsBody()->setRotationEnable(false);
-
+	testObject->setScale(IMAGE_SCALE);
 	//auto action = AnimationFromImage::createAnimation(1, "image/unit_new/move/red/");
 	
 	/*auto animation = Animation::create();
@@ -145,6 +194,28 @@ void BatleScene::createContent()
 	_hpSlider->setPosition(Vec2(topMenu->getContentSize().width / 2 + 25, _visibleSize.height - 22));
 	addChild(_hpSlider);
 
+	Vec2 slotPos = Vec2(45, topMenu->getContentSize().height/2);
+
+	_characterImageViewNode = ClippingNode::create();
+	_characterImageViewNode->setAlphaThreshold(0);
+	_characterImageViewNode->setPosition(Vec2::ZERO);
+	
+	string path = _imagePath;
+	path.append("unit_00_02_1.png");
+
+	auto mask = Sprite::create("image/screen/battle/icon_slot.png");
+	mask->setPosition(slotPos);
+	_characterImageViewNode->setStencil(mask);
+
+	auto icon = Sprite::create(path.c_str());
+	icon->setPosition(slotPos+Vec2(5,-10));
+	icon->setScale(IMAGE_SCALE);
+	icon->setTag(ICON);
+	_characterImageViewNode->addChild(icon);
+	topMenu->addChild(_characterImageViewNode);
+
+
+
 	_menuButton = Button::create();
 	_menuButton->loadTextureNormal("image/screen/battle/menu_btn.png");
 	_menuButton->addTouchEventListener(CC_CALLBACK_2(BatleScene::menuButtonCallback, this));
@@ -171,7 +242,7 @@ void BatleScene::createContent()
 	_selectRect->addChild(_mini_Icon);
 
 
-	_timeViewLabel = Label::create("10:00:11", "", 25);
+	_timeViewLabel = Label::create("00:00:00", "", 25);
 	_timeViewLabel->setHorizontalAlignment(TextHAlignment::CENTER);
 	_timeViewLabel->setPosition(Vec2(timeViewContainer->getContentSize().width / 2, timeViewContainer->getContentSize().height / 2));
 	timeViewContainer->addChild(_timeViewLabel);
@@ -225,7 +296,7 @@ Sprite* BatleScene::createBackground(Vec2 pos)
 void BatleScene::createPhysicBolder()
 {
 	auto bottomB = createHBolder();
-	bottomB->setPosition(Vec2(_visibleSize.width, -10));
+	bottomB->setPosition(Vec2(_visibleSize.width, 30));
 	_battleBackround->addChild(bottomB);
 
 	auto topB = createHBolder();
@@ -239,6 +310,8 @@ void BatleScene::createPhysicBolder()
 	auto rightB = createVBolder();
 	rightB->setPosition(Vec2(_visibleSize.width * 2, _visibleSize.height));
 	_battleBackround->addChild(rightB);
+
+	createRandomRock();
 }
 
 Node* BatleScene::createHBolder()
@@ -295,9 +368,9 @@ bool BatleScene::onTouchBegan(Touch *touch, Event *unused_event)
 
 void BatleScene::onTouchMoved(Touch *touch, Event *unused_event)
 {
-	float speed = 150;
+	fakeZOrder();
 	auto distanVector = touch->getLocation() - _touchStartPoint;
-	testObject->getPhysicsBody()->setVelocity(Vect(speed*cos(distanVector.getAngle()),speed*sin(distanVector.getAngle())));
+	testObject->getPhysicsBody()->setVelocity(Vect(MOVE_SPEED*cos(distanVector.getAngle()),MOVE_SPEED*sin(distanVector.getAngle())));
 	//testObject->setRotation(-(distanVector.getAngle() * RAD_DEG) + 90);
 	_mini_Icon->setRotation(-(distanVector.getAngle() * RAD_DEG) + 90);
 	log("%f", _mini_Icon->getRotation());
@@ -335,7 +408,7 @@ void BatleScene::actionCharacter(int directionId)
 		}
 	}
 	testObject->stopAllActions();
-	auto action = Animate::create(createAnimationWithDefine(directionId, "image/unit_new/move/red/"));
+	auto action = Animate::create(createAnimationWithDefine(directionId, _imagePath));
 	auto repeat = RepeatForever::create(action);
 	repeat->setTag(directionId);
 	testObject->runAction(repeat);
@@ -374,6 +447,8 @@ void BatleScene::menuButtonCallback(Ref *pSender, Widget::TouchEventType type)
 		else {
 			_myWorld->setDebugDrawMask(PhysicsWorld::DEBUGDRAW_ALL);
 		}
+
+		changeImagePathforTest();
 		break; 
 	}
 
@@ -402,10 +477,79 @@ Animation* BatleScene::createAnimationWithDefine(int imageId, string path)
 		animation->addSpriteFrameWithFile(p.c_str());
 	}
 	// should last 2.8 seconds. And there are 14 frames.
-	animation->setDelayPerUnit(0.3f);
+	animation->setDelayPerUnit(ANIMETE_DELAY);
 	animation->setRestoreOriginalFrame(true);
 	animation->setLoops(true);
 	return animation;
+}
+
+void BatleScene::changeImagePathforTest()
+{
+	int a = random(1, 5);
+	switch (a)
+	{
+	case 1:
+		_imagePath = "image/unit_new/move/red/";
+		break;
+	case  2:
+		_imagePath = "image/unit_new/move/green/";
+		break;
+	case 3:
+		_imagePath = "image/unit_new/move/blue/";
+		break;
+	case 4:
+		_imagePath = "image/unit_new/move/black/";
+		break;
+	case 5:
+		_imagePath = "image/unit_new/move/purple/";
+		break;
+	default:
+		_imagePath = "image/unit_new/move/red/";
+		break;
+	}
+	
+	_characterImageViewNode->removeChildByTag(ICON);
+	string path = _imagePath;
+	path.append("unit_00_02_1.png");
+	Vec2 slotPos = Vec2(45, 45);
+	auto icon = Sprite::create(path.c_str());
+	icon->setPosition(slotPos + Vec2(5, -10));
+	icon->setScale(IMAGE_SCALE);
+	icon->setTag(ICON);
+	_characterImageViewNode->addChild(icon);
+
+}
+
+void BatleScene::createRandomRock()
+{
+	for (int i = 1; i < 6; i++)
+	{
+		auto sp = Sprite::create("stone.png");
+		MyBodyParser::getInstance()->parseJsonFile("json/stone.json");
+		auto body = MyBodyParser::getInstance()->bodyFormJson(sp, "stone");
+		body->setDynamic(false);
+		body->getShape(0)->setRestitution(0);
+		body->setGravityEnable(false);
+		sp->setPhysicsBody(body);
+		
+		sp->setPosition(Vec2(random(0.1f, 0.9f)*_visibleSize.width * 2,random(0.1f,0.9f)*_visibleSize.height*2));
+		_allStone.push_back(sp);
+		_battleBackround->addChild(_allStone.back(),LOW);
+	}
+}
+
+void BatleScene::fakeZOrder()
+{
+	for (auto &stone : _allStone)
+	{
+		if (stone->getPositionY() < testObject->getPositionY() - 25)
+		{
+			stone->setZOrder(HIGH);
+		}
+		else {
+			stone->setZOrder(LOW);
+		}
+	}
 }
 
 

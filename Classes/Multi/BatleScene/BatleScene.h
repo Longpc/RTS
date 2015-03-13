@@ -2,6 +2,7 @@
 #define BATLE_SCENE
 #include "base/LayerBase.h"
 #include "base/Define.h"
+#include "base/MyBodyParser.h"
 #include "Multi/BatleResultScene/BatleResultScene.h"
 
 
@@ -24,6 +25,9 @@ private:
 	virtual Node* createHBolder();
 	virtual Node* createVBolder();
 
+	virtual void createRandomRock();
+	vector<Sprite*> _allStone;
+
 	///BUTTON CALLBACK///////////////////////////////////////////////////////////////////////
 	virtual void nextButtonCallback(Ref *pSender, Widget::TouchEventType type);
 	virtual void menuButtonCallback(Ref *pSender, Widget::TouchEventType type);
@@ -43,17 +47,21 @@ private:
 	///CHARACTER MOVE ACTION///////////////////////////////////////////////////////////////////////
 	virtual void actionCharacter(int directionId);
 	virtual Animation* createAnimationWithDefine(int imageId, string path);
-
+	
+	string _imagePath;
 	///MINIMAP LOGIC///////////////////////////////////////////////////////////////////////
 	virtual void updateMiniMap();
 
 	void update(float delta);
-
+	///FAKE  Z Order///////////////////////////////////////////////////////////////////////
+	void fakeZOrder();
 	///BATLE TIME///
 	void updateTime();
+	string makeTimeString(int second);
 
 	struct tm day;
 	time_t timer;
+	struct tm * timeinfo;
 
 	///UI///////////////////////////////////////////////////////////////////////
 	Button *_menuButton;
@@ -85,6 +93,7 @@ private:
 	///CHARACTER///////////////////////////////////////////////////////////////////////
 	Sprite *testObject;
 
+	virtual void changeImagePathforTest();
 
 };
 

@@ -143,6 +143,7 @@ xcopy /Y /Q "$(EngineRoot)external\websockets\prebuilt\win32\*.*" "$(OutDir)"</C
     <ClCompile Include="..\Classes\base\baseButton\ClippingButtonBase.cpp" />
     <ClCompile Include="..\Classes\base\dialogBase\DialogBase.cpp" />
     <ClCompile Include="..\Classes\base\LayerBase.cpp" />
+    <ClCompile Include="..\Classes\base\MyBodyParser.cpp" />
     <ClCompile Include="..\Classes\base\pageViewBase\PageViewBase.cpp" />
     <ClCompile Include="..\Classes\HelloWorldScene.cpp" />
     <ClCompile Include="..\Classes\ModeSelectScene\ModeSelectScene.cpp" />
@@ -164,6 +165,7 @@ xcopy /Y /Q "$(EngineRoot)external\websockets\prebuilt\win32\*.*" "$(OutDir)"</C
     <ClInclude Include="..\Classes\base\Define.h" />
     <ClInclude Include="..\Classes\base\dialogBase\DialogBase.h" />
     <ClInclude Include="..\Classes\base\LayerBase.h" />
+    <ClInclude Include="..\Classes\base\MyBodyParser.h" />
     <ClInclude Include="..\Classes\base\pageViewBase\PageViewBase.h" />
     <ClInclude Include="..\Classes\HelloWorldScene.h" />
     <ClInclude Include="..\Classes\ModeSelectScene\ModeSelectScene.h" />
