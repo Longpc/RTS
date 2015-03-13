@@ -43,6 +43,9 @@
     <Filter Include="src\base\pageViewBase">
       <UniqueIdentifier>{1fae0e35-1ac0-4017-b5c8-9b3598685eac}</UniqueIdentifier>
     </Filter>
+    <Filter Include="src\base\AnimationBase">
+      <UniqueIdentifier>{47c14464-0a93-4946-8613-953616c9fb91}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -92,6 +95,12 @@
     </ClCompile>
     <ClCompile Include="..\Classes\base\pageViewBase\PageViewBase.cpp">
       <Filter>src\base\pageViewBase</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Classes\base\animationBase\AnimationSpriteFromPlist.cpp">
+      <Filter>src\base\AnimationBase</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Classes\base\animationBase\AnimationFromImage.cpp">
+      <Filter>src\base\AnimationBase</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -145,6 +154,12 @@
     </ClInclude>
     <ClInclude Include="..\Classes\base\pageViewBase\PageViewBase.h">
       <Filter>src\base\pageViewBase</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Classes\base\animationBase\AnimationSpriteFromPlist.h">
+      <Filter>src\base\AnimationBase</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Classes\base\animationBase\AnimationFromImage.h">
+      <Filter>src\base\AnimationBase</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

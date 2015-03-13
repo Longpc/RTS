@@ -26,7 +26,6 @@ public:
 
 	virtual void onBackButtonClick(Ref *pSender);
 	virtual void removeLayerBase();
-
 	Button *_backButton;
 	Sprite *_pageTitleSprite;
 

@@ -6,6 +6,9 @@
 #include "Multi/MemberFullDialogLayer.h"
 #include "Multi/UnitSelectScene/UnitSelectScene.h"
 
+//for test
+#include "Multi/BatleScene/BatleScene.h"
+
 ///Include library header here///
 #include <string.h>
 

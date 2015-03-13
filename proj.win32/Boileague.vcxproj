@@ -138,6 +138,8 @@ xcopy /Y /Q "$(EngineRoot)external\websockets\prebuilt\win32\*.*" "$(OutDir)"</C
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="..\Classes\AppDelegate.cpp" />
+    <ClCompile Include="..\Classes\base\animationBase\AnimationFromImage.cpp" />
+    <ClCompile Include="..\Classes\base\animationBase\AnimationSpriteFromPlist.cpp" />
     <ClCompile Include="..\Classes\base\baseButton\ClippingButtonBase.cpp" />
     <ClCompile Include="..\Classes\base\dialogBase\DialogBase.cpp" />
     <ClCompile Include="..\Classes\base\LayerBase.cpp" />
@@ -156,6 +158,8 @@ xcopy /Y /Q "$(EngineRoot)external\websockets\prebuilt\win32\*.*" "$(OutDir)"</C
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\Classes\AppDelegate.h" />
+    <ClInclude Include="..\Classes\base\animationBase\AnimationFromImage.h" />
+    <ClInclude Include="..\Classes\base\animationBase\AnimationSpriteFromPlist.h" />
     <ClInclude Include="..\Classes\base\baseButton\ClippingButtonBase.h" />
     <ClInclude Include="..\Classes\base\Define.h" />
     <ClInclude Include="..\Classes\base\dialogBase\DialogBase.h" />

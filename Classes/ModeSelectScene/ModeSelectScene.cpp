@@ -123,6 +123,7 @@ void ModeSelectScene::testDialog(Ref *pSender, Widget::TouchEventType type)
 		else {
 			_onAccess = true;
 		}
+		Director::getInstance()->replaceScene(TransitionMoveInL::create(SCREEN_TRANSI_DELAY, BatleScene::createScene()));
 		break;
 	}
 	case cocos2d::ui::Widget::TouchEventType::CANCELED:

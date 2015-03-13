@@ -1,4 +1,4 @@
-﻿Build started 12/03/2015 19:18:42.
+﻿Build started 13/03/2015 16:47:22.
      1>Project "C:\CocosPro\Boileague\cocos2d\cocos\2d\libcocos2d.vcxproj" on node 2 (Build target(s)).
      1>PreLinkEvent:
          if not exist "C:\CocosPro\Boileague\proj.win32\Debug.win32\" mkdir "C:\CocosPro\Boileague\proj.win32\Debug.win32\"
@@ -41,4 +41,4 @@
 
 Build succeeded.
 
-Time Elapsed 00:00:03.91
+Time Elapsed 00:00:03.55

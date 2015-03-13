@@ -37,4 +37,8 @@ struct SkillInfo
 #define SOLO_MODE 1
 
 #define BUTON_MARGIN 200
+
+#define PI 3.1415926535897932385f
+#define DEG_RAD (PI / 180)
+#define RAD_DEG (180 / PI)
 #endif
