@@ -361,7 +361,7 @@ void BatleScene::createContent()
 
 	_selectRect = Sprite::create("image/screen/battle/map_frame.png");
 	_selectRect->setPosition(Vec2(_miniMap->getContentSize().width / 2, _miniMap->getContentSize().height / 2 + _selectRect->getContentSize().height / 2));
-	_miniMap->addChild(_selectRect);
+	_miniMap->addChild(_selectRect,2);
 
 	_mini_Icon = Sprite::create("mini_icon.png");
 	_mini_Icon->setPosition(Vec2(_selectRect->getContentSize().width / 2, _selectRect->getContentSize().height / 2));
@@ -434,6 +434,8 @@ void BatleScene::createContent()
 	testObject->addChild(_autoAttackArea);
 	_autoAttackArea->setPosition(Vec2(testObject->getContentSize().width / 2, testObject->getContentSize().height / 2 - 30));
 
+	auto node = Node::create();
+	node->setPosition(Vec2::ZERO);
 	for (int i = 0; i < 10; i++)
 	{
 		auto sp = Sprite::create("image/unit_new/move/red/unit_00_02_2.png");
@@ -459,8 +461,9 @@ void BatleScene::createContent()
 		float positionYScaleRate = _miniMap->getContentSize().height / (_visibleSize.height * 2);
 		enemyIcon->setPosition(Vec2(sp->getPositionX()*positionXScaleRate, sp->getPositionY()*positionYScaleRate));
 		_allEnemyIconInMinimap.push_back(enemyIcon);
-		_miniMap->addChild(_allEnemyIconInMinimap.back(),-1);
+		node->addChild(_allEnemyIconInMinimap.back(), 1);
 	}
+	_miniMap->addChild(node,1);
 	/*_testAttackTarget = Sprite::create("image/unit_new/move/red/unit_00_02_2.png");
 	_testAttackTarget->setPosition(_visibleSize);
 	_testAttackTarget->setScale(IMAGE_SCALE);
@@ -637,11 +640,17 @@ void BatleScene::onTouchMoved(Touch *touch, Event *unused_event)
 		return;
 	}
 	fakeZOrder();
-	_touchMoveEndSprite->setPosition(touch->getLocation());
-	_touchMoveEndSprite->setVisible(true);
 	auto distanVector = touch->getLocation() - _touchStartPoint;
+	if (distanVector.length() < 200) {
+		_touchMoveEndSprite->setPosition(touch->getLocation());
+	}
+	else {
+		_touchMoveEndSprite->setPosition(_touchStartPoint +Vec2(200*cos(distanVector.getAngle()), 200*sin(distanVector.getAngle())));
+	}
+	_touchMoveEndSprite->setVisible(true);
+	
 
-	if (distanVector.length() < _touchMoveBeginSprite->getContentSize().width / 2) {
+	if (distanVector.length() < _touchMoveBeginSprite->getContentSize().width / 6) {
 		testObject->getPhysicsBody()->setVelocity(Vect(0, 0));
 		testObject->stopActionByTag(_currentMoveActionTag);
 		return;
