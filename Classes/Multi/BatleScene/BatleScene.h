@@ -28,6 +28,8 @@ private:
 	virtual void createRandomRock();
 	vector<Sprite*> _allStone;
 
+	virtual void onPhysicContactBegin(const PhysicsContact &contact);
+
 	///BUTTON CALLBACK///////////////////////////////////////////////////////////////////////
 	virtual void nextButtonCallback(Ref *pSender, Widget::TouchEventType type);
 	virtual void menuButtonCallback(Ref *pSender, Widget::TouchEventType type);
@@ -46,12 +48,42 @@ private:
 	
 	///CHARACTER MOVE ACTION///////////////////////////////////////////////////////////////////////
 	virtual void actionCharacter(int directionId);
-	virtual Animation* createAnimationWithDefine(int imageId, string path);
 	
-	string _imagePath;
+	virtual void selectAttackTarget();
+	virtual void runAttackAnimation();
+	virtual Animation* createMoveAnimationWithDefine(int imageId, string path);
+	virtual Animation* createAttackAnimationWithDefine(int imageId, string path);
+	virtual void rotateCharacter(Sprite *target, int direc);
+	virtual void removeMoveDisableFlg();
+	virtual void removeceAttackDelayFlg();
+
+	virtual void characerAttackCallback();
+	virtual void enemyAttackCallback();
+	
+	virtual void showAttackDame(int dameValue, Vec2 pos);
+
+	string _moveImagePath;
+	string _attackImagePath;
+	Sprite *_selectTargetSprite;
+
+	Sprite *_autoAttackArea;
+	//Sprite *_testAttackTarget;
+	vector<Sprite*> _alltargetUnit;
+	vector<Sprite*> _allEnemyIconInMinimap;
+
+	vector<Slider*> _allEnemyHpBar;
+
+	int _currentAttackActionTag;
+	int _currentMoveActionTag;
+
+	int _indexOfRunningActionTarget;
+
+	bool _moveDisableFlg = false;
+	bool _onDelayAttackFlg = false;
+
 	///MINIMAP LOGIC///////////////////////////////////////////////////////////////////////
 	virtual void updateMiniMap();
-
+	virtual void checkForAutoAttack();
 	void update(float delta);
 	///FAKE  Z Order///////////////////////////////////////////////////////////////////////
 	void fakeZOrder();
@@ -85,6 +117,8 @@ private:
 
 	///TOUCH EVENT AND DETECT MOVE DIRECTION///////////////////////////////////////////////////////////////////////
 	Vec2 _touchStartPoint;
+	Sprite *_touchMoveBeginSprite;
+	Sprite *_touchMoveEndSprite;
 
 	////PHYSICAL//////////////////////////////////////////////////////////////////////
 	PhysicsWorld *_myWorld;
@@ -92,6 +126,7 @@ private:
 
 	///CHARACTER///////////////////////////////////////////////////////////////////////
 	Sprite *testObject;
+	Slider *_miniHpSlider;
 
 	virtual void changeImagePathforTest();
 

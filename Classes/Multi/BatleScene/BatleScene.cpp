@@ -4,6 +4,7 @@
 #define MOVE_SPEED 250
 #define IMAGE_SCALE 0.6
 #define ANIMETE_DELAY 0.25
+#define ATTACK_ANIMATION_DELAY 1
 
 #define LOW 1
 #define MID 2
@@ -31,7 +32,8 @@ bool BatleScene::init()
 	_pageTitleSprite->setVisible(false);
 	_usernameBg->setVisible(false);
 
-	_imagePath = "image/unit_new/move/red/";
+	_moveImagePath = "image/unit_new/move/red/";
+	_attackImagePath = "image/unit_new/attack/red/";
 
 	auto nextButton = Button::create();
 	nextButton->loadTextureNormal("CloseNormal.png");
@@ -77,15 +79,129 @@ void BatleScene::update(float delta)
 {
 	updateMiniMap();
 	updateTime();
+	checkForAutoAttack();
+}
+void BatleScene::checkForAutoAttack()
+{
+	float area = IMAGE_SCALE*_autoAttackArea->getContentSize().width / 2 + 25;
+	for (int i = 0; i < _alltargetUnit.size(); i++)
+	{
+		auto posDistan = _alltargetUnit[i]->getPosition() - testObject->getPosition();
+
+		if (posDistan.length() < area && _alltargetUnit[i]->isVisible()) {
+			if (testObject->getActionByTag(_currentAttackActionTag) == nullptr && _onDelayAttackFlg == false) {
+				int direc = detectDirectionBaseOnTouchAngle(-posDistan.getAngle()*RAD_DEG + 90);
+				//rotateCharacter(testObject,direc);
+				auto ani = createAttackAnimationWithDefine(direc, _attackImagePath);
+				//auto action = RepeatForever::create(Animate::create(ani)); //user repeat for change in future
+				auto call1 = CallFuncN::create(CC_CALLBACK_0(BatleScene::characerAttackCallback, this));
+				auto action = Sequence::create(Animate::create(ani),call1,nullptr);
+				action->setTag(direc * 10);
+				_currentAttackActionTag = direc * 10;
+				testObject->runAction(action);
+
+				string path = "image/unit_new/attack/red/";
+				auto target_ani = createAttackAnimationWithDefine(10 - direc, path);
+				auto call2 = CallFuncN::create(CC_CALLBACK_0(BatleScene::enemyAttackCallback, this));
+				auto action2 = Sequence::create(Animate::create(target_ani),call2,nullptr);
+				action2->setTag(direc);
+				//rotateCharacter(_alltargetUnit[i], 10 - direc);
+				_alltargetUnit[i]->runAction(action2);
+				_indexOfRunningActionTarget = i;
+
+				_onDelayAttackFlg = true;
+				this->runAction(Sequence::create(DelayTime::create(ATTACK_ANIMATION_DELAY), CallFuncN::create(CC_CALLBACK_0(BatleScene::removeceAttackDelayFlg, this)), nullptr));
+			}
+		}
+		else {
+			//testObject->stopActionByTag(_currentAttackActionTag);
+		}
+	}
+	/*auto posDistan = _testAttackTarget->getPosition() - testObject->getPosition();
+
+	if (posDistan.length() < area ) {
+		//log("Auto attack: %f",posDistan.getAngle()*RAD_DEG);
+		int direc = detectDirectionBaseOnTouchAngle(-posDistan.getAngle()*RAD_DEG + 90);
+		//log("direc %d ",direc);
+		if (testObject->getActionByTag(_currentAttackActionTag) == nullptr && _onDelayAttackFlg == false) {
+			auto ani = createAttackAnimationWithDefine(direc, _attackImagePath);
+			//auto action = RepeatForever::create(Animate::create(ani)); //user repeat for change in future
+			auto action = Animate::create(ani);
+			action->setTag(direc * 10);
+			_currentAttackActionTag = direc * 10;
+			testObject->runAction(action);
+
+			string path = "image/unit_new/attack/red/";
+			auto target_ani = createAttackAnimationWithDefine(10 - direc, path);
+			auto action2 = Animate::create(target_ani);
+			action2->setTag(direc);
+
+			_testAttackTarget->runAction(action2);
+
+			_onDelayAttackFlg = true;
+			this->runAction(Sequence::create(DelayTime::create(ATTACK_ANIMATION_DELAY), CallFuncN::create(CC_CALLBACK_0(BatleScene::removeceAttackDelayFlg, this)), nullptr));
+		}
+	}
+	else {
+		testObject->stopActionByTag(_currentAttackActionTag);
+	}*/
+}
+void BatleScene::characerAttackCallback()
+{
+	//log("charater");
+	if (_allEnemyHpBar[_indexOfRunningActionTarget]->getPercent() > 0) {
+		_allEnemyHpBar[_indexOfRunningActionTarget]->setPercent(_allEnemyHpBar[_indexOfRunningActionTarget]->getPercent() - 20);
+		showAttackDame(20, _alltargetUnit[_indexOfRunningActionTarget]->getPosition() + Vec2(0, 100));
+
+	}
+	else {
+		_alltargetUnit[_indexOfRunningActionTarget]->setVisible(false);
+		_allEnemyIconInMinimap[_indexOfRunningActionTarget]->setVisible(false);
+	}
 }
 
+void BatleScene::enemyAttackCallback()
+{
+	//log("enemy");
+	if (_miniHpSlider->getPercent() > 0)
+	{
+		_miniHpSlider->setPercent(_miniHpSlider->getPercent() - 10);
+		_hpSlider->setPercent(_miniHpSlider->getPercent());
+		showAttackDame(10, testObject->getPosition() + Vec2(0, 100));
+	}
+	else {
+		testObject->setPosition(Vec2(100, 100));
+		_miniHpSlider->setPercent(100);
+		_hpSlider->setPercent(100);
+	}
+
+}
+
+void BatleScene::showAttackDame(int dameValue, Vec2 pos)
+{
+	stringstream ss;
+	ss << ""<<dameValue;
+	auto lab = Label::create(ss.str().c_str(), "", 30);
+	lab->setTextColor(Color4B::RED);
+	lab->setPosition(pos);
+	_battleBackround->addChild(lab,9999);
+	auto action = Sequence::create(Spawn::create(ScaleBy::create(0.25f, 1.5), MoveBy::create(0.5f, Vec3(0, 100, 0)),nullptr), RemoveSelf::create(true), nullptr);
+	lab->runAction(action);
+}
+
+
+void BatleScene::removeceAttackDelayFlg() {
+	testObject->stopActionByTag(_currentAttackActionTag);
+	_alltargetUnit[_indexOfRunningActionTarget]->stopActionByTag(10 - (_currentAttackActionTag / 10));
+	_onDelayAttackFlg = false;
+}
 void BatleScene::updateTime()
 {
 	time_t currTimer;
 	time(&currTimer);
 
 	int seconds = ceil(difftime(currTimer, timer));
-	log("%d", seconds);
+	//log("%d", seconds);
 	_timeViewLabel->setString(makeTimeString(seconds).c_str());
 
 
@@ -144,9 +260,19 @@ void BatleScene::createContent()
 	testObject = Sprite::create("image/unit_new/move/red/unit_00_08_1.png");
 	_battleBackround->addChild(testObject,MID);
 	testObject->setPosition(Vec2(100, 100));
-	testObject->setPhysicsBody(PhysicsBody::createCircle(45, PhysicsMaterial(1, 0, 1)));
+	testObject->setPhysicsBody(PhysicsBody::createCircle(50, PhysicsMaterial(1, 0, 1)));
 	testObject->getPhysicsBody()->setRotationEnable(false);
 	testObject->setScale(IMAGE_SCALE);
+
+	_miniHpSlider = Slider::create();
+	_miniHpSlider->loadBarTexture("image/screen/battle/mini_hp_base.png");
+	_miniHpSlider->setPercent(100);
+	_miniHpSlider->loadSlidBallTextureNormal("image/screen/battle/test.png");
+	_miniHpSlider->loadProgressBarTexture("image/screen/battle/mini_hp_gauge.png");
+	//_hpSlider->setContentSize(Size(372, 12));
+	_miniHpSlider->setPosition(Vec2(testObject->getContentSize().width / 2, testObject->getContentSize().height-10));
+	testObject->addChild(_miniHpSlider);
+
 	//auto action = AnimationFromImage::createAnimation(1, "image/unit_new/move/red/");
 	
 	/*auto animation = Animation::create();
@@ -200,7 +326,7 @@ void BatleScene::createContent()
 	_characterImageViewNode->setAlphaThreshold(0);
 	_characterImageViewNode->setPosition(Vec2::ZERO);
 	
-	string path = _imagePath;
+	string path = _moveImagePath;
 	path.append("unit_00_02_1.png");
 
 	auto mask = Sprite::create("image/screen/battle/icon_slot.png");
@@ -242,6 +368,8 @@ void BatleScene::createContent()
 	_selectRect->addChild(_mini_Icon);
 
 
+
+
 	_timeViewLabel = Label::create("00:00:00", "", 25);
 	_timeViewLabel->setHorizontalAlignment(TextHAlignment::CENTER);
 	_timeViewLabel->setPosition(Vec2(timeViewContainer->getContentSize().width / 2, timeViewContainer->getContentSize().height / 2));
@@ -261,7 +389,7 @@ void BatleScene::createContent()
 
 	_skill2Button = Button::create();
 	_skill2Button->loadTextureNormal(skill2ImagePath.c_str());
-	_skill2Button->addTouchEventListener(CC_CALLBACK_2(BatleScene::skill4ButtonCallback, this));
+	_skill2Button->addTouchEventListener(CC_CALLBACK_2(BatleScene::skill2ButtonCallback, this));
 	_skill2Button->setPosition(Vec2(_visibleSize.width / 2 - 0.5 *baseSize.width - 10, baseSize.height / 2 + baseMargin));
 	addChild(_skill2Button);
 
@@ -284,6 +412,60 @@ void BatleScene::createContent()
 	_manaSlider->setPercent(100);
 	_manaSlider->setPosition(Vec2(_visibleSize.width / 2, baseSize.height + baseMargin*2));
 	addChild(_manaSlider);
+
+	auto action = RotateBy::create(1, 180);
+
+
+	_touchMoveBeginSprite = Sprite::create("image/screen/battle/ui_move.png");
+	_touchMoveBeginSprite->setVisible(false);
+	addChild(_touchMoveBeginSprite);
+	_touchMoveBeginSprite->runAction(RepeatForever::create(action));
+	
+	_touchMoveEndSprite = Sprite::create("image/screen/battle/ui_move_end.png");
+	_touchMoveEndSprite->setVisible(false);
+	addChild(_touchMoveEndSprite);
+	_touchMoveEndSprite->runAction(RepeatForever::create(action->clone()));
+	
+	_selectTargetSprite = Sprite::create("image/screen/battle/select.png");
+	_selectTargetSprite->setVisible(false);
+	_battleBackround->addChild(_selectTargetSprite);
+
+	_autoAttackArea = Sprite::create("image/screen/battle/select.png");
+	testObject->addChild(_autoAttackArea);
+	_autoAttackArea->setPosition(Vec2(testObject->getContentSize().width / 2, testObject->getContentSize().height / 2 - 30));
+
+	for (int i = 0; i < 10; i++)
+	{
+		auto sp = Sprite::create("image/unit_new/move/red/unit_00_02_2.png");
+		sp->setPosition(Vec2(2*_visibleSize.width*random(0.2f, 0.8f), 2*_visibleSize.height*random(0.2f, 0.8f)));
+		sp->setScale(IMAGE_SCALE);
+		sp->setTag(i);
+
+		auto hpB = Slider::create();
+		hpB->loadBarTexture("image/screen/battle/mini_hp_base.png");
+		hpB->setPercent(100);
+		hpB->loadSlidBallTextureNormal("image/screen/battle/test.png");
+		hpB->loadProgressBarTexture("image/screen/battle/mini_hp_gauge.png");
+		//_hpSlider->setContentSize(Size(372, 12));
+		hpB->setPosition(Vec2(sp->getContentSize().width / 2, sp->getContentSize().height - 10));
+		_allEnemyHpBar.push_back(hpB);
+		sp->addChild(_allEnemyHpBar.back(),100);
+		_alltargetUnit.push_back(sp);
+		_battleBackround->addChild(_alltargetUnit.back(),MID);
+
+		auto enemyIcon = Sprite::create("image/screen/battle/enemyicon.png");
+		enemyIcon->setOpacity(255);
+		float positionXScaleRate = _miniMap->getContentSize().width / (_visibleSize.width * 2);
+		float positionYScaleRate = _miniMap->getContentSize().height / (_visibleSize.height * 2);
+		enemyIcon->setPosition(Vec2(sp->getPositionX()*positionXScaleRate, sp->getPositionY()*positionYScaleRate));
+		_allEnemyIconInMinimap.push_back(enemyIcon);
+		_miniMap->addChild(_allEnemyIconInMinimap.back(),-1);
+	}
+	/*_testAttackTarget = Sprite::create("image/unit_new/move/red/unit_00_02_2.png");
+	_testAttackTarget->setPosition(_visibleSize);
+	_testAttackTarget->setScale(IMAGE_SCALE);
+	_battleBackround->addChild(_testAttackTarget);*/
+	
 }
 
 
@@ -296,19 +478,19 @@ Sprite* BatleScene::createBackground(Vec2 pos)
 void BatleScene::createPhysicBolder()
 {
 	auto bottomB = createHBolder();
-	bottomB->setPosition(Vec2(_visibleSize.width, 30));
+	bottomB->setPosition(Vec2(_visibleSize.width, -50));
 	_battleBackround->addChild(bottomB);
 
 	auto topB = createHBolder();
-	topB->setPosition(Vec2(_visibleSize.width, _visibleSize.height * 2));
+	topB->setPosition(Vec2(_visibleSize.width, _visibleSize.height * 2+50));
 	_battleBackround->addChild(topB);
 
 	auto leftB = createVBolder();
-	leftB->setPosition(Vec2(-10, _visibleSize.height));
+	leftB->setPosition(Vec2(-50, _visibleSize.height));
 	_battleBackround->addChild(leftB);
 
 	auto rightB = createVBolder();
-	rightB->setPosition(Vec2(_visibleSize.width * 2, _visibleSize.height));
+	rightB->setPosition(Vec2(_visibleSize.width * 2 + 50, _visibleSize.height));
 	_battleBackround->addChild(rightB);
 
 	createRandomRock();
@@ -316,7 +498,7 @@ void BatleScene::createPhysicBolder()
 
 Node* BatleScene::createHBolder()
 {
-	auto wallBd = PhysicsBody::createBox(Size(_visibleSize.width*2, 20), PhysicsMaterial(1, 0, 0));
+	auto wallBd = PhysicsBody::createBox(Size(_visibleSize.width*2, 100), PhysicsMaterial(1, 0, 0));
 	wallBd->setGravityEnable(false);
 	wallBd->setDynamic(false);
 	wallBd->setContactTestBitmask(0x1);
@@ -329,7 +511,7 @@ Node* BatleScene::createHBolder()
 
 Node* BatleScene::createVBolder()
 {
-	auto wallBd = PhysicsBody::createBox(Size(20, _visibleSize.height*2), PhysicsMaterial(1, 0, 0));
+	auto wallBd = PhysicsBody::createBox(Size(100, _visibleSize.height*2), PhysicsMaterial(1, 0, 0));
 	wallBd->setGravityEnable(false);
 	wallBd->setDynamic(false);
 	wallBd->setContactTestBitmask(0x1);
@@ -342,38 +524,133 @@ Node* BatleScene::createVBolder()
 }
 void BatleScene::skill1ButtonCallback(Ref *pSender, Widget::TouchEventType type)
 {
-
+	switch (type)
+	{
+	case cocos2d::ui::Widget::TouchEventType::BEGAN:
+		break;
+	case cocos2d::ui::Widget::TouchEventType::MOVED:
+		break;
+	case cocos2d::ui::Widget::TouchEventType::ENDED:
+	{
+		testObject->stopActionByTag(_currentMoveActionTag);
+		selectAttackTarget();
+		
+		break; }
+	case cocos2d::ui::Widget::TouchEventType::CANCELED:
+		break;
+	default:
+		break;
+	}
 }
 
 void BatleScene::skill2ButtonCallback(Ref *pSender, Widget::TouchEventType type)
 {
-
+	switch (type)
+	{
+	case cocos2d::ui::Widget::TouchEventType::BEGAN:
+		break;
+	case cocos2d::ui::Widget::TouchEventType::MOVED:
+		break;
+	case cocos2d::ui::Widget::TouchEventType::ENDED:
+	{
+		testObject->stopActionByTag(_currentMoveActionTag);
+		selectAttackTarget();
+		break;
+	}
+	case cocos2d::ui::Widget::TouchEventType::CANCELED:
+		break;
+	default:
+		break;
+	}
 }
 
 void BatleScene::skill3ButtonCallback(Ref *pSender, Widget::TouchEventType type)
 {
+	switch (type)
+	{
+	case cocos2d::ui::Widget::TouchEventType::BEGAN:
+		break;
+	case cocos2d::ui::Widget::TouchEventType::MOVED:
+		break;
+	case cocos2d::ui::Widget::TouchEventType::ENDED:
+	{
+		testObject->stopActionByTag(_currentMoveActionTag);
 
+		selectAttackTarget();
+		break;
+	}
+	case cocos2d::ui::Widget::TouchEventType::CANCELED:
+		break;
+	default:
+		break;
+	}
 }
 
 void BatleScene::skill4ButtonCallback(Ref *pSender, Widget::TouchEventType type)
 {
+	switch (type)
+	{
+	case cocos2d::ui::Widget::TouchEventType::BEGAN:
+		break;
+	case cocos2d::ui::Widget::TouchEventType::MOVED:
+		break;
+	case cocos2d::ui::Widget::TouchEventType::ENDED:
+	{
+		testObject->stopActionByTag(_currentMoveActionTag);
+		selectAttackTarget();
+		break; }
 
+	case cocos2d::ui::Widget::TouchEventType::CANCELED:
+		break;
+	default:
+		break;
+	}
 }
 
 bool BatleScene::onTouchBegan(Touch *touch, Event *unused_event)
 {
 	_touchStartPoint = touch->getLocation();
+	if (_moveDisableFlg == false){
+		_touchMoveBeginSprite->setPosition(_touchStartPoint);
+		_touchMoveBeginSprite->setVisible(true);
+	}
+	else {
+		_selectTargetSprite->setPosition(testObject->getPosition());
+		_selectTargetSprite->setVisible(true);
+	}
+	
 	return true;
 }
 
 void BatleScene::onTouchMoved(Touch *touch, Event *unused_event)
 {
+	if (_moveDisableFlg == true) {
+		_touchMoveBeginSprite->setVisible(false);
+		_touchMoveEndSprite->setVisible(false);
+		_selectTargetSprite->setVisible(true);
+		auto dis = touch->getLocation() - testObject->getPosition();
+		_selectTargetSprite->setPosition(_battleBackround->convertTouchToNodeSpace(touch));
+		_mini_Icon->setRotation(-(dis.getAngle() * RAD_DEG) + 90);
+		int direc = detectDirectionBaseOnTouchAngle(_mini_Icon->getRotation());
+		if (direc == 0) return;
+		rotateCharacter(testObject, direc);
+		return;
+	}
 	fakeZOrder();
+	_touchMoveEndSprite->setPosition(touch->getLocation());
+	_touchMoveEndSprite->setVisible(true);
 	auto distanVector = touch->getLocation() - _touchStartPoint;
+
+	if (distanVector.length() < _touchMoveBeginSprite->getContentSize().width / 2) {
+		testObject->getPhysicsBody()->setVelocity(Vect(0, 0));
+		testObject->stopActionByTag(_currentMoveActionTag);
+		return;
+	}
+
+	testObject->stopActionByTag(_currentAttackActionTag);
 	testObject->getPhysicsBody()->setVelocity(Vect(MOVE_SPEED*cos(distanVector.getAngle()),MOVE_SPEED*sin(distanVector.getAngle())));
-	//testObject->setRotation(-(distanVector.getAngle() * RAD_DEG) + 90);
 	_mini_Icon->setRotation(-(distanVector.getAngle() * RAD_DEG) + 90);
-	log("%f", _mini_Icon->getRotation());
+	//log("%f", _mini_Icon->getRotation());
 	int direc = detectDirectionBaseOnTouchAngle(_mini_Icon->getRotation());
 	if(direc != 0) actionCharacter(direc);
 	//_touchStartPoint = touch->getLocation();
@@ -387,12 +664,12 @@ int BatleScene::detectDirectionBaseOnTouchAngle(float angle)
 	if(caculAvgAngle(135,angle)) return 3;
 	if(caculAvgAngle(180,angle)) return 2;
 	if(caculAvgAngle(225,angle)) return 1;
-	if(caculAvgAngle(-90,angle)) return 4;
+	if(caculAvgAngle(-90,angle) || caculAvgAngle(270,angle)) return 4;
 	if (caculAvgAngle(-45,angle))
 	{
 		return 7;
 	}
-	return 0;
+	return 8;
 }
 bool BatleScene::caculAvgAngle(int avg, float angle)
 {
@@ -403,14 +680,15 @@ void BatleScene::actionCharacter(int directionId)
 {
 	if (testObject->getNumberOfRunningActions() > 0) {
 		if (testObject->getActionByTag(directionId) != nullptr) {
-			log("!!!");
+			//log("!!!");
 			return;
 		}
 	}
-	testObject->stopAllActions();
-	auto action = Animate::create(createAnimationWithDefine(directionId, _imagePath));
+	testObject->stopActionByTag(_currentMoveActionTag);
+	auto action = Animate::create(createMoveAnimationWithDefine(directionId, _moveImagePath));
 	auto repeat = RepeatForever::create(action);
 	repeat->setTag(directionId);
+	_currentMoveActionTag = directionId;
 	testObject->runAction(repeat);
 }
 void BatleScene::updateMiniMap()
@@ -427,8 +705,19 @@ void BatleScene::updateMiniMap()
 
 void BatleScene::onTouchEnded(Touch *touch, Event *unused_event)
 {
-	testObject->getPhysicsBody()->setVelocity(Vect::ZERO);
-	testObject->stopAllActions();
+	//log("touch END");
+	if (_selectTargetSprite->isVisible()) {
+		_selectTargetSprite->setVisible(false);
+		runAttackAnimation();
+		//_moveDisableFlg = false;
+	}
+	else {
+		testObject->getPhysicsBody()->setVelocity(Vect::ZERO);
+		testObject->stopActionByTag(_currentMoveActionTag);
+		_touchMoveBeginSprite->setVisible(false);
+		_touchMoveEndSprite->setVisible(false);
+	}
+	
 }
 
 void BatleScene::menuButtonCallback(Ref *pSender, Widget::TouchEventType type)
@@ -464,7 +753,7 @@ void BatleScene::savePhysicWorld(PhysicsWorld *world)
 	_myWorld = world;
 }
 
-Animation* BatleScene::createAnimationWithDefine(int imageId, string path)
+Animation* BatleScene::createMoveAnimationWithDefine(int imageId, string path)
 {
 	auto animation = Animation::create();
 	for (int i = 1; i < 3; i++)
@@ -473,7 +762,25 @@ Animation* BatleScene::createAnimationWithDefine(int imageId, string path)
 		sprintf(szName, "unit_00_0%d_%d.png",imageId, i);
 		string p = path;
 		p.append(szName);
-		log("%s", p.c_str());
+		//log("%s", p.c_str());
+		animation->addSpriteFrameWithFile(p.c_str());
+	}
+	// should last 2.8 seconds. And there are 14 frames.
+	animation->setDelayPerUnit(ANIMETE_DELAY);
+	animation->setRestoreOriginalFrame(true);
+	animation->setLoops(true);
+	return animation;
+}
+Animation* BatleScene::createAttackAnimationWithDefine(int imageId, string path)
+{
+	auto animation = Animation::create();
+	for (int i = 1; i < 3; i++)
+	{
+		char szName[100] = { 0 };
+		sprintf(szName, "unit_00_0%d_attack_%d.png", imageId, i);
+		string p = path;
+		p.append(szName);
+		//log("%s", p.c_str());
 		animation->addSpriteFrameWithFile(p.c_str());
 	}
 	// should last 2.8 seconds. And there are 14 frames.
@@ -489,27 +796,33 @@ void BatleScene::changeImagePathforTest()
 	switch (a)
 	{
 	case 1:
-		_imagePath = "image/unit_new/move/red/";
+		_moveImagePath = "image/unit_new/move/red/";
+		_attackImagePath = "image/unit_new/attack/red/";
 		break;
 	case  2:
-		_imagePath = "image/unit_new/move/green/";
+		_moveImagePath = "image/unit_new/move/green/";
+		_attackImagePath = "image/unit_new/attack/green/";
 		break;
 	case 3:
-		_imagePath = "image/unit_new/move/blue/";
+		_moveImagePath = "image/unit_new/move/blue/";
+		_attackImagePath = "image/unit_new/attack/blue/";
 		break;
 	case 4:
-		_imagePath = "image/unit_new/move/black/";
+		_moveImagePath = "image/unit_new/move/black/";
+		_attackImagePath = "image/unit_new/attack/black/";
 		break;
 	case 5:
-		_imagePath = "image/unit_new/move/purple/";
+		_moveImagePath = "image/unit_new/move/purple/";
+		_attackImagePath = "image/unit_new/attack/purple/";
 		break;
 	default:
-		_imagePath = "image/unit_new/move/red/";
+		_moveImagePath = "image/unit_new/move/red/";
+		_attackImagePath = "image/unit_new/attack/red/";
 		break;
 	}
 	
 	_characterImageViewNode->removeChildByTag(ICON);
-	string path = _imagePath;
+	string path = _moveImagePath;
 	path.append("unit_00_02_1.png");
 	Vec2 slotPos = Vec2(45, 45);
 	auto icon = Sprite::create(path.c_str());
@@ -531,10 +844,25 @@ void BatleScene::createRandomRock()
 		body->getShape(0)->setRestitution(0);
 		body->setGravityEnable(false);
 		sp->setPhysicsBody(body);
+		sp->setAnchorPoint(Vec2::ANCHOR_MIDDLE_BOTTOM);
 		
 		sp->setPosition(Vec2(random(0.1f, 0.9f)*_visibleSize.width * 2,random(0.1f,0.9f)*_visibleSize.height*2));
 		_allStone.push_back(sp);
 		_battleBackround->addChild(_allStone.back(),LOW);
+	}
+	for (int i = 1; i < 6; i++)
+	{
+		auto tree = Sprite::create("tree.png");
+		MyBodyParser::getInstance()->parseJsonFile("json/tree.json");
+		auto body = MyBodyParser::getInstance()->bodyFormJson(tree, "tree");
+		body->setDynamic(false);
+		body->getShape(0)->setRestitution(0);
+		body->setGravityEnable(false);
+		tree->setPhysicsBody(body);
+		tree->setAnchorPoint(Vec2::ANCHOR_MIDDLE_BOTTOM);
+		tree->setPosition(Vec2(random(0.1f, 0.9f)*_visibleSize.width * 2, random(0.1f, 0.9f)*_visibleSize.height * 2));
+		_allStone.push_back(tree);
+		_battleBackround->addChild(_allStone.back());
 	}
 }
 
@@ -544,13 +872,66 @@ void BatleScene::fakeZOrder()
 	{
 		if (stone->getPositionY() < testObject->getPositionY() - 25)
 		{
-			stone->setZOrder(HIGH);
+			stone->setLocalZOrder(HIGH);
 		}
 		else {
-			stone->setZOrder(LOW);
+			stone->setLocalZOrder(LOW);
 		}
 	}
 }
+
+void BatleScene::onPhysicContactBegin(const PhysicsContact &contact)
+{
+
+}
+
+void BatleScene::runAttackAnimation()
+{
+	int direc = detectDirectionBaseOnTouchAngle(_mini_Icon->getRotation());
+	if (direc == 0) return;
+	//testObject->stopAllActions();
+
+	auto action = Animate::create(createAttackAnimationWithDefine(direc, _attackImagePath));
+	float time = action->getDuration();
+	testObject->runAction(action);
+	CallFuncN *callF = CallFuncN::create(CC_CALLBACK_0(BatleScene::removeMoveDisableFlg, this));
+	this->runAction(Sequence::create(DelayTime::create(time),callF,nullptr));
+
+}
+
+void BatleScene::removeMoveDisableFlg()
+{
+	_moveDisableFlg = false;
+}
+
+void BatleScene::selectAttackTarget()
+{
+	testObject->stopActionByTag(_currentMoveActionTag);
+	_moveDisableFlg = true;
+	_selectTargetSprite->setPosition(testObject->getPosition());
+	_selectTargetSprite->setVisible(true);
+}
+
+void BatleScene::rotateCharacter(Sprite *target, int direc)
+{
+	log("Rotate direc %d", direc);
+	auto animation = Animation::create();
+	char szName[100] = { 0 };
+	sprintf(szName, "unit_00_0%d_attack_%d.png", direc, 1);
+	string p = _attackImagePath;
+	p.append(szName);
+	//log("%s", p.c_str());
+	animation->addSpriteFrameWithFile(p.c_str());
+	// should last 2.8 seconds. And there are 14 frames.
+	animation->setDelayPerUnit(ANIMETE_DELAY);
+	animation->setRestoreOriginalFrame(true);
+	target->runAction(Animate::create(animation));
+}
+
+
+
+
+
 
 
 
