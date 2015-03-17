@@ -141,7 +141,11 @@ xcopy /Y /Q "$(EngineRoot)external\websockets\prebuilt\win32\*.*" "$(OutDir)"</C
     <ClCompile Include="..\Classes\base\animationBase\AnimationFromImage.cpp" />
     <ClCompile Include="..\Classes\base\animationBase\AnimationSpriteFromPlist.cpp" />
     <ClCompile Include="..\Classes\base\baseButton\ClippingButtonBase.cpp" />
+    <ClCompile Include="..\Classes\base\database\DataUtils.cpp" />
+    <ClCompile Include="..\Classes\base\database\sqlite3.c" />
+    <ClCompile Include="..\Classes\base\database\SqlUtils.cpp" />
     <ClCompile Include="..\Classes\base\dialogBase\DialogBase.cpp" />
+    <ClCompile Include="..\Classes\base\font\LabelShow.cpp" />
     <ClCompile Include="..\Classes\base\LayerBase.cpp" />
     <ClCompile Include="..\Classes\base\MyBodyParser.cpp" />
     <ClCompile Include="..\Classes\base\pageViewBase\PageViewBase.cpp" />
@@ -149,6 +153,7 @@ xcopy /Y /Q "$(EngineRoot)external\websockets\prebuilt\win32\*.*" "$(OutDir)"</C
     <ClCompile Include="..\Classes\ModeSelectScene\ModeSelectScene.cpp" />
     <ClCompile Include="..\Classes\Multi\BatleResultScene\BatleResultScene.cpp" />
     <ClCompile Include="..\Classes\Multi\BatleScene\BatleScene.cpp" />
+    <ClCompile Include="..\Classes\Multi\BatleScene\OptionDialog.cpp" />
     <ClCompile Include="..\Classes\Multi\MemberFullDialogLayer.cpp" />
     <ClCompile Include="..\Classes\Multi\SkillSelectScene\SkillDetailDialog.cpp" />
     <ClCompile Include="..\Classes\Multi\SkillSelectScene\SkillSelectScene.cpp" />
@@ -162,8 +167,12 @@ xcopy /Y /Q "$(EngineRoot)external\websockets\prebuilt\win32\*.*" "$(OutDir)"</C
     <ClInclude Include="..\Classes\base\animationBase\AnimationFromImage.h" />
     <ClInclude Include="..\Classes\base\animationBase\AnimationSpriteFromPlist.h" />
     <ClInclude Include="..\Classes\base\baseButton\ClippingButtonBase.h" />
+    <ClInclude Include="..\Classes\base\database\DataUtils.h" />
+    <ClInclude Include="..\Classes\base\database\sqlite3.h" />
+    <ClInclude Include="..\Classes\base\database\SqlUtils.h" />
     <ClInclude Include="..\Classes\base\Define.h" />
     <ClInclude Include="..\Classes\base\dialogBase\DialogBase.h" />
+    <ClInclude Include="..\Classes\base\font\LabelShow.h" />
     <ClInclude Include="..\Classes\base\LayerBase.h" />
     <ClInclude Include="..\Classes\base\MyBodyParser.h" />
     <ClInclude Include="..\Classes\base\pageViewBase\PageViewBase.h" />
@@ -171,6 +180,7 @@ xcopy /Y /Q "$(EngineRoot)external\websockets\prebuilt\win32\*.*" "$(OutDir)"</C
     <ClInclude Include="..\Classes\ModeSelectScene\ModeSelectScene.h" />
     <ClInclude Include="..\Classes\Multi\BatleResultScene\BatleResultScene.h" />
     <ClInclude Include="..\Classes\Multi\BatleScene\BatleScene.h" />
+    <ClInclude Include="..\Classes\Multi\BatleScene\OptionDialog.h" />
     <ClInclude Include="..\Classes\Multi\MemberFullDialogLayer.h" />
     <ClInclude Include="..\Classes\Multi\SkillSelectScene\SkillDetailDialog.h" />
     <ClInclude Include="..\Classes\Multi\SkillSelectScene\SkillSelectScene.h" />

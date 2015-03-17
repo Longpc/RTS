@@ -9,9 +9,13 @@ typedef std::function<void(Ref *pSender, Widget::TouchEventType type)> MyTouchEv
 class DialogBase :public LayerBase
 {
 public:
-
-	bool init();
-private:
+	static DialogBase* create(MyTouchEvent decideCallback, MyTouchEvent ccCallback);
+	bool init(MyTouchEvent dCall, MyTouchEvent ccCall);
+	virtual Sprite* getBackGroundSprite();
+	virtual void setDialogbackGroundImagePath();
+	virtual Button* getCloseButton();
+	virtual void onExit();
+private :
 	virtual void closeButtonCallback(Ref *pSender, Widget::TouchEventType type);
 	virtual void decideButtonCallback(Ref *pSender, Widget::TouchEventType type);
 	virtual void closeDialog();
@@ -20,7 +24,10 @@ private:
 	MyTouchEvent _decideCallback;
 	MyTouchEvent _ccCallback;
 
+	int selectType;
 	Sprite* _dialogBackground;
+	Button* decideButton;
+	Button* closeButton;
 
 };
 

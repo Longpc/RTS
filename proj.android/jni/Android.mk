@@ -23,7 +23,13 @@ LOCAL_SRC_FILES := hellocpp/main.cpp \
 				   ../../Classes/Multi/UnitSelectScene/UnitDetailDialog.cpp \
 				   ../../Classes/Multi/UnitSelectScene/UnitSelectScene.cpp \
 				   ../../Classes/Multi/MemberFullDialogLayer.cpp \
-				   ../../Classes/base/MyBodyParser.cpp
+				   ../../Classes/base/MyBodyParser.cpp \
+				   ../../Classes/base/font/LabelShow.cpp \
+				   ../../Classes/base/dialogBase/DialogBase.cpp \
+				   ../../Classes/Multi/BatleScene/OptionDialog.cpp \
+				   ../../Classes/base/database/DataUtils.cpp \
+				   ../../Classes/base/database/sqlite3.c \
+				   ../../Classes/base/database/SqlUtils.cpp
 
 LOCAL_C_INCLUDES := $(LOCAL_PATH)/../../Classes
 

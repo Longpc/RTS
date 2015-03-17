@@ -16,6 +16,11 @@ bool ModeSelectScene::init()
 	if (!LayerBase::init()) {
 		return false;
 	}
+	if (CC_TARGET_PLATFORM != CC_PLATFORM_WIN32)
+	{
+		createDatabase();
+	}
+
 	_item1->setEnabled(false);
 	_usernameBg->setVisible(false);
 
@@ -130,5 +135,37 @@ void ModeSelectScene::testDialog(Ref *pSender, Widget::TouchEventType type)
 		break;
 	default:
 		break;
+	}
+}
+
+void ModeSelectScene::createDatabase()
+{
+	auto request = new HttpRequest();
+	request->setUrl("http://192.168.0.126/cocos2dx/database.db3");
+	request->setRequestType(HttpRequest::Type::GET);
+	request->setResponseCallback(this, httpresponse_selector(ModeSelectScene::serverCallback));
+	auto client = HttpClient::getInstance();
+	client->enableCookies(NULL);
+	client->send(request);
+}
+
+void ModeSelectScene::serverCallback(HttpClient* client, HttpResponse* response)
+{
+	if (response->getResponseCode() == 200)
+	{
+		auto fileUtils = FileUtils::getInstance();
+		std::string filepath = fileUtils->getWritablePath() + "database.db3";
+		std::vector<char> *resData = response->getResponseData();
+		FILE *fp = fopen(filepath.c_str(), "w");
+		if (!fp) {
+			log("can not create file %s", filepath.c_str());
+			return;
+		}
+		fwrite(resData->data(), 1, resData->size(), fp);
+		fclose(fp);
+		log("save file into %s", filepath.c_str());
+	}
+	else {
+
 	}
 }

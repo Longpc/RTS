@@ -1,4 +1,5 @@
 #include "SkillSelectScene.h"
+#define SLOT_NUMBER 2
 Scene * SkillSelectScene::createScene(int unitId)
 {
 	auto scene = Scene::create();
@@ -28,7 +29,7 @@ bool SkillSelectScene::init(int unit)
 	_unitInfo = unit;
 	_defaultLabel->setString("Please select skill");
 
-	_slot1BackGroundButton = createSlotBaseSprite(Vec2(_visibleSize.width / 2 - BUTON_MARGIN, _visibleSize.height - 150));
+	_slot1BackGroundButton = createSlotBaseSprite(Vec2(_visibleSize.width / 2 - BUTON_MARGIN/2, _visibleSize.height - 150));
 	addChild(_slot1BackGroundButton);
 	_slot1BackGroundButton->loadTextureNormal("image/screen/skillSelect/00_frame.png");
 	float baseX = _slot1BackGroundButton->getContentSize().width / 2;
@@ -38,47 +39,47 @@ bool SkillSelectScene::init(int unit)
 	_slot1BackGroundButton->addChild(_skill1NameLabel);
 
 
-	_slot2BackGroundButton = createSlotBaseSprite(Vec2(_visibleSize.width / 2, _visibleSize.height - 150));
+	_slot2BackGroundButton = createSlotBaseSprite(Vec2(_visibleSize.width / 2+BUTON_MARGIN/2, _visibleSize.height - 150));
 	addChild(_slot2BackGroundButton);
 	_slot2BackGroundButton->addChild(createUnitNameBg(Vec2(baseX, baseY)));
 	_skill2NameLabel = createUniNameLabel(Vec2(baseX, baseY));
 	_slot2BackGroundButton->addChild(_skill2NameLabel);
 
-	_slot3BackGroundButton = createSlotBaseSprite(Vec2(_visibleSize.width / 2 + BUTON_MARGIN, _visibleSize.height - 150));
+	/*_slot3BackGroundButton = createSlotBaseSprite(Vec2(_visibleSize.width / 2 + BUTON_MARGIN, _visibleSize.height - 150));
 	addChild(_slot3BackGroundButton);
 	_slot3BackGroundButton->addChild(createUnitNameBg(Vec2(baseX, baseY)));
 	_skill3nameLabel = createUniNameLabel(Vec2(baseX, baseY));
-	_slot3BackGroundButton->addChild(_skill3nameLabel);
+	_slot3BackGroundButton->addChild(_skill3nameLabel);*/
 
-	_slot1 = createSlot(Vec2(_visibleSize.width / 2 - BUTON_MARGIN, _visibleSize.height - 150));
-	_slot2 = createSlot(Vec2(_visibleSize.width / 2, _visibleSize.height - 150));
-	_slot3 = createSlot(Vec2(_visibleSize.width / 2 + BUTON_MARGIN, _visibleSize.height - 150));
+	_slot1 = createSlot(Vec2(_visibleSize.width / 2 - BUTON_MARGIN/2, _visibleSize.height - 150));
+	_slot2 = createSlot(Vec2(_visibleSize.width / 2 + BUTON_MARGIN/2, _visibleSize.height - 150));
+	//_slot3 = createSlot(Vec2(_visibleSize.width / 2 + BUTON_MARGIN, _visibleSize.height - 150));
 
 	addChild(_slot1);
 	addChild(_slot2);
-	addChild(_slot3);
+	//addChild(_slot3);
 
 
 	button1 = Button::create();
 	button1->loadTextureNormal("image/screen/skillSelect/face_button.png");
 	button1->setTouchEnabled(true);
 	button1->addTouchEventListener(CC_CALLBACK_2(SkillSelectScene::onTouchUnitSlot1, this));
-	button1->setPosition(Vec2(_visibleSize.width / 2 - BUTON_MARGIN, _visibleSize.height - 150));
+	button1->setPosition(Vec2(_visibleSize.width / 2 - BUTON_MARGIN/2, _visibleSize.height - 150));
 	_slot1->addChild(button1);
 
 	button2 = Button::create();
 	button2->loadTextureNormal("image/screen/skillSelect/face_button.png");
 	button2->setTouchEnabled(true);
 	button2->addTouchEventListener(CC_CALLBACK_2(SkillSelectScene::onTouchUnitSlot2, this));
-	button2->setPosition(Vec2(_visibleSize.width / 2, _visibleSize.height - 150));
+	button2->setPosition(Vec2(_visibleSize.width / 2+BUTON_MARGIN/2, _visibleSize.height - 150));
 	_slot2->addChild(button2);
 
-	button3 = Button::create();
+	/*button3 = Button::create();
 	button3->loadTextureNormal("image/screen/skillSelect/face_button.png");
 	button3->setTouchEnabled(true);
 	button3->addTouchEventListener(CC_CALLBACK_2(SkillSelectScene::onTouchUnitSlot3, this));
 	button3->setPosition(Vec2(_visibleSize.width / 2 + BUTON_MARGIN, _visibleSize.height - 150));
-	_slot3->addChild(button3);
+	_slot3->addChild(button3);*/
 
 	auto nextButton = Button::create();
 	nextButton->loadTextureNormal("image/button/new/button_decide.png");
@@ -146,18 +147,20 @@ void SkillSelectScene::onTouchUnitSlot2(Ref *pSender, Widget::TouchEventType typ
 	setSelectedSlot(2);
 }
 
-void SkillSelectScene::onTouchUnitSlot3(Ref *pSender, Widget::TouchEventType type)
+/*void SkillSelectScene::onTouchUnitSlot3(Ref *pSender, Widget::TouchEventType type)
 {
 	if (_onTouchDisable) return;
 	log("slot3");
 	_onSelectedSlot = 3;
 	setSelectedSlot(3);
-}void SkillSelectScene::displayUnit(Button *parent, LabelTTF *label, int unitId)
+}
+*/
+void SkillSelectScene::displayUnit(Button *parent, LabelTTF *label, int unitId)
 {
 	parent->loadTextureNormal(_allSkillInfo[unitId]._imagePath);
 	label->setString(_allSkillInfo[unitId]._name);
 	//parent->setScale(0.3);
-	if (_onSelectedSlot < 3) {
+	if (_onSelectedSlot < SLOT_NUMBER) {
 		_onSelectedSlot++;
 		setSelectedSlot(_onSelectedSlot);
 	}
@@ -247,11 +250,11 @@ void SkillSelectScene::onSelectUnit(int unitId)
 		displayUnit(button2,_skill2NameLabel, unitId);
 		break;
 	}
-	case 3:
+	/*case 3:
 	{
 		displayUnit(button3, _skill3nameLabel,unitId);
 		break;
-	}
+	}*/
 	default:
 		break;
 	}
@@ -440,23 +443,23 @@ void SkillSelectScene::setSelectedSlot(int slotNum)
 	{
 		_slot1BackGroundButton->loadTextureNormal("image/screen/skillSelect/00_frame.png");
 		_slot2BackGroundButton->loadTextureNormal("image/screen/skillSelect/00_frame_inactive.png");
-		_slot3BackGroundButton->loadTextureNormal("image/screen/skillSelect/00_frame_inactive.png");
+		//_slot3BackGroundButton->loadTextureNormal("image/screen/skillSelect/00_frame_inactive.png");
 		break;
 	}
 	case 2:
 	{
 		_slot2BackGroundButton->loadTextureNormal("image/screen/skillSelect/00_frame.png");
 		_slot1BackGroundButton->loadTextureNormal("image/screen/skillSelect/00_frame_inactive.png");
-		_slot3BackGroundButton->loadTextureNormal("image/screen/skillSelect/00_frame_inactive.png");
+		//_slot3BackGroundButton->loadTextureNormal("image/screen/skillSelect/00_frame_inactive.png");
 		break;
 	}
-	case 3:
+	/*case 3:
 	{
 		_slot3BackGroundButton->loadTextureNormal("image/screen/skillSelect/00_frame.png");
 		_slot1BackGroundButton->loadTextureNormal("image/screen/skillSelect/00_frame_inactive.png");
 		_slot2BackGroundButton->loadTextureNormal("image/screen/skillSelect/00_frame_inactive.png");
 		break;
-	}
+	}*/
 	default:
 		break;
 	}

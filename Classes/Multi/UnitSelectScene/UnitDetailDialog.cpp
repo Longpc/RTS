@@ -1,6 +1,6 @@
 #include "UnitDetailDialog.h"
 
-UnitDetailDialog* UnitDetailDialog::create(UnitInfo unit, MyTouchEvent decideCallback, MyTouchEvent ccelCallback)
+UnitDetailDialog* UnitDetailDialog::create(UnitInforNew unit, MyTouchEvent decideCallback, MyTouchEvent ccelCallback)
 {
 	UnitDetailDialog *p = new UnitDetailDialog();
 	if (p && p->init(unit, decideCallback, ccelCallback)) {
@@ -11,7 +11,7 @@ UnitDetailDialog* UnitDetailDialog::create(UnitInfo unit, MyTouchEvent decideCal
 	return NULL;
 }
 
-bool UnitDetailDialog::init(UnitInfo unit, MyTouchEvent decideCallback, MyTouchEvent ccelCallback)
+bool UnitDetailDialog::init(UnitInforNew unit, MyTouchEvent decideCallback, MyTouchEvent ccelCallback)
 {
 	if (!LayerBase::init()) {
 		return false;
@@ -72,31 +72,61 @@ void UnitDetailDialog::closeDialog()
 
 void UnitDetailDialog::displayUnitInfo(Sprite *parent)
 {
-	auto image = Sprite::create(_unitInfo._imagePath);
+	auto image = Sprite::create(_unitInfo.image);
 	image->setPosition(Vec2(150, parent->getContentSize().height / 2));
 	parent->addChild(image, 10);
 	image->setScale(2);
 
+	
+
+
 	std::stringstream info;
-	info << "Name: " <<_unitInfo._name  << "\nAttack: "<<_unitInfo._attack << "\nDefense: "<<_unitInfo._defence<<"\nSpeed: "<<_unitInfo._hp;
+	info << "Name: " << _unitInfo.name << "\nHP: " << _unitInfo.hp << "\nHP Restore: " << _unitInfo.hp_restore << "\nMP: " << _unitInfo.mp_restore << "\nAttack Dame: " << _unitInfo.attack_dame << "\nDefense: " << _unitInfo.defence;
+	info << "\nAttack Rage: " << _unitInfo.attack_sight << "\nMovement speed: " << _unitInfo.move_speed << "\nAttribute: " << _unitInfo.attr << "\nType: " << _unitInfo.type;
 	statusLabel = LabelTTF::create(info.str().c_str(), "", 25);
 	statusLabel->setColor(Color3B::BLACK);
-	statusLabel->setPosition(Vec2(parent->getContentSize().width/2 - 70, parent->getContentSize().height - 100));
+	
 	statusLabel->setHorizontalAlignment(TextHAlignment::LEFT);
-	statusLabel->setAnchorPoint(Vec2::ANCHOR_TOP_LEFT);
-	parent->addChild(statusLabel);
+	
 
 	std::stringstream skill;
-	skill << "Skill: ABC \n\nEffect ...... " << _unitInfo._name ;
+	skill << "Skill: ABC \n\nEffect ...... " << _unitInfo.name ;
 	skillLabel = LabelTTF::create(skill.str().c_str(), "", 25);
 	skillLabel->setColor(Color3B::BLACK);
-	skillLabel->setPosition(Vec2(parent->getContentSize().width/2 - 70, parent->getContentSize().height - 100));
 	skillLabel->setHorizontalAlignment(TextHAlignment::LEFT);
 	skillLabel->setVisible(false);
-	skillLabel->setAnchorPoint(Vec2::ANCHOR_TOP_LEFT);
-	parent->addChild(skillLabel);
 
+	
 
+	auto con = Layer::create();
+	con->setContentSize(Size(_visibleSize.width/2, statusLabel->getContentSize().height + 300));
+	con->setAnchorPoint(Vec2::ANCHOR_BOTTOM_LEFT);
+	con->setPosition(Vec2::ZERO);
+
+	textViewScroll = extension::ScrollView::create();
+	textViewScroll->setContainer(con);
+	textViewScroll->setContentSize(Size(_visibleSize.width/2,statusLabel->getContentSize().height + 200));
+	textViewScroll->setPosition(Vec2(parent->getContentSize().width / 2 - 70, 100));
+	textViewScroll->setAnchorPoint(Vec2::ANCHOR_BOTTOM_LEFT);
+	textViewScroll->setDirection(extension::ScrollView::Direction::VERTICAL);
+	textViewScroll->setTouchEnabled(true);
+	parent->addChild(textViewScroll);
+	
+	/*if*(statusLabel->getContentSize().height < parent->getContentSize().height - 100) {*/
+		statusLabel->setPosition(Vec2(parent->getContentSize().width / 2 - 70, parent->getContentSize().height - 100));
+		statusLabel->setAnchorPoint(Vec2::ANCHOR_TOP_LEFT);
+
+		skillLabel->setPosition(Vec2(parent->getContentSize().width / 2 - 70, parent->getContentSize().height - 100));
+		skillLabel->setAnchorPoint(Vec2::ANCHOR_TOP_LEFT);
+
+		parent->addChild(statusLabel);
+		parent->addChild(skillLabel);
+	/*}
+	else {
+		con->addChild(statusLabel);
+		con->addChild(skillLabel);
+	}*/
+	
 	statusButton = Button::create();
 	statusButton->loadTextureNormal("image/dialog/unitDetail/status_s.png");
 	statusButton->setPosition(Vec2(parent->getContentSize().width/2 - 10,parent->getContentSize().height - 50));

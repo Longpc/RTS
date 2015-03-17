@@ -7,8 +7,8 @@ typedef std::function<void(Ref *pSender, Widget::TouchEventType type)> MyTouchEv
 class UnitDetailDialog :public LayerBase
 {
 public:
-	static UnitDetailDialog* create(UnitInfo unit, MyTouchEvent decideCallback, MyTouchEvent ccelCallback);
-	bool init(UnitInfo unit, MyTouchEvent decideCallback, MyTouchEvent ccelCallback);
+	static UnitDetailDialog* create(UnitInforNew unit, MyTouchEvent decideCallback, MyTouchEvent ccelCallback);
+	bool init(UnitInforNew unit, MyTouchEvent decideCallback, MyTouchEvent ccelCallback);
 
 private:
 	virtual void closeButtonCallback(Ref *pSender, Widget::TouchEventType type);
@@ -19,13 +19,15 @@ private:
 	virtual void statusButtonCallback(Ref *pSender, Widget::TouchEventType type);
 	virtual void skillButonCallback(Ref *pSEnder, Widget::TouchEventType type);
 
+	extension::ScrollView *textViewScroll;
+
 	LabelTTF *statusLabel;
 	LabelTTF *skillLabel;
 
 	Button *statusButton;
 	Button *skillButton;
 
-	UnitInfo _unitInfo;
+	UnitInforNew _unitInfo;
 	MyTouchEvent _decideCallback;
 	MyTouchEvent _ccCallback;
 };

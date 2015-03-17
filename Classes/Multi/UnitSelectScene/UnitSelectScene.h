@@ -27,6 +27,7 @@ public:
 	bool init(int roomId, int pageFlg);
 protected:
 private:
+	virtual void getDataFromDataBase();
 	virtual void onEnter();
 	virtual void update(float delta);
 	bool onTouchBegan(Touch *touch, Event *unused_event);
@@ -85,7 +86,8 @@ private:
 	PageView *_mainPage;
 	int _pageNum;
 
-	vector<UnitInfo> _allUnitInfo;
+	//vector<UnitInfo> _allUnitInfo;
+	vector<UnitInforNew> _allUnitInfoNew;
 
 	bool _onTouchDisable;
 	Vec2 _touchBeginPoint;

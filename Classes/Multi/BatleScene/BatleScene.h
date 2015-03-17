@@ -4,6 +4,8 @@
 #include "base/Define.h"
 #include "base/MyBodyParser.h"
 #include "Multi/BatleResultScene/BatleResultScene.h"
+#include "base/font/LabelShow.h"
+#include "OptionDialog.h"
 
 
 #include <time.h>
@@ -37,6 +39,10 @@ private:
 	virtual void skill2ButtonCallback(Ref *pSender, Widget::TouchEventType type);
 	virtual void skill3ButtonCallback(Ref *pSender, Widget::TouchEventType type);
 	virtual void skill4ButtonCallback(Ref *pSender, Widget::TouchEventType type);
+	
+	virtual void debugPhysicButtonCallback(Ref *pSEnder, Widget::TouchEventType type);
+	virtual void changeImageButtonCallback(Ref *pSender, Widget::TouchEventType type);
+
 	///MAIN TOUCH EVENT///////////////////////////////////////////////////////////////////////
 	virtual bool onTouchBegan(Touch *touch, Event *unused_event);
 	virtual void onTouchMoved(Touch *touch, Event *unused_event);
@@ -54,14 +60,23 @@ private:
 	virtual Animation* createMoveAnimationWithDefine(int imageId, string path);
 	virtual Animation* createAttackAnimationWithDefine(int imageId, string path);
 	virtual void rotateCharacter(Sprite *target, int direc);
+
 	virtual void removeMoveDisableFlg();
 	virtual void removeceAttackDelayFlg();
 
-	virtual void characerAttackCallback();
-	virtual void enemyAttackCallback();
-	
-	virtual void showAttackDame(int dameValue, Vec2 pos);
+	/*Remove enemy attack delay flag. Default attack delay time is 1s*/
+	virtual void removeEnemyAttackDelayFlg(Ref *pSender);
 
+	/*This function will be call when main character attack animation finished ( 0.5s)*/
+	virtual void characerAttackCallback();
+	/*This function will be called when enemy (as pSender) attack animation was finished*/
+	virtual void enemyAttackCallback(Ref *pSEnder);
+	
+	virtual void showAttackDame(int dameValue, Vec2 pos, int colorType);
+
+	///OPTION DIALOG CALLBACK///////////////////////////////////////////////////////////////////////
+	virtual void optionDecideCallback(Ref *pSEnder, Widget::TouchEventType type);
+	virtual void optionCancelCallback(Ref *pSEnder, Widget::TouchEventType type);
 	string _moveImagePath;
 	string _attackImagePath;
 	Sprite *_selectTargetSprite;
@@ -76,10 +91,11 @@ private:
 	int _currentAttackActionTag;
 	int _currentMoveActionTag;
 
-	int _indexOfRunningActionTarget;
+	int _indexOfBeAttackEnemy;
 
 	bool _moveDisableFlg = false;
 	bool _onDelayAttackFlg = false;
+	vector<bool> _allEnemyAttachDelay;
 
 	///MINIMAP LOGIC///////////////////////////////////////////////////////////////////////
 	virtual void updateMiniMap();
@@ -120,6 +136,8 @@ private:
 	Sprite *_touchMoveBeginSprite;
 	Sprite *_touchMoveEndSprite;
 
+	int _moveMode;
+
 	////PHYSICAL//////////////////////////////////////////////////////////////////////
 	PhysicsWorld *_myWorld;
 	virtual void savePhysicWorld(PhysicsWorld *world);
@@ -127,6 +145,11 @@ private:
 	///CHARACTER///////////////////////////////////////////////////////////////////////
 	Sprite *testObject;
 	Slider *_miniHpSlider;
+	bool _onRespwanFlg = false;
+
+	virtual void removeReSpawnFlg();
+
+
 
 	virtual void changeImagePathforTest();
 

@@ -46,6 +46,12 @@
     <Filter Include="src\base\AnimationBase">
       <UniqueIdentifier>{47c14464-0a93-4946-8613-953616c9fb91}</UniqueIdentifier>
     </Filter>
+    <Filter Include="src\base\fonts">
+      <UniqueIdentifier>{c9b25ed1-e3ca-43db-9914-211694d05795}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\base\database">
+      <UniqueIdentifier>{4db4b416-eb9e-4fe0-8a04-fc3cfc4867db}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -104,6 +110,21 @@
     </ClCompile>
     <ClCompile Include="..\Classes\base\MyBodyParser.cpp">
       <Filter>src\base</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Classes\base\font\LabelShow.cpp">
+      <Filter>src\base\fonts</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Classes\Multi\BatleScene\OptionDialog.cpp">
+      <Filter>src\Multi\BatleScene</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Classes\base\database\sqlite3.c">
+      <Filter>src\base\database</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Classes\base\database\SqlUtils.cpp">
+      <Filter>src\base\database</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Classes\base\database\DataUtils.cpp">
+      <Filter>src\base\database</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -166,6 +187,21 @@
     </ClInclude>
     <ClInclude Include="..\Classes\base\MyBodyParser.h">
       <Filter>src\base</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Classes\base\font\LabelShow.h">
+      <Filter>src\base\fonts</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Classes\Multi\BatleScene\OptionDialog.h">
+      <Filter>src\Multi\BatleScene</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Classes\base\database\sqlite3.h">
+      <Filter>src\base\database</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Classes\base\database\SqlUtils.h">
+      <Filter>src\base\database</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Classes\base\database\DataUtils.h">
+      <Filter>src\base\database</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

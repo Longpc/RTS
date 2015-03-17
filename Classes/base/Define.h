@@ -29,6 +29,23 @@ struct SkillInfo
 	string _imagePath;
 	string _description;
 };
+struct UnitInforNew 
+{
+	int id;
+	string name;
+	int hp;
+	int hp_restore;
+	int mp;
+	int mp_restore;
+	int attack_dame;
+	int defence;
+	int attack_sight;
+	int move_speed;
+	int attr;
+	int type;
+	string image;
+};
+
 
 #define BASE_SPACE_X 120
 #define BOLDER_TAG 77

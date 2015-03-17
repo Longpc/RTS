@@ -26,7 +26,7 @@ private:
 
 	virtual void onTouchUnitSlot1(Ref *pSender, Widget::TouchEventType type);
 	virtual void onTouchUnitSlot2(Ref *pSender, Widget::TouchEventType type);
-	virtual void onTouchUnitSlot3(Ref *pSender, Widget::TouchEventType type);
+	//virtual void onTouchUnitSlot3(Ref *pSender, Widget::TouchEventType type);
 
 	virtual void onTouchUnit(Ref *pSender, Widget::TouchEventType type);
 	virtual void onSelectUnit(int unitId);
@@ -53,19 +53,19 @@ private:
 
 	Button *button1;
 	Button *button2;
-	Button *button3;
+	//Button *button3;
 
 	Button *_slot1BackGroundButton;
 	Button *_slot2BackGroundButton;
-	Button *_slot3BackGroundButton;
+	//Button *_slot3BackGroundButton;
 
 	LabelTTF *_skill1NameLabel;
 	LabelTTF *_skill2NameLabel;
-	LabelTTF *_skill3nameLabel;
+	//LabelTTF *_skill3nameLabel;
 
 	ClippingNode *_slot1;
 	ClippingNode *_slot2;
-	ClippingNode *_slot3;
+	//ClippingNode *_slot3;
 
 	PageView *_mainPage;
 	int _pageNum;

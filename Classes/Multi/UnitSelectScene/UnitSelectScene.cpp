@@ -30,6 +30,7 @@ bool MultiUnitSelectScene::init(int roomId,int pageFlg)
 	if (!LayerBase::init()) {
 		return false;
 	}
+	getDataFromDataBase();
 	_roomId = roomId;
 	_pageFlg = pageFlg;
 	_onTouchDisable = false;
@@ -198,8 +199,8 @@ void MultiUnitSelectScene::onSelectUnit(int unitId)
 }
 void MultiUnitSelectScene::displayUnit(Button *parent,LabelTTF *textView, int unitId)
 {
-	parent->loadTextureNormal(_allUnitInfo[unitId - 1]._imagePath);
-	textView->setString(_allUnitInfo[unitId - 1]._name);
+	parent->loadTextureNormal(_allUnitInfoNew[unitId].image);
+	textView->setString(_allUnitInfoNew[unitId].name);
 
 	if (_onSelectedSlot < 3) {
 		_onSelectedSlot++;
@@ -229,7 +230,7 @@ void MultiUnitSelectScene::onBackButtonClick(Ref *pSender)
 }
 void MultiUnitSelectScene::createAllUnitView()
 {
-	for (int i = 1; i < 6; i++)
+	/*for (int i = 1; i < 6; i++)
 	{
 		std::stringstream path;
 		path << "image/unit/" << i<<".png";
@@ -242,7 +243,7 @@ void MultiUnitSelectScene::createAllUnitView()
 		temp._hp = 200*i;
 		temp._unitId = i;
 		_allUnitInfo.push_back(temp);
-	}
+	}*/
 	auto spite = Sprite::create("image/screen/unitSelect/back.png");
 	spite->setPosition(Vec2(_visibleSize.width/2,_visibleSize.height/2 - 120));
 	addChild(spite);
@@ -267,8 +268,8 @@ void MultiUnitSelectScene::createAllUnitView()
 	_mainPage->setPosition(Vec2(75,0));
 	_mainPage->removeAllPages();
 
-	_pageNum = (_allUnitInfo.size() / 4);
-	if (_pageNum * 4 < _allUnitInfo.size()) {
+	_pageNum = (_allUnitInfoNew.size() / 4);
+	if (_pageNum * 4 < _allUnitInfoNew.size()) {
 		_pageNum += 1;
 	}
 	log("page num: %d", _pageNum);
@@ -285,10 +286,10 @@ void MultiUnitSelectScene::createAllUnitView()
 		mum->setSwallowsTouches(false);
 		for (int j = 1; j < 5; j++)
 		{
-			if ((j + i * 4-1) < _allUnitInfo.size()) {
+			if ((j + i * 4-1) < _allUnitInfoNew.size()) {
 				auto sprite = Button::create();
-				sprite->setTag(_allUnitInfo[j + i * 4 - 1]._unitId);
-				sprite->loadTextureNormal(_allUnitInfo[j+i*4 - 1]._imagePath);
+				sprite->setTag(j + i * 4 - 1);
+				sprite->loadTextureNormal(_allUnitInfoNew[j+i*4 - 1].image);
 				sprite->setSwallowTouches(false);
 				sprite->setScale(1.5);
 				sprite->addTouchEventListener(CC_CALLBACK_2(MultiUnitSelectScene::onTouchUnit, this));
@@ -362,12 +363,12 @@ void MultiUnitSelectScene::onTouchUnit(Ref *pSender, Widget::TouchEventType type
 		int tag = unit->getTag();
 		/*Bellow code: don't trigger touch event for invisible unit*/
 		int curPageIndex = _mainPage->getCurPageIndex();
-		if (tag > (curPageIndex + 1) * 4) return;
-		if (tag <= curPageIndex * 4) return;
+		if (tag >= (curPageIndex + 1) * 4) return;
+		if (tag < curPageIndex * 4) return;
 
 		_onSelectedUnitId = tag;
 		_onTouchDisable = true;
-		auto dialog = UnitDetailDialog::create(_allUnitInfo[tag - 1], CC_CALLBACK_2(MultiUnitSelectScene::decideCallBack, this), CC_CALLBACK_2(MultiUnitSelectScene::cancelCallBack, this));
+		auto dialog = UnitDetailDialog::create(_allUnitInfoNew[tag], CC_CALLBACK_2(MultiUnitSelectScene::decideCallBack, this), CC_CALLBACK_2(MultiUnitSelectScene::cancelCallBack, this));
 		getParent()->addChild(dialog);
 		
 		break;
@@ -502,6 +503,41 @@ void MultiUnitSelectScene::setSelectedSlot(int slotNum)
 	default:
 		break;
 	}
+}
+
+void MultiUnitSelectScene::getDataFromDataBase()
+{
+#define DATABASE_NAME "database.db3"
+#define TABLE_NAME "unit"
+	sqlite3 *data = SqlUtil::openData(DATABASE_NAME);
+	string sql = "select * from unit";
+	vector<vector<string>> a = SqlUtil::runQuery(data, sql.c_str());
+	for (auto &item : a)
+	{
+		UnitInforNew temp;
+		temp.id = DataUtils::stringToFloat(item[0].c_str());
+		temp.name = item[1];
+		temp.hp = DataUtils::stringToFloat(item[2].c_str());
+		temp.hp_restore = DataUtils::stringToFloat(item[3].c_str());
+		temp.mp = DataUtils::stringToFloat(item[4].c_str());
+		temp.mp_restore = DataUtils::stringToFloat(item[5].c_str());
+		temp.attack_dame = DataUtils::stringToFloat(item[6].c_str());
+		temp.defence = DataUtils::stringToFloat(item[7].c_str());
+		temp.attack_sight = DataUtils::stringToFloat(item[8].c_str());
+		temp.move_speed = DataUtils::stringToFloat(item[9].c_str());
+		temp.attr = DataUtils::stringToFloat(item[10].c_str());
+		temp.type = DataUtils::stringToFloat(item[11].c_str());
+		temp.image = item[12].c_str();
+		_allUnitInfoNew.push_back(temp);
+		for (int i = 0; i < item.size(); i ++)
+		{
+			log("%s", item[i].c_str());
+
+		}
+		log("________________________");
+	}
+
+
 }
 
 
