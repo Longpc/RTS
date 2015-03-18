@@ -149,6 +149,8 @@ xcopy /Y /Q "$(EngineRoot)external\websockets\prebuilt\win32\*.*" "$(OutDir)"</C
     <ClCompile Include="..\Classes\base\LayerBase.cpp" />
     <ClCompile Include="..\Classes\base\MyBodyParser.cpp" />
     <ClCompile Include="..\Classes\base\pageViewBase\PageViewBase.cpp" />
+    <ClCompile Include="..\Classes\dataController\SkillData\SkillData.cpp" />
+    <ClCompile Include="..\Classes\dataController\UnitData\UnitData.cpp" />
     <ClCompile Include="..\Classes\HelloWorldScene.cpp" />
     <ClCompile Include="..\Classes\ModeSelectScene\ModeSelectScene.cpp" />
     <ClCompile Include="..\Classes\Multi\BatleResultScene\BatleResultScene.cpp" />
@@ -176,6 +178,8 @@ xcopy /Y /Q "$(EngineRoot)external\websockets\prebuilt\win32\*.*" "$(OutDir)"</C
     <ClInclude Include="..\Classes\base\LayerBase.h" />
     <ClInclude Include="..\Classes\base\MyBodyParser.h" />
     <ClInclude Include="..\Classes\base\pageViewBase\PageViewBase.h" />
+    <ClInclude Include="..\Classes\dataController\SkillData\SkillData.h" />
+    <ClInclude Include="..\Classes\dataController\UnitData\UnitData.h" />
     <ClInclude Include="..\Classes\HelloWorldScene.h" />
     <ClInclude Include="..\Classes\ModeSelectScene\ModeSelectScene.h" />
     <ClInclude Include="..\Classes\Multi\BatleResultScene\BatleResultScene.h" />

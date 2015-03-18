@@ -217,7 +217,7 @@ void UnitDetailDialog::skillButonCallback(Ref *pSEnder, Widget::TouchEventType t
 
 void UnitDetailDialog::getUnitSkillDataFromDatabase()
 {
-	string sql = "SELECT skill.* FROM unit_skill JOIN unit ON unit.id = unit_skill.unitId JOIN skill ON skill.id = unit_skill.skillId WHERE unit.id = ";
+	/*string sql = "SELECT skill.* FROM unit_skill JOIN unit ON unit.id = unit_skill.unitId JOIN skill ON skill.id = unit_skill.skillId WHERE unit.id = ";
 	sql.append(DataUtils::numberToString(_unitInfo.id));
 
 #define DATAFILE "database.db3"
@@ -242,7 +242,8 @@ void UnitDetailDialog::getUnitSkillDataFromDatabase()
 		temp.icon = item[12].c_str();
 		_allUnitSkill.push_back(temp);
 	}
-
+	*/
+	_allUnitSkill =  SkillData::getUnitSkillsByUnitId(_unitInfo.id);
 }
 
 void UnitDetailDialog::testLog()

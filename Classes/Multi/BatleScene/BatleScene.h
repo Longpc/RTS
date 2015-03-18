@@ -6,17 +6,25 @@
 #include "Multi/BatleResultScene/BatleResultScene.h"
 #include "base/font/LabelShow.h"
 #include "OptionDialog.h"
-
+#include "dataController/UnitData/UnitData.h"
+#include "dataController/SkillData/SkillData.h"
 
 #include <time.h>
+
+#define ENEMY_NUM 5
+#define RESTORE_MULTI 5
 class BatleScene : public LayerBase
 {
 
 public:
-	static Scene* createScene();
-	CREATE_FUNC(BatleScene);
-	bool init();
+	static Scene* createScene(int selectedUnitId);
+	static BatleScene* create(int unitId);
+	bool init(int unitId);
 private:
+	///DATABASE///////////////////////////////////////////////////////////////////////
+	virtual UnitInforNew getUnitDataFromDataBase(int unitId);
+	virtual vector<SkillInfoNew> getUnitSkillFromDataBase(int unitId);
+	virtual vector<UnitInforNew> getEnemyUnitsData(vector<int> enemyIdList);
 	///LAYOUT BASE///////////////////////////////////////////////////////////////////////
 	virtual void onEnter();
 
@@ -81,12 +89,13 @@ private:
 	string _attackImagePath;
 	Sprite *_selectTargetSprite;
 
+	///ATTACK LOGIC///////////////////////////////////////////////////////////////////////
 	Sprite *_autoAttackArea;
 	//Sprite *_testAttackTarget;
 	vector<Sprite*> _alltargetUnit;
 	vector<Sprite*> _allEnemyIconInMinimap;
-
 	vector<Slider*> _allEnemyHpBar;
+	vector<UnitInforNew> _allEnemyUnitData;
 
 	int _currentAttackActionTag;
 	int _currentMoveActionTag;
@@ -96,6 +105,13 @@ private:
 	bool _moveDisableFlg = false;
 	bool _onDelayAttackFlg = false;
 	vector<bool> _allEnemyAttachDelay;
+
+	vector<int> _enemyCurentHp;
+	vector<int> _enemyCurentMp;
+
+	int _characterCurentHp;
+	int _characterCurentMp;
+
 
 	///MINIMAP LOGIC///////////////////////////////////////////////////////////////////////
 	virtual void updateMiniMap();
@@ -141,8 +157,13 @@ private:
 	////PHYSICAL//////////////////////////////////////////////////////////////////////
 	PhysicsWorld *_myWorld;
 	virtual void savePhysicWorld(PhysicsWorld *world);
-
 	///CHARACTER///////////////////////////////////////////////////////////////////////
+	virtual void saveSelectedUnitId(int id);
+
+	int _selectedUnitId;
+	UnitInforNew _unitData;
+	vector<SkillInfoNew> _allUnitSkillData;
+
 	Sprite *testObject;
 	Slider *_miniHpSlider;
 	bool _onRespwanFlg = false;
@@ -152,6 +173,10 @@ private:
 
 
 	virtual void changeImagePathforTest();
+	virtual void autoRestoreHpAndMp();
+	virtual void updateSlider();
+
+	int _oldSecond = 0;
 
 };
 

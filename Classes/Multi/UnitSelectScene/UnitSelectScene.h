@@ -60,6 +60,8 @@ private:
 
 	int _onSelectedSlot = 1;
 	int _onSelectedUnitId = 0;
+	int _decidedUnitId = 0;
+
 	int _roomId;
 	int _pageFlg;
 

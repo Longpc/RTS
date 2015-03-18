@@ -179,7 +179,7 @@ void SkillSelectScene::nextButtonCallback(Ref *pSender, Widget::TouchEventType t
 		break;
 	case cocos2d::ui::Widget::TouchEventType::ENDED:
 	{
-		Director::getInstance()->replaceScene(TransitionMoveInR::create(SCREEN_TRANSI_DELAY, BatleScene::createScene()));
+		Director::getInstance()->replaceScene(TransitionMoveInR::create(SCREEN_TRANSI_DELAY, BatleScene::createScene(_selectedUnitId)));
 		break;
 	}
 	case cocos2d::ui::Widget::TouchEventType::CANCELED:

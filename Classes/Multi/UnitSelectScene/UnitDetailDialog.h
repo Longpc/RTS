@@ -2,6 +2,7 @@
 #define UNIT_DETAIL_DIALOG
 #include "base/LayerBase.h"
 #include "base/Define.h"
+#include "dataController/SkillData/SkillData.h"
 
 typedef std::function<void(Ref *pSender, Widget::TouchEventType type)> MyTouchEvent;
 class UnitDetailDialog :public LayerBase

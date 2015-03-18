@@ -52,6 +52,15 @@
     <Filter Include="src\base\database">
       <UniqueIdentifier>{4db4b416-eb9e-4fe0-8a04-fc3cfc4867db}</UniqueIdentifier>
     </Filter>
+    <Filter Include="src\dataController">
+      <UniqueIdentifier>{d9693b37-6741-4d5b-8067-02b6918e3dfa}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\dataController\UnitData">
+      <UniqueIdentifier>{41381394-4fcf-4f7e-94dc-2ffffdfd9ef0}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\dataController\SkillData">
+      <UniqueIdentifier>{53a2c2ed-57f1-4e61-92d0-86c7689c58ac}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -125,6 +134,12 @@
     </ClCompile>
     <ClCompile Include="..\Classes\base\database\DataUtils.cpp">
       <Filter>src\base\database</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Classes\dataController\UnitData\UnitData.cpp">
+      <Filter>src\dataController\UnitData</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Classes\dataController\SkillData\SkillData.cpp">
+      <Filter>src\dataController\SkillData</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -202,6 +217,12 @@
     </ClInclude>
     <ClInclude Include="..\Classes\base\database\DataUtils.h">
       <Filter>src\base\database</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Classes\dataController\UnitData\UnitData.h">
+      <Filter>src\dataController\UnitData</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Classes\dataController\SkillData\SkillData.h">
+      <Filter>src\dataController\SkillData</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

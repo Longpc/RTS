@@ -383,6 +383,7 @@ void MultiUnitSelectScene::onTouchUnit(Ref *pSender, Widget::TouchEventType type
 void MultiUnitSelectScene::decideCallBack(Ref *pSender, Widget::TouchEventType type)
 {
 	onSelectUnit(_onSelectedUnitId);
+	_decidedUnitId = _onSelectedUnitId;
 	_onTouchDisable = false;
 	
 	
@@ -412,8 +413,8 @@ void MultiUnitSelectScene::nextButtonCallback(Ref *pSender, Widget::TouchEventTy
 		break;
 	case cocos2d::ui::Widget::TouchEventType::ENDED:
 	{
-		if (_onSelectedUnitId == 0) break;
-		Director::getInstance()->replaceScene(TransitionMoveInR::create(SCREEN_TRANSI_DELAY, SkillSelectScene::createScene(_onSelectedUnitId)));
+		if (_decidedUnitId == 0) break;
+		Director::getInstance()->replaceScene(TransitionMoveInR::create(SCREEN_TRANSI_DELAY, SkillSelectScene::createScene(_decidedUnitId)));
 		break;
 	}
 	case cocos2d::ui::Widget::TouchEventType::CANCELED:

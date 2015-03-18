@@ -14,18 +14,30 @@
 
 #define RESPAWN_DELAY 0.6f
 
-Scene* BatleScene::createScene()
+Scene* BatleScene::createScene(int selectedUnitId)
 {
 	auto scene = Scene::createWithPhysics();
 	scene->getPhysicsWorld()->setDebugDrawMask(PhysicsWorld::DEBUGDRAW_ALL);
 	scene->getPhysicsWorld()->setGravity(Vect::ZERO);
-	auto lay = BatleScene::create();
+	auto lay = BatleScene::create(selectedUnitId);
 	lay->savePhysicWorld(scene->getPhysicsWorld());
 	scene->addChild(lay);
 	return scene;
 }
 
-bool BatleScene::init()
+BatleScene* BatleScene::create(int unitId)
+{
+	BatleScene *layer = new BatleScene();
+	if (layer && layer->init(unitId)) {
+		layer->autorelease();
+		return layer;
+	}
+
+	CC_SAFE_DELETE(layer);
+	return NULL;
+}
+
+bool BatleScene::init(int unitId)
 {
 	if (!LayerBase::init()) {
 		return false;
@@ -43,6 +55,14 @@ bool BatleScene::init()
 	_menu->setVisible(false);
 	_pageTitleSprite->setVisible(false);
 	_usernameBg->setVisible(false);
+	_selectedUnitId = unitId;
+
+	_unitData = getUnitDataFromDataBase(_selectedUnitId);
+	_allUnitSkillData = getUnitSkillFromDataBase(_selectedUnitId);
+
+	//Bellow vector is store  list of enemy unit id.
+	vector<int> a;
+	_allEnemyUnitData = getEnemyUnitsData(a);
 
 	_moveImagePath = "image/unit_new/move/red/";
 	_attackImagePath = "image/unit_new/attack/red/";
@@ -98,11 +118,20 @@ void BatleScene::onEnter()
 	srand(time(NULL));
 	time(&timer);
 	timeinfo = localtime(&timer);
+	_characterCurentHp = _unitData.hp;
+	_characterCurentMp = _unitData.mp;
+	for (int i = 0; i < ENEMY_NUM; i++)
+	{
+		_enemyCurentHp.push_back(_allEnemyUnitData[i].hp);
+		_enemyCurentMp.push_back(_allEnemyUnitData[i].mp);
+	}
+
 	scheduleUpdate();
 }
 
 void BatleScene::update(float delta)
 {
+	log("Current Hp: %d", _characterCurentHp);
 	updateMiniMap();
 	updateTime();
 	checkForAutoAttack();
@@ -190,9 +219,11 @@ void BatleScene::checkForAutoAttack()
 void BatleScene::characerAttackCallback()
 {
 	//log("charater");
-	if (_allEnemyHpBar[_indexOfBeAttackEnemy]->getPercent() > 0) {
-		_allEnemyHpBar[_indexOfBeAttackEnemy]->setPercent(_allEnemyHpBar[_indexOfBeAttackEnemy]->getPercent() - 20);
-		showAttackDame(20, _alltargetUnit[_indexOfBeAttackEnemy]->getPosition() + Vec2(0, 100),1);
+	if (_enemyCurentHp[_indexOfBeAttackEnemy] > 0) {
+		_enemyCurentHp[_indexOfBeAttackEnemy] -= _unitData.attack_dame;
+
+		_allEnemyHpBar[_indexOfBeAttackEnemy]->setPercent(ceil((_enemyCurentHp[_indexOfBeAttackEnemy] * 100.0f / _allEnemyUnitData[_indexOfBeAttackEnemy].hp)));
+		showAttackDame(_unitData.attack_dame, _alltargetUnit[_indexOfBeAttackEnemy]->getPosition() + Vec2(0, 100),1);
 
 	}
 	else {
@@ -205,20 +236,26 @@ void BatleScene::enemyAttackCallback(Ref *pSEnder)
 {
 	Sprite *_sprite = (Sprite*)pSEnder;
 	_sprite->stopActionByTag(1);
+	int id = _sprite->getTag();
 	//log("enemy");
-	if (_miniHpSlider->getPercent() > 0)
+	if (_characterCurentHp > 0)
 	{
 		if (!_onRespwanFlg)
 		{
-			_miniHpSlider->setPercent(_miniHpSlider->getPercent() - 10);
+			_characterCurentHp -= _allEnemyUnitData[id].attack_dame;
+			//log("Percent: %d", ceil(float(float(_characterCurentHp) / float(_unitData.hp)) * 100));
+			_miniHpSlider->setPercent(ceil((_characterCurentHp*100.0f / _unitData.hp)));
 			_hpSlider->setPercent(_miniHpSlider->getPercent());
-			showAttackDame(10, testObject->getPosition() + Vec2(0, 100),2);
+			showAttackDame(_allEnemyUnitData[id].attack_dame, testObject->getPosition() + Vec2(0, 100),2);
 		}
 	}
 	else {
 		testObject->setPosition(Vec2(100, 100));
 		_miniHpSlider->setPercent(100);
 		_hpSlider->setPercent(100);
+		_manaSlider->setPercent(100);
+		_characterCurentHp = _unitData.hp;
+		_characterCurentMp = _unitData.mp;
 		auto action = Spawn::create(Blink::create(0.6, 6),Sequence::create(DelayTime::create(RESPAWN_DELAY),CallFuncN::create(CC_CALLBACK_0(BatleScene::removeReSpawnFlg,this)),nullptr),nullptr);
 		testObject->runAction(action);
 		_onRespwanFlg = true;
@@ -264,6 +301,11 @@ void BatleScene::updateTime()
 	time(&currTimer);
 
 	int seconds = ceil(difftime(currTimer, timer));
+	if (seconds != _oldSecond && (seconds % 5 == 0)) {
+		_oldSecond = seconds;
+		/*log("CALL");*/
+		autoRestoreHpAndMp();
+	}
 	//log("%d", seconds);
 	_timeViewLabel->setString(makeTimeString(seconds).c_str());
 
@@ -335,26 +377,6 @@ void BatleScene::createContent()
 	//_hpSlider->setContentSize(Size(372, 12));
 	_miniHpSlider->setPosition(Vec2(testObject->getContentSize().width / 2, testObject->getContentSize().height-10));
 	testObject->addChild(_miniHpSlider);
-
-	//auto action = AnimationFromImage::createAnimation(1, "image/unit_new/move/red/");
-	
-	/*auto animation = Animation::create();
-	for (int i = 1; i < 3; i++)
-	{
-		char szName[100] = { 0 };
-		sprintf(szName, "unit_00_01_%d.png", i);
-		string p = "image/unit_new/move/red/";
-		p.append(szName);
-		animation->addSpriteFrameWithFile(p.c_str());
-	}
-	// should last 2.8 seconds. And there are 14 frames.
-	animation->setDelayPerUnit(0.2f);
-	animation->setRestoreOriginalFrame(true);
-	animation->setLoops(true);*/
-	//auto action = Animate::create(createAnimationWithDefine(1,"image/unit_new/move/red/"));
-	
-	//testObject->runAction(RepeatForever::create(action));
-
 
 	auto folow = Follow::create(testObject);
 	folow->setTag(121);
@@ -500,7 +522,7 @@ void BatleScene::createContent()
 
 	auto node = Node::create();
 	node->setPosition(Vec2::ZERO);
-	for (int i = 0; i < 10; i++)
+	for (int i = 0; i < ENEMY_NUM; i++)
 	{
 		auto sp = Sprite::create("image/unit_new/move/red/unit_00_02_2.png");
 		sp->setPosition(Vec2(2*_visibleSize.width*random(0.2f, 0.8f), 2*_visibleSize.height*random(0.2f, 0.8f)));
@@ -1050,6 +1072,7 @@ void BatleScene::optionCancelCallback(Ref *pSEnder, Widget::TouchEventType type)
 
 void BatleScene::removeReSpawnFlg()
 {
+	testObject->setVisible(true);
 	_onRespwanFlg = false;
 }
 
@@ -1065,9 +1088,11 @@ void BatleScene::debugPhysicButtonCallback(Ref *pSEnder, Widget::TouchEventType 
 	{
 		if (_myWorld->getDebugDrawMask() == PhysicsWorld::DEBUGDRAW_ALL) {
 			_myWorld->setDebugDrawMask(PhysicsWorld::DEBUGDRAW_NONE);
+			_autoAttackArea->setVisible(false);
 		}
 		else {
 			_myWorld->setDebugDrawMask(PhysicsWorld::DEBUGDRAW_ALL);
+			_autoAttackArea->setVisible(true);
 		}
 		break;
 	}
@@ -1097,6 +1122,72 @@ void BatleScene::changeImageButtonCallback(Ref *pSender, Widget::TouchEventType 
 		break;
 	}
 }
+
+void BatleScene::saveSelectedUnitId(int id)
+{
+	_selectedUnitId = id;
+}
+
+UnitInforNew BatleScene::getUnitDataFromDataBase(int unitId)
+{
+
+	return UnitData::getUnitDataById(unitId);
+
+}
+
+vector<SkillInfoNew> BatleScene::getUnitSkillFromDataBase(int unitId)
+{
+	return SkillData::getUnitSkillsByUnitId(unitId);
+}
+
+vector<UnitInforNew> BatleScene::getEnemyUnitsData(vector<int> enemyIdList)
+{
+	vector<UnitInforNew> returnData;
+	for (int i = 0; i < ENEMY_NUM; i++)
+	{
+		returnData.push_back(UnitData::getUnitDataById(2));
+	}
+	
+
+	return returnData;
+}
+
+void BatleScene::autoRestoreHpAndMp()
+{ 
+	_characterCurentHp += _unitData.hp_restore/RESTORE_MULTI;
+	if (_characterCurentHp > _unitData.hp) {
+		_characterCurentHp = _unitData.hp;
+	}
+	_characterCurentMp += _unitData.mp_restore/RESTORE_MULTI;
+	if (_characterCurentMp > _unitData.mp)
+	{
+		_characterCurentMp = _unitData.mp;
+	}
+
+	for (int i = 0; i < ENEMY_NUM; i++)
+	{
+		_enemyCurentHp[i] += _allEnemyUnitData[i].hp_restore/RESTORE_MULTI;
+		if (_enemyCurentHp[i] > _allEnemyUnitData[i].hp) {
+			_enemyCurentHp[i] = _allEnemyUnitData[i].hp;
+		}
+	}
+	updateSlider();
+}
+
+void BatleScene::updateSlider()
+{
+	_miniHpSlider->setPercent(ceil((_characterCurentHp * 100.0f / _unitData.hp)));
+	_hpSlider->setPercent(_miniHpSlider->getPercent());
+
+	_manaSlider->setPercent(ceil((_characterCurentMp * 100.0f / _unitData.mp)));
+
+	for (int i = 0; i < ENEMY_NUM; i++)
+	{
+		_allEnemyHpBar[i]->setPercent(ceil((_enemyCurentHp[i] * 100.0f / _allEnemyUnitData[i].hp)));
+	}
+}
+
+
 
 
 
