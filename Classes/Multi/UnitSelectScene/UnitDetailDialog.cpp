@@ -16,13 +16,15 @@ bool UnitDetailDialog::init(UnitInforNew unit, MyTouchEvent decideCallback, MyTo
 	if (!LayerBase::init()) {
 		return false;
 	}
+	_unitInfo = unit;
+	getUnitSkillDataFromDatabase();
 	_menu->setVisible(false);
 	_bgImage->setVisible(false);
 	_pageTitleSprite->setVisible(false);
 	_usernameBg->setVisible(false);
 	_decideCallback = decideCallback;
 	_ccCallback = ccelCallback;
-	_unitInfo = unit;
+	
 
 	//auto background = LayerColor::create(Color4B(0, 0, 0, 150));
 	//addChild(background, -1);
@@ -71,61 +73,88 @@ void UnitDetailDialog::closeDialog()
 }
 
 void UnitDetailDialog::displayUnitInfo(Sprite *parent)
+
 {
+
 	auto image = Sprite::create(_unitInfo.image);
 	image->setPosition(Vec2(150, parent->getContentSize().height / 2));
 	parent->addChild(image, 10);
 	image->setScale(2);
-
-	
-
 
 	std::stringstream info;
 	info << "Name: " << _unitInfo.name << "\nHP: " << _unitInfo.hp << "\nHP Restore: " << _unitInfo.hp_restore << "\nMP: " << _unitInfo.mp_restore << "\nAttack Dame: " << _unitInfo.attack_dame << "\nDefense: " << _unitInfo.defence;
 	info << "\nAttack Rage: " << _unitInfo.attack_sight << "\nMovement speed: " << _unitInfo.move_speed << "\nAttribute: " << _unitInfo.attr << "\nType: " << _unitInfo.type;
 	statusLabel = LabelTTF::create(info.str().c_str(), "", 25);
 	statusLabel->setColor(Color3B::BLACK);
-	
 	statusLabel->setHorizontalAlignment(TextHAlignment::LEFT);
 	
-
-	std::stringstream skill;
-	skill << "Skill: ABC \n\nEffect ...... " << _unitInfo.name ;
-	skillLabel = LabelTTF::create(skill.str().c_str(), "", 25);
-	skillLabel->setColor(Color3B::BLACK);
+	skillLabel = LabelTTF::create("", "", 25);
+	//skillLabel->setColor(Color3B::BLACK);
 	skillLabel->setHorizontalAlignment(TextHAlignment::LEFT);
 	skillLabel->setVisible(false);
 
+	auto backGroundSize = parent->getContentSize();
+
+	for (int i = 0; i < _allUnitSkill.size(); i++)
+	{
+		auto sp = Sprite::create(_allUnitSkill[i].icon);
+		sp->setScale(0.7);
+		Vec2 pos = Vec2(0, backGroundSize.height/2 - 100 * i - 250);
+		sp->setPosition(pos);
+		skillLabel->addChild(sp);
+		string content = _allUnitSkill[i].name.append("\n").append(_allUnitSkill[i].effect);
+		auto lb = Label::create(content.c_str(), "", 25,Size(400,100));
+		lb->setColor(Color3B::BLACK);
+		lb->setPosition(pos + Vec2(50, -10));
+		lb->setAnchorPoint(Vec2::ANCHOR_MIDDLE_LEFT);
+		skillLabel->addChild(lb);
+	}
+
 	
 
-	auto con = Layer::create();
-	con->setContentSize(Size(_visibleSize.width/2, statusLabel->getContentSize().height + 300));
-	con->setAnchorPoint(Vec2::ANCHOR_BOTTOM_LEFT);
-	con->setPosition(Vec2::ZERO);
+	if (statusLabel->getContentSize().height > backGroundSize.height-150)
+	{
 
-	textViewScroll = extension::ScrollView::create();
-	textViewScroll->setContainer(con);
-	textViewScroll->setContentSize(Size(_visibleSize.width/2,statusLabel->getContentSize().height + 200));
-	textViewScroll->setPosition(Vec2(parent->getContentSize().width / 2 - 70, 100));
-	textViewScroll->setAnchorPoint(Vec2::ANCHOR_BOTTOM_LEFT);
-	textViewScroll->setDirection(extension::ScrollView::Direction::VERTICAL);
-	textViewScroll->setTouchEnabled(true);
-	parent->addChild(textViewScroll);
-	
-	/*if*(statusLabel->getContentSize().height < parent->getContentSize().height - 100) {*/
+		auto scroll = extension::ScrollView::create();
+		scroll->setViewSize(Size(backGroundSize.width / 2, 300));
+		scroll->setPosition(Vec2(backGroundSize.width / 2 - 70, 30));
+		scroll->setAnchorPoint(Vec2::ANCHOR_BOTTOM_LEFT);
+		scroll->setDirection(extension::ScrollView::Direction::VERTICAL);
+		scroll->updateInset();
+		scroll->setVisible(true);
+
+		parent->addChild(scroll);
+		auto layer = Layer::create();
+		layer->setAnchorPoint(Vec2::ANCHOR_TOP_LEFT);
+		layer->setContentSize(Size(backGroundSize.width / 2, statusLabel->getContentSize().height + 50));
+		layer->setPosition(Vec2(0, -layer->getContentSize().height / 2));
+
+		auto height = layer->getContentSize().height;
+
+		scroll->setContainer(layer);
+		scroll->setContentOffset(scroll->minContainerOffset());
+		statusLabel->setAnchorPoint(Vec2::ANCHOR_TOP_LEFT);
+		statusLabel->setPosition(Vec2(0, height));
+		layer->addChild(statusLabel);
+		/*skillLabel->setAnchorPoint(Vec2::ANCHOR_TOP_LEFT);
+		
+		
+		skillLabel->setPosition(Vec2(2, height));
+		layer->addChild(skillLabel); */
+	}
+	else {
 		statusLabel->setPosition(Vec2(parent->getContentSize().width / 2 - 70, parent->getContentSize().height - 100));
 		statusLabel->setAnchorPoint(Vec2::ANCHOR_TOP_LEFT);
 
-		skillLabel->setPosition(Vec2(parent->getContentSize().width / 2 - 70, parent->getContentSize().height - 100));
-		skillLabel->setAnchorPoint(Vec2::ANCHOR_TOP_LEFT);
-
 		parent->addChild(statusLabel);
-		parent->addChild(skillLabel);
-	/*}
-	else {
-		con->addChild(statusLabel);
-		con->addChild(skillLabel);
-	}*/
+		
+	}
+	
+
+	skillLabel->setPosition(Vec2(parent->getContentSize().width / 2 - 70, parent->getContentSize().height - 100));
+	skillLabel->setAnchorPoint(Vec2::ANCHOR_TOP_LEFT);
+	parent->addChild(skillLabel);
+
 	
 	statusButton = Button::create();
 	statusButton->loadTextureNormal("image/dialog/unitDetail/status_s.png");
@@ -184,4 +213,39 @@ void UnitDetailDialog::skillButonCallback(Ref *pSEnder, Widget::TouchEventType t
 	default:
 		break;
 	}
+}
+
+void UnitDetailDialog::getUnitSkillDataFromDatabase()
+{
+	string sql = "SELECT skill.* FROM unit_skill JOIN unit ON unit.id = unit_skill.unitId JOIN skill ON skill.id = unit_skill.skillId WHERE unit.id = ";
+	sql.append(DataUtils::numberToString(_unitInfo.id));
+
+#define DATAFILE "database.db3"
+	sqlite3 *data = SqlUtil::openData(DATAFILE);
+
+	vector<vector<string>> a = SqlUtil::runQuery(data, sql.c_str());
+	for (auto &item : a)
+	{
+		SkillInfoNew temp;
+		temp.id = DataUtils::stringToFloat(item[0].c_str());
+		temp.name = item[1];
+		temp.aoe = DataUtils::stringToFloat(item[2].c_str());
+		temp.target_type = DataUtils::stringToFloat(item[3].c_str());
+		temp.mp_cost = DataUtils::stringToFloat(item[4].c_str());
+		temp.cooldown = DataUtils::stringToFloat(item[5].c_str());
+		temp.skill_type = DataUtils::stringToFloat(item[6].c_str());
+		temp.dame_type = DataUtils::stringToFloat(item[7].c_str());
+		temp.dame_value = DataUtils::stringToFloat(item[8].c_str());
+		temp.duration = DataUtils::stringToFloat(item[9].c_str());
+		temp.effect = (item[10].c_str());
+		temp.plistpath = (item[11].c_str());
+		temp.icon = item[12].c_str();
+		_allUnitSkill.push_back(temp);
+	}
+
+}
+
+void UnitDetailDialog::testLog()
+{
+	log("LOG LOG LOG");
 }

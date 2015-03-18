@@ -22,13 +22,7 @@ struct UnitInfo
 	int _attack;
 	int _defence;
 };
-struct SkillInfo
-{
-	string _name;
-	int _skillId;
-	string _imagePath;
-	string _description;
-};
+
 struct UnitInforNew 
 {
 	int id;
@@ -46,7 +40,22 @@ struct UnitInforNew
 	string image;
 };
 
+struct SkillInfoNew {
+	int id;
+	string name;
+	int aoe;
+	int target_type;
+	int mp_cost;
+	int cooldown;
+	int skill_type;
+	int dame_type;
+	int dame_value;
+	int duration;
+	string effect;
+	string plistpath;
+	string icon;
 
+};
 #define BASE_SPACE_X 120
 #define BOLDER_TAG 77
 #define SCREEN_TRANSI_DELAY 0.5

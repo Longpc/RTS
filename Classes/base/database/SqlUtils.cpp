@@ -197,9 +197,9 @@ vector<vector<string>> SqlUtil::runQuery(sqlite3*db, string query)
 	vector<char *> *data;
 	char *text1 = "";
 	vector<vector<string>> str;
-	if (sqlite3_prepare(db, query.c_str(), -1, &statement, 0) == SQLITE_OK)
+	if (sqlite3_prepare_v2(db, query.c_str(), -1, &statement, 0) == SQLITE_OK)
 	{
-		int res = sqlite3_step(statement);
+		//int res = sqlite3_step(statement);
 		int columNum = sqlite3_column_count(statement);
 		log("%d", columNum);
 		for (;;) {
@@ -219,7 +219,7 @@ vector<vector<string>> SqlUtil::runQuery(sqlite3*db, string query)
 			str.push_back(temp);
 			temp.clear();
 		}
-		result = res;
+		//result = res;
 		sqlite3_finalize(statement);
 		return str;
 	}

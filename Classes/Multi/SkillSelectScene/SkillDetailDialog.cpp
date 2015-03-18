@@ -1,5 +1,5 @@
 #include "SkillDetailDialog.h"
-SkillDetailDialog* SkillDetailDialog::create(SkillInfo unit, MyTouchEvent decideCallback, MyTouchEvent ccelCallback)
+SkillDetailDialog* SkillDetailDialog::create(SkillInfoNew unit, MyTouchEvent decideCallback, MyTouchEvent ccelCallback)
 {
 	SkillDetailDialog *p = new SkillDetailDialog();
 	if (p && p->init(unit, decideCallback, ccelCallback)) {
@@ -10,7 +10,7 @@ SkillDetailDialog* SkillDetailDialog::create(SkillInfo unit, MyTouchEvent decide
 	return NULL;
 }
 
-bool SkillDetailDialog::init(SkillInfo unit, MyTouchEvent decideCallback, MyTouchEvent ccelCallback)
+bool SkillDetailDialog::init(SkillInfoNew unit, MyTouchEvent decideCallback, MyTouchEvent ccelCallback)
 {
 	if (!LayerBase::init()) {
 		return false;
@@ -22,7 +22,7 @@ bool SkillDetailDialog::init(SkillInfo unit, MyTouchEvent decideCallback, MyTouc
 
 	_decideCallback = decideCallback;
 	_ccCallback = ccelCallback;
-	_unitInfo = unit;
+	_skillInfo = unit;
 
 	//auto background = LayerColor::create(Color4B(0, 0, 0, 150));
 	//addChild(background, -1);
@@ -72,15 +72,15 @@ void SkillDetailDialog::closeDialog()
 
 void SkillDetailDialog::displayUnitInfo(Sprite *parent)
 {
-	auto image = Sprite::create(_unitInfo._imagePath);
+	auto image = Sprite::create(_skillInfo.icon);
 	image->setScale(1.5);
 	image->setPosition(Vec2(image->getContentSize().width / 2 + 80, parent->getContentSize().height / 2));
 	parent->addChild(image, 10);
 
 
 	std::stringstream info;
-	info << "Name: " << _unitInfo._name << "\nDescription: " << _unitInfo._description << "\nId: " << _unitInfo._skillId;
-	auto label = LabelTTF::create(info.str().c_str(), "", 25);
+	info << "Name: " << _skillInfo.name << "\nDescription: " << _skillInfo.effect << "\nMP: " << _skillInfo.mp_cost;
+	auto label = LabelTTF::create(info.str().c_str(), "", 25,Size(parent->getContentSize().width/2,300));
 	label->setColor(Color3B::BLACK);
 	label->setAnchorPoint(Vec2::ANCHOR_TOP_LEFT);
 	label->setHorizontalAlignment(TextHAlignment::LEFT);

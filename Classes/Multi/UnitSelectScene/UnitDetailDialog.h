@@ -11,6 +11,8 @@ public:
 	bool init(UnitInforNew unit, MyTouchEvent decideCallback, MyTouchEvent ccelCallback);
 
 private:
+	virtual void getUnitSkillDataFromDatabase();
+
 	virtual void closeButtonCallback(Ref *pSender, Widget::TouchEventType type);
 	virtual void decideButtonCallback(Ref *pSender, Widget::TouchEventType type);
 	virtual void closeDialog();
@@ -19,7 +21,6 @@ private:
 	virtual void statusButtonCallback(Ref *pSender, Widget::TouchEventType type);
 	virtual void skillButonCallback(Ref *pSEnder, Widget::TouchEventType type);
 
-	extension::ScrollView *textViewScroll;
 
 	LabelTTF *statusLabel;
 	LabelTTF *skillLabel;
@@ -28,8 +29,12 @@ private:
 	Button *skillButton;
 
 	UnitInforNew _unitInfo;
+	vector<SkillInfoNew> _allUnitSkill;
+
 	MyTouchEvent _decideCallback;
 	MyTouchEvent _ccCallback;
+
+	virtual void testLog();
 };
 
 

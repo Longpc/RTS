@@ -26,7 +26,9 @@ bool SkillSelectScene::init(int unit)
 	if (!LayerBase::init()) {
 		return false;
 	}
-	_unitInfo = unit;
+
+	getSkillDataFromDatabase();
+	_selectedUnitId = unit;
 	_defaultLabel->setString("Please select skill");
 
 	_slot1BackGroundButton = createSlotBaseSprite(Vec2(_visibleSize.width / 2 - BUTON_MARGIN/2, _visibleSize.height - 150));
@@ -157,8 +159,8 @@ void SkillSelectScene::onTouchUnitSlot2(Ref *pSender, Widget::TouchEventType typ
 */
 void SkillSelectScene::displayUnit(Button *parent, LabelTTF *label, int unitId)
 {
-	parent->loadTextureNormal(_allSkillInfo[unitId]._imagePath);
-	label->setString(_allSkillInfo[unitId]._name);
+	parent->loadTextureNormal(_allSkillInfo[unitId].icon);
+	label->setString(_allSkillInfo[unitId].name);
 	//parent->setScale(0.3);
 	if (_onSelectedSlot < SLOT_NUMBER) {
 		_onSelectedSlot++;
@@ -219,12 +221,12 @@ void SkillSelectScene::onTouchUnit(Ref *pSender, Widget::TouchEventType type)
 		int tag = unit->getTag();
 		log("touch unit %d", tag);
 		int curPageIndex = _mainPage->getCurPageIndex();
-		if (tag > (curPageIndex + 1) * 4) return;
-		if (tag <= curPageIndex * 4) return;
+		if (tag - 1 > (curPageIndex + 1) * 4) return;
+		if (tag -1 <= curPageIndex * 4) return;
 
-		_onSelectedUnitId = tag-1;
+		_onSelectedUnitId = tag-2;
 		_onTouchDisable = true;
-		auto dialod = SkillDetailDialog::create(_allSkillInfo[tag-1], CC_CALLBACK_2(SkillSelectScene::decideCallBack, this), CC_CALLBACK_2(SkillSelectScene::cancelCallBack, this));
+		auto dialod = SkillDetailDialog::create(_allSkillInfo[tag-2], CC_CALLBACK_2(SkillSelectScene::decideCallBack, this), CC_CALLBACK_2(SkillSelectScene::cancelCallBack, this));
 		getParent()->addChild(dialod);
 		break;
 	}
@@ -286,17 +288,7 @@ LabelTTF* SkillSelectScene::createUniNameLabel(Vec2 pos)
 
 void SkillSelectScene::createAllUnitView()
 {
-	for (int i = 1; i < 11; i++)
-	{
-		SkillInfo temp;
-		temp._name = "Skill";
-		temp._skillId = i;
-		temp._description = "this skill is . ........";
-		std::stringstream path;
-		path << "image/skillnew/buff/" << i << ".png";
-		temp._imagePath = path.str().c_str();
-		_allSkillInfo.push_back(temp);
-	}
+	
 	auto spite = Sprite::create("image/screen/unitSelect/back.png");
 	spite->setPosition(Vec2(_visibleSize.width / 2, _visibleSize.height / 2 - 120));
 	addChild(spite);
@@ -325,6 +317,9 @@ void SkillSelectScene::createAllUnitView()
 	if (_pageNum * 4 < _allSkillInfo.size()) {
 		_pageNum += 1;
 	}
+	if (_pageNum < 2) {
+		rArrow->setVisible(false);
+	}
 	log("page num: %d", _pageNum);
 	float baseX = space * 1 / 8;
 	float spaceX = space * 1 / 4;
@@ -341,8 +336,8 @@ void SkillSelectScene::createAllUnitView()
 		{
 			if ((j + i * 4 - 1) < _allSkillInfo.size()) {
 				auto sprite = Button::create();
-				sprite->setTag(_allSkillInfo[j + i * 4 - 1]._skillId);
-				sprite->loadTextureNormal(_allSkillInfo[j + i * 4 - 1]._imagePath);
+				sprite->setTag(_allSkillInfo[j + i * 4 - 1].id);
+				sprite->loadTextureNormal(_allSkillInfo[j + i * 4 - 1].icon);
 				sprite->setSwallowTouches(false);
 				sprite->addTouchEventListener(CC_CALLBACK_2(SkillSelectScene::onTouchUnit, this));
 				int yValue = lay->getContentSize().height / 2 + 20;
@@ -462,5 +457,31 @@ void SkillSelectScene::setSelectedSlot(int slotNum)
 	}*/
 	default:
 		break;
+	}
+}
+
+void SkillSelectScene::getSkillDataFromDatabase()
+{
+#define DATAFILE "database.db3"
+	sqlite3 *data = SqlUtil::openData(DATAFILE);
+	string sql = "select * from skill";
+	vector<vector<string>> a = SqlUtil::runQuery(data, sql.c_str());
+	for (auto &item : a)
+	{
+		SkillInfoNew temp;
+		temp.id = DataUtils::stringToFloat(item[0].c_str());
+		temp.name = item[1];
+		temp.aoe = DataUtils::stringToFloat(item[2].c_str());
+		temp.target_type = DataUtils::stringToFloat(item[3].c_str());
+		temp.mp_cost = DataUtils::stringToFloat(item[4].c_str());
+		temp.cooldown = DataUtils::stringToFloat(item[5].c_str());
+		temp.skill_type = DataUtils::stringToFloat(item[6].c_str());
+		temp.dame_type = DataUtils::stringToFloat(item[7].c_str());
+		temp.dame_value = DataUtils::stringToFloat(item[8].c_str());
+		temp.duration = DataUtils::stringToFloat(item[9].c_str());
+		temp.effect = (item[10].c_str());
+		temp.plistpath = (item[11].c_str());
+		temp.icon = item[12].c_str();
+		_allSkillInfo.push_back(temp);
 	}
 }

@@ -496,6 +496,7 @@ void BatleScene::createContent()
 	_autoAttackArea = Sprite::create("image/screen/battle/select.png");
 	testObject->addChild(_autoAttackArea);
 	_autoAttackArea->setPosition(Vec2(testObject->getContentSize().width / 2, testObject->getContentSize().height / 2 - 30));
+	_autoAttackArea->setVisible(false);
 
 	auto node = Node::create();
 	node->setPosition(Vec2::ZERO);

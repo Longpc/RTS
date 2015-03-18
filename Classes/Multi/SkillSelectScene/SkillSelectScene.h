@@ -17,6 +17,8 @@ private:
 	virtual void onEnter();
 	virtual void update(float delta);
 
+	virtual void getSkillDataFromDatabase();
+
 	bool onTouchBegan(Touch *touch, Event *unused_event);
 	void onTouchEnded(Touch *touch, Event *unused_event);
 	void onTouchMoved(Touch *touch, Event *unused_event);
@@ -73,9 +75,9 @@ private:
 	Button *rArrow;
 
 
-	int _unitInfo;
+	int _selectedUnitId;
 
-	vector<SkillInfo> _allSkillInfo;
+	vector<SkillInfoNew> _allSkillInfo;
 
 	bool _onTouchDisable = false;
 	Vec2 _beginTouchPoint;

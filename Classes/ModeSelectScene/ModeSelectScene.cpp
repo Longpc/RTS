@@ -141,7 +141,7 @@ void ModeSelectScene::testDialog(Ref *pSender, Widget::TouchEventType type)
 void ModeSelectScene::createDatabase()
 {
 	auto request = new HttpRequest();
-	request->setUrl("http://192.168.0.126/cocos2dx/database.db3");
+	request->setUrl("http://tore.f-2.jp/mokha/server/download/innolab/database/database.db3");
 	request->setRequestType(HttpRequest::Type::GET);
 	request->setResponseCallback(this, httpresponse_selector(ModeSelectScene::serverCallback));
 	auto client = HttpClient::getInstance();
@@ -166,6 +166,6 @@ void ModeSelectScene::serverCallback(HttpClient* client, HttpResponse* response)
 		log("save file into %s", filepath.c_str());
 	}
 	else {
-
+		log("Fail to conect to server");
 	}
 }
