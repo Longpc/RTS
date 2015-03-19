@@ -564,12 +564,10 @@ void BatleScene::removeEnemyAttackDelayFlg(Ref *pSender) {
 }
 void BatleScene::showAttackDame(int dameValue, Vec2 pos,int type)
 {
-	//stringstream ss;
-	//ss << ""<<dameValue;
-	//auto lab = Label::create(ss.str().c_str(), "", 30);
-	//lab->setTextColor(Color4B::RED);
-	//lab->setPosition(pos);
-	//_battleBackround->addChild(lab,9999);
+	if (dameValue < 0)
+	{
+		return;
+	}
 	auto action = Sequence::create(Spawn::create(ScaleBy::create(0.25f, 1.5), MoveBy::create(0.5f, Vec3(0, 100, 0)),nullptr), RemoveSelf::create(true), nullptr);
 	//lab->runAction(action);
 
@@ -1371,19 +1369,35 @@ void BatleScene::skillRestoreAll(SkillInfoNew skillInfo)
 		break;
 	}
 
-
-	for (int i = 0; i < _allAlliedUnitData.size(); i++)
-	{
-		_allAlliedUnitCurrentHp[i] += value;
-		if (_allAlliedUnitCurrentHp[i] > _allAlliedUnitData[i].hp) {
-			_allAlliedUnitCurrentHp[i] = _allAlliedUnitData[i].hp;
+	if (skillInfo.aoe > 0) {
+		vector<int> allUnitIndex = detectUnitInAoe(skillInfo.aoe, ALLIED_FLAG);
+		for (int &index : allUnitIndex)
+		{
+			_allAlliedUnitCurrentHp[index] += value;
+			if (_allAlliedUnitCurrentHp[index] > _allAlliedUnitData[index].hp) {
+				_allAlliedUnitCurrentHp[index] = _allAlliedUnitData[index].hp;
+			}
+			_allAlliedUnitHpBar[index]->setPercent(_allAlliedUnitCurrentHp[index] * 100.0f / _allAlliedUnitData[index].hp);
 		}
-		_allAlliedUnitHpBar[i]->setPercent(_allAlliedUnitCurrentHp[i] * 100.0f / _allAlliedUnitData[i].hp);
 
+		//RUN EFFECT AOE
+	}
+	else {
+		for (int i = 0; i < _allAlliedUnitData.size(); i++)
+		{
+			_allAlliedUnitCurrentHp[i] += value;
+			if (_allAlliedUnitCurrentHp[i] > _allAlliedUnitData[i].hp) {
+				_allAlliedUnitCurrentHp[i] = _allAlliedUnitData[i].hp;
+			}
+			_allAlliedUnitHpBar[i]->setPercent(_allAlliedUnitCurrentHp[i] * 100.0f / _allAlliedUnitData[i].hp);
+
+		}
+
+		//RUN EFFECT HEAL ALL
+		//_mainCharacterMiniHpBar->setPercent(_allAlliedUnitCurrentHp[0] * 100.0f / _mainCharacterData.hp);
 	}
 
-	_mainCharacterMiniHpBar->setPercent(_allAlliedUnitCurrentHp[0] * 100.0f / _mainCharacterData.hp);
-	//RUN EFFECT HEAL ALL
+
 }
 
 void BatleScene::skillRestoreOne(SkillInfoNew skillInfo)
