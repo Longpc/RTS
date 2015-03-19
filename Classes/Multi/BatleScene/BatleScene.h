@@ -119,7 +119,7 @@ private:
 	int _currentAttackActionTag;
 	int _currentMoveActionTag;
 
-	int _indexOfBeAttackEnemy;
+	int _indexOfBeAttackEnemy = -1;
 
 	///MINIMAP LOGIC///////////////////////////////////////////////////////////////////////
 	virtual void updateMiniMap();

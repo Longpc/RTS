@@ -509,6 +509,7 @@ void BatleScene::enemyDieAction(int id)
 {
 	_alltargetUnit[id]->setVisible(false);
 	_allEnemyIconInMinimap[id]->setVisible(false);
+	_indexOfBeAttackEnemy = -1;
 }
 void BatleScene::enemyAttackCallback(Ref *pSEnder)
 {
@@ -579,7 +580,7 @@ void BatleScene::runRespawnAction()
 
 void BatleScene::removeceAttackDelayFlg() {
 	testObject->stopActionByTag(_currentAttackActionTag);
-	_alltargetUnit[_indexOfBeAttackEnemy]->stopActionByTag(10 - (_currentAttackActionTag / 10));
+	//_alltargetUnit[_indexOfBeAttackEnemy]->stopActionByTag(10 - (_currentAttackActionTag / 10));
 	_onDelayAttackFlg = false;
 }
 void BatleScene::updateTime()
@@ -1147,6 +1148,10 @@ void BatleScene::skill1ButtonCallback(Ref *pSender, Widget::TouchEventType type)
 		Button* bt = dynamic_cast<Button*>(pSender);
 		int tag = bt->getTag();
 		//Progress Timer
+		if (_mainCharacterSkillData[tag - 1].target_type == TARGET_ONE && _mainCharacterSkillData[tag - 1].skill_type == TYPE_ATTACK && _indexOfBeAttackEnemy < 0) {
+			log("Invalid attack target");
+			return;
+		}
 		if (_mainCharacterSkillData[tag - 1].mp_cost <= _characterCurentMp){
 			bt->setColor(Color3B::GRAY);
 			bt->setTouchEnabled(false);
@@ -1308,7 +1313,16 @@ void BatleScene::skillHelpAction(SkillInfoNew skillInfo)
 
 void BatleScene::skillAttackAction(SkillInfoNew skillInfo)
 {
-
+	switch (skillInfo.target_type)
+	{
+	case TARGET_ALL:
+		skillAttackAll(skillInfo);
+		break;
+	case TARGET_ONE:
+		skillAttackOne(skillInfo);
+	default:
+		break;
+	}
 }
 
 void BatleScene::skillRestoreAll(SkillInfoNew skillInfo)
@@ -1334,6 +1348,7 @@ void BatleScene::skillRestoreAll(SkillInfoNew skillInfo)
 	}
 
 	_mainCharacterMiniHpBar->setPercent(_allAlliedUnitCurrentHp[0] * 100.0f / _mainCharacterData.hp);
+	//RUN EFFECT HEAL ALL
 }
 
 void BatleScene::skillRestoreOne(SkillInfoNew skillInfo)
@@ -1354,7 +1369,7 @@ void BatleScene::skillRestoreOne(SkillInfoNew skillInfo)
 	}
 	_mainCharacterMiniHpBar->setPercent(_allAlliedUnitCurrentHp[0] * 100.0f / _mainCharacterData.hp);
 	_avataHpBar->setPercent(_mainCharacterMiniHpBar->getPercent());
-	//Run Effect
+	//Run Effect heal one
 }
 
 void BatleScene::skillHelpAll(SkillInfoNew skillInfo)
@@ -1364,17 +1379,58 @@ void BatleScene::skillHelpAll(SkillInfoNew skillInfo)
 
 void BatleScene::skillHelpOne(SkillInfoNew skillInfo)
 {
+	
 
 }
 
 void BatleScene::skillAttackAll(SkillInfoNew skillInfo)
 {
-
+	int value = 0;
+	switch (skillInfo.dame_type)
+	{
+	case DAME_TYPE_PERCENT:
+		value = _mainCharacterData.attack_dame*100.0f / skillInfo.dame_value;
+		break;
+	case DAME_TYPE_PURE:
+		value = skillInfo.dame_value;
+	default:
+		break;
+	}
+	for (int i = 0; i < _allEnemyUnitData.size(); i++)
+	{
+		_allEnemyCurentHp[i] -= (value - _allEnemyUnitData[i].defence);
+		if (_allEnemyCurentHp[i] <= 0) {
+			enemyDieAction(i);
+			return;
+		}
+		_allEnemyHpBar[i]->setPercent(_allEnemyCurentHp[i] * 100.0f / _allEnemyUnitData[i].hp);
+	}
+	//RUN EFFECT ATTACK ALL
 }
 
 void BatleScene::skillAttackOne(SkillInfoNew skillInfo)
 {
-
+	int value = 0;
+	switch (skillInfo.dame_type)
+	{
+	case DAME_TYPE_PERCENT:
+		value = _mainCharacterData.attack_dame*100.0f / skillInfo.dame_value;
+		break;
+	case DAME_TYPE_PURE:
+		value = skillInfo.dame_value;
+	default:
+		break;
+	}
+	int dame = (value - _allEnemyUnitData[_indexOfBeAttackEnemy].defence);
+	_allEnemyCurentHp[_indexOfBeAttackEnemy] -= dame;
+	if (_allEnemyCurentHp[_indexOfBeAttackEnemy] <= 0)
+	{
+		enemyDieAction(_indexOfBeAttackEnemy);
+		return;
+	}
+	_allEnemyHpBar[_indexOfBeAttackEnemy]->setPercent(_allEnemyCurentHp[_indexOfBeAttackEnemy] * 100.0f / _allEnemyUnitData[_indexOfBeAttackEnemy].hp);
+	showAttackDame(dame, _alltargetUnit[_indexOfBeAttackEnemy]->getPosition() + Vec2(0, 100), 1);
+	//RUN EFFECT ATTACK ONE UNIT 
 }
 
 
