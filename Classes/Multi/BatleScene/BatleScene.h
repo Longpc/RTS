@@ -13,6 +13,14 @@
 
 #define ENEMY_NUM 5
 #define RESTORE_MULTI 5
+
+#define TAG_SKILL_1 1
+#define TAG_SKILL_2 2
+#define TAG_SKILL_3 3
+#define TAG_SKILL_4 4
+
+
+
 class BatleScene : public LayerBase
 {
 
@@ -44,10 +52,10 @@ private:
 	virtual void nextButtonCallback(Ref *pSender, Widget::TouchEventType type);
 	virtual void menuButtonCallback(Ref *pSender, Widget::TouchEventType type);
 	virtual void skill1ButtonCallback(Ref *pSender, Widget::TouchEventType type);
-	virtual void skill2ButtonCallback(Ref *pSender, Widget::TouchEventType type);
-	virtual void skill3ButtonCallback(Ref *pSender, Widget::TouchEventType type);
-	virtual void skill4ButtonCallback(Ref *pSender, Widget::TouchEventType type);
-	
+// 	virtual void skill2ButtonCallback(Ref *pSender, Widget::TouchEventType type);
+// 	virtual void skill3ButtonCallback(Ref *pSender, Widget::TouchEventType type);
+// 	virtual void skill4ButtonCallback(Ref *pSender, Widget::TouchEventType type);
+// 	
 	virtual void debugPhysicButtonCallback(Ref *pSEnder, Widget::TouchEventType type);
 	virtual void changeImageButtonCallback(Ref *pSender, Widget::TouchEventType type);
 
@@ -82,6 +90,11 @@ private:
 	
 	virtual void showAttackDame(int dameValue, Vec2 pos, int colorType);
 
+	virtual void enemyDieAction(int id);
+
+	virtual void runRespawnAction();
+	virtual void removeReSpawnFlg();
+
 	///OPTION DIALOG CALLBACK///////////////////////////////////////////////////////////////////////
 	virtual void optionDecideCallback(Ref *pSEnder, Widget::TouchEventType type);
 	virtual void optionCancelCallback(Ref *pSEnder, Widget::TouchEventType type);
@@ -97,21 +110,16 @@ private:
 	vector<Slider*> _allEnemyHpBar;
 	vector<UnitInforNew> _allEnemyUnitData;
 
+	vector<bool> _allEnemyAttachDelay;
+
+	vector<int> _allEnemyCurentHp;
+	vector<int> _allEnemyCurentMp;
+
+
 	int _currentAttackActionTag;
 	int _currentMoveActionTag;
 
 	int _indexOfBeAttackEnemy;
-
-	bool _moveDisableFlg = false;
-	bool _onDelayAttackFlg = false;
-	vector<bool> _allEnemyAttachDelay;
-
-	vector<int> _enemyCurentHp;
-	vector<int> _enemyCurentMp;
-
-	int _characterCurentHp;
-	int _characterCurentMp;
-
 
 	///MINIMAP LOGIC///////////////////////////////////////////////////////////////////////
 	virtual void updateMiniMap();
@@ -135,13 +143,10 @@ private:
 	Button *_skill3Button;
 	Button *_skill4Button;
 
-	Slider *_hpSlider;
-	Slider *_manaSlider;
-
 	Label *_timeViewLabel;
 	Sprite *_miniMap;
 	Sprite *_selectRect;
-	Sprite *_mini_Icon;
+	Sprite *_mainCharacterAvata;
 
 	Node *_battleBackround;
 
@@ -158,18 +163,26 @@ private:
 	PhysicsWorld *_myWorld;
 	virtual void savePhysicWorld(PhysicsWorld *world);
 	///CHARACTER///////////////////////////////////////////////////////////////////////
-	virtual void saveSelectedUnitId(int id);
 
 	int _selectedUnitId;
-	UnitInforNew _unitData;
-	vector<SkillInfoNew> _allUnitSkillData;
-
+	UnitInforNew _mainCharacterData;
+	vector<SkillInfoNew> _mainCharacterSkillData;
 	Sprite *testObject;
-	Slider *_miniHpSlider;
+
+	Slider *_mainCharacterMiniHpBar;
 	bool _onRespwanFlg = false;
 
-	virtual void removeReSpawnFlg();
+	bool _moveDisableFlg = false;
+	bool _onDelayAttackFlg = false;
 
+	Slider *_avataHpBar;
+	Slider *_mainCharacterMpBar;
+	int _characterCurentMp;
+
+	///ALLIED UNIT
+	vector<UnitInforNew> _allAlliedUnitData;
+	vector<int> _allAlliedUnitCurrentHp;
+	vector<Slider*> _allAlliedUnitHpBar;
 
 
 	virtual void changeImagePathforTest();
@@ -177,6 +190,29 @@ private:
 	virtual void updateSlider();
 
 	int _oldSecond = 0;
+
+	bool _skill1CooldownFlg = false;
+	bool _skill2CooldownFlg = false;
+	bool _skill3CooldownFlg = false;
+	bool _skill4CooldownFlg = false;
+
+	virtual void removeSkillDisableFlg(int skillnum);
+
+	virtual void playSkill(int skillId);
+	virtual void skillRestoreAction(SkillInfoNew skillInfo);
+	virtual void skillRestoreAll(SkillInfoNew skillInfo);
+	virtual void skillRestoreOne(SkillInfoNew skillInfo);
+
+	virtual void skillHelpAction(SkillInfoNew skillInfo);
+	virtual void skillHelpAll(SkillInfoNew skillInfo);
+	virtual void skillHelpOne(SkillInfoNew skillInfo);
+
+	virtual void skillAttackAction(SkillInfoNew skillInfo);
+	virtual void skillAttackAll(SkillInfoNew skillInfo);
+	virtual void skillAttackOne(SkillInfoNew skillInfo);
+
+
+
 
 };
 

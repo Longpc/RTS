@@ -8,8 +8,12 @@ UnitInforNew UnitData::getUnitDataById(int unitId)
 	string sql = "select * from unit where unit.id =";
 	sql.append(DataUtils::numberToString(unitId));
 	vector<vector<string>> a = SqlUtil::runQuery(data, sql.c_str());
-	
-	return convertInfo(a[0]);
+	if (a.size() > 0)
+	{
+		return convertInfo(a[0]);
+	}
+	UnitInforNew b;
+	return b;
 }
 
 vector<UnitInforNew> UnitData::getAllUnitData()

@@ -57,13 +57,20 @@ bool BatleScene::init(int unitId)
 	_usernameBg->setVisible(false);
 	_selectedUnitId = unitId;
 
-	_unitData = getUnitDataFromDataBase(_selectedUnitId);
-	_allUnitSkillData = getUnitSkillFromDataBase(_selectedUnitId);
+
+	///INIT DATA FOR ALL UNIT IN BATTLE
+	_mainCharacterData = getUnitDataFromDataBase(_selectedUnitId);
+	_mainCharacterSkillData = getUnitSkillFromDataBase(_selectedUnitId);
+
+	_allAlliedUnitData.push_back(_mainCharacterData);
+	_allAlliedUnitCurrentHp.push_back(_mainCharacterData.hp);
 
 	//Bellow vector is store  list of enemy unit id.
 	vector<int> a;
 	_allEnemyUnitData = getEnemyUnitsData(a);
 
+
+	//////////
 	_moveImagePath = "image/unit_new/move/red/";
 	_attackImagePath = "image/unit_new/attack/red/";
 
@@ -91,39 +98,301 @@ bool BatleScene::init(int unitId)
 	createContent();
 	return true;
 }
-
-void BatleScene::nextButtonCallback(Ref *pSender, Widget::TouchEventType type)
+void BatleScene::createContent()
 {
-	switch (type)
-	{
-	case cocos2d::ui::Widget::TouchEventType::BEGAN:
-		break;
-	case cocos2d::ui::Widget::TouchEventType::MOVED:
-		break;
-	case cocos2d::ui::Widget::TouchEventType::ENDED:
-	{
-		Director::getInstance()->replaceScene(TransitionMoveInR::create(SCREEN_TRANSI_DELAY, BatleResultScene::createScene()));
-		break;
-	}
-	case cocos2d::ui::Widget::TouchEventType::CANCELED:
-		break;
+	_battleBackround = Node::create();
+	_battleBackround->setPosition(Vec2::ZERO);
+	_battleBackround->setAnchorPoint(Vec2::ANCHOR_TOP_RIGHT);
+	addChild(_battleBackround);
 
-	default:
-		break;
+	auto part1 = createBackground(_visibleSize);
+	part1->setAnchorPoint(Vec2::ANCHOR_TOP_RIGHT);
+	_battleBackround->addChild(part1);
+	auto part2 = createBackground(_visibleSize);
+	part2->setAnchorPoint(Vec2::ANCHOR_TOP_LEFT);
+	_battleBackround->addChild(part2);
+	auto part3 = createBackground(_visibleSize);
+	part3->setAnchorPoint(Vec2::ANCHOR_BOTTOM_RIGHT);
+	_battleBackround->addChild(part3);
+	auto part4 = createBackground(_visibleSize);
+	part4->setAnchorPoint(Vec2::ANCHOR_BOTTOM_LEFT);
+	_battleBackround->addChild(part4);
+
+	createPhysicBolder();
+
+	testObject = Sprite::create("image/unit_new/move/red/unit_00_08_1.png");
+	_battleBackround->addChild(testObject, MID);
+	testObject->setPosition(Vec2(100, 100));
+	testObject->setPhysicsBody(PhysicsBody::createCircle(50, PhysicsMaterial(1, 0, 1)));
+	testObject->getPhysicsBody()->setRotationEnable(false);
+	testObject->setScale(IMAGE_SCALE);
+
+	_mainCharacterMiniHpBar = Slider::create();
+	_mainCharacterMiniHpBar->loadBarTexture("image/screen/battle/mini_hp_base.png");
+	_mainCharacterMiniHpBar->setPercent(100);
+	//_miniHpSlider->loadSlidBallTextureNormal("image/screen/battle/test.png");
+	_mainCharacterMiniHpBar->loadProgressBarTexture("image/screen/battle/mini_hp_gauge.png");
+	//_hpSlider->setContentSize(Size(372, 12));
+	_mainCharacterMiniHpBar->setPosition(Vec2(testObject->getContentSize().width / 2, testObject->getContentSize().height - 10));
+	testObject->addChild(_mainCharacterMiniHpBar);
+
+	_allAlliedUnitHpBar.push_back(_mainCharacterMiniHpBar);
+
+
+	auto folow = Follow::create(testObject);
+	folow->setTag(121);
+	_battleBackround->runAction(folow);
+	auto bolder = Node::create();
+	//bolder->setPosition(Vec2::ZERO);
+	//_battleBackround->addChild(bolder);
+	//bolder->runAction(folow->clone());
+	//bolder->setPhysicsBody(PhysicsBody::createEdgeBox(Size(2 * part1->getContentSize()), PhysicsMaterial(1, 1, 1)));
+	_battleBackround->setPhysicsBody(PhysicsBody::createEdgeBox(Size(1, 1), PhysicsMaterial(1, 1, 1)));
+
+
+
+	float baseMargin = 15;
+	Sprite *topMenu = Sprite::create("image/screen/battle/status_parts.png");
+	topMenu->setAnchorPoint(Vec2::ANCHOR_TOP_LEFT);
+	topMenu->setPosition(Vec2(0, _visibleSize.height));
+	addChild(topMenu);
+
+	_avataHpBar = Slider::create();
+	_avataHpBar->loadBarTexture("image/screen/battle/hp_base.png");
+	_avataHpBar->setPercent(100);
+	//_hpSlider->loadSlidBallTextureNormal("image/screen/battle/test.png");
+	_avataHpBar->loadProgressBarTexture("image/screen/battle/hp.png");
+	//_hpSlider->setContentSize(Size(372, 12));
+	_avataHpBar->setPosition(Vec2(topMenu->getContentSize().width / 2 + 25, _visibleSize.height - 22));
+	addChild(_avataHpBar);
+
+	Vec2 slotPos = Vec2(45, topMenu->getContentSize().height / 2);
+
+	_characterImageViewNode = ClippingNode::create();
+	_characterImageViewNode->setAlphaThreshold(0);
+	_characterImageViewNode->setPosition(Vec2::ZERO);
+
+	string path = _moveImagePath;
+	path.append("unit_00_02_1.png");
+
+	auto mask = Sprite::create("image/screen/battle/icon_slot.png");
+	mask->setPosition(slotPos);
+	_characterImageViewNode->setStencil(mask);
+
+	auto icon = Sprite::create(_mainCharacterData.image);
+	icon->setPosition(slotPos + Vec2(0,0));
+	icon->setScale(1.4);
+	icon->setTag(ICON);
+	_characterImageViewNode->addChild(icon);
+	topMenu->addChild(_characterImageViewNode);
+
+
+
+	_menuButton = Button::create();
+	_menuButton->loadTextureNormal("image/screen/battle/menu_btn.png");
+	_menuButton->addTouchEventListener(CC_CALLBACK_2(BatleScene::menuButtonCallback, this));
+	_menuButton->setPosition(Vec2(_menuButton->getContentSize().width / 2 + 10, _visibleSize.height - topMenu->getContentSize().height));
+	_menuButton->setAnchorPoint(Vec2::ANCHOR_MIDDLE_TOP);
+	addChild(_menuButton);
+
+	Sprite *timeViewContainer = Sprite::create("image/screen/battle/time_parts.png");
+	timeViewContainer->setAnchorPoint(Vec2::ANCHOR_TOP_RIGHT);
+	timeViewContainer->setPosition(Vec2(_visibleSize.width - baseMargin, _visibleSize.height - baseMargin));
+	addChild(timeViewContainer);
+
+	_miniMap = Sprite::create("image/screen/battle/map.png");
+	_miniMap->setAnchorPoint(Vec2::ANCHOR_TOP_RIGHT);
+	_miniMap->setPosition(timeViewContainer->getPosition() - Vec2(0, 50));
+	addChild(_miniMap);
+
+	_selectRect = Sprite::create("image/screen/battle/map_frame.png");
+	_selectRect->setPosition(Vec2(_miniMap->getContentSize().width / 2, _miniMap->getContentSize().height / 2 + _selectRect->getContentSize().height / 2));
+	_miniMap->addChild(_selectRect, 2);
+
+	_mainCharacterAvata = Sprite::create("mini_icon.png");
+	_mainCharacterAvata->setPosition(Vec2(_selectRect->getContentSize().width / 2, _selectRect->getContentSize().height / 2));
+	_selectRect->addChild(_mainCharacterAvata);
+
+
+
+
+	_timeViewLabel = Label::create("00:00:00", "", 25);
+	_timeViewLabel->setHorizontalAlignment(TextHAlignment::CENTER);
+	_timeViewLabel->setPosition(Vec2(timeViewContainer->getContentSize().width / 2, timeViewContainer->getContentSize().height / 2));
+	timeViewContainer->addChild(_timeViewLabel);
+
+	string skill1ImagePath = _mainCharacterSkillData[0].icon;
+	string skill2ImagePath = _mainCharacterSkillData[1].icon;
+
+	string skill3ImagePath = "image/screen/battle/skill_icon_3.png";
+	string skill4ImagePath = "image/screen/battle/skill_icon_4.png";
+
+
+
+	_skill1Button = Button::create();
+	_skill1Button->loadTextureNormal(skill1ImagePath.c_str());
+	_skill1Button->addTouchEventListener(CC_CALLBACK_2(BatleScene::skill1ButtonCallback, this));
+	Size baseSize = _skill1Button->getContentSize();
+	_skill1Button->setTag(TAG_SKILL_1);
+	_skill1Button->setPosition(Vec2(_visibleSize.width / 2 - 1.5 * baseSize.width - 20, baseSize.height / 2 + baseMargin));
+	addChild(_skill1Button);
+
+	_skill2Button = Button::create();
+	_skill2Button->loadTextureNormal(skill2ImagePath.c_str());
+	_skill2Button->addTouchEventListener(CC_CALLBACK_2(BatleScene::skill1ButtonCallback, this));
+	_skill2Button->setTag(TAG_SKILL_2);
+	_skill2Button->setPosition(Vec2(_visibleSize.width / 2 - 0.5 *baseSize.width - 10, baseSize.height / 2 + baseMargin));
+	addChild(_skill2Button);
+
+	_skill3Button = Button::create();
+	_skill3Button->loadTextureNormal(skill3ImagePath.c_str());
+	//_skill3Button->addTouchEventListener(CC_CALLBACK_2(BatleScene::skill1ButtonCallback, this));
+	_skill3Button->setTag(TAG_SKILL_3);
+	_skill3Button->setPosition(Vec2(_visibleSize.width / 2 + 0.5*baseSize.width + 10, baseSize.height / 2 + baseMargin));
+	addChild(_skill3Button);
+
+	_skill4Button = Button::create();
+	_skill4Button->loadTextureNormal(skill4ImagePath.c_str());
+	//_skill4Button->addTouchEventListener(CC_CALLBACK_2(BatleScene::skill1ButtonCallback, this));
+	_skill4Button->setTag(TAG_SKILL_4);
+	_skill4Button->setPosition(Vec2(_visibleSize.width / 2 + 1.5 * baseSize.width + 20, baseSize.height / 2 + baseMargin));
+	addChild(_skill4Button);
+
+	_mainCharacterMpBar = Slider::create();
+	_mainCharacterMpBar->loadBarTexture("image/screen/battle/mp_base.png");
+	//_manaSlider->loadSlidBallTextureNormal("image/screen/battle/test.png");
+	_mainCharacterMpBar->loadProgressBarTexture("image/screen/battle/mp.png");
+	_mainCharacterMpBar->setPercent(100);
+	_mainCharacterMpBar->setPosition(Vec2(_visibleSize.width / 2, baseSize.height + baseMargin * 2));
+	addChild(_mainCharacterMpBar);
+
+	auto action = RotateBy::create(1, 180);
+
+
+	_touchMoveBeginSprite = Sprite::create("image/screen/battle/ui_move.png");
+	_touchMoveBeginSprite->setVisible(false);
+	addChild(_touchMoveBeginSprite);
+	_touchMoveBeginSprite->runAction(RepeatForever::create(action));
+
+	_touchMoveEndSprite = Sprite::create("image/screen/battle/ui_move_end.png");
+	_touchMoveEndSprite->setVisible(false);
+	addChild(_touchMoveEndSprite);
+	_touchMoveEndSprite->runAction(RepeatForever::create(action->clone()));
+
+	_selectTargetSprite = Sprite::create("image/screen/battle/select.png");
+	_selectTargetSprite->setVisible(false);
+	_battleBackround->addChild(_selectTargetSprite);
+
+	_autoAttackArea = Sprite::create("image/screen/battle/select.png");
+	testObject->addChild(_autoAttackArea);
+	_autoAttackArea->setPosition(Vec2(testObject->getContentSize().width / 2, testObject->getContentSize().height / 2 - 30));
+	_autoAttackArea->setVisible(false);
+
+	auto node = Node::create();
+	node->setPosition(Vec2::ZERO);
+	for (int i = 0; i < ENEMY_NUM; i++)
+	{
+		auto sp = Sprite::create("image/unit_new/move/red/unit_00_02_2.png");
+		sp->setPosition(Vec2(2 * _visibleSize.width*random(0.2f, 0.8f), 2 * _visibleSize.height*random(0.2f, 0.8f)));
+		sp->setScale(IMAGE_SCALE);
+		sp->setTag(i);
+
+		auto hpB = Slider::create();
+		hpB->loadBarTexture("image/screen/battle/mini_hp_base.png");
+		hpB->setPercent(100);
+		//hpB->loadSlidBallTextureNormal("image/screen/battle/test.png");
+		hpB->loadProgressBarTexture("image/screen/battle/mini_hp_gauge.png");
+		//_hpSlider->setContentSize(Size(372, 12));
+		hpB->setPosition(Vec2(sp->getContentSize().width / 2, sp->getContentSize().height - 10));
+		_allEnemyHpBar.push_back(hpB);
+		sp->addChild(_allEnemyHpBar.back(), 100);
+		_alltargetUnit.push_back(sp);
+		_battleBackround->addChild(_alltargetUnit.back(), MID);
+
+		auto enemyIcon = Sprite::create("image/screen/battle/enemyicon.png");
+		enemyIcon->setOpacity(255);
+		float positionXScaleRate = _miniMap->getContentSize().width / (_visibleSize.width * 2);
+		float positionYScaleRate = _miniMap->getContentSize().height / (_visibleSize.height * 2);
+		enemyIcon->setPosition(Vec2(sp->getPositionX()*positionXScaleRate, sp->getPositionY()*positionYScaleRate));
+		_allEnemyIconInMinimap.push_back(enemyIcon);
+		node->addChild(_allEnemyIconInMinimap.back(), 1);
+		_allEnemyAttachDelay.push_back(false);
 	}
+	_miniMap->addChild(node, 1);
+	/*_testAttackTarget = Sprite::create("image/unit_new/move/red/unit_00_02_2.png");
+	_testAttackTarget->setPosition(_visibleSize);
+	_testAttackTarget->setScale(IMAGE_SCALE);
+	_battleBackround->addChild(_testAttackTarget);*/
+
 }
+
+
+Sprite* BatleScene::createBackground(Vec2 pos)
+{
+	auto sp = Sprite::create("image/screen/battle/bg.png");
+	sp->setPosition(pos);
+	return sp;
+}
+void BatleScene::createPhysicBolder()
+{
+	auto bottomB = createHBolder();
+	bottomB->setPosition(Vec2(_visibleSize.width, -50));
+	_battleBackround->addChild(bottomB);
+
+	auto topB = createHBolder();
+	topB->setPosition(Vec2(_visibleSize.width, _visibleSize.height * 2 + 50));
+	_battleBackround->addChild(topB);
+
+	auto leftB = createVBolder();
+	leftB->setPosition(Vec2(-50, _visibleSize.height));
+	_battleBackround->addChild(leftB);
+
+	auto rightB = createVBolder();
+	rightB->setPosition(Vec2(_visibleSize.width * 2 + 50, _visibleSize.height));
+	_battleBackround->addChild(rightB);
+
+	createRandomRock();
+}
+
+Node* BatleScene::createHBolder()
+{
+	auto wallBd = PhysicsBody::createBox(Size(_visibleSize.width * 2, 100), PhysicsMaterial(1, 0, 0));
+	wallBd->setGravityEnable(false);
+	wallBd->setDynamic(false);
+	wallBd->setContactTestBitmask(0x1);
+
+	auto node = Node::create();
+	node->setPhysicsBody(wallBd);
+
+	return node;
+}
+
+Node* BatleScene::createVBolder()
+{
+	auto wallBd = PhysicsBody::createBox(Size(100, _visibleSize.height * 2), PhysicsMaterial(1, 0, 0));
+	wallBd->setGravityEnable(false);
+	wallBd->setDynamic(false);
+	wallBd->setContactTestBitmask(0x1);
+
+	auto node = Node::create();
+	node->setPhysicsBody(wallBd);
+
+	return node;
+
+}
+
+
 void BatleScene::onEnter()
 {
 	LayerBase::onEnter();
 	srand(time(NULL));
 	time(&timer);
 	timeinfo = localtime(&timer);
-	_characterCurentHp = _unitData.hp;
-	_characterCurentMp = _unitData.mp;
+	_characterCurentMp = _mainCharacterData.mp;
 	for (int i = 0; i < ENEMY_NUM; i++)
 	{
-		_enemyCurentHp.push_back(_allEnemyUnitData[i].hp);
-		_enemyCurentMp.push_back(_allEnemyUnitData[i].mp);
+		_allEnemyCurentHp.push_back(_allEnemyUnitData[i].hp);
+		_allEnemyCurentMp.push_back(_allEnemyUnitData[i].mp);
 	}
 
 	scheduleUpdate();
@@ -131,7 +400,7 @@ void BatleScene::onEnter()
 
 void BatleScene::update(float delta)
 {
-	log("Current Hp: %d", _characterCurentHp);
+	//log("Current Hp: %d", _characterCurentHp);
 	updateMiniMap();
 	updateTime();
 	checkForAutoAttack();
@@ -219,46 +488,52 @@ void BatleScene::checkForAutoAttack()
 void BatleScene::characerAttackCallback()
 {
 	//log("charater");
-	if (_enemyCurentHp[_indexOfBeAttackEnemy] > 0) {
-		_enemyCurentHp[_indexOfBeAttackEnemy] -= _unitData.attack_dame;
-
-		_allEnemyHpBar[_indexOfBeAttackEnemy]->setPercent(ceil((_enemyCurentHp[_indexOfBeAttackEnemy] * 100.0f / _allEnemyUnitData[_indexOfBeAttackEnemy].hp)));
-		showAttackDame(_unitData.attack_dame, _alltargetUnit[_indexOfBeAttackEnemy]->getPosition() + Vec2(0, 100),1);
+	if (_allEnemyCurentHp[_indexOfBeAttackEnemy] > 0) {
+		int dame = (_mainCharacterData.attack_dame - _allEnemyUnitData[_indexOfBeAttackEnemy].defence);
+		_allEnemyCurentHp[_indexOfBeAttackEnemy] -= dame;
+		if (_allEnemyCurentHp[_indexOfBeAttackEnemy] <= 0)
+		{
+			enemyDieAction(_indexOfBeAttackEnemy);
+			return;
+		}
+		_allEnemyHpBar[_indexOfBeAttackEnemy]->setPercent(ceil((_allEnemyCurentHp[_indexOfBeAttackEnemy] * 100.0f / _allEnemyUnitData[_indexOfBeAttackEnemy].hp)));
+		showAttackDame(dame, _alltargetUnit[_indexOfBeAttackEnemy]->getPosition() + Vec2(0, 100),1);
 
 	}
 	else {
-		_alltargetUnit[_indexOfBeAttackEnemy]->setVisible(false);
-		_allEnemyIconInMinimap[_indexOfBeAttackEnemy]->setVisible(false);
+		enemyDieAction(_indexOfBeAttackEnemy);
 	}
 }
 
+void BatleScene::enemyDieAction(int id)
+{
+	_alltargetUnit[id]->setVisible(false);
+	_allEnemyIconInMinimap[id]->setVisible(false);
+}
 void BatleScene::enemyAttackCallback(Ref *pSEnder)
 {
 	Sprite *_sprite = (Sprite*)pSEnder;
 	_sprite->stopActionByTag(1);
 	int id = _sprite->getTag();
 	//log("enemy");
-	if (_characterCurentHp > 0)
+	if (_allAlliedUnitCurrentHp[0] > 0)
 	{
 		if (!_onRespwanFlg)
 		{
-			_characterCurentHp -= _allEnemyUnitData[id].attack_dame;
+			int dame = _allEnemyUnitData[id].attack_dame - _mainCharacterData.defence;
+			_allAlliedUnitCurrentHp[0] -= dame;
+			if (_allAlliedUnitCurrentHp[0] <= 0) {
+				runRespawnAction();
+				return;
+			}
 			//log("Percent: %d", ceil(float(float(_characterCurentHp) / float(_unitData.hp)) * 100));
-			_miniHpSlider->setPercent(ceil((_characterCurentHp*100.0f / _unitData.hp)));
-			_hpSlider->setPercent(_miniHpSlider->getPercent());
-			showAttackDame(_allEnemyUnitData[id].attack_dame, testObject->getPosition() + Vec2(0, 100),2);
+			_mainCharacterMiniHpBar->setPercent(ceil((_allAlliedUnitCurrentHp[0] * 100.0f / _mainCharacterData.hp)));
+			_avataHpBar->setPercent(_mainCharacterMiniHpBar->getPercent());
+			showAttackDame(dame, testObject->getPosition() + Vec2(0, 100),2);
 		}
 	}
 	else {
-		testObject->setPosition(Vec2(100, 100));
-		_miniHpSlider->setPercent(100);
-		_hpSlider->setPercent(100);
-		_manaSlider->setPercent(100);
-		_characterCurentHp = _unitData.hp;
-		_characterCurentMp = _unitData.mp;
-		auto action = Spawn::create(Blink::create(0.6, 6),Sequence::create(DelayTime::create(RESPAWN_DELAY),CallFuncN::create(CC_CALLBACK_0(BatleScene::removeReSpawnFlg,this)),nullptr),nullptr);
-		testObject->runAction(action);
-		_onRespwanFlg = true;
+		runRespawnAction();
 	}
 	
 
@@ -289,6 +564,18 @@ void BatleScene::showAttackDame(int dameValue, Vec2 pos,int type)
 	s->runAction(action);
 }
 
+void BatleScene::runRespawnAction()
+{
+	testObject->setPosition(Vec2(100, 100));
+	_mainCharacterMiniHpBar->setPercent(100);
+	_avataHpBar->setPercent(100);
+	_mainCharacterMpBar->setPercent(100);
+	_allAlliedUnitCurrentHp[0] = _mainCharacterData.hp;
+	_characterCurentMp = _mainCharacterData.mp;
+	auto action = Spawn::create(Blink::create(0.6, 6), Sequence::create(DelayTime::create(RESPAWN_DELAY), CallFuncN::create(CC_CALLBACK_0(BatleScene::removeReSpawnFlg, this)), nullptr), nullptr);
+	testObject->runAction(action);
+	_onRespwanFlg = true;
+}
 
 void BatleScene::removeceAttackDelayFlg() {
 	testObject->stopActionByTag(_currentAttackActionTag);
@@ -340,362 +627,7 @@ string BatleScene::makeTimeString(int second) {
 
 	return timeString.str().c_str();
 }
-void BatleScene::createContent()
-{
-	_battleBackround = Node::create();
-	_battleBackround->setPosition(Vec2::ZERO);
-	_battleBackround->setAnchorPoint(Vec2::ANCHOR_TOP_RIGHT);
-	addChild(_battleBackround);
 
-	auto part1 = createBackground(_visibleSize);
-	part1->setAnchorPoint(Vec2::ANCHOR_TOP_RIGHT);
-	_battleBackround->addChild(part1);
-	auto part2 = createBackground(_visibleSize);
-	part2->setAnchorPoint(Vec2::ANCHOR_TOP_LEFT);
-	_battleBackround->addChild(part2);
-	auto part3 = createBackground(_visibleSize);
-	part3->setAnchorPoint(Vec2::ANCHOR_BOTTOM_RIGHT);
-	_battleBackround->addChild(part3);
-	auto part4 = createBackground(_visibleSize);
-	part4->setAnchorPoint(Vec2::ANCHOR_BOTTOM_LEFT);
-	_battleBackround->addChild(part4);
-
-	createPhysicBolder();
-
-	testObject = Sprite::create("image/unit_new/move/red/unit_00_08_1.png");
-	_battleBackround->addChild(testObject,MID);
-	testObject->setPosition(Vec2(100, 100));
-	testObject->setPhysicsBody(PhysicsBody::createCircle(50, PhysicsMaterial(1, 0, 1)));
-	testObject->getPhysicsBody()->setRotationEnable(false);
-	testObject->setScale(IMAGE_SCALE);
-
-	_miniHpSlider = Slider::create();
-	_miniHpSlider->loadBarTexture("image/screen/battle/mini_hp_base.png");
-	_miniHpSlider->setPercent(100);
-	_miniHpSlider->loadSlidBallTextureNormal("image/screen/battle/test.png");
-	_miniHpSlider->loadProgressBarTexture("image/screen/battle/mini_hp_gauge.png");
-	//_hpSlider->setContentSize(Size(372, 12));
-	_miniHpSlider->setPosition(Vec2(testObject->getContentSize().width / 2, testObject->getContentSize().height-10));
-	testObject->addChild(_miniHpSlider);
-
-	auto folow = Follow::create(testObject);
-	folow->setTag(121);
-	_battleBackround->runAction(folow);
-	auto bolder = Node::create();
-	//bolder->setPosition(Vec2::ZERO);
-	//_battleBackround->addChild(bolder);
-	//bolder->runAction(folow->clone());
-	//bolder->setPhysicsBody(PhysicsBody::createEdgeBox(Size(2 * part1->getContentSize()), PhysicsMaterial(1, 1, 1)));
-	_battleBackround->setPhysicsBody(PhysicsBody::createEdgeBox(Size(1, 1), PhysicsMaterial(1, 1, 1)));
-
-
-
-	float baseMargin = 15;
-	Sprite *topMenu = Sprite::create("image/screen/battle/status_parts.png");
-	topMenu->setAnchorPoint(Vec2::ANCHOR_TOP_LEFT);
-	topMenu->setPosition(Vec2(0, _visibleSize.height));
-	addChild(topMenu);
-
-	_hpSlider = Slider::create();
-	_hpSlider->loadBarTexture("image/screen/battle/hp_base.png");
-	_hpSlider->setPercent(100);
-	_hpSlider->loadSlidBallTextureNormal("image/screen/battle/test.png");
-	_hpSlider->loadProgressBarTexture("image/screen/battle/hp.png");
-	//_hpSlider->setContentSize(Size(372, 12));
-	_hpSlider->setPosition(Vec2(topMenu->getContentSize().width / 2 + 25, _visibleSize.height - 22));
-	addChild(_hpSlider);
-
-	Vec2 slotPos = Vec2(45, topMenu->getContentSize().height/2);
-
-	_characterImageViewNode = ClippingNode::create();
-	_characterImageViewNode->setAlphaThreshold(0);
-	_characterImageViewNode->setPosition(Vec2::ZERO);
-	
-	string path = _moveImagePath;
-	path.append("unit_00_02_1.png");
-
-	auto mask = Sprite::create("image/screen/battle/icon_slot.png");
-	mask->setPosition(slotPos);
-	_characterImageViewNode->setStencil(mask);
-
-	auto icon = Sprite::create(path.c_str());
-	icon->setPosition(slotPos+Vec2(5,-10));
-	icon->setScale(IMAGE_SCALE);
-	icon->setTag(ICON);
-	_characterImageViewNode->addChild(icon);
-	topMenu->addChild(_characterImageViewNode);
-
-
-
-	_menuButton = Button::create();
-	_menuButton->loadTextureNormal("image/screen/battle/menu_btn.png");
-	_menuButton->addTouchEventListener(CC_CALLBACK_2(BatleScene::menuButtonCallback, this));
-	_menuButton->setPosition(Vec2(_menuButton->getContentSize().width / 2 + 10, _visibleSize.height - topMenu->getContentSize().height));
-	_menuButton->setAnchorPoint(Vec2::ANCHOR_MIDDLE_TOP);
-	addChild(_menuButton);
-
-	Sprite *timeViewContainer = Sprite::create("image/screen/battle/time_parts.png");
-	timeViewContainer->setAnchorPoint(Vec2::ANCHOR_TOP_RIGHT);
-	timeViewContainer->setPosition(Vec2(_visibleSize.width - baseMargin, _visibleSize.height - baseMargin));
-	addChild(timeViewContainer);
-
-	_miniMap = Sprite::create("image/screen/battle/map.png");
-	_miniMap->setAnchorPoint(Vec2::ANCHOR_TOP_RIGHT);
-	_miniMap->setPosition(timeViewContainer->getPosition() - Vec2(0, 50));
-	addChild(_miniMap);
-
-	_selectRect = Sprite::create("image/screen/battle/map_frame.png");
-	_selectRect->setPosition(Vec2(_miniMap->getContentSize().width / 2, _miniMap->getContentSize().height / 2 + _selectRect->getContentSize().height / 2));
-	_miniMap->addChild(_selectRect,2);
-
-	_mini_Icon = Sprite::create("mini_icon.png");
-	_mini_Icon->setPosition(Vec2(_selectRect->getContentSize().width / 2, _selectRect->getContentSize().height / 2));
-	_selectRect->addChild(_mini_Icon);
-
-
-
-
-	_timeViewLabel = Label::create("00:00:00", "", 25);
-	_timeViewLabel->setHorizontalAlignment(TextHAlignment::CENTER);
-	_timeViewLabel->setPosition(Vec2(timeViewContainer->getContentSize().width / 2, timeViewContainer->getContentSize().height / 2));
-	timeViewContainer->addChild(_timeViewLabel);
-
-	string skill1ImagePath = "image/screen/battle/skill_icon_1.png";
-	string skill2ImagePath = "image/screen/battle/skill_icon_2.png";
-	string skill3ImagePath = "image/screen/battle/skill_icon_3.png";
-	string skill4ImagePath = "image/screen/battle/skill_icon_4.png";
-
-	_skill1Button = Button::create();
-	_skill1Button->loadTextureNormal(skill1ImagePath.c_str());
-	_skill1Button->addTouchEventListener(CC_CALLBACK_2(BatleScene::skill1ButtonCallback, this));
-	Size baseSize = _skill1Button->getContentSize();
-	_skill1Button->setPosition(Vec2(_visibleSize.width / 2 - 1.5 * baseSize.width - 20, baseSize.height / 2 + baseMargin));
-	addChild(_skill1Button);
-
-	_skill2Button = Button::create();
-	_skill2Button->loadTextureNormal(skill2ImagePath.c_str());
-	_skill2Button->addTouchEventListener(CC_CALLBACK_2(BatleScene::skill2ButtonCallback, this));
-	_skill2Button->setPosition(Vec2(_visibleSize.width / 2 - 0.5 *baseSize.width - 10, baseSize.height / 2 + baseMargin));
-	addChild(_skill2Button);
-
-	_skill3Button = Button::create();
-	_skill3Button->loadTextureNormal(skill3ImagePath.c_str());
-	_skill3Button->addTouchEventListener(CC_CALLBACK_2(BatleScene::skill3ButtonCallback, this));
-	_skill3Button->setPosition(Vec2(_visibleSize.width / 2 + 0.5*baseSize.width+10, baseSize.height / 2 + baseMargin));
-	addChild(_skill3Button);
-
-	_skill4Button = Button::create();
-	_skill4Button->loadTextureNormal(skill4ImagePath.c_str());
-	_skill4Button->addTouchEventListener(CC_CALLBACK_2(BatleScene::skill4ButtonCallback, this));
-	_skill4Button->setPosition(Vec2(_visibleSize.width / 2 + 1.5 * baseSize.width + 20, baseSize.height / 2 + baseMargin));
-	addChild(_skill4Button);
-
-	_manaSlider = Slider::create();
-	_manaSlider->loadBarTexture("image/screen/battle/mp_base.png");
-	_manaSlider->loadSlidBallTextureNormal("image/screen/battle/test.png");
-	_manaSlider->loadProgressBarTexture("image/screen/battle/mp.png");
-	_manaSlider->setPercent(100);
-	_manaSlider->setPosition(Vec2(_visibleSize.width / 2, baseSize.height + baseMargin*2));
-	addChild(_manaSlider);
-
-	auto action = RotateBy::create(1, 180);
-
-
-	_touchMoveBeginSprite = Sprite::create("image/screen/battle/ui_move.png");
-	_touchMoveBeginSprite->setVisible(false);
-	addChild(_touchMoveBeginSprite);
-	_touchMoveBeginSprite->runAction(RepeatForever::create(action));
-	
-	_touchMoveEndSprite = Sprite::create("image/screen/battle/ui_move_end.png");
-	_touchMoveEndSprite->setVisible(false);
-	addChild(_touchMoveEndSprite);
-	_touchMoveEndSprite->runAction(RepeatForever::create(action->clone()));
-	
-	_selectTargetSprite = Sprite::create("image/screen/battle/select.png");
-	_selectTargetSprite->setVisible(false);
-	_battleBackround->addChild(_selectTargetSprite);
-
-	_autoAttackArea = Sprite::create("image/screen/battle/select.png");
-	testObject->addChild(_autoAttackArea);
-	_autoAttackArea->setPosition(Vec2(testObject->getContentSize().width / 2, testObject->getContentSize().height / 2 - 30));
-	_autoAttackArea->setVisible(false);
-
-	auto node = Node::create();
-	node->setPosition(Vec2::ZERO);
-	for (int i = 0; i < ENEMY_NUM; i++)
-	{
-		auto sp = Sprite::create("image/unit_new/move/red/unit_00_02_2.png");
-		sp->setPosition(Vec2(2*_visibleSize.width*random(0.2f, 0.8f), 2*_visibleSize.height*random(0.2f, 0.8f)));
-		sp->setScale(IMAGE_SCALE);
-		sp->setTag(i);
-
-		auto hpB = Slider::create();
-		hpB->loadBarTexture("image/screen/battle/mini_hp_base.png");
-		hpB->setPercent(100);
-		//hpB->loadSlidBallTextureNormal("image/screen/battle/test.png");
-		hpB->loadProgressBarTexture("image/screen/battle/mini_hp_gauge.png");
-		//_hpSlider->setContentSize(Size(372, 12));
-		hpB->setPosition(Vec2(sp->getContentSize().width / 2, sp->getContentSize().height - 10));
-		_allEnemyHpBar.push_back(hpB);
-		sp->addChild(_allEnemyHpBar.back(),100);
-		_alltargetUnit.push_back(sp);
-		_battleBackround->addChild(_alltargetUnit.back(),MID);
-
-		auto enemyIcon = Sprite::create("image/screen/battle/enemyicon.png");
-		enemyIcon->setOpacity(255);
-		float positionXScaleRate = _miniMap->getContentSize().width / (_visibleSize.width * 2);
-		float positionYScaleRate = _miniMap->getContentSize().height / (_visibleSize.height * 2);
-		enemyIcon->setPosition(Vec2(sp->getPositionX()*positionXScaleRate, sp->getPositionY()*positionYScaleRate));
-		_allEnemyIconInMinimap.push_back(enemyIcon);
-		node->addChild(_allEnemyIconInMinimap.back(), 1);
-		_allEnemyAttachDelay.push_back(false);
-	}
-	_miniMap->addChild(node,1);
-	/*_testAttackTarget = Sprite::create("image/unit_new/move/red/unit_00_02_2.png");
-	_testAttackTarget->setPosition(_visibleSize);
-	_testAttackTarget->setScale(IMAGE_SCALE);
-	_battleBackround->addChild(_testAttackTarget);*/
-	
-}
-
-
-Sprite* BatleScene::createBackground(Vec2 pos)
-{
-	auto sp = Sprite::create("image/screen/battle/bg.png");
-	sp->setPosition(pos);
-	return sp;
-}
-void BatleScene::createPhysicBolder()
-{
-	auto bottomB = createHBolder();
-	bottomB->setPosition(Vec2(_visibleSize.width, -50));
-	_battleBackround->addChild(bottomB);
-
-	auto topB = createHBolder();
-	topB->setPosition(Vec2(_visibleSize.width, _visibleSize.height * 2+50));
-	_battleBackround->addChild(topB);
-
-	auto leftB = createVBolder();
-	leftB->setPosition(Vec2(-50, _visibleSize.height));
-	_battleBackround->addChild(leftB);
-
-	auto rightB = createVBolder();
-	rightB->setPosition(Vec2(_visibleSize.width * 2 + 50, _visibleSize.height));
-	_battleBackround->addChild(rightB);
-
-	createRandomRock();
-}
-
-Node* BatleScene::createHBolder()
-{
-	auto wallBd = PhysicsBody::createBox(Size(_visibleSize.width*2, 100), PhysicsMaterial(1, 0, 0));
-	wallBd->setGravityEnable(false);
-	wallBd->setDynamic(false);
-	wallBd->setContactTestBitmask(0x1);
-
-	auto node = Node::create();
-	node->setPhysicsBody(wallBd);
-
-	return node;
-}
-
-Node* BatleScene::createVBolder()
-{
-	auto wallBd = PhysicsBody::createBox(Size(100, _visibleSize.height*2), PhysicsMaterial(1, 0, 0));
-	wallBd->setGravityEnable(false);
-	wallBd->setDynamic(false);
-	wallBd->setContactTestBitmask(0x1);
-
-	auto node = Node::create();
-	node->setPhysicsBody(wallBd);
-
-	return node;
-
-}
-void BatleScene::skill1ButtonCallback(Ref *pSender, Widget::TouchEventType type)
-{
-	switch (type)
-	{
-	case cocos2d::ui::Widget::TouchEventType::BEGAN:
-		break;
-	case cocos2d::ui::Widget::TouchEventType::MOVED:
-		break;
-	case cocos2d::ui::Widget::TouchEventType::ENDED:
-	{
-		testObject->stopActionByTag(_currentMoveActionTag);
-		selectAttackTarget();
-		
-		break; }
-	case cocos2d::ui::Widget::TouchEventType::CANCELED:
-		break;
-	default:
-		break;
-	}
-}
-
-void BatleScene::skill2ButtonCallback(Ref *pSender, Widget::TouchEventType type)
-{
-	switch (type)
-	{
-	case cocos2d::ui::Widget::TouchEventType::BEGAN:
-		break;
-	case cocos2d::ui::Widget::TouchEventType::MOVED:
-		break;
-	case cocos2d::ui::Widget::TouchEventType::ENDED:
-	{
-		testObject->stopActionByTag(_currentMoveActionTag);
-		selectAttackTarget();
-		break;
-	}
-	case cocos2d::ui::Widget::TouchEventType::CANCELED:
-		break;
-	default:
-		break;
-	}
-}
-
-void BatleScene::skill3ButtonCallback(Ref *pSender, Widget::TouchEventType type)
-{
-	switch (type)
-	{
-	case cocos2d::ui::Widget::TouchEventType::BEGAN:
-		break;
-	case cocos2d::ui::Widget::TouchEventType::MOVED:
-		break;
-	case cocos2d::ui::Widget::TouchEventType::ENDED:
-	{
-		testObject->stopActionByTag(_currentMoveActionTag);
-
-		selectAttackTarget();
-		break;
-	}
-	case cocos2d::ui::Widget::TouchEventType::CANCELED:
-		break;
-	default:
-		break;
-	}
-}
-
-void BatleScene::skill4ButtonCallback(Ref *pSender, Widget::TouchEventType type)
-{
-	switch (type)
-	{
-	case cocos2d::ui::Widget::TouchEventType::BEGAN:
-		break;
-	case cocos2d::ui::Widget::TouchEventType::MOVED:
-		break;
-	case cocos2d::ui::Widget::TouchEventType::ENDED:
-	{
-		testObject->stopActionByTag(_currentMoveActionTag);
-		selectAttackTarget();
-		break; }
-
-	case cocos2d::ui::Widget::TouchEventType::CANCELED:
-		break;
-	default:
-		break;
-	}
-}
 
 bool BatleScene::onTouchBegan(Touch *touch, Event *unused_event)
 {
@@ -720,8 +652,8 @@ void BatleScene::onTouchMoved(Touch *touch, Event *unused_event)
 		_selectTargetSprite->setVisible(true);
 		auto dis = touch->getLocation() - testObject->getPosition();
 		_selectTargetSprite->setPosition(_battleBackround->convertTouchToNodeSpace(touch));
-		_mini_Icon->setRotation(-(dis.getAngle() * RAD_DEG) + 90);
-		int direc = detectDirectionBaseOnTouchAngle(_mini_Icon->getRotation());
+		_mainCharacterAvata->setRotation(-(dis.getAngle() * RAD_DEG) + 90);
+		int direc = detectDirectionBaseOnTouchAngle(_mainCharacterAvata->getRotation());
 		if (direc == 0) return;
 		rotateCharacter(testObject, direc);
 		return;
@@ -745,9 +677,9 @@ void BatleScene::onTouchMoved(Touch *touch, Event *unused_event)
 
 	testObject->stopActionByTag(_currentAttackActionTag);
 	testObject->getPhysicsBody()->setVelocity(Vect(MOVE_SPEED*cos(distanVector.getAngle()),MOVE_SPEED*sin(distanVector.getAngle())));
-	_mini_Icon->setRotation(-(distanVector.getAngle() * RAD_DEG) + 90);
+	_mainCharacterAvata->setRotation(-(distanVector.getAngle() * RAD_DEG) + 90);
 	//log("%f", _mini_Icon->getRotation());
-	int direc = detectDirectionBaseOnTouchAngle(_mini_Icon->getRotation());
+	int direc = detectDirectionBaseOnTouchAngle(_mainCharacterAvata->getRotation());
 	if(direc != 0) actionCharacter(direc);
 	//_touchStartPoint = touch->getLocation();
 	
@@ -989,7 +921,7 @@ void BatleScene::onPhysicContactBegin(const PhysicsContact &contact)
 
 void BatleScene::runAttackAnimation()
 {
-	int direc = detectDirectionBaseOnTouchAngle(_mini_Icon->getRotation());
+	int direc = detectDirectionBaseOnTouchAngle(_mainCharacterAvata->getRotation());
 	if (direc == 0) return;
 	//testObject->stopAllActions();
 
@@ -1016,7 +948,7 @@ void BatleScene::selectAttackTarget()
 
 void BatleScene::rotateCharacter(Sprite *target, int direc)
 {
-	log("Rotate direc %d", direc);
+	//log("Rotate direc %d", direc);
 	auto animation = Animation::create();
 	char szName[100] = { 0 };
 	sprintf(szName, "unit_00_0%d_attack_%d.png", direc, 1);
@@ -1024,7 +956,6 @@ void BatleScene::rotateCharacter(Sprite *target, int direc)
 	p.append(szName);
 	//log("%s", p.c_str());
 	animation->addSpriteFrameWithFile(p.c_str());
-	// should last 2.8 seconds. And there are 14 frames.
 	animation->setDelayPerUnit(ANIMETE_DELAY);
 	animation->setRestoreOriginalFrame(true);
 	target->runAction(Animate::create(animation));
@@ -1122,12 +1053,26 @@ void BatleScene::changeImageButtonCallback(Ref *pSender, Widget::TouchEventType 
 		break;
 	}
 }
-
-void BatleScene::saveSelectedUnitId(int id)
+void BatleScene::nextButtonCallback(Ref *pSender, Widget::TouchEventType type)
 {
-	_selectedUnitId = id;
-}
+	switch (type)
+	{
+	case cocos2d::ui::Widget::TouchEventType::BEGAN:
+		break;
+	case cocos2d::ui::Widget::TouchEventType::MOVED:
+		break;
+	case cocos2d::ui::Widget::TouchEventType::ENDED:
+	{
+		Director::getInstance()->replaceScene(TransitionMoveInR::create(SCREEN_TRANSI_DELAY, BatleResultScene::createScene()));
+		break;
+	}
+	case cocos2d::ui::Widget::TouchEventType::CANCELED:
+		break;
 
+	default:
+		break;
+	}
+}
 UnitInforNew BatleScene::getUnitDataFromDataBase(int unitId)
 {
 
@@ -1154,21 +1099,21 @@ vector<UnitInforNew> BatleScene::getEnemyUnitsData(vector<int> enemyIdList)
 
 void BatleScene::autoRestoreHpAndMp()
 { 
-	_characterCurentHp += _unitData.hp_restore/RESTORE_MULTI;
-	if (_characterCurentHp > _unitData.hp) {
-		_characterCurentHp = _unitData.hp;
+	_allAlliedUnitCurrentHp[0] += _mainCharacterData.hp_restore / RESTORE_MULTI;
+	if (_allAlliedUnitCurrentHp[0] > _mainCharacterData.hp) {
+		_allAlliedUnitCurrentHp[0] = _mainCharacterData.hp;
 	}
-	_characterCurentMp += _unitData.mp_restore/RESTORE_MULTI;
-	if (_characterCurentMp > _unitData.mp)
+	_characterCurentMp += _mainCharacterData.mp_restore/RESTORE_MULTI;
+	if (_characterCurentMp > _mainCharacterData.mp)
 	{
-		_characterCurentMp = _unitData.mp;
+		_characterCurentMp = _mainCharacterData.mp;
 	}
 
 	for (int i = 0; i < ENEMY_NUM; i++)
 	{
-		_enemyCurentHp[i] += _allEnemyUnitData[i].hp_restore/RESTORE_MULTI;
-		if (_enemyCurentHp[i] > _allEnemyUnitData[i].hp) {
-			_enemyCurentHp[i] = _allEnemyUnitData[i].hp;
+		_allEnemyCurentHp[i] += _allEnemyUnitData[i].hp_restore/RESTORE_MULTI;
+		if (_allEnemyCurentHp[i] > _allEnemyUnitData[i].hp) {
+			_allEnemyCurentHp[i] = _allEnemyUnitData[i].hp;
 		}
 	}
 	updateSlider();
@@ -1176,16 +1121,267 @@ void BatleScene::autoRestoreHpAndMp()
 
 void BatleScene::updateSlider()
 {
-	_miniHpSlider->setPercent(ceil((_characterCurentHp * 100.0f / _unitData.hp)));
-	_hpSlider->setPercent(_miniHpSlider->getPercent());
+	_mainCharacterMiniHpBar->setPercent(ceil((_allAlliedUnitCurrentHp[0] * 100.0f / _mainCharacterData.hp)));
+	_avataHpBar->setPercent(_mainCharacterMiniHpBar->getPercent());
 
-	_manaSlider->setPercent(ceil((_characterCurentMp * 100.0f / _unitData.mp)));
+	_mainCharacterMpBar->setPercent(ceil((_characterCurentMp * 100.0f / _mainCharacterData.mp)));
 
 	for (int i = 0; i < ENEMY_NUM; i++)
 	{
-		_allEnemyHpBar[i]->setPercent(ceil((_enemyCurentHp[i] * 100.0f / _allEnemyUnitData[i].hp)));
+		_allEnemyHpBar[i]->setPercent(ceil((_allEnemyCurentHp[i] * 100.0f / _allEnemyUnitData[i].hp)));
 	}
 }
+void BatleScene::skill1ButtonCallback(Ref *pSender, Widget::TouchEventType type)
+{
+	switch (type)
+	{
+	case cocos2d::ui::Widget::TouchEventType::BEGAN:
+		break;
+	case cocos2d::ui::Widget::TouchEventType::MOVED:
+		break;
+	case cocos2d::ui::Widget::TouchEventType::ENDED:
+	{
+		//testObject->stopActionByTag(_currentMoveActionTag);
+		//selectAttackTarget();
+		
+		Button* bt = dynamic_cast<Button*>(pSender);
+		int tag = bt->getTag();
+		//Progress Timer
+		if (_mainCharacterSkillData[tag - 1].mp_cost <= _characterCurentMp){
+			bt->setColor(Color3B::GRAY);
+			bt->setTouchEnabled(false);
+			bt->setEnabled(true);
+			playSkill(tag - 1);
+			bt->runAction(Sequence::create(DelayTime::create(_mainCharacterSkillData[tag - 1].cooldown), CallFuncN::create([&, tag](Ref *p) {
+				removeSkillDisableFlg(tag);
+			}), nullptr));
+			
+		}
+		else {
+			log("Not enough MP");
+		}
+		
+		break; }
+	case cocos2d::ui::Widget::TouchEventType::CANCELED:
+		break;
+	default:
+		break;
+	}
+}
+/*
+void BatleScene::skill2ButtonCallback(Ref *pSender, Widget::TouchEventType type)
+{
+	switch (type)
+	{
+	case cocos2d::ui::Widget::TouchEventType::BEGAN:
+		break;
+	case cocos2d::ui::Widget::TouchEventType::MOVED:
+		break;
+	case cocos2d::ui::Widget::TouchEventType::ENDED:
+	{
+		//testObject->stopActionByTag(_currentMoveActionTag);
+		//selectAttackTarget();
+		break;
+	}
+	case cocos2d::ui::Widget::TouchEventType::CANCELED:
+		break;
+	default:
+		break;
+	}
+}
+
+void BatleScene::skill3ButtonCallback(Ref *pSender, Widget::TouchEventType type)
+{
+	switch (type)
+	{
+	case cocos2d::ui::Widget::TouchEventType::BEGAN:
+		break;
+	case cocos2d::ui::Widget::TouchEventType::MOVED:
+		break;
+	case cocos2d::ui::Widget::TouchEventType::ENDED:
+	{
+		//testObject->stopActionByTag(_currentMoveActionTag);
+
+		//selectAttackTarget();
+		break;
+	}
+	case cocos2d::ui::Widget::TouchEventType::CANCELED:
+		break;
+	default:
+		break;
+	}
+}
+
+void BatleScene::skill4ButtonCallback(Ref *pSender, Widget::TouchEventType type)
+{
+	switch (type)
+	{
+	case cocos2d::ui::Widget::TouchEventType::BEGAN:
+		break;
+	case cocos2d::ui::Widget::TouchEventType::MOVED:
+		break;
+	case cocos2d::ui::Widget::TouchEventType::ENDED:
+	{
+		//testObject->stopActionByTag(_currentMoveActionTag);
+		//selectAttackTarget();
+		break; }
+
+	case cocos2d::ui::Widget::TouchEventType::CANCELED:
+		break;
+	default:
+		break;
+	}
+}
+*/
+void BatleScene::playSkill(int Id)
+{
+	SkillInfoNew skill = _mainCharacterSkillData[Id];
+	_characterCurentMp -= skill.mp_cost;
+	_mainCharacterMpBar->setPercent(ceil(_characterCurentMp*100.0f / _mainCharacterData.mp));
+	switch (skill.skill_type)
+	{
+	case TYPE_HELP:
+		skillHelpAction(skill);
+		break;
+	case TYPE_RESTORE:
+		skillRestoreAction(skill);
+		break;
+	case TYPE_ATTACK:
+		skillAttackAction(skill);
+		break;
+	default:
+		break;
+	}
+
+}
+
+void BatleScene::removeSkillDisableFlg(int skillnum)
+{
+	switch (skillnum)
+	{
+	case TAG_SKILL_1:
+		_skill1Button->setEnabled(true);
+		_skill1Button->setTouchEnabled(true);
+		_skill1Button->setColor(Color3B::WHITE);
+		break;
+	case TAG_SKILL_2:
+		_skill2Button->setEnabled(true);
+		_skill2Button->setTouchEnabled(true);
+		_skill2Button->setColor(Color3B::WHITE);
+		break;
+	case TAG_SKILL_3:
+		_skill3Button->setEnabled(true);
+		_skill3Button->setTouchEnabled(true);
+		_skill3Button->setColor(Color3B::WHITE);
+		break;
+	case TAG_SKILL_4:
+		_skill4Button->setEnabled(true);
+		_skill4Button->setTouchEnabled(true);
+		_skill4Button->setColor(Color3B::WHITE);
+		break;
+	default:
+		break;
+	}
+}
+
+void BatleScene::skillRestoreAction(SkillInfoNew skillInfo)
+{
+	switch (skillInfo.target_type)
+	{
+	case TARGET_ALL:
+		skillRestoreAll(skillInfo);
+		break;
+	case TARGET_ONE:
+		skillRestoreOne(skillInfo);
+		break;
+	default:
+		break;
+	}
+
+
+}
+
+void BatleScene::skillHelpAction(SkillInfoNew skillInfo)
+{
+
+}
+
+void BatleScene::skillAttackAction(SkillInfoNew skillInfo)
+{
+
+}
+
+void BatleScene::skillRestoreAll(SkillInfoNew skillInfo)
+{
+	int value = 0;
+	switch (skillInfo.dame_type)
+	{
+	case DAME_TYPE_PERCENT:
+		value = ceil(1.0f*_mainCharacterData.hp *skillInfo.dame_value/100.0f);
+		break;
+	case DAME_TYPE_PURE:
+		value = ceil(skillInfo.dame_value);
+		break;
+	}
+	for (int i = 0; i < _allAlliedUnitData.size(); i++)
+	{
+		_allAlliedUnitCurrentHp[i] += value;
+		if (_allAlliedUnitCurrentHp[i] > _allAlliedUnitData[i].hp) {
+			_allAlliedUnitCurrentHp[i] = _allAlliedUnitData[i].hp;
+		}
+		_allAlliedUnitHpBar[i]->setPercent(_allAlliedUnitCurrentHp[i] * 100.0f / _allAlliedUnitData[i].hp);
+
+	}
+
+	_mainCharacterMiniHpBar->setPercent(_allAlliedUnitCurrentHp[0] * 100.0f / _mainCharacterData.hp);
+}
+
+void BatleScene::skillRestoreOne(SkillInfoNew skillInfo)
+{
+	int value = 0;
+	switch (skillInfo.dame_type)
+	{
+	case DAME_TYPE_PERCENT:
+		value = ceil(1.0f*_mainCharacterData.hp *skillInfo.dame_value/100.0f);
+		break;
+	case DAME_TYPE_PURE:
+		value = ceil(skillInfo.dame_value);
+		break;
+	}
+	_allAlliedUnitCurrentHp[0] += value;
+	if (_allAlliedUnitCurrentHp[0] > _mainCharacterData.hp) {
+		_allAlliedUnitCurrentHp[0] = _mainCharacterData.hp;
+	}
+	_mainCharacterMiniHpBar->setPercent(_allAlliedUnitCurrentHp[0] * 100.0f / _mainCharacterData.hp);
+	_avataHpBar->setPercent(_mainCharacterMiniHpBar->getPercent());
+	//Run Effect
+}
+
+void BatleScene::skillHelpAll(SkillInfoNew skillInfo)
+{
+
+}
+
+void BatleScene::skillHelpOne(SkillInfoNew skillInfo)
+{
+
+}
+
+void BatleScene::skillAttackAll(SkillInfoNew skillInfo)
+{
+
+}
+
+void BatleScene::skillAttackOne(SkillInfoNew skillInfo)
+{
+
+}
+
+
+
+
+
+
 
 
 

@@ -56,6 +56,17 @@ struct SkillInfoNew {
 	string icon;
 
 };
+#define TYPE_HELP 1
+#define TYPE_RESTORE 2
+#define TYPE_ATTACK 3
+
+#define TARGET_ALL 0
+#define TARGET_ONE 1
+
+#define DAME_TYPE_PERCENT 1
+#define DAME_TYPE_PURE 2
+
+
 #define BASE_SPACE_X 120
 #define BOLDER_TAG 77
 #define SCREEN_TRANSI_DELAY 0.5

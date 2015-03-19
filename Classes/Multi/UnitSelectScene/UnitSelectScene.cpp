@@ -366,7 +366,7 @@ void MultiUnitSelectScene::onTouchUnit(Ref *pSender, Widget::TouchEventType type
 		if (tag >= (curPageIndex + 1) * 4) return;
 		if (tag < curPageIndex * 4) return;
 
-		_onSelectedUnitId = tag;
+		_onSelectedUnitTag = tag;
 		_onTouchDisable = true;
 		auto dialog = UnitDetailDialog::create(_allUnitInfoNew[tag], CC_CALLBACK_2(MultiUnitSelectScene::decideCallBack, this), CC_CALLBACK_2(MultiUnitSelectScene::cancelCallBack, this));
 		getParent()->addChild(dialog);
@@ -382,9 +382,25 @@ void MultiUnitSelectScene::onTouchUnit(Ref *pSender, Widget::TouchEventType type
 
 void MultiUnitSelectScene::decideCallBack(Ref *pSender, Widget::TouchEventType type)
 {
-	onSelectUnit(_onSelectedUnitId);
-	_decidedUnitId = _onSelectedUnitId;
-	_onTouchDisable = false;
+	switch (type)
+	{
+	case cocos2d::ui::Widget::TouchEventType::BEGAN:
+	{
+		_decidedUnitId = _allUnitInfoNew[_onSelectedUnitTag].id;
+		onSelectUnit(_onSelectedUnitTag);
+		_onTouchDisable = false;
+		break;
+	}
+	case cocos2d::ui::Widget::TouchEventType::MOVED:
+		break;
+	case cocos2d::ui::Widget::TouchEventType::ENDED:
+		break;
+	case cocos2d::ui::Widget::TouchEventType::CANCELED:
+		break;
+	default:
+		break;
+	}
+	
 	
 	
 }
