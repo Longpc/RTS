@@ -22,6 +22,8 @@
 #define ENEMY_FLAG 1
 #define ALLIED_FLAG 2
 
+#define TAG_MP_LABEL 1
+
 class BatleScene : public LayerBase
 {
 
@@ -39,6 +41,7 @@ private:
 
 	///CREATE UI CONTENT + PHYSIC WORLD///////////////////////////////////////////////////////////////////////
 	virtual void createContent();
+	virtual void displaySkillMpInButton(Button *parent, int mp);
 	virtual Sprite* createBackground(Vec2 pos);
 	virtual void createPhysicBolder();
 	virtual Node* createHBolder();
@@ -199,8 +202,6 @@ private:
 	virtual void removeSkillDisableFlg(int skillnum);
 
 	virtual void showCoolDown(Button *parentButton, int cooldownTime);
-
-
 
 	virtual void playSkill(int skillId);
 	virtual vector<int> detectUnitInAoe(float aoe, int unitFlg);

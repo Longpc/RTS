@@ -237,6 +237,7 @@ void BatleScene::createContent()
 	_skill1Button->setTag(TAG_SKILL_1);
 	_skill1Button->setPosition(Vec2(_visibleSize.width / 2 - 1.5 * baseSize.width - 20, baseSize.height / 2 + baseMargin));
 	addChild(_skill1Button);
+	displaySkillMpInButton(_skill1Button, _mainCharacterSkillData[0].mp_cost);
 
 	_skill2Button = Button::create();
 	_skill2Button->loadTextureNormal(skill2ImagePath.c_str());
@@ -244,6 +245,7 @@ void BatleScene::createContent()
 	_skill2Button->setTag(TAG_SKILL_2);
 	_skill2Button->setPosition(Vec2(_visibleSize.width / 2 - 0.5 *baseSize.width - 10, baseSize.height / 2 + baseMargin));
 	addChild(_skill2Button);
+	displaySkillMpInButton(_skill2Button, _mainCharacterSkillData[1].mp_cost);
 
 	_skill3Button = Button::create();
 	_skill3Button->loadTextureNormal(skill3ImagePath.c_str());
@@ -327,6 +329,15 @@ void BatleScene::createContent()
 
 }
 
+void BatleScene::displaySkillMpInButton(Button *parent, int mp)
+{
+	auto lb = Label::create(DataUtils::numberToString(mp), "", 25);
+	lb->setColor(Color3B(75,215,243));
+	lb->setPosition(Vec2(parent->getContentSize() / 2) - Vec2(0, 30));
+	lb->setTag(TAG_MP_LABEL);
+	parent->addChild(lb);
+}
+
 
 Sprite* BatleScene::createBackground(Vec2 pos)
 {
@@ -405,6 +416,7 @@ void BatleScene::update(float delta)
 	updateMiniMap();
 	updateTime();
 	checkForAutoAttack();
+
 }
 void BatleScene::checkForAutoAttack()
 {
@@ -511,6 +523,7 @@ void BatleScene::enemyDieAction(int id)
 	_allEnemyUnitSprite[id]->setVisible(false);
 	_allEnemyIconInMinimap[id]->setVisible(false);
 	_indexOfBeAttackEnemy = -1;
+	testObject->stopActionByTag(_currentAttackActionTag);
 }
 void BatleScene::enemyAttackCallback(Ref *pSEnder)
 {
@@ -1357,6 +1370,8 @@ void BatleScene::skillRestoreAll(SkillInfoNew skillInfo)
 		value = ceil(skillInfo.dame_value);
 		break;
 	}
+
+
 	for (int i = 0; i < _allAlliedUnitData.size(); i++)
 	{
 		_allAlliedUnitCurrentHp[i] += value;
@@ -1416,18 +1431,37 @@ void BatleScene::skillAttackAll(SkillInfoNew skillInfo)
 	default:
 		break;
 	}
-	for (int i = 0; i < _allEnemyUnitData.size(); i++)
-	{
-		int dame = (value - _allEnemyUnitData[i].defence);
-		_allEnemyCurentHp[i] -= dame;
-		if (_allEnemyCurentHp[i] <= 0) {
-			enemyDieAction(i);
-			return;
+	if (skillInfo.aoe > 0) {
+		vector<int> unitIndex = detectUnitInAoe(skillInfo.aoe, ENEMY_FLAG);
+		for (int &index : unitIndex)
+		{
+			int dame = (value - _allEnemyUnitData[index].defence);
+			_allEnemyCurentHp[index] -= dame;
+			if (_allEnemyCurentHp[index] <= 0) {
+				enemyDieAction(index);
+				return;
+			}
+			_allEnemyHpBar[index]->setPercent(_allEnemyCurentHp[index] * 100.0f / _allEnemyUnitData[index].hp);
+			showAttackDame(dame, _allEnemyUnitSprite[index]->getPosition() + Vec2(0, 100), 1);
+			//RUN EFFECET AOE
 		}
-		_allEnemyHpBar[i]->setPercent(_allEnemyCurentHp[i] * 100.0f / _allEnemyUnitData[i].hp);
-		showAttackDame(dame, _allEnemyUnitSprite[i]->getPosition() + Vec2(0, 100), 1);
 	}
-	//RUN EFFECT ATTACK ALL
+	else {
+		for (int i = 0; i < _allEnemyUnitData.size(); i++)
+		{
+			int dame = (value - _allEnemyUnitData[i].defence);
+			_allEnemyCurentHp[i] -= dame;
+			if (_allEnemyCurentHp[i] <= 0) {
+				enemyDieAction(i);
+				return;
+			}
+			_allEnemyHpBar[i]->setPercent(_allEnemyCurentHp[i] * 100.0f / _allEnemyUnitData[i].hp);
+			showAttackDame(dame, _allEnemyUnitSprite[i]->getPosition() + Vec2(0, 100), 1);
+		}
+		//RUN EFFECT ATTACK ALL
+	}
+	
+	
 }
 
 void BatleScene::skillAttackOne(SkillInfoNew skillInfo)
@@ -1481,6 +1515,7 @@ vector<int> BatleScene::detectUnitInAoe(float detectAoe, int unitFlg)
 
 	return resultUnitId;
 }
+
 
 
 
