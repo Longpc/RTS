@@ -19,7 +19,8 @@
 #define TAG_SKILL_3 3
 #define TAG_SKILL_4 4
 
-
+#define ENEMY_FLAG 1
+#define ALLIED_FLAG 2
 
 class BatleScene : public LayerBase
 {
@@ -105,7 +106,7 @@ private:
 	///ATTACK LOGIC///////////////////////////////////////////////////////////////////////
 	Sprite *_autoAttackArea;
 	//Sprite *_testAttackTarget;
-	vector<Sprite*> _alltargetUnit;
+	vector<Sprite*> _allEnemyUnitSprite;
 	vector<Sprite*> _allEnemyIconInMinimap;
 	vector<Slider*> _allEnemyHpBar;
 	vector<UnitInforNew> _allEnemyUnitData;
@@ -114,7 +115,6 @@ private:
 
 	vector<int> _allEnemyCurentHp;
 	vector<int> _allEnemyCurentMp;
-
 
 	int _currentAttackActionTag;
 	int _currentMoveActionTag;
@@ -183,7 +183,7 @@ private:
 	vector<UnitInforNew> _allAlliedUnitData;
 	vector<int> _allAlliedUnitCurrentHp;
 	vector<Slider*> _allAlliedUnitHpBar;
-
+	vector<Sprite*> _allAlliedUnitSprite;
 
 	virtual void changeImagePathforTest();
 	virtual void autoRestoreHpAndMp();
@@ -198,7 +198,13 @@ private:
 
 	virtual void removeSkillDisableFlg(int skillnum);
 
+	virtual void showCoolDown(Button *parentButton, int cooldownTime);
+
+
+
 	virtual void playSkill(int skillId);
+	virtual vector<int> detectUnitInAoe(float aoe, int unitFlg);
+
 	virtual void skillRestoreAction(SkillInfoNew skillInfo);
 	virtual void skillRestoreAll(SkillInfoNew skillInfo);
 	virtual void skillRestoreOne(SkillInfoNew skillInfo);
@@ -211,7 +217,9 @@ private:
 	virtual void skillAttackAll(SkillInfoNew skillInfo);
 	virtual void skillAttackOne(SkillInfoNew skillInfo);
 
-
+	float _helpAttackValue = 1.0f;
+	float _helpDefenceValue = 1.0f;
+	float _helpHpValue = 1.0f;
 
 
 };

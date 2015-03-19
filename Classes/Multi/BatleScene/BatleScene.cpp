@@ -137,6 +137,7 @@ void BatleScene::createContent()
 	testObject->addChild(_mainCharacterMiniHpBar);
 
 	_allAlliedUnitHpBar.push_back(_mainCharacterMiniHpBar);
+	_allAlliedUnitSprite.push_back(testObject);
 
 
 	auto folow = Follow::create(testObject);
@@ -306,8 +307,8 @@ void BatleScene::createContent()
 		hpB->setPosition(Vec2(sp->getContentSize().width / 2, sp->getContentSize().height - 10));
 		_allEnemyHpBar.push_back(hpB);
 		sp->addChild(_allEnemyHpBar.back(), 100);
-		_alltargetUnit.push_back(sp);
-		_battleBackround->addChild(_alltargetUnit.back(), MID);
+		_allEnemyUnitSprite.push_back(sp);
+		_battleBackround->addChild(_allEnemyUnitSprite.back(), MID);
 
 		auto enemyIcon = Sprite::create("image/screen/battle/enemyicon.png");
 		enemyIcon->setOpacity(255);
@@ -408,11 +409,11 @@ void BatleScene::update(float delta)
 void BatleScene::checkForAutoAttack()
 {
 	float area = IMAGE_SCALE*_autoAttackArea->getContentSize().width / 2 + 25;
-	for (int i = 0; i < _alltargetUnit.size(); i++)
+	for (int i = 0; i < _allEnemyUnitSprite.size(); i++)
 	{
-		auto posDistan = _alltargetUnit[i]->getPosition() - testObject->getPosition();
+		auto posDistan = _allEnemyUnitSprite[i]->getPosition() - testObject->getPosition();
 		int direc = detectDirectionBaseOnTouchAngle(-posDistan.getAngle()*RAD_DEG + 90);
-		if (posDistan.length() < area && _alltargetUnit[i]->isVisible()) {
+		if (posDistan.length() < area && _allEnemyUnitSprite[i]->isVisible()) {
 			if (testObject->getActionByTag(_currentAttackActionTag) == nullptr && _onDelayAttackFlg == false) {
 				//rotateCharacter(testObject,direc);
 				auto ani = createAttackAnimationWithDefine(direc, _attackImagePath);
@@ -436,7 +437,7 @@ void BatleScene::checkForAutoAttack()
 				this->runAction(Sequence::create(DelayTime::create(ATTACK_ANIMATION_DELAY), CallFuncN::create(CC_CALLBACK_0(BatleScene::removeceAttackDelayFlg, this)), nullptr));
 			}
 
-			if (_alltargetUnit[i]->getNumberOfRunningActions() < 1 && _allEnemyAttachDelay[i] == false) {
+			if (_allEnemyUnitSprite[i]->getNumberOfRunningActions() < 1 && _allEnemyAttachDelay[i] == false) {
 				string path = "image/unit_new/attack/red/";
 				auto target_ani = createAttackAnimationWithDefine(10 - direc, path);
 				auto call2 = CallFuncN::create(CC_CALLBACK_1(BatleScene::enemyAttackCallback, this));
@@ -448,7 +449,7 @@ void BatleScene::checkForAutoAttack()
 				action2->setTag(1);
 				//rotateCharacter(_alltargetUnit[i], 10 - direc);
 				_allEnemyAttachDelay[i] = true;
-				_alltargetUnit[i]->runAction(Spawn::create(action2,forCallback,nullptr));
+				_allEnemyUnitSprite[i]->runAction(Spawn::create(action2,forCallback,nullptr));
 				//_indexOfRunningActionTarget = i;
 			}
 		}
@@ -497,7 +498,7 @@ void BatleScene::characerAttackCallback()
 			return;
 		}
 		_allEnemyHpBar[_indexOfBeAttackEnemy]->setPercent(ceil((_allEnemyCurentHp[_indexOfBeAttackEnemy] * 100.0f / _allEnemyUnitData[_indexOfBeAttackEnemy].hp)));
-		showAttackDame(dame, _alltargetUnit[_indexOfBeAttackEnemy]->getPosition() + Vec2(0, 100),1);
+		showAttackDame(dame, _allEnemyUnitSprite[_indexOfBeAttackEnemy]->getPosition() + Vec2(0, 100),1);
 
 	}
 	else {
@@ -507,7 +508,7 @@ void BatleScene::characerAttackCallback()
 
 void BatleScene::enemyDieAction(int id)
 {
-	_alltargetUnit[id]->setVisible(false);
+	_allEnemyUnitSprite[id]->setVisible(false);
 	_allEnemyIconInMinimap[id]->setVisible(false);
 	_indexOfBeAttackEnemy = -1;
 }
@@ -903,7 +904,7 @@ void BatleScene::fakeZOrder()
 			stone->setLocalZOrder(LOW);
 		}
 	}
-	for (auto &enemy : _alltargetUnit)
+	for (auto &enemy : _allEnemyUnitSprite)
 	{
 		if (enemy->getPositionY() > testObject->getPositionY()) {
 			enemy->setLocalZOrder(LOW);
@@ -1157,6 +1158,7 @@ void BatleScene::skill1ButtonCallback(Ref *pSender, Widget::TouchEventType type)
 			bt->setTouchEnabled(false);
 			bt->setEnabled(true);
 			playSkill(tag - 1);
+			showCoolDown(bt, _mainCharacterSkillData[tag - 1].cooldown);
 			bt->runAction(Sequence::create(DelayTime::create(_mainCharacterSkillData[tag - 1].cooldown), CallFuncN::create([&, tag](Ref *p) {
 				removeSkillDisableFlg(tag);
 			}), nullptr));
@@ -1238,6 +1240,24 @@ void BatleScene::skill4ButtonCallback(Ref *pSender, Widget::TouchEventType type)
 	}
 }
 */
+void BatleScene::showCoolDown(Button *parentButton, int time)
+{
+	auto secondLabel = Label::create(DataUtils::numberToString(time), "", 40);
+	secondLabel->setColor(Color3B::RED);
+	secondLabel->setPosition(parentButton->getContentSize() / 2);
+	parentButton->addChild(secondLabel);
+	auto action = Repeat::create(Sequence::create(DelayTime::create(1), CallFuncN::create([&](Ref *pSender){
+		Label* lb = dynamic_cast<Label*>(pSender);
+		int t = DataUtils::stringToFloat(lb->getString());
+		lb->setString(DataUtils::numberToString(t - 1));
+	}),nullptr),time-1);
+	auto action2 = Sequence::create(DelayTime::create(time), CallFuncN::create([&](Ref *pSEnder){
+		Label* lb = dynamic_cast<Label*>(pSEnder);
+		lb->removeFromParentAndCleanup(true);
+	}), nullptr);
+	secondLabel->runAction(Spawn::create(action, action2, nullptr));
+}
+
 void BatleScene::playSkill(int Id)
 {
 	SkillInfoNew skill = _mainCharacterSkillData[Id];
@@ -1374,7 +1394,7 @@ void BatleScene::skillRestoreOne(SkillInfoNew skillInfo)
 
 void BatleScene::skillHelpAll(SkillInfoNew skillInfo)
 {
-
+	int value = 0;
 }
 
 void BatleScene::skillHelpOne(SkillInfoNew skillInfo)
@@ -1398,12 +1418,14 @@ void BatleScene::skillAttackAll(SkillInfoNew skillInfo)
 	}
 	for (int i = 0; i < _allEnemyUnitData.size(); i++)
 	{
-		_allEnemyCurentHp[i] -= (value - _allEnemyUnitData[i].defence);
+		int dame = (value - _allEnemyUnitData[i].defence);
+		_allEnemyCurentHp[i] -= dame;
 		if (_allEnemyCurentHp[i] <= 0) {
 			enemyDieAction(i);
 			return;
 		}
 		_allEnemyHpBar[i]->setPercent(_allEnemyCurentHp[i] * 100.0f / _allEnemyUnitData[i].hp);
+		showAttackDame(dame, _allEnemyUnitSprite[i]->getPosition() + Vec2(0, 100), 1);
 	}
 	//RUN EFFECT ATTACK ALL
 }
@@ -1429,9 +1451,37 @@ void BatleScene::skillAttackOne(SkillInfoNew skillInfo)
 		return;
 	}
 	_allEnemyHpBar[_indexOfBeAttackEnemy]->setPercent(_allEnemyCurentHp[_indexOfBeAttackEnemy] * 100.0f / _allEnemyUnitData[_indexOfBeAttackEnemy].hp);
-	showAttackDame(dame, _alltargetUnit[_indexOfBeAttackEnemy]->getPosition() + Vec2(0, 100), 1);
+	showAttackDame(dame, _allEnemyUnitSprite[_indexOfBeAttackEnemy]->getPosition() + Vec2(0, 100), 1);
 	//RUN EFFECT ATTACK ONE UNIT 
 }
+
+vector<int> BatleScene::detectUnitInAoe(float detectAoe, int unitFlg)
+{
+	vector<int> resultUnitId;
+	vector<Sprite*> allUnit;
+	switch (unitFlg)
+	{
+	case ENEMY_FLAG:
+		allUnit = _allEnemyUnitSprite;
+		break;
+	case ALLIED_FLAG:
+		allUnit = _allAlliedUnitSprite;
+		break;
+	default:
+		break;
+	}
+
+	for (int i = 0; i < allUnit.size(); i++)
+	{
+		Vec2 distan = allUnit[i]->getPosition() - testObject->getPosition();
+		if (distan.length() < detectAoe) {
+			resultUnitId.push_back(i);
+		}
+	}
+
+	return resultUnitId;
+}
+
 
 
 
