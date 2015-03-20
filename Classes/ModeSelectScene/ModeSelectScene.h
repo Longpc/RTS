@@ -29,7 +29,7 @@ private:
 	*/
 	virtual bool checkRoomMember();
 
-	virtual void testDialog(Ref *pSender, Widget::TouchEventType type);
+	/*virtual void testDialog(Ref *pSender, Widget::TouchEventType type);*/
 
 	/*Create data base*/
 	virtual void createDatabase();

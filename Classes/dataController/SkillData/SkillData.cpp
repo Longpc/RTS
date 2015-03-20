@@ -22,7 +22,38 @@ SkillInfoNew SkillData::getSkillInfoBySkillId(int skillId)
 	SkillInfoNew a;
 	return a;
 }
+vector<SkillInfoNew> SkillData::getPlayerSkillDataByPlayerId(int playerId)
+{
+	vector<SkillInfoNew> temp;
+	return temp;
+}
 
+vector<SkillInfoNew> SkillData::getAllPlayerSkillData()
+{
+	vector<SkillInfoNew> allSkill;
+	sqlite3 *data = SqlUtil::openData(DATAFILE);
+	string sql = "select * from player_skill";
+	vector<vector<string>> a = SqlUtil::runQuery(data, sql.c_str());
+	for (auto &item : a)
+	{
+		allSkill.push_back(convertData(item));
+	}
+	return allSkill;
+}
+
+SkillInfoNew SkillData::getPlayerSkillDataBySkillId(int skillId)
+{
+	sqlite3 *data = SqlUtil::openData(DATAFILE);
+	string sql = "select * from player_skill where player_skill.id =";
+	sql.append(DataUtils::numberToString(skillId));
+	vector<vector<string>> a = SqlUtil::runQuery(data, sql.c_str());
+	if (a.size() > 0)
+	{
+		return convertData(a[0]);
+	}
+	SkillInfoNew b;
+	return b;
+}
 SkillInfoNew SkillData::convertData(vector<string> item)
 {
 	SkillInfoNew temp;
@@ -43,4 +74,8 @@ SkillInfoNew SkillData::convertData(vector<string> item)
 
 	return temp;
 }
+
+
+
+
 

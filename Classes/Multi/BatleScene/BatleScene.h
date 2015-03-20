@@ -28,9 +28,9 @@ class BatleScene : public LayerBase
 {
 
 public:
-	static Scene* createScene(int selectedUnitId);
-	static BatleScene* create(int unitId);
-	bool init(int unitId);
+	static Scene* createScene(int selectedUnitId, vector<SkillInfoNew> playerSkills);
+	static BatleScene* create(int unitId, vector<SkillInfoNew> playerSkills);
+	bool init(int unitId, vector<SkillInfoNew> playerSkills);
 private:
 	///DATABASE///////////////////////////////////////////////////////////////////////
 	virtual UnitInforNew getUnitDataFromDataBase(int unitId);
@@ -165,6 +165,10 @@ private:
 	////PHYSICAL//////////////////////////////////////////////////////////////////////
 	PhysicsWorld *_myWorld;
 	virtual void savePhysicWorld(PhysicsWorld *world);
+
+	///PLAYER///////////////////////////////////////////////////////////////////////
+
+	vector<SkillInfoNew> _playerSkills;
 	///CHARACTER///////////////////////////////////////////////////////////////////////
 
 	int _selectedUnitId;
@@ -178,8 +182,10 @@ private:
 	bool _moveDisableFlg = false;
 	bool _onDelayAttackFlg = false;
 
-	Slider *_avataHpBar;
+	Slider *_mainCharacterHpBar;
+	Label *_hpViewLabel;
 	Slider *_mainCharacterMpBar;
+	Label *_mpViewlabel;
 	int _characterCurentMp;
 
 	///ALLIED UNIT
@@ -192,6 +198,8 @@ private:
 	virtual void autoRestoreHpAndMp();
 	virtual void updateSlider();
 
+	virtual void updateHpAndMpViewLabel();
+
 	int _oldSecond = 0;
 
 	bool _skill1CooldownFlg = false;
@@ -203,7 +211,7 @@ private:
 
 	virtual void showCoolDown(Button *parentButton, int cooldownTime);
 
-	virtual void playSkill(int skillId);
+	virtual void playSkill(SkillInfoNew skillData);
 	virtual vector<int> detectUnitInAoe(float aoe, int unitFlg);
 
 	virtual void skillRestoreAction(SkillInfoNew skillInfo);
@@ -222,7 +230,12 @@ private:
 	float _helpDefenceValue = 1.0f;
 	float _helpHpValue = 1.0f;
 
+	UnitInforNew _redTeamTowerData;
+	UnitInforNew _blueTeamTowerData;
+	
+	int _currentPlayerTeamFlg = TEAM_FLG_BLUE;
 
+	virtual void endBattle();
 };
 
 

@@ -29,6 +29,8 @@ bool SkillSelectScene::init(int unit)
 
 	getSkillDataFromDatabase();
 	_selectedUnitId = unit;
+	_allSelectedSkilId.push_back(0);
+	_allSelectedSkilId.push_back(0);
 	_defaultLabel->setString("Please select skill");
 
 	_slot1BackGroundButton = createSlotBaseSprite(Vec2(_visibleSize.width / 2 - BUTON_MARGIN/2, _visibleSize.height - 150));
@@ -179,7 +181,16 @@ void SkillSelectScene::nextButtonCallback(Ref *pSender, Widget::TouchEventType t
 		break;
 	case cocos2d::ui::Widget::TouchEventType::ENDED:
 	{
-		Director::getInstance()->replaceScene(TransitionMoveInR::create(SCREEN_TRANSI_DELAY, BatleScene::createScene(_selectedUnitId)));
+		vector<SkillInfoNew> skills;
+		for (auto &var : _allSelectedSkilId)
+		{
+			if (var < 1)
+			{
+				return;
+			}
+			skills.push_back(_allSkillInfo[var-1]);
+		}
+		Director::getInstance()->replaceScene(TransitionMoveInR::create(SCREEN_TRANSI_DELAY, BatleScene::createScene(_selectedUnitId,skills)));
 		break;
 	}
 	case cocos2d::ui::Widget::TouchEventType::CANCELED:
@@ -197,8 +208,24 @@ void SkillSelectScene::onBackButtonClick(Ref *pSender)
 
 void SkillSelectScene::decideCallBack(Ref *pSender, Widget::TouchEventType type)
 {
-	onSelectUnit(_onSelectedUnitId);
-	_onTouchDisable = false;
+	switch (type)
+	{
+	case cocos2d::ui::Widget::TouchEventType::BEGAN:
+	{
+		onSelectUnit(_onSelectedUnitId);
+		_onTouchDisable = false;
+		break;
+	}
+	case cocos2d::ui::Widget::TouchEventType::MOVED:
+		break;
+	case cocos2d::ui::Widget::TouchEventType::ENDED:
+		break;
+	case cocos2d::ui::Widget::TouchEventType::CANCELED:
+		break;
+	default:
+		break;
+	}
+	
 }
 
 void SkillSelectScene::cancelCallBack(Ref *pSender, Widget::TouchEventType type)
@@ -221,12 +248,12 @@ void SkillSelectScene::onTouchUnit(Ref *pSender, Widget::TouchEventType type)
 		int tag = unit->getTag();
 		log("touch unit %d", tag);
 		int curPageIndex = _mainPage->getCurPageIndex();
-		if (tag - 1 > (curPageIndex + 1) * 4) return;
-		if (tag -1 <= curPageIndex * 4) return;
+		if (tag > (curPageIndex + 1) * 4) return;
+		if (tag  <= curPageIndex * 4) return;
 
-		_onSelectedUnitId = tag-2;
+		_onSelectedUnitId = tag-1;
 		_onTouchDisable = true;
-		auto dialod = SkillDetailDialog::create(_allSkillInfo[tag-2], CC_CALLBACK_2(SkillSelectScene::decideCallBack, this), CC_CALLBACK_2(SkillSelectScene::cancelCallBack, this));
+		auto dialod = SkillDetailDialog::create(_allSkillInfo[tag-1], CC_CALLBACK_2(SkillSelectScene::decideCallBack, this), CC_CALLBACK_2(SkillSelectScene::cancelCallBack, this));
 		getParent()->addChild(dialod);
 		break;
 	}
@@ -245,11 +272,13 @@ void SkillSelectScene::onSelectUnit(int unitId)
 	case 1:
 	{
 		displayUnit(button1,_skill1NameLabel, unitId);
+		_allSelectedSkilId[0] = _allSkillInfo[unitId].id;
 		break;
 	}
 	case 2:
 	{
 		displayUnit(button2,_skill2NameLabel, unitId);
+		_allSelectedSkilId[1] = _allSkillInfo[unitId].id;
 		break;
 	}
 	/*case 3:
@@ -462,7 +491,10 @@ void SkillSelectScene::setSelectedSlot(int slotNum)
 
 void SkillSelectScene::getSkillDataFromDatabase()
 {
-#define DATAFILE "database.db3"
+	_allSkillInfo = SkillData::getAllPlayerSkillData();
+
+
+/*#define DATAFILE "database.db3"
 	sqlite3 *data = SqlUtil::openData(DATAFILE);
 	string sql = "select * from skill";
 	vector<vector<string>> a = SqlUtil::runQuery(data, sql.c_str());
@@ -483,5 +515,5 @@ void SkillSelectScene::getSkillDataFromDatabase()
 		temp.plistpath = (item[11].c_str());
 		temp.icon = item[12].c_str();
 		_allSkillInfo.push_back(temp);
-	}
+	}*/
 }

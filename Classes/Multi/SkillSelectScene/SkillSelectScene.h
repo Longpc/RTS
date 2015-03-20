@@ -82,8 +82,8 @@ private:
 	bool _onTouchDisable = false;
 	Vec2 _beginTouchPoint;
 
-
 	int _selectedSkillNum = 0;
+	vector<int> _allSelectedSkilId;
 };
 
 #endif

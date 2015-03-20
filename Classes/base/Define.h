@@ -38,6 +38,7 @@ struct UnitInforNew
 	int attr;
 	int type;
 	string image;
+	int attack_delay;
 };
 
 struct SkillInfoNew {
@@ -67,6 +68,8 @@ struct SkillInfoNew {
 #define DAME_TYPE_PERCENT 1
 #define DAME_TYPE_PURE 2
 
+#define TEAM_FLG_RED 1
+#define TEAM_FLG_BLUE 2
 enum SKILL_HELP_TYPE
 {
 	HP = 1,

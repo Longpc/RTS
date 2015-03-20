@@ -20,7 +20,7 @@ vector<UnitInforNew> UnitData::getAllUnitData()
 {
 	vector<UnitInforNew> allUnit;
 	sqlite3 *data = SqlUtil::openData(DATABASE_FILE);
-	string sql = "select * from unit";
+	string sql = "select * from unit unit.move_speed > 0 ";
 	vector<vector<string>> a = SqlUtil::runQuery(data, sql.c_str());
 	for (auto &item : a)
 	{	
@@ -46,6 +46,21 @@ UnitInforNew UnitData::convertInfo(vector<string> item)
 	temp.attr = DataUtils::stringToFloat(item[10].c_str());
 	temp.type = DataUtils::stringToFloat(item[11].c_str());
 	temp.image = item[12].c_str();
+	temp.attack_delay = DataUtils::stringToFloat(item[13].c_str());
 
 	return temp;
+}
+
+UnitInforNew UnitData::getTowerDataByTeamFlg(int teamFlg)
+{
+	sqlite3 *data = SqlUtil::openData(DATABASE_FILE);
+	string sql = "select * from unit where unit.move_speed = 0 AND unit.mp = ";
+	sql.append(DataUtils::numberToString(teamFlg));
+	vector<vector<string>> a = SqlUtil::runQuery(data, sql.c_str());
+	if (a.size() > 0)
+	{
+		return convertInfo(a[0]);
+	}
+	UnitInforNew b;
+	return b;
 }

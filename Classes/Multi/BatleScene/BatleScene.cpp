@@ -14,21 +14,21 @@
 
 #define RESPAWN_DELAY 0.6f
 
-Scene* BatleScene::createScene(int selectedUnitId)
+Scene* BatleScene::createScene(int selectedUnitId, vector<SkillInfoNew> playerSkills)
 {
 	auto scene = Scene::createWithPhysics();
 	scene->getPhysicsWorld()->setDebugDrawMask(PhysicsWorld::DEBUGDRAW_NONE);
 	scene->getPhysicsWorld()->setGravity(Vect::ZERO);
-	auto lay = BatleScene::create(selectedUnitId);
+	auto lay = BatleScene::create(selectedUnitId, playerSkills);
 	lay->savePhysicWorld(scene->getPhysicsWorld());
 	scene->addChild(lay);
 	return scene;
 }
 
-BatleScene* BatleScene::create(int unitId)
+BatleScene* BatleScene::create(int unitId,vector<SkillInfoNew> skills)
 {
 	BatleScene *layer = new BatleScene();
-	if (layer && layer->init(unitId)) {
+	if (layer && layer->init(unitId,skills)) {
 		layer->autorelease();
 		return layer;
 	}
@@ -37,7 +37,7 @@ BatleScene* BatleScene::create(int unitId)
 	return NULL;
 }
 
-bool BatleScene::init(int unitId)
+bool BatleScene::init(int unitId,vector<SkillInfoNew> skills)
 {
 	if (!LayerBase::init()) {
 		return false;
@@ -57,17 +57,26 @@ bool BatleScene::init(int unitId)
 	_usernameBg->setVisible(false);
 	_selectedUnitId = unitId;
 
+	_playerSkills = skills;
 
 	///INIT DATA FOR ALL UNIT IN BATTLE
 	_mainCharacterData = getUnitDataFromDataBase(_selectedUnitId);
 	_mainCharacterSkillData = getUnitSkillFromDataBase(_selectedUnitId);
 
+
+
+
 	_allAlliedUnitData.push_back(_mainCharacterData);
+
 	_allAlliedUnitCurrentHp.push_back(_mainCharacterData.hp);
 
 	//Bellow vector is store  list of enemy unit id.
 	vector<int> a;
 	_allEnemyUnitData = getEnemyUnitsData(a);
+
+	_redTeamTowerData = UnitData::getTowerDataByTeamFlg(TEAM_FLG_RED);
+	_blueTeamTowerData = UnitData::getTowerDataByTeamFlg(TEAM_FLG_BLUE);
+
 
 
 	//////////
@@ -120,6 +129,48 @@ void BatleScene::createContent()
 
 	createPhysicBolder();
 
+	auto redTower = Sprite::create("tower_red.png");
+	redTower->setPosition(Vec2(_visibleSize.width, _visibleSize.height * 2 - 250));
+	//redTower->setAnchorPoint(Vec2::ANCHOR_MIDDLE_BOTTOM);
+	_battleBackround->addChild(redTower);
+	MyBodyParser::getInstance()->parseJsonFile("json/tower.json");
+	PhysicsBody* redTBody = MyBodyParser::getInstance()->bodyFormJson(redTower, "tower");
+	redTBody->setDynamic(false);
+	redTBody->setGravityEnable(false);
+	redTower->setPhysicsBody(redTBody);
+	
+	auto redTHpBar = Slider::create();
+	redTHpBar->loadBarTexture("image/screen/battle/mini_hp_base.png");
+	redTHpBar->setPercent(100);
+	//hpB->loadSlidBallTextureNormal("image/screen/battle/test.png");
+	redTHpBar->loadProgressBarTexture("image/screen/battle/mini_hp_gauge.png");
+	//_hpSlider->setContentSize(Size(372, 12));
+	redTHpBar->setPosition(Vec2(redTower->getContentSize().width / 2, redTower->getContentSize().height - 10));
+
+	redTower->addChild(redTHpBar);
+	redTower->setTag(ENEMY_NUM);
+
+	auto blueTower = Sprite::create("tower_blue.png");
+	blueTower->setPosition(Vec2(_visibleSize.width, 250));
+	//blueTower->setAnchorPoint(Vec2::ANCHOR_MIDDLE_BOTTOM);
+	_battleBackround->addChild(blueTower);
+	PhysicsBody* blueTBody = MyBodyParser::getInstance()->bodyFormJson(blueTower, "tower");
+	blueTBody->setDynamic(false);
+	blueTBody->setGravityEnable(false);
+	blueTower->setPhysicsBody(blueTBody);
+
+	auto blueTHpBar = Slider::create();
+	blueTHpBar->loadBarTexture("image/screen/battle/mini_hp_base.png");
+	blueTHpBar->setPercent(100);
+	blueTHpBar->loadProgressBarTexture("image/screen/battle/mini_hp_gauge.png");
+	blueTHpBar->setPosition(Vec2(blueTower->getContentSize().width / 2, blueTower->getContentSize().height - 10));
+	blueTower->addChild(blueTHpBar);
+	blueTower->setTag(ENEMY_NUM);
+
+	_allStone.push_back(redTower);
+	_allStone.push_back(blueTower);
+
+
 	testObject = Sprite::create("image/unit_new/move/red/unit_00_08_1.png");
 	_battleBackround->addChild(testObject, MID);
 	testObject->setPosition(Vec2(100, 100));
@@ -139,7 +190,6 @@ void BatleScene::createContent()
 	_allAlliedUnitHpBar.push_back(_mainCharacterMiniHpBar);
 	_allAlliedUnitSprite.push_back(testObject);
 
-
 	auto folow = Follow::create(testObject);
 	folow->setTag(121);
 	_battleBackround->runAction(folow);
@@ -158,14 +208,21 @@ void BatleScene::createContent()
 	topMenu->setPosition(Vec2(0, _visibleSize.height));
 	addChild(topMenu);
 
-	_avataHpBar = Slider::create();
-	_avataHpBar->loadBarTexture("image/screen/battle/hp_base.png");
-	_avataHpBar->setPercent(100);
+	_mainCharacterHpBar = Slider::create();
+	_mainCharacterHpBar->loadBarTexture("image/screen/battle/hp_base.png");
+	_mainCharacterHpBar->setPercent(100);
 	//_hpSlider->loadSlidBallTextureNormal("image/screen/battle/test.png");
-	_avataHpBar->loadProgressBarTexture("image/screen/battle/hp.png");
+	_mainCharacterHpBar->loadProgressBarTexture("image/screen/battle/hp.png");
 	//_hpSlider->setContentSize(Size(372, 12));
-	_avataHpBar->setPosition(Vec2(topMenu->getContentSize().width / 2 + 25, _visibleSize.height - 22));
-	addChild(_avataHpBar);
+	_mainCharacterHpBar->setPosition(Vec2(topMenu->getContentSize().width / 2 + 25, _visibleSize.height - 22));
+	addChild(_mainCharacterHpBar);
+
+	_hpViewLabel = Label::create(DataUtils::numberToString(_mainCharacterData.hp), "", 20);
+	_hpViewLabel->setColor(Color3B::GREEN);
+	_hpViewLabel->setContentSize(Size(150, 50));
+	_hpViewLabel->setPosition(Vec2(_mainCharacterHpBar->getContentSize()) - Vec2(0, 50));
+	_mainCharacterHpBar->addChild(_hpViewLabel);
+
 
 	Vec2 slotPos = Vec2(45, topMenu->getContentSize().height / 2);
 
@@ -225,8 +282,8 @@ void BatleScene::createContent()
 	string skill1ImagePath = _mainCharacterSkillData[0].icon;
 	string skill2ImagePath = _mainCharacterSkillData[1].icon;
 
-	string skill3ImagePath = "image/screen/battle/skill_icon_3.png";
-	string skill4ImagePath = "image/screen/battle/skill_icon_4.png";
+	string skill3ImagePath = _playerSkills[0].icon;
+	string skill4ImagePath = _playerSkills[1].icon;
 
 
 
@@ -249,17 +306,19 @@ void BatleScene::createContent()
 
 	_skill3Button = Button::create();
 	_skill3Button->loadTextureNormal(skill3ImagePath.c_str());
-	//_skill3Button->addTouchEventListener(CC_CALLBACK_2(BatleScene::skill1ButtonCallback, this));
+	_skill3Button->addTouchEventListener(CC_CALLBACK_2(BatleScene::skill1ButtonCallback, this));
 	_skill3Button->setTag(TAG_SKILL_3);
 	_skill3Button->setPosition(Vec2(_visibleSize.width / 2 + 0.5*baseSize.width + 10, baseSize.height / 2 + baseMargin));
 	addChild(_skill3Button);
+	displaySkillMpInButton(_skill3Button, _playerSkills[0].mp_cost);
 
 	_skill4Button = Button::create();
 	_skill4Button->loadTextureNormal(skill4ImagePath.c_str());
-	//_skill4Button->addTouchEventListener(CC_CALLBACK_2(BatleScene::skill1ButtonCallback, this));
+	_skill4Button->addTouchEventListener(CC_CALLBACK_2(BatleScene::skill1ButtonCallback, this));
 	_skill4Button->setTag(TAG_SKILL_4);
 	_skill4Button->setPosition(Vec2(_visibleSize.width / 2 + 1.5 * baseSize.width + 20, baseSize.height / 2 + baseMargin));
 	addChild(_skill4Button);
+	displaySkillMpInButton(_skill4Button, _playerSkills[1].mp_cost);
 
 	_mainCharacterMpBar = Slider::create();
 	_mainCharacterMpBar->loadBarTexture("image/screen/battle/mp_base.png");
@@ -268,6 +327,12 @@ void BatleScene::createContent()
 	_mainCharacterMpBar->setPercent(100);
 	_mainCharacterMpBar->setPosition(Vec2(_visibleSize.width / 2, baseSize.height + baseMargin * 2));
 	addChild(_mainCharacterMpBar);
+
+	_mpViewlabel = Label::create(DataUtils::numberToString(_mainCharacterData.mp), "", 20);
+	_mpViewlabel->setColor(Color3B::BLUE);
+	_mpViewlabel->setContentSize(Size(150, 50));
+	_mpViewlabel->setPosition(Vec2(_mainCharacterMpBar->getContentSize()) + Vec2(50, 0));
+	_mainCharacterMpBar->addChild(_mpViewlabel);
 
 	auto action = RotateBy::create(1, 180);
 
@@ -290,6 +355,9 @@ void BatleScene::createContent()
 	testObject->addChild(_autoAttackArea);
 	_autoAttackArea->setPosition(Vec2(testObject->getContentSize().width / 2, testObject->getContentSize().height / 2 - 30));
 	_autoAttackArea->setVisible(false);
+
+	float positionXScaleRate = _miniMap->getContentSize().width / (_visibleSize.width * 2);
+	float positionYScaleRate = _miniMap->getContentSize().height / (_visibleSize.height * 2);
 
 	auto node = Node::create();
 	node->setPosition(Vec2::ZERO);
@@ -314,8 +382,6 @@ void BatleScene::createContent()
 
 		auto enemyIcon = Sprite::create("image/screen/battle/enemyicon.png");
 		enemyIcon->setOpacity(255);
-		float positionXScaleRate = _miniMap->getContentSize().width / (_visibleSize.width * 2);
-		float positionYScaleRate = _miniMap->getContentSize().height / (_visibleSize.height * 2);
 		enemyIcon->setPosition(Vec2(sp->getPositionX()*positionXScaleRate, sp->getPositionY()*positionYScaleRate));
 		_allEnemyIconInMinimap.push_back(enemyIcon);
 		node->addChild(_allEnemyIconInMinimap.back(), 1);
@@ -327,12 +393,60 @@ void BatleScene::createContent()
 	_testAttackTarget->setScale(IMAGE_SCALE);
 	_battleBackround->addChild(_testAttackTarget);*/
 
+	auto enemyIcon1 = Sprite::create("image/screen/battle/enemyicon.png");
+	enemyIcon1->setOpacity(255);
+
+	switch (_currentPlayerTeamFlg)
+	{
+	case TEAM_FLG_RED:
+		_allAlliedUnitSprite.push_back(redTower);
+		_allAlliedUnitHpBar.push_back(redTHpBar);
+		_allAlliedUnitData.push_back(_redTeamTowerData);
+		_allAlliedUnitCurrentHp.push_back(_redTeamTowerData.hp);
+
+		_allEnemyAttachDelay.push_back(false);
+		_allEnemyCurentHp.push_back(_blueTeamTowerData.hp);
+		_allEnemyHpBar.push_back(blueTHpBar);
+		_allEnemyUnitData.push_back(_blueTeamTowerData);
+		_allEnemyUnitSprite.push_back(blueTower);
+
+		
+// 		float positionXScaleRate = _miniMap->getContentSize().width / (_visibleSize.width * 2);
+// 		float positionYScaleRate = _miniMap->getContentSize().height / (_visibleSize.height * 2);
+		enemyIcon1->setPosition(Vec2(blueTower->getPositionX()*positionXScaleRate, blueTower->getPositionY()*positionYScaleRate));
+		_allEnemyIconInMinimap.push_back(enemyIcon1);
+		node->addChild(_allEnemyIconInMinimap.back(), 1);
+
+		break;
+	case TEAM_FLG_BLUE:
+		_allAlliedUnitSprite.push_back(blueTower);
+		_allAlliedUnitHpBar.push_back(blueTHpBar);
+		_allAlliedUnitData.push_back(_blueTeamTowerData);
+		_allAlliedUnitCurrentHp.push_back(_blueTeamTowerData.hp);
+
+		_allEnemyAttachDelay.push_back(false);
+		_allEnemyCurentHp.push_back(_redTeamTowerData.hp);
+		_allEnemyHpBar.push_back(redTHpBar);
+		_allEnemyUnitData.push_back(_redTeamTowerData);
+		_allEnemyUnitSprite.push_back(redTower);
+
+
+		enemyIcon1->setPosition(Vec2(redTower->getPositionX()*positionXScaleRate, redTower->getPositionY()*positionYScaleRate));
+		_allEnemyIconInMinimap.push_back(enemyIcon1);
+		node->addChild(_allEnemyIconInMinimap.back(), 1);
+
+		break;
+	default:
+		break;
+	}
+
+
 }
 
 void BatleScene::displaySkillMpInButton(Button *parent, int mp)
 {
 	auto lb = Label::create(DataUtils::numberToString(mp), "", 25);
-	lb->setColor(Color3B(75,215,243));
+	lb->setColor(Color3B(0,0,243));
 	lb->setPosition(Vec2(parent->getContentSize() / 2) - Vec2(0, 30));
 	lb->setTag(TAG_MP_LABEL);
 	parent->addChild(lb);
@@ -415,6 +529,7 @@ void BatleScene::update(float delta)
 	//log("Current Hp: %d", _characterCurentHp);
 	updateMiniMap();
 	updateTime();
+	updateHpAndMpViewLabel();
 	checkForAutoAttack();
 
 }
@@ -425,7 +540,7 @@ void BatleScene::checkForAutoAttack()
 	{
 		auto posDistan = _allEnemyUnitSprite[i]->getPosition() - testObject->getPosition();
 		int direc = detectDirectionBaseOnTouchAngle(-posDistan.getAngle()*RAD_DEG + 90);
-		if (posDistan.length() < area && _allEnemyUnitSprite[i]->isVisible()) {
+		if (posDistan.length() < _mainCharacterData.attack_sight && _allEnemyUnitSprite[i]->isVisible()) {
 			if (testObject->getActionByTag(_currentAttackActionTag) == nullptr && _onDelayAttackFlg == false) {
 				//rotateCharacter(testObject,direc);
 				auto ani = createAttackAnimationWithDefine(direc, _attackImagePath);
@@ -435,19 +550,13 @@ void BatleScene::checkForAutoAttack()
 				action->setTag(direc * 10);
 				_currentAttackActionTag = direc * 10;
 				testObject->runAction(action);
-
-				/*string path = "image/unit_new/attack/red/";
-				auto target_ani = createAttackAnimationWithDefine(10 - direc, path);
-				auto call2 = CallFuncN::create(CC_CALLBACK_0(BatleScene::enemyAttackCallback, this));
-				auto action2 = Sequence::create(Animate::create(target_ani),call2,nullptr);
-				action2->setTag(direc);
-				//rotateCharacter(_alltargetUnit[i], 10 - direc);
-				_alltargetUnit[i]->runAction(action2);*/
 				_indexOfBeAttackEnemy = i;
 
 				_onDelayAttackFlg = true;
-				this->runAction(Sequence::create(DelayTime::create(ATTACK_ANIMATION_DELAY), CallFuncN::create(CC_CALLBACK_0(BatleScene::removeceAttackDelayFlg, this)), nullptr));
+				this->runAction(Sequence::create(DelayTime::create(_mainCharacterData.attack_delay), CallFuncN::create(CC_CALLBACK_0(BatleScene::removeceAttackDelayFlg, this)), nullptr));
 			}
+		}
+		if (posDistan.length() < _allEnemyUnitData[i].attack_sight && _allEnemyUnitSprite[i]->isVisible()) {
 
 			if (_allEnemyUnitSprite[i]->getNumberOfRunningActions() < 1 && _allEnemyAttachDelay[i] == false) {
 				string path = "image/unit_new/attack/red/";
@@ -455,18 +564,15 @@ void BatleScene::checkForAutoAttack()
 				auto call2 = CallFuncN::create(CC_CALLBACK_1(BatleScene::enemyAttackCallback, this));
 				auto action2 = Sequence::create(Animate::create(target_ani), call2, nullptr);
 
-				auto forCallback = Sequence::create(DelayTime::create(ATTACK_ANIMATION_DELAY), CallFuncN::create(CC_CALLBACK_1(BatleScene::removeEnemyAttackDelayFlg, this)), nullptr);
+				auto forCallback = Sequence::create(DelayTime::create(_allEnemyUnitData[i].attack_delay), CallFuncN::create(CC_CALLBACK_1(BatleScene::removeEnemyAttackDelayFlg, this)), nullptr);
 
 
 				action2->setTag(1);
 				//rotateCharacter(_alltargetUnit[i], 10 - direc);
 				_allEnemyAttachDelay[i] = true;
-				_allEnemyUnitSprite[i]->runAction(Spawn::create(action2,forCallback,nullptr));
+				_allEnemyUnitSprite[i]->runAction(Spawn::create(action2, forCallback, nullptr));
 				//_indexOfRunningActionTarget = i;
 			}
-		}
-		else {
-			//testObject->stopActionByTag(_currentAttackActionTag);
 		}
 	}
 	/*auto posDistan = _testAttackTarget->getPosition() - testObject->getPosition();
@@ -527,6 +633,9 @@ void BatleScene::enemyDieAction(int id)
 	_allEnemyIconInMinimap[id]->setVisible(false);
 	_indexOfBeAttackEnemy = -1;
 	testObject->stopActionByTag(_currentAttackActionTag);
+	if (id == _allEnemyUnitData.size() - 1) {
+		endBattle();
+	}
 }
 void BatleScene::enemyAttackCallback(Ref *pSEnder)
 {
@@ -550,7 +659,7 @@ void BatleScene::enemyAttackCallback(Ref *pSEnder)
 			}
 			//log("Percent: %d", ceil(float(float(_characterCurentHp) / float(_unitData.hp)) * 100));
 			_mainCharacterMiniHpBar->setPercent(ceil((_allAlliedUnitCurrentHp[0] * 100.0f / _mainCharacterData.hp)));
-			_avataHpBar->setPercent(_mainCharacterMiniHpBar->getPercent());
+			_mainCharacterHpBar->setPercent(_mainCharacterMiniHpBar->getPercent());
 			showAttackDame(dame, testObject->getPosition() + Vec2(0, 100),2);
 		}
 	}
@@ -588,7 +697,7 @@ void BatleScene::runRespawnAction()
 {
 	testObject->setPosition(Vec2(100, 100));
 	_mainCharacterMiniHpBar->setPercent(100);
-	_avataHpBar->setPercent(100);
+	_mainCharacterHpBar->setPercent(100);
 	_mainCharacterMpBar->setPercent(100);
 	_allAlliedUnitCurrentHp[0] = _mainCharacterData.hp;
 	_characterCurentMp = _mainCharacterData.mp;
@@ -696,7 +805,7 @@ void BatleScene::onTouchMoved(Touch *touch, Event *unused_event)
 	}
 
 	testObject->stopActionByTag(_currentAttackActionTag);
-	testObject->getPhysicsBody()->setVelocity(Vect(MOVE_SPEED*cos(distanVector.getAngle()),MOVE_SPEED*sin(distanVector.getAngle())));
+	testObject->getPhysicsBody()->setVelocity(Vect(_mainCharacterData.move_speed*cos(distanVector.getAngle()),_mainCharacterData.move_speed*sin(distanVector.getAngle())));
 	_mainCharacterAvata->setRotation(-(distanVector.getAngle() * RAD_DEG) + 90);
 	//log("%f", _mini_Icon->getRotation());
 	int direc = detectDirectionBaseOnTouchAngle(_mainCharacterAvata->getRotation());
@@ -888,7 +997,7 @@ void BatleScene::createRandomRock()
 		body->getShape(0)->setRestitution(0);
 		body->setGravityEnable(false);
 		sp->setPhysicsBody(body);
-		sp->setAnchorPoint(Vec2::ANCHOR_MIDDLE_BOTTOM);
+		sp->setAnchorPoint(Vec2::ANCHOR_MIDDLE);
 		
 		sp->setPosition(Vec2(random(0.1f, 0.9f)*_visibleSize.width * 2,random(0.1f,0.9f)*_visibleSize.height*2));
 		_allStone.push_back(sp);
@@ -914,7 +1023,7 @@ void BatleScene::fakeZOrder()
 {
 	for (auto &stone : _allStone)
 	{
-		if (stone->getPositionY() < testObject->getPositionY() - 25)
+		if (stone->getPositionY() - stone->getContentSize().height/2 < testObject->getPositionY() - testObject->getContentSize().height/2)
 		{
 			stone->setLocalZOrder(HIGH);
 		}
@@ -1083,7 +1192,7 @@ void BatleScene::nextButtonCallback(Ref *pSender, Widget::TouchEventType type)
 		break;
 	case cocos2d::ui::Widget::TouchEventType::ENDED:
 	{
-		Director::getInstance()->replaceScene(TransitionMoveInR::create(SCREEN_TRANSI_DELAY, BatleResultScene::createScene()));
+		endBattle();
 		break;
 	}
 	case cocos2d::ui::Widget::TouchEventType::CANCELED:
@@ -1142,7 +1251,7 @@ void BatleScene::autoRestoreHpAndMp()
 void BatleScene::updateSlider()
 {
 	_mainCharacterMiniHpBar->setPercent(ceil((_allAlliedUnitCurrentHp[0] * 100.0f / _mainCharacterData.hp)));
-	_avataHpBar->setPercent(_mainCharacterMiniHpBar->getPercent());
+	_mainCharacterHpBar->setPercent(_mainCharacterMiniHpBar->getPercent());
 
 	_mainCharacterMpBar->setPercent(ceil((_characterCurentMp * 100.0f / _mainCharacterData.mp)));
 
@@ -1167,17 +1276,27 @@ void BatleScene::skill1ButtonCallback(Ref *pSender, Widget::TouchEventType type)
 		Button* bt = dynamic_cast<Button*>(pSender);
 		int tag = bt->getTag();
 		//Progress Timer
-		if (_mainCharacterSkillData[tag - 1].target_type == TARGET_ONE && _mainCharacterSkillData[tag - 1].skill_type == TYPE_ATTACK && _indexOfBeAttackEnemy < 0) {
+
+		SkillInfoNew skill;
+		if (tag == TAG_SKILL_1 || tag == TAG_SKILL_2)
+		{
+			skill = _mainCharacterSkillData[tag - 1];
+		}
+		else {
+			skill = _playerSkills[tag - 3];
+		}
+
+		if (skill.target_type == TARGET_ONE && skill.skill_type == TYPE_ATTACK && _indexOfBeAttackEnemy < 0) {
 			log("Invalid attack target");
 			return;
 		}
-		if (_mainCharacterSkillData[tag - 1].mp_cost <= _characterCurentMp){
+		if (skill.mp_cost <= _characterCurentMp){
 			bt->setColor(Color3B::GRAY);
 			bt->setTouchEnabled(false);
 			bt->setEnabled(true);
-			playSkill(tag - 1);
-			showCoolDown(bt, _mainCharacterSkillData[tag - 1].cooldown);
-			bt->runAction(Sequence::create(DelayTime::create(_mainCharacterSkillData[tag - 1].cooldown), CallFuncN::create([&, tag](Ref *p) {
+			playSkill(skill);
+			showCoolDown(bt, skill.cooldown);
+			bt->runAction(Sequence::create(DelayTime::create(skill.cooldown), CallFuncN::create([&, tag](Ref *p) {
 				removeSkillDisableFlg(tag);
 			}), nullptr));
 			
@@ -1276,9 +1395,9 @@ void BatleScene::showCoolDown(Button *parentButton, int time)
 	secondLabel->runAction(Spawn::create(action, action2, nullptr));
 }
 
-void BatleScene::playSkill(int Id)
+void BatleScene::playSkill(SkillInfoNew skillData)
 {
-	SkillInfoNew skill = _mainCharacterSkillData[Id];
+	SkillInfoNew skill = skillData;
 	_characterCurentMp -= skill.mp_cost;
 	_mainCharacterMpBar->setPercent(ceil(_characterCurentMp*100.0f / _mainCharacterData.mp));
 	switch (skill.skill_type)
@@ -1434,7 +1553,7 @@ void BatleScene::skillRestoreOne(SkillInfoNew skillInfo)
 		_allAlliedUnitCurrentHp[0] = _mainCharacterData.hp;
 	}
 	_mainCharacterMiniHpBar->setPercent(_allAlliedUnitCurrentHp[0] * 100.0f / _mainCharacterData.hp);
-	_avataHpBar->setPercent(_mainCharacterMiniHpBar->getPercent());
+	_mainCharacterHpBar->setPercent(_mainCharacterMiniHpBar->getPercent());
 	//Run Effect heal one
 }
 
@@ -1548,8 +1667,11 @@ void BatleScene::skillAttackAll(SkillInfoNew skillInfo)
 				enemyDieAction(index);
 				return;
 			}
-			_allEnemyHpBar[index]->setPercent(_allEnemyCurentHp[index] * 100.0f / _allEnemyUnitData[index].hp);
-			showAttackDame(dame, _allEnemyUnitSprite[index]->getPosition() + Vec2(0, 100), 1);
+			if (_allEnemyUnitSprite[index]->isVisible())
+			{
+				_allEnemyHpBar[index]->setPercent(_allEnemyCurentHp[index] * 100.0f / _allEnemyUnitData[index].hp);
+				showAttackDame(dame, _allEnemyUnitSprite[index]->getPosition() + Vec2(0, 100), 1);
+			}
 			//RUN EFFECET AOE
 		}
 	}
@@ -1563,8 +1685,11 @@ void BatleScene::skillAttackAll(SkillInfoNew skillInfo)
 				enemyDieAction(i);
 				return;
 			}
-			_allEnemyHpBar[i]->setPercent(_allEnemyCurentHp[i] * 100.0f / _allEnemyUnitData[i].hp);
-			showAttackDame(dame, _allEnemyUnitSprite[i]->getPosition() + Vec2(0, 100), 1);
+			if (_allEnemyUnitSprite[i]->isVisible())
+			{
+				_allEnemyHpBar[i]->setPercent(_allEnemyCurentHp[i] * 100.0f / _allEnemyUnitData[i].hp);
+				showAttackDame(dame, _allEnemyUnitSprite[i]->getPosition() + Vec2(0, 100), 1);
+			}
 		}
 		//RUN EFFECT ATTACK ALL
 	}
@@ -1624,6 +1749,20 @@ vector<int> BatleScene::detectUnitInAoe(float detectAoe, int unitFlg)
 
 	return resultUnitId;
 }
+
+void BatleScene::updateHpAndMpViewLabel()
+{
+	string hp = DataUtils::numberToString(_allAlliedUnitCurrentHp[0]).append("/").append(DataUtils::numberToString(_allAlliedUnitData[0].hp));
+	_hpViewLabel->setString(hp.c_str());
+	string mp = DataUtils::numberToString(_characterCurentMp).append("/").append(DataUtils::numberToString(_allAlliedUnitData[0].mp));
+	_mpViewlabel->setString(mp.c_str());
+}
+
+void BatleScene::endBattle()
+{
+	Director::getInstance()->replaceScene(TransitionMoveInR::create(SCREEN_TRANSI_DELAY, BatleResultScene::createScene()));
+}
+
 
 
 

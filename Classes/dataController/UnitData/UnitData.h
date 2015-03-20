@@ -11,5 +11,7 @@ public:
 	static vector<UnitInforNew> getAllUnitData();
 	static UnitInforNew convertInfo(vector<string> data);
 
+	static UnitInforNew getTowerDataByTeamFlg(int teamFlg);
+
 };
 #endif

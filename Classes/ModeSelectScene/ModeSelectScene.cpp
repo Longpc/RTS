@@ -47,12 +47,12 @@ bool ModeSelectScene::init()
 	soloButton->setPosition(Vec2(_visibleSize.width * 3 / 4, _visibleSize.height *1/ 3));
 	addChild(soloButton);
 
-	auto nextButton = Button::create();
-	nextButton->loadTextureNormal("CloseNormal.png");
-	nextButton->setPosition(Vec2(_visibleSize.width - 50, 70));
-	nextButton->setTouchEnabled(true);
-	nextButton->addTouchEventListener(CC_CALLBACK_2(ModeSelectScene::testDialog, this));
-	addChild(nextButton, 10);
+// 	auto nextButton = Button::create();
+// 	nextButton->loadTextureNormal("CloseNormal.png");
+// 	nextButton->setPosition(Vec2(_visibleSize.width - 50, 70));
+// 	nextButton->setTouchEnabled(true);
+// 	nextButton->addTouchEventListener(CC_CALLBACK_2(ModeSelectScene::testDialog, this));
+// 	addChild(nextButton, 10);
 
 	return true;
 }
@@ -112,31 +112,31 @@ bool ModeSelectScene::checkRoomMember()
 	return _onAccess;
 }
 
-void ModeSelectScene::testDialog(Ref *pSender, Widget::TouchEventType type)
-{
-	switch (type)
-	{
-	case cocos2d::ui::Widget::TouchEventType::BEGAN:
-		break;
-	case cocos2d::ui::Widget::TouchEventType::MOVED:
-		break;
-	case cocos2d::ui::Widget::TouchEventType::ENDED:
-	{
-		if (_onAccess) {
-			_onAccess = false;
-		}
-		else {
-			_onAccess = true;
-		}
-		Director::getInstance()->replaceScene(TransitionMoveInL::create(SCREEN_TRANSI_DELAY, BatleScene::createScene(2)));
-		break;
-	}
-	case cocos2d::ui::Widget::TouchEventType::CANCELED:
-		break;
-	default:
-		break;
-	}
-}
+// void ModeSelectScene::testDialog(Ref *pSender, Widget::TouchEventType type)
+// {
+// 	switch (type)
+// 	{
+// 	case cocos2d::ui::Widget::TouchEventType::BEGAN:
+// 		break;
+// 	case cocos2d::ui::Widget::TouchEventType::MOVED:
+// 		break;
+// 	case cocos2d::ui::Widget::TouchEventType::ENDED:
+// 	{
+// 		if (_onAccess) {
+// 			_onAccess = false;
+// 		}
+// 		else {
+// 			_onAccess = true;
+// 		}
+// 		Director::getInstance()->replaceScene(TransitionMoveInL::create(SCREEN_TRANSI_DELAY, BatleScene::createScene(2)));
+// 		break;
+// 	}
+// 	case cocos2d::ui::Widget::TouchEventType::CANCELED:
+// 		break;
+// 	default:
+// 		break;
+// 	}
+// }
 
 void ModeSelectScene::createDatabase()
 {
