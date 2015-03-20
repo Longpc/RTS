@@ -54,6 +54,7 @@ struct SkillInfoNew {
 	string effect;
 	string plistpath;
 	string icon;
+	int skill_help_type;
 
 };
 #define TYPE_HELP 1
@@ -65,6 +66,19 @@ struct SkillInfoNew {
 
 #define DAME_TYPE_PERCENT 1
 #define DAME_TYPE_PURE 2
+
+enum SKILL_HELP_TYPE
+{
+	HP = 1,
+	HP_RESTORE = 2,
+	MP = 3,
+	MP_RESTORE = 4,
+	ATTACK_DAME = 5,
+	DEFENCE = 6,
+	ATTACK_RANGE = 7,
+	MOVESPEED = 8
+};
+
 
 
 #define BASE_SPACE_X 120

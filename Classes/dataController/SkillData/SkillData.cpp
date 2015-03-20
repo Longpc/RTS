@@ -39,6 +39,7 @@ SkillInfoNew SkillData::convertData(vector<string> item)
 	temp.effect = (item[10].c_str());
 	temp.plistpath = (item[11].c_str());
 	temp.icon = item[12].c_str();
+	temp.skill_help_type = DataUtils::stringToFloat(item[13].c_str());
 
 	return temp;
 }
