@@ -577,34 +577,6 @@ void BatleScene::checkForAutoAttack()
 			}
 		}
 	}
-	/*auto posDistan = _testAttackTarget->getPosition() - testObject->getPosition();
-
-	if (posDistan.length() < area ) {
-		//log("Auto attack: %f",posDistan.getAngle()*RAD_DEG);
-		int direc = detectDirectionBaseOnTouchAngle(-posDistan.getAngle()*RAD_DEG + 90);
-		//log("direc %d ",direc);
-		if (testObject->getActionByTag(_currentAttackActionTag) == nullptr && _onDelayAttackFlg == false) {
-			auto ani = createAttackAnimationWithDefine(direc, _attackImagePath);
-			//auto action = RepeatForever::create(Animate::create(ani)); //user repeat for change in future
-			auto action = Animate::create(ani);
-			action->setTag(direc * 10);
-			_currentAttackActionTag = direc * 10;
-			testObject->runAction(action);
-
-			string path = "image/unit_new/attack/red/";
-			auto target_ani = createAttackAnimationWithDefine(10 - direc, path);
-			auto action2 = Animate::create(target_ani);
-			action2->setTag(direc);
-
-			_testAttackTarget->runAction(action2);
-
-			_onDelayAttackFlg = true;
-			this->runAction(Sequence::create(DelayTime::create(ATTACK_ANIMATION_DELAY), CallFuncN::create(CC_CALLBACK_0(BatleScene::removeceAttackDelayFlg, this)), nullptr));
-		}
-	}
-	else {
-		testObject->stopActionByTag(_currentAttackActionTag);
-	}*/
 }
 void BatleScene::characerAttackCallback()
 {
@@ -1274,7 +1246,11 @@ void BatleScene::skill1ButtonCallback(Ref *pSender, Widget::TouchEventType type)
 	{
 		//testObject->stopActionByTag(_currentMoveActionTag);
 		//selectAttackTarget();
-		
+
+		//Effect *effect = new Effect();
+		//effect->createEffectHelp(testObject, "Effect/particle_defence_05s_h.plist", "Effect/particle_defence_05s_v.plist", "image/screen/battle/magic_circle_blue.png");
+
+
 		Button* bt = dynamic_cast<Button*>(pSender);
 		int tag = bt->getTag();
 		//Progress Timer
@@ -1314,71 +1290,7 @@ void BatleScene::skill1ButtonCallback(Ref *pSender, Widget::TouchEventType type)
 		break;
 	}
 }
-/*
-void BatleScene::skill2ButtonCallback(Ref *pSender, Widget::TouchEventType type)
-{
-	switch (type)
-	{
-	case cocos2d::ui::Widget::TouchEventType::BEGAN:
-		break;
-	case cocos2d::ui::Widget::TouchEventType::MOVED:
-		break;
-	case cocos2d::ui::Widget::TouchEventType::ENDED:
-	{
-		//testObject->stopActionByTag(_currentMoveActionTag);
-		//selectAttackTarget();
-		break;
-	}
-	case cocos2d::ui::Widget::TouchEventType::CANCELED:
-		break;
-	default:
-		break;
-	}
-}
 
-void BatleScene::skill3ButtonCallback(Ref *pSender, Widget::TouchEventType type)
-{
-	switch (type)
-	{
-	case cocos2d::ui::Widget::TouchEventType::BEGAN:
-		break;
-	case cocos2d::ui::Widget::TouchEventType::MOVED:
-		break;
-	case cocos2d::ui::Widget::TouchEventType::ENDED:
-	{
-		//testObject->stopActionByTag(_currentMoveActionTag);
-
-		//selectAttackTarget();
-		break;
-	}
-	case cocos2d::ui::Widget::TouchEventType::CANCELED:
-		break;
-	default:
-		break;
-	}
-}
-
-void BatleScene::skill4ButtonCallback(Ref *pSender, Widget::TouchEventType type)
-{
-	switch (type)
-	{
-	case cocos2d::ui::Widget::TouchEventType::BEGAN:
-		break;
-	case cocos2d::ui::Widget::TouchEventType::MOVED:
-		break;
-	case cocos2d::ui::Widget::TouchEventType::ENDED:
-	{
-		//testObject->stopActionByTag(_currentMoveActionTag);
-		//selectAttackTarget();
-		break; }
-
-	case cocos2d::ui::Widget::TouchEventType::CANCELED:
-		break;
-	default:
-		break;
-	}
-}
-*/
 void BatleScene::showCoolDown(Button *parentButton, int time)
 {
 	auto secondLabel = Label::create(DataUtils::numberToString(time), "", 40);
@@ -1496,6 +1408,8 @@ void BatleScene::skillAttackAction(SkillInfoNew skillInfo)
 
 void BatleScene::skillRestoreAll(SkillInfoNew skillInfo)
 {
+	log("Restore All");
+
 	int value = 0;
 	switch (skillInfo.dame_type)
 	{
@@ -1507,7 +1421,8 @@ void BatleScene::skillRestoreAll(SkillInfoNew skillInfo)
 		break;
 	}
 
-	if (skillInfo.aoe > 0) {
+	if (skillInfo.aoe > 0) 
+	{
 		vector<int> allUnitIndex = detectUnitInAoe(skillInfo.aoe, ALLIED_FLAG);
 		for (int &index : allUnitIndex)
 		{
@@ -1533,6 +1448,9 @@ void BatleScene::skillRestoreAll(SkillInfoNew skillInfo)
 
 		//RUN EFFECT HEAL ALL
 		//_mainCharacterMiniHpBar->setPercent(_allAlliedUnitCurrentHp[0] * 100.0f / _mainCharacterData.hp);
+
+
+
 	}
 
 
@@ -1540,6 +1458,8 @@ void BatleScene::skillRestoreAll(SkillInfoNew skillInfo)
 
 void BatleScene::skillRestoreOne(SkillInfoNew skillInfo)
 {
+	log("Restore One");
+
 	int value = 0;
 	switch (skillInfo.dame_type)
 	{
@@ -1556,7 +1476,15 @@ void BatleScene::skillRestoreOne(SkillInfoNew skillInfo)
 	}
 	_mainCharacterMiniHpBar->setPercent(_allAlliedUnitCurrentHp[0] * 100.0f / _mainCharacterData.hp);
 	_mainCharacterHpBar->setPercent(_mainCharacterMiniHpBar->getPercent());
+	
+	
 	//Run Effect heal one
+	Effect *effect = new Effect();
+	effect->createEffectHeal(
+		testObject, 
+		"Effect/particle_heal_1s.plist", 
+		"image/screen/battle/magic_circle_blue.png"
+		);
 }
 
 void BatleScene::skillHelpAll(SkillInfoNew skillInfo)
@@ -1647,6 +1575,8 @@ void BatleScene::skillHelpOne(SkillInfoNew skillInfo)
 
 void BatleScene::skillAttackAll(SkillInfoNew skillInfo)
 {
+	log("Attack All");
+
 	int value = 0;
 	switch (skillInfo.dame_type)
 	{
@@ -1659,6 +1589,8 @@ void BatleScene::skillAttackAll(SkillInfoNew skillInfo)
 		break;
 	}
 	if (skillInfo.aoe > 0) {
+
+		// Do tim cac unit trong khu vuc aoe
 		vector<int> unitIndex = detectUnitInAoe(skillInfo.aoe, ENEMY_FLAG);
 		for (int &index : unitIndex)
 		{
@@ -1674,10 +1606,14 @@ void BatleScene::skillAttackAll(SkillInfoNew skillInfo)
 				_allEnemyHpBar[index]->setPercent(_allEnemyCurentHp[index] * 100.0f / _allEnemyUnitData[index].hp);
 				showAttackDame(dame, _allEnemyUnitSprite[index]->getPosition() + Vec2(0, 100), 1);
 			}
+			
+			
 			//RUN EFFECET AOE
+
 		}
 	}
-	else {
+	else 
+	{
 		for (int i = 0; i < _allEnemyUnitData.size(); i++)
 		{
 			int dame = (value - _allEnemyUnitData[i].defence);
@@ -1693,7 +1629,11 @@ void BatleScene::skillAttackAll(SkillInfoNew skillInfo)
 				showAttackDame(dame, _allEnemyUnitSprite[i]->getPosition() + Vec2(0, 100), 1);
 			}
 		}
+		
+		
 		//RUN EFFECT ATTACK ALL
+		
+
 	}
 	
 	
@@ -1701,6 +1641,8 @@ void BatleScene::skillAttackAll(SkillInfoNew skillInfo)
 
 void BatleScene::skillAttackOne(SkillInfoNew skillInfo)
 {
+	log("Attack One");
+
 	int value = 0;
 	switch (skillInfo.dame_type)
 	{
@@ -1722,7 +1664,17 @@ void BatleScene::skillAttackOne(SkillInfoNew skillInfo)
 	}
 	_allEnemyHpBar[_indexOfBeAttackEnemy]->setPercent(_allEnemyCurentHp[_indexOfBeAttackEnemy] * 100.0f / _allEnemyUnitData[_indexOfBeAttackEnemy].hp);
 	showAttackDame(dame, _allEnemyUnitSprite[_indexOfBeAttackEnemy]->getPosition() + Vec2(0, 100), 1);
-	//RUN EFFECT ATTACK ONE UNIT 
+	
+	//RUN EFFECT ATTACK ONE UNIT
+
+	Effect* effect = new Effect();
+	effect->createEffectAttackFire(
+		testObject, 
+		"Effect/particle_fire.plist", 
+		"image/screen/battle/magic_circle_red.png", 
+		_allEnemyUnitSprite[_indexOfBeAttackEnemy]->getPosition()
+	);
+
 }
 
 vector<int> BatleScene::detectUnitInAoe(float detectAoe, int unitFlg)
@@ -1764,14 +1716,6 @@ void BatleScene::endBattle()
 {
 	Director::getInstance()->replaceScene(TransitionMoveInR::create(SCREEN_TRANSI_DELAY, BatleResultScene::createScene()));
 }
-
-
-
-
-
-
-
-
 
 
 

@@ -141,6 +141,9 @@
     <ClCompile Include="..\Classes\dataController\SkillData\SkillData.cpp">
       <Filter>src\dataController\SkillData</Filter>
     </ClCompile>
+    <ClCompile Include="..\Classes\Multi\BatleScene\Effect.cpp">
+      <Filter>src\Multi\BatleScene</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="main.h">
@@ -223,6 +226,9 @@
     </ClInclude>
     <ClInclude Include="..\Classes\dataController\SkillData\SkillData.h">
       <Filter>src\dataController\SkillData</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Classes\Multi\BatleScene\Effect.h">
+      <Filter>src\Multi\BatleScene</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

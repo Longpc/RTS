@@ -8,6 +8,7 @@
 #include "OptionDialog.h"
 #include "dataController/UnitData/UnitData.h"
 #include "dataController/SkillData/SkillData.h"
+#include "Effect.h"
 
 #include <time.h>
 
@@ -236,6 +237,7 @@ private:
 	int _currentPlayerTeamFlg = TEAM_FLG_BLUE;
 
 	virtual void endBattle();
+
 };
 
 
