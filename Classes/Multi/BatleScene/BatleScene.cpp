@@ -217,7 +217,7 @@ void BatleScene::createContent()
 	_mainCharacterHpBar->setPosition(Vec2(topMenu->getContentSize().width / 2 + 25, _visibleSize.height - 22));
 	addChild(_mainCharacterHpBar);
 
-	_hpViewLabel = Label::create(DataUtils::numberToString(_mainCharacterData.hp), "", 20);
+	_hpViewLabel = Label::createWithSystemFont(DataUtils::numberToString(_mainCharacterData.hp), "", 20);
 	_hpViewLabel->setColor(Color3B::GREEN);
 	_hpViewLabel->setContentSize(Size(150, 50));
 	_hpViewLabel->setPosition(Vec2(_mainCharacterHpBar->getContentSize()) - Vec2(0, 50));
@@ -274,7 +274,7 @@ void BatleScene::createContent()
 
 
 
-	_timeViewLabel = Label::create("00:00:00", "", 25);
+	_timeViewLabel = Label::createWithSystemFont("00:00:00", "", 25);
 	_timeViewLabel->setHorizontalAlignment(TextHAlignment::CENTER);
 	_timeViewLabel->setPosition(Vec2(timeViewContainer->getContentSize().width / 2, timeViewContainer->getContentSize().height / 2));
 	timeViewContainer->addChild(_timeViewLabel);
@@ -328,7 +328,7 @@ void BatleScene::createContent()
 	_mainCharacterMpBar->setPosition(Vec2(_visibleSize.width / 2, baseSize.height + baseMargin * 2));
 	addChild(_mainCharacterMpBar);
 
-	_mpViewlabel = Label::create(DataUtils::numberToString(_mainCharacterData.mp), "", 20);
+	_mpViewlabel = Label::createWithSystemFont(DataUtils::numberToString(_mainCharacterData.mp), "", 20);
 	_mpViewlabel->setColor(Color3B::BLUE);
 	_mpViewlabel->setContentSize(Size(150, 50));
 	_mpViewlabel->setPosition(Vec2(_mainCharacterMpBar->getContentSize()) + Vec2(50, 0));
@@ -453,7 +453,7 @@ void BatleScene::createContent()
 
 void BatleScene::displaySkillMpInButton(Button *parent, int mp)
 {
-	auto lb = Label::create(DataUtils::numberToString(mp), "", 25);
+	auto lb = Label::createWithSystemFont(DataUtils::numberToString(mp), "", 25);
 	lb->setColor(Color3B(0,0,243));
 	lb->setPosition(Vec2(parent->getContentSize() / 2) - Vec2(0, 30));
 	lb->setTag(TAG_MP_LABEL);
@@ -542,7 +542,7 @@ void BatleScene::checkForAutoAttack()
 	{
 		auto posDistan = _allEnemyUnitSprite[i]->getPosition() - testObject->getPosition();
 		int direc = detectDirectionBaseOnTouchAngle(-posDistan.getAngle()*RAD_DEG + 90);
-		if (posDistan.length() < _mainCharacterData.attack_sight && _allEnemyUnitSprite[i]->isVisible()) {
+		if (posDistan.length() < ATTACK_AOE*_mainCharacterData.attack_sight/100.0f && _allEnemyUnitSprite[i]->isVisible()) {
 			if (testObject->getActionByTag(_currentAttackActionTag) == nullptr && _onDelayAttackFlg == false) {
 				//rotateCharacter(testObject,direc);
 				auto ani = createAttackAnimationWithDefine(direc, _attackImagePath);
@@ -558,7 +558,7 @@ void BatleScene::checkForAutoAttack()
 				this->runAction(Sequence::create(DelayTime::create(_mainCharacterData.attack_delay), CallFuncN::create(CC_CALLBACK_0(BatleScene::removeceAttackDelayFlg, this)), nullptr));
 			}
 		}
-		if (posDistan.length() < _allEnemyUnitData[i].attack_sight && _allEnemyUnitSprite[i]->isVisible()) {
+		if (posDistan.length() < ATTACK_AOE*_allEnemyUnitData[i].attack_sight/100.0f && _allEnemyUnitSprite[i]->isVisible()) {
 
 			if (_allEnemyUnitSprite[i]->getNumberOfRunningActions() < 1 && _allEnemyAttachDelay[i] == false) {
 				string path = "image/unit_new/attack/red/";
@@ -583,6 +583,9 @@ void BatleScene::characerAttackCallback()
 	//log("charater");
 	if (_allEnemyCurentHp[_indexOfBeAttackEnemy] > 0) {
 		int dame = (_mainCharacterData.attack_dame - _allEnemyUnitData[_indexOfBeAttackEnemy].defence);
+		float defaultDameRate = caculDameRate(_mainCharacterData.attr, _allEnemyUnitData[_indexOfBeAttackEnemy].attr);
+
+		dame = ceil(random(0.85f, 1.0f)*dame*defaultDameRate);
 		if (dame <= 0) {
 			dame = 1;
 		}
@@ -622,6 +625,12 @@ void BatleScene::enemyAttackCallback(Ref *pSEnder)
 		if (!_onRespwanFlg)
 		{
 			int dame = _allEnemyUnitData[id].attack_dame - _mainCharacterData.defence;
+			float defaultDameRate = caculDameRate(_allEnemyUnitData[id].attr, _mainCharacterData.attr);
+
+			dame = ceil(random(0.85f, 1.0f)*dame*defaultDameRate);
+			if (dame <= 0) {
+				dame = 1;
+			}
 			if (dame <= 0)
 			{
 				dame = 1;
@@ -1293,7 +1302,7 @@ void BatleScene::skill1ButtonCallback(Ref *pSender, Widget::TouchEventType type)
 
 void BatleScene::showCoolDown(Button *parentButton, int time)
 {
-	auto secondLabel = Label::create(DataUtils::numberToString(time), "", 40);
+	auto secondLabel = Label::createWithSystemFont(DataUtils::numberToString(time), "", 40);
 	secondLabel->setColor(Color3B::RED);
 	secondLabel->setPosition(parentButton->getContentSize() / 2);
 	parentButton->addChild(secondLabel);
@@ -1595,6 +1604,9 @@ void BatleScene::skillAttackAll(SkillInfoNew skillInfo)
 		for (int &index : unitIndex)
 		{
 			int dame = (value - _allEnemyUnitData[index].defence);
+			float defaultDameRate = caculDameRate(_mainCharacterData.attr, _allEnemyUnitData[index].attr);
+			dame = ceil(random(0.85f, 1.0f)*dame*defaultDameRate);
+
 			if (dame <= 0) dame = 1;
 			_allEnemyCurentHp[index] -= dame;
 			if (_allEnemyCurentHp[index] <= 0) {
@@ -1655,6 +1667,10 @@ void BatleScene::skillAttackOne(SkillInfoNew skillInfo)
 		break;
 	}
 	int dame = (value - _allEnemyUnitData[_indexOfBeAttackEnemy].defence);
+	float defaultDameRate = caculDameRate(_mainCharacterData.attr, _allEnemyUnitData[_indexOfBeAttackEnemy].attr);
+
+	dame = ceil(random(0.85f, 1.0f)*dame*defaultDameRate);
+
 	if (dame <= 0) dame = 1;
 	_allEnemyCurentHp[_indexOfBeAttackEnemy] -= dame;
 	if (_allEnemyCurentHp[_indexOfBeAttackEnemy] <= 0)
@@ -1715,6 +1731,18 @@ void BatleScene::updateHpAndMpViewLabel()
 void BatleScene::endBattle()
 {
 	Director::getInstance()->replaceScene(TransitionMoveInR::create(SCREEN_TRANSI_DELAY, BatleResultScene::createScene()));
+}
+
+float BatleScene::caculDameRate(int mainC, int enemy)
+{
+	if (enemy == 4 || mainC == enemy)
+	{
+		return 1.0f;
+	}
+	if (mainC - enemy == -1 || mainC - enemy == 2) {
+		return 1.5f;
+	}
+	return 0.5f;
 }
 
 

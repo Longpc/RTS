@@ -82,9 +82,25 @@ void UnitDetailDialog::displayUnitInfo(Sprite *parent)
 	parent->addChild(image, 10);
 	image->setScale(2);
 
+	string dameType = "無";
+	switch (_unitInfo.attr)
+	{
+	case 1:
+		dameType = "火";
+		break;
+	case 2:
+		dameType = "草";
+		break;
+	case 3:
+		dameType = "水";
+	default:
+		break;
+	}
+
+
 	std::stringstream info;
 	info << "名前:   " << _unitInfo.name << "\nHP:   " << _unitInfo.hp << "\nHP 回復:   " << _unitInfo.hp_restore << "\nMP:   " << _unitInfo.mp_restore << "\n攻撃力:   " << _unitInfo.attack_dame << "\n防御力:   " << _unitInfo.defence;
-	info << "\n攻撃範囲:   " << _unitInfo.attack_sight << "\n移動スピード: " << _unitInfo.move_speed << "\n特徴: " << _unitInfo.attr << "\nタイプ: " << _unitInfo.type;
+	info << "\n攻撃範囲:   " << _unitInfo.attack_sight << "\n移動スピード: " << _unitInfo.move_speed << "\n属性: " << dameType << "\nタイプ: " << _unitInfo.type;
 	statusLabel = Label::create(info.str().c_str(), JAPANESE_FONT_1_BOLD, 25);
 	statusLabel->setColor(Color3B::BLACK);
 	statusLabel->setHorizontalAlignment(TextHAlignment::LEFT);

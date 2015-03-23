@@ -237,6 +237,7 @@ private:
 	int _currentPlayerTeamFlg = TEAM_FLG_BLUE;
 
 	virtual void endBattle();
+	virtual float caculDameRate(int mainC, int enemy);
 
 };
 

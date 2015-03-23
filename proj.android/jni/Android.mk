@@ -31,7 +31,8 @@ LOCAL_SRC_FILES := hellocpp/main.cpp \
 				   ../../Classes/base/database/sqlite3.c \
 				   ../../Classes/base/database/SqlUtils.cpp \
 				   ../../Classes/dataController/SkillData/SkillData.cpp \
-				   ../../Classes/dataController/UnitData/UnitData.cpp
+				   ../../Classes/dataController/UnitData/UnitData.cpp \
+				   ../../Classes/Multi/BatleScene/Effect.cpp
 
 LOCAL_C_INCLUDES := $(LOCAL_PATH)/../../Classes
 

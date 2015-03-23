@@ -58,6 +58,8 @@ struct SkillInfoNew {
 	int skill_help_type;
 
 };
+
+#define ATTACK_AOE 100.0f
 #define TYPE_HELP 1
 #define TYPE_RESTORE 2
 #define TYPE_ATTACK 3
