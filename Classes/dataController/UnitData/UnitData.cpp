@@ -20,7 +20,7 @@ vector<UnitInforNew> UnitData::getAllUnitData()
 {
 	vector<UnitInforNew> allUnit;
 	sqlite3 *data = SqlUtil::openData(DATABASE_FILE);
-	string sql = "select * from unit unit.move_speed > 0 ";
+	string sql = "select * from unit where unit.move_speed > 0 ";
 	vector<vector<string>> a = SqlUtil::runQuery(data, sql.c_str());
 	for (auto &item : a)
 	{	

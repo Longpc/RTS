@@ -38,7 +38,7 @@ public:
 	LayerColor *_backGround;
 	Sprite *_bgImage;
 	Size _visibleSize;
-	LabelTTF *_defaultLabel;
+	Label *_defaultLabel;
 	Menu *_menu;
 	MenuItemImage * _item1;
 

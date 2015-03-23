@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>data</key>
+	<dict>
+		<key>ModeSelect</key>
+		<string>モードを選択して下さい</string>
+		<key>UnitSelect</key>
+		<string>ユニットを選択して下さい</string>
+		<key>SkillSelect</key>
+		<string>スキルを選択してください</string>
+		<key>ServerAddress</key>
+		<string>http://tore.f-2.jp/mokha/server/download/innolab/database/database.db3</string>
+		<key>retry</key>
+		<string>3</string>
+	</dict>
+	<key>metadata</key>
+	<dict>
+		<key>format</key>
+		<integer>1</integer>
+	</dict>
+</dict>
+</plist>

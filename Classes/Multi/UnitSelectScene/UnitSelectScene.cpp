@@ -1,4 +1,4 @@
-
+﻿#pragma execution_character_set("utf-8")
 #include "UnitSelectScene.h"
 
 
@@ -36,7 +36,7 @@ bool MultiUnitSelectScene::init(int roomId,int pageFlg)
 	_onTouchDisable = false;
 	UserDefault::getInstance()->setIntegerForKey("MODE", _pageFlg);
 
-	_defaultLabel->setString("Please select unit");
+	_defaultLabel->setString("ユニットを選択して下さい");
 	
 	baseSlot1 = createSlotBaseSprite(Vec2(_visibleSize.width / 2 - 150, _visibleSize.height - 150));
 	addChild(baseSlot1);
@@ -197,7 +197,7 @@ void MultiUnitSelectScene::onSelectUnit(int unitId)
 		break;
 	}
 }
-void MultiUnitSelectScene::displayUnit(Button *parent,LabelTTF *textView, int unitId)
+void MultiUnitSelectScene::displayUnit(Button *parent,Label *textView, int unitId)
 {
 	parent->loadTextureNormal(_allUnitInfoNew[unitId].image);
 	textView->setString(_allUnitInfoNew[unitId].name);
@@ -253,11 +253,13 @@ void MultiUnitSelectScene::createAllUnitView()
 	lArrow->setPosition(Vec2(50, baseSize.height / 2));
 	spite->addChild(lArrow);
 	lArrow->setSwallowTouches(true);
+	lArrow->addTouchEventListener(CC_CALLBACK_2(MultiUnitSelectScene::leftArrowClickCallback, this));
 	lArrow->setVisible(false);
 
 	rArrow = Button::create("image/screen/unitSelect/right.png");
 	rArrow->setPosition(Vec2(baseSize.width - 50, baseSize.height / 2));
 	rArrow->setAnchorPoint(Vec2::ANCHOR_MIDDLE_RIGHT);
+	rArrow->addTouchEventListener(CC_CALLBACK_2(MultiUnitSelectScene::rightArrowClickCallback, this));
 	spite->addChild(rArrow);
 	rArrow->setSwallowTouches(true);
 
@@ -457,9 +459,9 @@ Sprite* MultiUnitSelectScene::createUnitNameBg(Vec2 pos)
 	return sp;
 }
 
-LabelTTF* MultiUnitSelectScene::createUniNameLabel(Vec2 pos)
+Label* MultiUnitSelectScene::createUniNameLabel(Vec2 pos)
 {
-	auto lb = LabelTTF::create("", "fonts/Marker Felt.ttf", 20);
+	auto lb = Label::create("", JAPANESE_FONT_1_BOLD, 20);
 	lb->setPosition(pos);
 	lb->setHorizontalAlignment(TextHAlignment::CENTER);
 	lb->setColor(Color3B::BLACK);
@@ -524,7 +526,7 @@ void MultiUnitSelectScene::setSelectedSlot(int slotNum)
 
 void MultiUnitSelectScene::getDataFromDataBase()
 {
-#define DATABASE_NAME "database.db3"
+/*#define DATABASE_NAME "database.db3"
 #define TABLE_NAME "unit"
 	sqlite3 *data = SqlUtil::openData(DATABASE_NAME);
 	string sql = "select * from unit";
@@ -554,7 +556,48 @@ void MultiUnitSelectScene::getDataFromDataBase()
 		log("________________________");
 	}
 
+	*/
+	_allUnitInfoNew = UnitData::getAllUnitData();
+}
 
+void MultiUnitSelectScene::leftArrowClickCallback(Ref *pSender, Widget::TouchEventType type)
+{
+	switch (type)
+	{
+	case cocos2d::ui::Widget::TouchEventType::BEGAN:
+		break;
+	case cocos2d::ui::Widget::TouchEventType::MOVED:
+		break;
+	case cocos2d::ui::Widget::TouchEventType::ENDED:
+	{
+		_mainPage->scrollToPage(_mainPage->getCurPageIndex() - 1);
+		break;
+	}
+	case cocos2d::ui::Widget::TouchEventType::CANCELED:
+		break;
+	default:
+		break;
+	}
+}
+
+void MultiUnitSelectScene::rightArrowClickCallback(Ref *pSender, Widget::TouchEventType type)
+{
+	switch (type)
+	{
+	case cocos2d::ui::Widget::TouchEventType::BEGAN:
+		break;
+	case cocos2d::ui::Widget::TouchEventType::MOVED:
+		break;
+	case cocos2d::ui::Widget::TouchEventType::ENDED:
+	{
+		_mainPage->scrollToPage(_mainPage->getCurPageIndex() + 1);
+		break;
+	}
+	case cocos2d::ui::Widget::TouchEventType::CANCELED:
+		break;
+	default:
+		break;
+	}
 }
 
 

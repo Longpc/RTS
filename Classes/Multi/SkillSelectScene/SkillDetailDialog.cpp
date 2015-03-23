@@ -1,3 +1,4 @@
+﻿#pragma execution_character_set("utf-8")
 #include "SkillDetailDialog.h"
 SkillDetailDialog* SkillDetailDialog::create(SkillInfoNew unit, MyTouchEvent decideCallback, MyTouchEvent ccelCallback)
 {
@@ -79,8 +80,8 @@ void SkillDetailDialog::displayUnitInfo(Sprite *parent)
 
 
 	std::stringstream info;
-	info << "Name: " << _skillInfo.name << "\nDescription: " << _skillInfo.effect << "\nMP: " << _skillInfo.mp_cost;
-	auto label = LabelTTF::create(info.str().c_str(), "", 25,Size(parent->getContentSize().width/2,300));
+	info << "スキル名前: " << _skillInfo.name << "\n\n説明: " << _skillInfo.effect << "\n必要ＭＰ: " << _skillInfo.mp_cost;
+	auto label = Label::createWithSystemFont(info.str().c_str(), JAPANESE_FONT_1_BOLD, 25,Size(parent->getContentSize().width/2,300));
 	label->setColor(Color3B::BLACK);
 	label->setAnchorPoint(Vec2::ANCHOR_TOP_LEFT);
 	label->setHorizontalAlignment(TextHAlignment::LEFT);

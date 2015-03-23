@@ -1,3 +1,4 @@
+﻿#pragma execution_character_set("utf-8")
 #include "SkillSelectScene.h"
 #define SLOT_NUMBER 2
 Scene * SkillSelectScene::createScene(int unitId)
@@ -31,7 +32,7 @@ bool SkillSelectScene::init(int unit)
 	_selectedUnitId = unit;
 	_allSelectedSkilId.push_back(0);
 	_allSelectedSkilId.push_back(0);
-	_defaultLabel->setString("Please select skill");
+	_defaultLabel->setString("スキルを選択して下さい");
 
 	_slot1BackGroundButton = createSlotBaseSprite(Vec2(_visibleSize.width / 2 - BUTON_MARGIN/2, _visibleSize.height - 150));
 	addChild(_slot1BackGroundButton);
@@ -159,7 +160,7 @@ void SkillSelectScene::onTouchUnitSlot2(Ref *pSender, Widget::TouchEventType typ
 	setSelectedSlot(3);
 }
 */
-void SkillSelectScene::displayUnit(Button *parent, LabelTTF *label, int unitId)
+void SkillSelectScene::displayUnit(Button *parent, Label *label, int unitId)
 {
 	parent->loadTextureNormal(_allSkillInfo[unitId].icon);
 	label->setString(_allSkillInfo[unitId].name);
@@ -306,9 +307,9 @@ Sprite* SkillSelectScene::createUnitNameBg(Vec2 pos)
 	sp->setPosition(pos);
 	return sp;
 }
-LabelTTF* SkillSelectScene::createUniNameLabel(Vec2 pos)
+Label* SkillSelectScene::createUniNameLabel(Vec2 pos)
 {
-	auto lb = LabelTTF::create("", "fonts/Marker Felt.ttf", 20);
+	auto lb = Label::createWithSystemFont("", JAPANESE_FONT_1_BOLD, 20);
 	lb->setPosition(pos);
 	lb->setHorizontalAlignment(TextHAlignment::CENTER);
 	lb->setColor(Color3B::BLACK);
@@ -327,12 +328,14 @@ void SkillSelectScene::createAllUnitView()
 	lArrow->setPosition(Vec2(50, baseSize.height / 2));
 	spite->addChild(lArrow);
 	lArrow->setSwallowTouches(true);
+	lArrow->addTouchEventListener(CC_CALLBACK_2(SkillSelectScene::leftArrowClickCallback, this));
 	lArrow->setVisible(false);
 
 	rArrow = Button::create("image/screen/unitSelect/right.png");
 	rArrow->setPosition(Vec2(baseSize.width - 50, baseSize.height / 2));
 	rArrow->setAnchorPoint(Vec2::ANCHOR_MIDDLE_RIGHT);
 	spite->addChild(rArrow);
+	rArrow->addTouchEventListener(CC_CALLBACK_2(SkillSelectScene::rightArrowClickCallback, this));
 	rArrow->setSwallowTouches(true);
 
 	float space = baseSize.width - 150;
@@ -382,40 +385,7 @@ void SkillSelectScene::createAllUnitView()
 	//_mainPage->removePageAtIndex(0);
 	_mainPage->addEventListener(CC_CALLBACK_2(SkillSelectScene::pageViewEvent, this));
 	spite->addChild(_mainPage);
-	/*auto spite = Sprite::create("image/navigator/dialog_background.png");
-	spite->setPosition(Vec2(_visibleSize.width / 2, _visibleSize.height / 2 - 100));
-	addChild(spite);
-
-	auto scroll = extension::ScrollView::create();
-	scroll->setViewSize(spite->getContentSize());
-	scroll->setPosition(Vec2::ZERO);
-	scroll->setAnchorPoint(Vec2::ANCHOR_BOTTOM_LEFT);
-	scroll->setDirection(extension::ScrollView::Direction::HORIZONTAL);
-	scroll->updateInset();
-	scroll->setVisible(true);
-
-	spite->addChild(scroll);
-	auto layer = Layer::create();
-	layer->setAnchorPoint(Vec2::ANCHOR_BOTTOM_LEFT);
-	layer->setContentSize(Size(_allSkillInfo.size()*BASE_SPACE_X, spite->getContentSize().height));
 	
-	scroll->setContainer(layer);
-	scroll->setContentOffset(scroll->minContainerOffset());
-
-	float baseMargin = 120;
-	for (int i = 0; i < _allSkillInfo.size(); i++)
-	{
-		auto sprite = Button::create();
-		//sprite->setScale(0.5);
-		sprite->setTag(_allSkillInfo[i]._skillId);
-		sprite->loadTextureNormal(_allSkillInfo[i]._imagePath);
-		sprite->setSwallowTouches(false);
-		int xValue = (i*0.5);
-		sprite->addTouchEventListener(CC_CALLBACK_2(SkillSelectScene::onTouchUnit, this));
-		sprite->setPosition(Vec2(baseMargin + BASE_SPACE_X*xValue, layer->getContentSize().height-(baseMargin + BASE_SPACE_X*(i % 2))));
-		layer->addChild(sprite);
-	}
-	layer->setPosition(Vec2(0, 0));*/
 }
 
 ClippingNode* SkillSelectScene::createSlot(Vec2 position)
@@ -516,4 +486,44 @@ void SkillSelectScene::getSkillDataFromDatabase()
 		temp.icon = item[12].c_str();
 		_allSkillInfo.push_back(temp);
 	}*/
+}
+
+void SkillSelectScene::leftArrowClickCallback(Ref *pSender, Widget::TouchEventType type)
+{
+	switch (type)
+	{
+	case cocos2d::ui::Widget::TouchEventType::BEGAN:
+		break;
+	case cocos2d::ui::Widget::TouchEventType::MOVED:
+		break;
+	case cocos2d::ui::Widget::TouchEventType::ENDED:
+	{
+		_mainPage->scrollToPage(_mainPage->getCurPageIndex() - 1);
+		break;
+	}
+	case cocos2d::ui::Widget::TouchEventType::CANCELED:
+		break;
+	default:
+		break;
+	}
+}
+
+void SkillSelectScene::rightArrowClickCallback(Ref *pSender, Widget::TouchEventType type)
+{
+	switch (type)
+	{
+	case cocos2d::ui::Widget::TouchEventType::BEGAN:
+		break;
+	case cocos2d::ui::Widget::TouchEventType::MOVED:
+		break;
+	case cocos2d::ui::Widget::TouchEventType::ENDED:
+	{
+		_mainPage->scrollToPage(_mainPage->getCurPageIndex() + 1);
+		break;
+	}
+	case cocos2d::ui::Widget::TouchEventType::CANCELED:
+		break;
+	default:
+		break;
+	}
 }

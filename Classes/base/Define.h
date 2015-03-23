@@ -82,7 +82,9 @@ enum SKILL_HELP_TYPE
 	MOVESPEED = 8
 };
 
-
+#define JAPANESE_FONT_1_HEAVY "fonts/AozoraMinchoHeavy.ttf"
+#define JAPANESE_FONT_1_BOLD "fonts/AozoraMincho-bold.ttf"
+#define JAPANESE_FONT_1_REGULAR "fonts/AozoraMinchoRegular.ttf"
 
 #define BASE_SPACE_X 120
 #define BOLDER_TAG 77

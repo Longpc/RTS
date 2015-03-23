@@ -1,3 +1,4 @@
+﻿#pragma execution_character_set("utf-8")
 #include "MultiTeamSelectScene.h"
 
 Scene * MultiTeamSelectScene::createScene()
@@ -16,9 +17,9 @@ bool MultiTeamSelectScene::init()
 		return false;
 	}
 
-	String *str = String::createWithFormat("Please select team");
+	
 	if (_defaultLabel != nullptr) {
-		_defaultLabel->setString(str->getCString());
+		_defaultLabel->setString("チームを選択してください");
 	}
 	
 	auto blueTeamBg = Sprite::create("image/screen/base.png");
@@ -180,9 +181,9 @@ void MultiTeamSelectScene::getAndShowTeamInfo(int teamId,Sprite *parent)
 		teamInfo.push_back(temp);
 	}
 	std::stringstream memNum;
-	memNum << "Player: "<< teamInfo.size();
-	auto teamLabel = LabelTTF::create(memNum.str().c_str(), "fonts/Marker Felt.ttf", 30);
-	teamLabel->setPosition(Vec2(50, parent->getContentSize().height - 10));
+	memNum << "プレイヤー数: "<< teamInfo.size();
+	auto teamLabel = Label::create(memNum.str().c_str(), JAPANESE_FONT_1_BOLD, 30);
+	teamLabel->setPosition(Vec2(50, parent->getContentSize().height - 20));
 	teamLabel->setAnchorPoint(Vec2::ANCHOR_TOP_LEFT);
 	teamLabel->setColor(Color3B::BLACK);
 	parent->addChild(teamLabel);
@@ -194,11 +195,11 @@ void MultiTeamSelectScene::getAndShowTeamInfo(int teamId,Sprite *parent)
 	username1Bg->addChild(createLabelWithStringandPosition(teamInfo[0]._name, Vec2(10, username1Bg->getContentSize().height / 2)));
 	parent->addChild(username1Bg);
 
-	auto userName2Bg = createUsernameBackground(Vec2(baseX, baseY * 2 / 3));
+	auto userName2Bg = createUsernameBackground(Vec2(baseX, baseY * 2 / 3 -5));
 	userName2Bg->addChild(createLabelWithStringandPosition(teamInfo[1]._name, Vec2(10, username1Bg->getContentSize().height / 2)));
 	parent->addChild(userName2Bg);
 
-	auto username3Bg = createUsernameBackground(Vec2(baseX, baseY * 1 / 3));
+	auto username3Bg = createUsernameBackground(Vec2(baseX, baseY * 1 / 3 - 10));
 	//username3Bg->addChild(createLabelWithStringandPosition(_blueTeamUserInfo[2]._name, Vec2(10, username3Bg->getContentSize().height / 2)));
 	parent->addChild(username3Bg);
 
@@ -270,9 +271,9 @@ Sprite* MultiTeamSelectScene::createUsernameBackground(Vec2 position)
 	return sp;
 }
 
-LabelTTF* MultiTeamSelectScene::createLabelWithStringandPosition(string text, Vec2 pos)
+Label* MultiTeamSelectScene::createLabelWithStringandPosition(string text, Vec2 pos)
 {
-	auto lb = LabelTTF::create(text.c_str(), "", 25);
+	auto lb = Label::create(text.c_str(), JAPANESE_FONT_1_BOLD, 25);
 	lb->setHorizontalAlignment(TextHAlignment::LEFT);
 	lb->setAnchorPoint(Vec2::ANCHOR_MIDDLE_LEFT);
 	lb->setColor(Color3B::BLACK);

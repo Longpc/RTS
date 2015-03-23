@@ -19,7 +19,7 @@ private:
 
 	virtual Button* createSlotBaseSprite(Vec2 pos);
 	virtual Sprite* createUnitNameBg(Vec2 pos);
-	virtual LabelTTF* createUniNameLabel(Vec2 pos);
+	virtual Label* createUniNameLabel(Vec2 pos);
 	
 	Sprite *statusTab;
 	Sprite *skillTab;
@@ -30,9 +30,9 @@ private:
 	Button *_slot2BackgroundButon;
 	Button *_slot3BackgroundButon;
 
-	LabelTTF *selectedUnit1Name;
-	LabelTTF *selectedUnit2Name;
-	LabelTTF *selectedUnit3Name;
+	Label *selectedUnit1Name;
+	Label *selectedUnit2Name;
+	Label *selectedUnit3Name;
 
 	ClippingNode *_slot1;
 	ClippingNode *_slot2;
