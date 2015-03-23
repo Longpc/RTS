@@ -1,3 +1,5 @@
+#pragma execution_character_set("utf-8")
+
 #include "LayerBase.h"
 
 bool LayerBase::init()
@@ -23,22 +25,22 @@ bool LayerBase::init()
 	_item1->setPosition(Vec2( _item1->getContentSize().width/2, _visibleSize.height - _item1->getContentSize().height/2));
 	_menu->setPosition(Vec2::ZERO);
 
-	_defaultLabel = LabelTTF::create("", "fonts/Marker Felt.ttf", 30);
-	_defaultLabel->setPosition(Vec2(_visibleSize.width / 2, _visibleSize.height - 50));
+	_defaultLabel = Label::createWithSystemFont("", JAPANESE_FONT_1_HEAVY, 30);
+	_defaultLabel->setPosition(Vec2(_visibleSize.width / 2, _visibleSize.height - 40));
 	_defaultLabel->setColor(Color3B::BLACK);
 	addChild(_defaultLabel);
 
 	addChild(_menu,1);
 
 	_usernameBg = Sprite::create("image/navigator/user_name.png");
-	_usernameBg->setScaleX(0.5);
-	_usernameBg->setScaleY(0.8);
-	_usernameBg->setPosition(Vec2(_visibleSize.width - _usernameBg->getContentSize().width*0.5 / 2, _visibleSize.height - _usernameBg->getContentSize().height*0.8 / 2));
+	_usernameBg->setScaleX(0.5f);
+	_usernameBg->setScaleY(0.8f);
+	_usernameBg->setPosition(Vec2(_visibleSize.width - _usernameBg->getContentSize().width*0.5f / 2, _visibleSize.height - _usernameBg->getContentSize().height*0.8f / 2));
 	addChild(_usernameBg);
 
 	_curUserInfo._name = "Long";
 
-	auto userNameLabel = LabelTTF::create(_curUserInfo._name, "fonts/Marker Felt.ttf", 30);
+	auto userNameLabel = Label::createWithSystemFont(_curUserInfo._name, JAPANESE_FONT_1_BOLD, 30);
 	userNameLabel->setPosition(Vec2(50,_usernameBg->getContentSize().height/2));
 	userNameLabel->setColor(Color3B::BLACK);
 	_usernameBg->addChild(userNameLabel,1);

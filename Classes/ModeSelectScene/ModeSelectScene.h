@@ -32,12 +32,14 @@ private:
 	/*virtual void testDialog(Ref *pSender, Widget::TouchEventType type);*/
 
 	/*Create data base*/
-	virtual void createDatabase();
+	virtual void downloadDatabase();
 	virtual void serverCallback(HttpClient* client, HttpResponse* response);
 
 
 	bool _onAccess = true;
 	bool _onDisableTouch = false;
+
+	int _retryCount = 1;
 };
 
 #endif

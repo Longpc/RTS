@@ -23,8 +23,8 @@ private:
 	virtual void skillButonCallback(Ref *pSEnder, Widget::TouchEventType type);
 
 
-	LabelTTF *statusLabel;
-	LabelTTF *skillLabel;
+	Label *statusLabel;
+	Node *skillLabel;
 
 	Button *statusButton;
 	Button *skillButton;

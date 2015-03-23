@@ -1,3 +1,5 @@
+#pragma execution_character_set("utf-8")
+
 #include "BatleResultScene.h"
 
 Scene* BatleResultScene::createScene()
@@ -84,8 +86,8 @@ void BatleResultScene::createContent()
 	addChild(statusTab, 10);
 
 	std::stringstream info;
-	info << "Name: TEAM BLUE" << "\nAttack: " << 1000000 << "\nDefense: " << 11110 << "\nSpeed: " << 10;
-	auto label = LabelTTF::create(info.str().c_str(), "", 25);
+	info << "チーム名前: TEAM BLUE" << "\n攻撃ダメージ: " << 1000000 << "\n防御: " << 11110 << "\nSpeed: " << 10;
+	auto label = Label::createWithSystemFont(info.str().c_str(), JAPANESE_FONT_1_BOLD, 25);
 	label->setColor(Color3B::BLACK);
 	label->setPosition(Vec2(150, statusTab->getContentSize().height - 100));
 	label->setHorizontalAlignment(TextHAlignment::LEFT);
@@ -98,7 +100,7 @@ void BatleResultScene::createContent()
 
 	std::stringstream info2;
 	info2 << "Name: TEAM RED " << "\nAttack: " << 100 << "\nDefense: " << 100 << "\nSpeed: " << 10110;
-	auto label2 = LabelTTF::create(info2.str().c_str(), "", 25);
+	auto label2 = Label::createWithSystemFont(info2.str().c_str(), JAPANESE_FONT_1_BOLD, 25);
 	label2->setColor(Color3B::BLACK);
 	label2->setPosition(Vec2(150, statusTab->getContentSize().height - 100));
 	label2->setHorizontalAlignment(TextHAlignment::LEFT);
@@ -203,9 +205,9 @@ Sprite* BatleResultScene::createUnitNameBg(Vec2 pos)
 	sp->setPosition(pos);
 	return sp;
 }
-LabelTTF* BatleResultScene::createUniNameLabel(Vec2 pos)
+Label* BatleResultScene::createUniNameLabel(Vec2 pos)
 {
-	auto lb = LabelTTF::create("", "fonts/Marker Felt.ttf", 20);
+	auto lb = Label::createWithSystemFont("", JAPANESE_FONT_1_BOLD, 20);
 	lb->setPosition(pos);
 	lb->setHorizontalAlignment(TextHAlignment::CENTER);
 	lb->setColor(Color3B::BLACK);

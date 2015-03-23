@@ -37,7 +37,7 @@ private:
 	virtual void getAndShowTeamInfo(int teamId,Sprite *parent);
 
 	virtual Sprite* createUsernameBackground(Vec2 position);
-	virtual LabelTTF* createLabelWithStringandPosition(string text, Vec2 pos);
+	virtual Label* createLabelWithStringandPosition(string text, Vec2 pos);
 
 	/*
 	Check selected room accessible

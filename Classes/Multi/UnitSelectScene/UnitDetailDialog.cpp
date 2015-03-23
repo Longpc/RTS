@@ -1,3 +1,4 @@
+﻿#pragma execution_character_set("utf-8")
 #include "UnitDetailDialog.h"
 
 UnitDetailDialog* UnitDetailDialog::create(UnitInforNew unit, MyTouchEvent decideCallback, MyTouchEvent ccelCallback)
@@ -82,15 +83,13 @@ void UnitDetailDialog::displayUnitInfo(Sprite *parent)
 	image->setScale(2);
 
 	std::stringstream info;
-	info << "Name: " << _unitInfo.name << "\nHP: " << _unitInfo.hp << "\nHP Restore: " << _unitInfo.hp_restore << "\nMP: " << _unitInfo.mp_restore << "\nAttack Dame: " << _unitInfo.attack_dame << "\nDefense: " << _unitInfo.defence;
-	info << "\nAttack Rage: " << _unitInfo.attack_sight << "\nMovement speed: " << _unitInfo.move_speed << "\nAttribute: " << _unitInfo.attr << "\nType: " << _unitInfo.type;
-	statusLabel = LabelTTF::create(info.str().c_str(), "", 25);
+	info << "名前:   " << _unitInfo.name << "\nHP:   " << _unitInfo.hp << "\nHP 回復:   " << _unitInfo.hp_restore << "\nMP:   " << _unitInfo.mp_restore << "\n攻撃力:   " << _unitInfo.attack_dame << "\n防御力:   " << _unitInfo.defence;
+	info << "\n攻撃範囲:   " << _unitInfo.attack_sight << "\n移動スピード: " << _unitInfo.move_speed << "\n特徴: " << _unitInfo.attr << "\nタイプ: " << _unitInfo.type;
+	statusLabel = Label::create(info.str().c_str(), JAPANESE_FONT_1_BOLD, 25);
 	statusLabel->setColor(Color3B::BLACK);
 	statusLabel->setHorizontalAlignment(TextHAlignment::LEFT);
 	
-	skillLabel = LabelTTF::create("", "", 25);
-	//skillLabel->setColor(Color3B::BLACK);
-	skillLabel->setHorizontalAlignment(TextHAlignment::LEFT);
+	skillLabel = Node::create();
 	skillLabel->setVisible(false);
 
 	auto backGroundSize = parent->getContentSize();
@@ -103,7 +102,7 @@ void UnitDetailDialog::displayUnitInfo(Sprite *parent)
 		sp->setPosition(pos);
 		skillLabel->addChild(sp);
 		string content = _allUnitSkill[i].name.append("\n").append(_allUnitSkill[i].effect);
-		auto lb = Label::create(content.c_str(), "", 25,Size(400,100));
+		auto lb = Label::create(content.c_str(), JAPANESE_FONT_1_BOLD, 25,Size(400,100));
 		lb->setColor(Color3B::BLACK);
 		lb->setPosition(pos + Vec2(50, -10));
 		lb->setAnchorPoint(Vec2::ANCHOR_MIDDLE_LEFT);

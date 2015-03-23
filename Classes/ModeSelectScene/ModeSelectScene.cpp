@@ -1,4 +1,4 @@
-
+﻿#pragma execution_character_set("utf-8")
 #include "ModeSelectScene.h"
 
 Scene * ModeSelectScene::createScene()
@@ -18,15 +18,20 @@ bool ModeSelectScene::init()
 	}
 	if (CC_TARGET_PLATFORM != CC_PLATFORM_WIN32)
 	{
-		createDatabase();
+		downloadDatabase();
+	}
+
+	auto config = Configuration::getInstance();
+	if (config->getValue("ServerAddress").isNull())
+	{
+		config->loadConfigFile("configs/config-test-ok.plist");
 	}
 
 	_item1->setEnabled(false);
 	_usernameBg->setVisible(false);
 
-	String *str = String::createWithFormat("Please select game mode");
 	if (_defaultLabel != nullptr) {
-		_defaultLabel->setString(str->getCString());
+		_defaultLabel->setString("モードを選択して下さい");
 	}
 
 	Sprite *unit = Sprite::create("image/unit/navi.png");
@@ -138,10 +143,12 @@ bool ModeSelectScene::checkRoomMember()
 // 	}
 // }
 
-void ModeSelectScene::createDatabase()
+void ModeSelectScene::downloadDatabase()
 {
 	auto request = new HttpRequest();
-	request->setUrl("http://tore.f-2.jp/mokha/server/download/innolab/database/database.db3");
+	string svAddredd = Configuration::getInstance()->getValue("ServerAddress").asString();
+	log("%s", svAddredd.c_str());
+	request->setUrl(/*"http://tore.f-2.jp/mokha/server/download/innolab/database/database.db3"*/svAddredd.c_str());
 	request->setRequestType(HttpRequest::Type::GET);
 	request->setResponseCallback(this, httpresponse_selector(ModeSelectScene::serverCallback));
 	auto client = HttpClient::getInstance();
@@ -166,6 +173,16 @@ void ModeSelectScene::serverCallback(HttpClient* client, HttpResponse* response)
 		log("save file into %s", filepath.c_str());
 	}
 	else {
-		log("Fail to conect to server");
+		
+		if (_retryCount <= Configuration::getInstance()->getValue("retry").asInt())
+		{
+			log("Fail to conect to server %d time", _retryCount);
+			_retryCount++;
+			log("Retry....");
+			downloadDatabase();
+		}
+		else {
+			log("CONNECT TO SERVER FAILED. DATABASE  UPDATE FAILED");
+		}
 	}
 }

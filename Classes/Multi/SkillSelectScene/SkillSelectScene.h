@@ -36,7 +36,7 @@ private:
 	virtual void decideCallBack(Ref *pSender, Widget::TouchEventType type);
 	virtual void cancelCallBack(Ref *pSender, Widget::TouchEventType type);
 
-	virtual void displayUnit(Button * parent,LabelTTF *label, int unitId);
+	virtual void displayUnit(Button * parent,Label *label, int unitId);
 
 
 	virtual void onBackButtonClick(Ref *pSender);
@@ -44,10 +44,13 @@ private:
 
 	virtual Button* createSlotBaseSprite(Vec2 pos);
 	virtual Sprite* createUnitNameBg(Vec2 pos);
-	virtual LabelTTF* createUniNameLabel(Vec2 pos);
+	virtual Label* createUniNameLabel(Vec2 pos);
 
 	virtual void pageViewEvent(Ref *pSender, PageView::EventType type);
 	virtual void setSelectedSlot(int slotNum);
+
+	virtual void leftArrowClickCallback(Ref *pSender, Widget::TouchEventType type);
+	virtual void rightArrowClickCallback(Ref *pSender, Widget::TouchEventType type);
 
 	int _onSelectedSlot = 1;
 	int _onSelectedUnitId = 0;
@@ -61,8 +64,8 @@ private:
 	Button *_slot2BackGroundButton;
 	//Button *_slot3BackGroundButton;
 
-	LabelTTF *_skill1NameLabel;
-	LabelTTF *_skill2NameLabel;
+	Label *_skill1NameLabel;
+	Label *_skill2NameLabel;
 	//LabelTTF *_skill3nameLabel;
 
 	ClippingNode *_slot1;
