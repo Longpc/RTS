@@ -386,8 +386,16 @@ void BatleScene::createContent()
 		_allEnemyIconInMinimap.push_back(enemyIcon);
 		node->addChild(_allEnemyIconInMinimap.back(), 1);
 		_allEnemyAttachDelay.push_back(false);
+		_allEnemyCurentHp.push_back(_allEnemyUnitData[i].hp);
+		_allEnemyCurentMp.push_back(_allEnemyUnitData[i].mp);
 	}
+
 	_miniMap->addChild(node, 1);
+
+	_characterCurentMp = _mainCharacterData.mp;
+	
+
+
 	/*_testAttackTarget = Sprite::create("image/unit_new/move/red/unit_00_02_2.png");
 	_testAttackTarget->setPosition(_visibleSize);
 	_testAttackTarget->setScale(IMAGE_SCALE);
@@ -514,12 +522,6 @@ void BatleScene::onEnter()
 	srand(time(NULL));
 	time(&timer);
 	timeinfo = localtime(&timer);
-	_characterCurentMp = _mainCharacterData.mp;
-	for (int i = 0; i < ENEMY_NUM; i++)
-	{
-		_allEnemyCurentHp.push_back(_allEnemyUnitData[i].hp);
-		_allEnemyCurentMp.push_back(_allEnemyUnitData[i].mp);
-	}
 
 	scheduleUpdate();
 }
@@ -535,7 +537,7 @@ void BatleScene::update(float delta)
 }
 void BatleScene::checkForAutoAttack()
 {
-	float area = IMAGE_SCALE*_autoAttackArea->getContentSize().width / 2 + 25;
+	//float area = IMAGE_SCALE*_autoAttackArea->getContentSize().width / 2 + 25;
 	for (int i = 0; i < _allEnemyUnitSprite.size(); i++)
 	{
 		auto posDistan = _allEnemyUnitSprite[i]->getPosition() - testObject->getPosition();
