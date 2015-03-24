@@ -1509,13 +1509,11 @@ void BatleScene::skillRestoreOne(SkillInfoNew skillInfo)
 	_mainCharacterHpBar->setPercent(_mainCharacterMiniHpBar->getPercent());
 	
 	
-	//Run Effect heal one
-	Effect *effect = new Effect();
-	effect->createEffectHeal(
-		testObject, 
-		"Effect/particle_heal_1s.plist", 
-		"image/screen/battle/magic_circle_blue.png"
-		);
+	///////////RUN EFFECT HEAL ONE
+	Effect* effect = new Effect();
+
+	ParticleSystemQuad* skillHealEffect = effect->createEffectHeal("Effect/particle_heal_1s.plist", effect->EC_Other);
+	effect->runEffectHeal(testObject, skillHealEffect, "image/screen/battle/magic/200x200/magic_green200x200.png");
 }
 
 void BatleScene::skillHelpAll(SkillInfoNew skillInfo)
@@ -1537,6 +1535,7 @@ void BatleScene::skillHelpOne(SkillInfoNew skillInfo)
 		break;
 	}
 	int saveValue = 0;
+	Effect* effect = new Effect();
 	switch (skillInfo.skill_help_type)
 	{
 	case SKILL_HELP_TYPE::HP:
@@ -1568,21 +1567,27 @@ void BatleScene::skillHelpOne(SkillInfoNew skillInfo)
 		}), nullptr));
 		break;
 	case SKILL_HELP_TYPE::ATTACK_DAME:
+	{
 		saveValue = _mainCharacterData.attack_dame;
 		_mainCharacterData.attack_dame = ceil(1.0f*value*_mainCharacterData.attack_dame);
 		runAction(Sequence::create(DelayTime::create(skillInfo.duration), CallFuncN::create([&, saveValue](Ref *pSEnder){
 			_mainCharacterData.attack_dame = saveValue;
 		}), nullptr));
 		break;
-	case SKILL_HELP_TYPE::DEFENCE :
-		log("increase defence by %f",value);
+	}
+	case SKILL_HELP_TYPE::DEFENCE:
+	{
+		log("increase defence by %f", value);
 		saveValue = _mainCharacterData.defence;
 		_mainCharacterData.defence = ceil(1.0f*value*_mainCharacterData.defence);
 		runAction(Sequence::create(DelayTime::create(skillInfo.duration), CallFuncN::create([&, saveValue](Ref *pSEnder){
 			_mainCharacterData.defence = saveValue;
 			log("remove defence buff");
 		}), nullptr));
+		effect->createEffectHelp(testObject, "Effect/particle_defence_05s_h.plist", "Effect/particle_defence_05s_v.plist", "image/screen/battle/magic/200x200/magic_blue200x200.png");
+
 		break;
+	}
 	case SKILL_HELP_TYPE::ATTACK_RANGE:
 		saveValue = _mainCharacterData.attack_sight;
 		_mainCharacterData.attack_sight = ceil(1.0f*value*_mainCharacterData.attack_sight);
@@ -1642,8 +1647,12 @@ void BatleScene::skillAttackAll(SkillInfoNew skillInfo)
 			}
 			
 			
-			//RUN EFFECET AOE
-
+			/////////////EFFECET ATTACK AOE
+			Effect* attackAllAOE = new Effect();
+			ParticleSystemQuad* attackAllAOEEffect = attackAllAOE->createEffectAttackFire("Effect/particle_fire.plist");
+			attackAllAOE->runEffectAttackFire(testObject, attackAllAOEEffect,
+				"image/screen/battle/magic/200x200/magic_orange200x200.png" ,
+				_allEnemyUnitSprite[index]->getPosition());
 		}
 	}
 	else 
@@ -1662,12 +1671,15 @@ void BatleScene::skillAttackAll(SkillInfoNew skillInfo)
 				_allEnemyHpBar[i]->setPercent(_allEnemyCurentHp[i] * 100.0f / _allEnemyUnitData[i].hp);
 				showAttackDame(dame, _allEnemyUnitSprite[i]->getPosition() + Vec2(0, 100), 1);
 			}
-		}
-		
-		
-		//RUN EFFECT ATTACK ALL
-		
 
+			//RUN EFFECT ATTACK ALL
+			//////////// RUN EFFECT ATTACK ALL
+			Effect* attackAll = new Effect();
+			ParticleSystemQuad* attackAllEffect = attackAll->createEffectAttackThunder("Effect/particle_fire.plist");
+			attackAll->runEffectAttackFire(testObject, attackAllEffect,
+				"image/screen/battle/magic/200x200/magic_orange200x200.png",
+				_allEnemyUnitSprite[i]->getPosition());
+		}
 	}
 	
 	
@@ -1705,14 +1717,15 @@ void BatleScene::skillAttackOne(SkillInfoNew skillInfo)
 	
 	//RUN EFFECT ATTACK ONE UNIT
 
-	Effect* effect = new Effect();
-	effect->createEffectAttackFire(
-		testObject, 
-		"Effect/particle_fire.plist", 
-		"image/screen/battle/magic_circle_red.png", 
+	//////////// ATTACK ONE
+	Effect* attackOne = new Effect();
+	ParticleSystemQuad* attackOneEffect = attackOne->createEffectAttackFire("Effect/particle_fire.plist");
+	attackOne->runEffectAttackFire(
+		testObject,
+		attackOneEffect,
+		"image/screen/battle/magic/200x200/magic_orange200x200.png",
 		_allEnemyUnitSprite[_indexOfBeAttackEnemy]->getPosition()
-	);
-
+		);
 }
 
 vector<int> BatleScene::detectUnitInAoe(float detectAoe, int unitFlg)
