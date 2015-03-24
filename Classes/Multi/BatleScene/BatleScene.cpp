@@ -2,8 +2,8 @@
 
 
 #define MOVE_SPEED 250
-#define IMAGE_SCALE 0.6
-#define ANIMETE_DELAY 0.25
+#define IMAGE_SCALE 0.6f
+#define ANIMETE_DELAY 0.25f
 #define ATTACK_ANIMATION_DELAY 1
 
 #define LOW 1
@@ -80,8 +80,9 @@ bool BatleScene::init(int unitId,vector<SkillInfoNew> skills)
 
 
 	//////////
-	_moveImagePath = "image/unit_new/move/red/";
-	_attackImagePath = "image/unit_new/attack/red/";
+	//_moveImagePath = "image/unit_new/move/red/";
+	//_attackImagePath = "image/unit_new/attack/red/";
+	changeAnimationImagePathByUnitId(unitId);
 
 	auto nextButton = Button::create();
 	nextButton->loadTextureNormal("CloseNormal.png");
@@ -167,11 +168,12 @@ void BatleScene::createContent()
 	blueTower->addChild(blueTHpBar);
 	blueTower->setTag(ENEMY_NUM);
 
-	_allStone.push_back(redTower);
-	_allStone.push_back(blueTower);
+	//_allStone.push_back(redTower);
+	//_allStone.push_back(blueTower);
 
-
-	testObject = Sprite::create("image/unit_new/move/red/unit_00_08_1.png");
+	string path = _moveImagePath;
+	path.append("unit_00_08_1.png");
+	testObject = Sprite::create(path.c_str());
 	_battleBackround->addChild(testObject, MID);
 	testObject->setPosition(Vec2(100, 100));
 	testObject->setPhysicsBody(PhysicsBody::createCircle(50, PhysicsMaterial(1, 0, 1)));
@@ -230,9 +232,6 @@ void BatleScene::createContent()
 	_characterImageViewNode->setAlphaThreshold(0);
 	_characterImageViewNode->setPosition(Vec2::ZERO);
 
-	string path = _moveImagePath;
-	path.append("unit_00_02_1.png");
-
 	auto mask = Sprite::create("image/screen/battle/icon_slot.png");
 	mask->setPosition(slotPos);
 	_characterImageViewNode->setStencil(mask);
@@ -243,8 +242,6 @@ void BatleScene::createContent()
 	icon->setTag(ICON);
 	_characterImageViewNode->addChild(icon);
 	topMenu->addChild(_characterImageViewNode);
-
-
 
 	_menuButton = Button::create();
 	_menuButton->loadTextureNormal("image/screen/battle/menu_btn.png");
@@ -537,6 +534,7 @@ void BatleScene::update(float delta)
 }
 void BatleScene::checkForAutoAttack()
 {
+	if (_onRespwanFlg) return;
 	//float area = IMAGE_SCALE*_autoAttackArea->getContentSize().width / 2 + 25;
 	for (int i = 0; i < _allEnemyUnitSprite.size(); i++)
 	{
@@ -580,6 +578,7 @@ void BatleScene::checkForAutoAttack()
 }
 void BatleScene::characerAttackCallback()
 {
+	if (_onRespwanFlg) return;
 	//log("charater");
 	if (_allEnemyCurentHp[_indexOfBeAttackEnemy] > 0) {
 		int dame = (_mainCharacterData.attack_dame - _allEnemyUnitData[_indexOfBeAttackEnemy].defence);
@@ -616,6 +615,7 @@ void BatleScene::enemyDieAction(int id)
 }
 void BatleScene::enemyAttackCallback(Ref *pSEnder)
 {
+	if (_onRespwanFlg) return;
 	Sprite *_sprite = (Sprite*)pSEnder;
 	_sprite->stopActionByTag(1);
 	int id = _sprite->getTag();
@@ -678,15 +678,34 @@ void BatleScene::showAttackDame(int dameValue, Vec2 pos,int type)
 
 void BatleScene::runRespawnAction()
 {
-	testObject->setPosition(Vec2(100, 100));
+	if (_onRespwanFlg) return;
+	_onRespwanFlg = true;
+	auto timeLb = Label::create("5", JAPANESE_FONT_1_HEAVY, 150);
+	_battleBackround->addChild(timeLb, 1000);
+	timeLb->setPosition(testObject->getPosition());
+	timeLb->setColor(Color3B::RED);
+
 	_mainCharacterMiniHpBar->setPercent(100);
 	_mainCharacterHpBar->setPercent(100);
 	_mainCharacterMpBar->setPercent(100);
 	_allAlliedUnitCurrentHp[0] = _mainCharacterData.hp;
 	_characterCurentMp = _mainCharacterData.mp;
-	auto action = Spawn::create(Blink::create(0.6, 6), Sequence::create(DelayTime::create(RESPAWN_DELAY), CallFuncN::create(CC_CALLBACK_0(BatleScene::removeReSpawnFlg, this)), nullptr), nullptr);
-	testObject->runAction(action);
-	_onRespwanFlg = true;
+	testObject->setVisible(false);
+	auto action = Repeat::create(Sequence::create(DelayTime::create(1), CallFuncN::create([&](Ref *pSender){
+		Label* lb = dynamic_cast<Label*>(pSender);
+		int t = DataUtils::stringToFloat(lb->getString());
+		lb->setString(DataUtils::numberToString(t - 1));
+	}), nullptr), 5);
+	auto action2 = CallFuncN::create([&](Ref *pSEnder){
+		Label* lb = dynamic_cast<Label*>(pSEnder);
+		lb->removeFromParentAndCleanup(true);
+		testObject->setPosition(Vec2(100, 100));
+		testObject->setVisible(true);
+		auto action = Spawn::create(Blink::create(0.6f, 6), Sequence::create(DelayTime::create(RESPAWN_DELAY), CallFuncN::create(CC_CALLBACK_0(BatleScene::removeReSpawnFlg, this)), nullptr), nullptr);
+		testObject->runAction(action);
+		
+	});
+	timeLb->runAction(Sequence::create(action, action2, nullptr));
 }
 
 void BatleScene::removeceAttackDelayFlg() {
@@ -758,7 +777,7 @@ bool BatleScene::onTouchBegan(Touch *touch, Event *unused_event)
 
 void BatleScene::onTouchMoved(Touch *touch, Event *unused_event)
 {
-	if (_moveDisableFlg == true) {
+	/*if (_moveDisableFlg == true) {
 		_touchMoveBeginSprite->setVisible(false);
 		_touchMoveEndSprite->setVisible(false);
 		_selectTargetSprite->setVisible(true);
@@ -769,7 +788,7 @@ void BatleScene::onTouchMoved(Touch *touch, Event *unused_event)
 		if (direc == 0) return;
 		rotateCharacter(testObject, direc);
 		return;
-	}
+	}*/
 	fakeZOrder();
 	auto distanVector = touch->getLocation() - _touchStartPoint;
 	if (distanVector.length() < 200) {
@@ -846,17 +865,17 @@ void BatleScene::updateMiniMap()
 void BatleScene::onTouchEnded(Touch *touch, Event *unused_event)
 {
 	//log("touch END");
-	if (_selectTargetSprite->isVisible()) {
+	/*if (_selectTargetSprite->isVisible()) {
 		_selectTargetSprite->setVisible(false);
 		runAttackAnimation();
 		//_moveDisableFlg = false;
 	}
-	else {
+	else {*/
 		testObject->getPhysicsBody()->setVelocity(Vect::ZERO);
 		testObject->stopActionByTag(_currentMoveActionTag);
 		_touchMoveBeginSprite->setVisible(false);
 		_touchMoveEndSprite->setVisible(false);
-	}
+	/*}*/
 	
 }
 
@@ -926,28 +945,31 @@ Animation* BatleScene::createAttackAnimationWithDefine(int imageId, string path)
 	return animation;
 }
 
-void BatleScene::changeImagePathforTest()
+/*This function will be change in future with GAF animation file or another unit image
+In my opinion, animation image path must be store in database or something have sane struct
+*/
+void BatleScene::changeAnimationImagePathByUnitId(int unitId)
 {
-	int a = random(1, 5);
-	switch (a)
+
+	switch (unitId-1)
 	{
 	case 1:
 		_moveImagePath = "image/unit_new/move/red/";
 		_attackImagePath = "image/unit_new/attack/red/";
 		break;
-	case  2:
+	case  3:
 		_moveImagePath = "image/unit_new/move/green/";
 		_attackImagePath = "image/unit_new/attack/green/";
 		break;
-	case 3:
+	case 4:
 		_moveImagePath = "image/unit_new/move/blue/";
 		_attackImagePath = "image/unit_new/attack/blue/";
 		break;
-	case 4:
+	case 5:
 		_moveImagePath = "image/unit_new/move/black/";
 		_attackImagePath = "image/unit_new/attack/black/";
 		break;
-	case 5:
+	case 2:
 		_moveImagePath = "image/unit_new/move/purple/";
 		_attackImagePath = "image/unit_new/attack/purple/";
 		break;
@@ -957,7 +979,7 @@ void BatleScene::changeImagePathforTest()
 		break;
 	}
 	
-	_characterImageViewNode->removeChildByTag(ICON);
+	/*_characterImageViewNode->removeChildByTag(ICON);
 	string path = _moveImagePath;
 	path.append("unit_00_02_1.png");
 	Vec2 slotPos = Vec2(45, 45);
@@ -965,7 +987,7 @@ void BatleScene::changeImagePathforTest()
 	icon->setPosition(slotPos + Vec2(5, -10));
 	icon->setScale(IMAGE_SCALE);
 	icon->setTag(ICON);
-	_characterImageViewNode->addChild(icon);
+	_characterImageViewNode->addChild(icon);*/
 
 }
 
@@ -984,7 +1006,7 @@ void BatleScene::createRandomRock()
 		
 		sp->setPosition(Vec2(random(0.1f, 0.9f)*_visibleSize.width * 2,random(0.1f,0.9f)*_visibleSize.height*2));
 		_allStone.push_back(sp);
-		_battleBackround->addChild(_allStone.back(),LOW);
+		_battleBackround->addChild(_allStone.back(),ceil(_visibleSize.height * 3 - sp->getPositionY()));
 	}
 	for (int i = 1; i < 6; i++)
 	{
@@ -998,7 +1020,7 @@ void BatleScene::createRandomRock()
 		tree->setAnchorPoint(Vec2::ANCHOR_MIDDLE_BOTTOM);
 		tree->setPosition(Vec2(random(0.1f, 0.9f)*_visibleSize.width * 2, random(0.1f, 0.9f)*_visibleSize.height * 2));
 		_allStone.push_back(tree);
-		_battleBackround->addChild(_allStone.back());
+		_battleBackround->addChild(_allStone.back(),ceil(_visibleSize.height*3 - tree->getPositionY()));
 	}
 }
 
@@ -1006,7 +1028,7 @@ void BatleScene::fakeZOrder()
 {
 	for (auto &stone : _allStone)
 	{
-		if (stone->getPositionY() - stone->getContentSize().height/2 < testObject->getPositionY() - testObject->getContentSize().height/2)
+		if (stone->getPositionY() - stone->getContentSize().height/2 < testObject->getPositionY())
 		{
 			stone->setLocalZOrder(HIGH);
 		}
@@ -1031,7 +1053,7 @@ void BatleScene::onPhysicContactBegin(const PhysicsContact &contact)
 
 }
 
-void BatleScene::runAttackAnimation()
+/*void BatleScene::runAttackAnimation()
 {
 	int direc = detectDirectionBaseOnTouchAngle(_mainCharacterAvata->getRotation());
 	if (direc == 0) return;
@@ -1043,20 +1065,20 @@ void BatleScene::runAttackAnimation()
 	CallFuncN *callF = CallFuncN::create(CC_CALLBACK_0(BatleScene::removeMoveDisableFlg, this));
 	this->runAction(Sequence::create(DelayTime::create(time),callF,nullptr));
 
-}
+}*/
 
-void BatleScene::removeMoveDisableFlg()
+/*void BatleScene::removeMoveDisableFlg()
 {
 	_moveDisableFlg = false;
 }
-
-void BatleScene::selectAttackTarget()
+*/
+/*void BatleScene::selectAttackTarget()
 {
 	testObject->stopActionByTag(_currentMoveActionTag);
 	_moveDisableFlg = true;
 	_selectTargetSprite->setPosition(testObject->getPosition());
 	_selectTargetSprite->setVisible(true);
-}
+}*/
 
 void BatleScene::rotateCharacter(Sprite *target, int direc)
 {
@@ -1156,7 +1178,7 @@ void BatleScene::changeImageButtonCallback(Ref *pSender, Widget::TouchEventType 
 		break;
 	case cocos2d::ui::Widget::TouchEventType::ENDED:
 	{
-		changeImagePathforTest();
+		//changeAnimationImagePathByUnitId();
 		break;
 	}
 	case cocos2d::ui::Widget::TouchEventType::CANCELED:

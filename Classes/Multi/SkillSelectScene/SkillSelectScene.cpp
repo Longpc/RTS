@@ -34,7 +34,35 @@ bool SkillSelectScene::init(int unit)
 	_allSelectedSkilId.push_back(0);
 	_defaultLabel->setString("スキルを選択して下さい");
 
-	_slot1BackGroundButton = createSlotBaseSprite(Vec2(_visibleSize.width / 2 - BUTON_MARGIN/2, _visibleSize.height - 150));
+	_skillSlot1 = ClipingButtonBase::create("image/screen/skillSelect/slot_rect.png", "image/screen/skillSelect/00_frame_inactive.png", "image/screen/skillSelect/00_frame.png");
+	_skillSlot1->setPosition(Vec2(_visibleSize.width / 2 - BUTON_MARGIN / 2, _visibleSize.height - 150));
+	addChild(_skillSlot1,100);
+	_skillSlot1->setSelected(true);
+	_skillSlot1->addTouchEvent(CC_CALLBACK_2(SkillSelectScene::onTouchUnitSlot1, this));
+	auto _slot1BackGroundButton = _skillSlot1->getBackgroundButton();
+	float baseX = _slot1BackGroundButton->getContentSize().width / 2;
+	float baseY = -20;
+	_slot1BackGroundButton->addChild(createUnitNameBg(Vec2(baseX, baseY)));
+	_skill1NameLabel = createUniNameLabel(Vec2(baseX, baseY));
+	_slot1BackGroundButton->addChild(_skill1NameLabel);
+
+
+	_skillSlot2 = ClipingButtonBase::create("image/screen/skillSelect/slot_rect.png", "image/screen/skillSelect/00_frame_inactive.png", "image/screen/skillSelect/00_frame.png");
+	_skillSlot2->setPosition(Vec2(_visibleSize.width / 2 + BUTON_MARGIN / 2, _visibleSize.height - 150));
+	_skillSlot2->setSelected(false);
+	_skillSlot2->addTouchEvent(CC_CALLBACK_2(SkillSelectScene::onTouchUnitSlot2, this));
+	addChild(_skillSlot2, 100);
+	auto _slot2BackGroundButton = _skillSlot2->getBackgroundButton();
+	_slot2BackGroundButton->addChild(createUnitNameBg(Vec2(baseX, baseY)));
+	_skill2NameLabel = createUniNameLabel(Vec2(baseX, baseY));
+	_slot2BackGroundButton->addChild(_skill2NameLabel);
+
+
+
+
+
+
+	/*_slot1BackGroundButton = createSlotBaseSprite();
 	addChild(_slot1BackGroundButton);
 	_slot1BackGroundButton->loadTextureNormal("image/screen/skillSelect/00_frame.png");
 	float baseX = _slot1BackGroundButton->getContentSize().width / 2;
@@ -50,11 +78,11 @@ bool SkillSelectScene::init(int unit)
 	_skill2NameLabel = createUniNameLabel(Vec2(baseX, baseY));
 	_slot2BackGroundButton->addChild(_skill2NameLabel);
 
-	/*_slot3BackGroundButton = createSlotBaseSprite(Vec2(_visibleSize.width / 2 + BUTON_MARGIN, _visibleSize.height - 150));
+	_slot3BackGroundButton = createSlotBaseSprite(Vec2(_visibleSize.width / 2 + BUTON_MARGIN, _visibleSize.height - 150));
 	addChild(_slot3BackGroundButton);
 	_slot3BackGroundButton->addChild(createUnitNameBg(Vec2(baseX, baseY)));
 	_skill3nameLabel = createUniNameLabel(Vec2(baseX, baseY));
-	_slot3BackGroundButton->addChild(_skill3nameLabel);*/
+	_slot3BackGroundButton->addChild(_skill3nameLabel);
 
 	_slot1 = createSlot(Vec2(_visibleSize.width / 2 - BUTON_MARGIN/2, _visibleSize.height - 150));
 	_slot2 = createSlot(Vec2(_visibleSize.width / 2 + BUTON_MARGIN/2, _visibleSize.height - 150));
@@ -78,7 +106,7 @@ bool SkillSelectScene::init(int unit)
 	button2->addTouchEventListener(CC_CALLBACK_2(SkillSelectScene::onTouchUnitSlot2, this));
 	button2->setPosition(Vec2(_visibleSize.width / 2+BUTON_MARGIN/2, _visibleSize.height - 150));
 	_slot2->addChild(button2);
-
+	*/
 	/*button3 = Button::create();
 	button3->loadTextureNormal("image/screen/skillSelect/face_button.png");
 	button3->setTouchEnabled(true);
@@ -126,7 +154,7 @@ void SkillSelectScene::onTouchMoved(Touch *touch, Event *unused_event)
 {
 	//log("layer touch move");
 	Vec2 distanVector = _beginTouchPoint - touch->getLocation();
-	if (abs(distanVector.x ) > _mainPage->getCustomScrollThreshold()) {
+	if (abs(distanVector.x ) > _mainPageView->getCustomScrollThreshold()) {
 		_onTouchDisable = true;
 	}
 	
@@ -248,7 +276,7 @@ void SkillSelectScene::onTouchUnit(Ref *pSender, Widget::TouchEventType type)
 		Button* unit = dynamic_cast<Button*>(pSender);
 		int tag = unit->getTag();
 		log("touch unit %d", tag);
-		int curPageIndex = _mainPage->getCurPageIndex();
+		int curPageIndex = _mainPageView->getCurPageIndex();
 		if (tag > (curPageIndex + 1) * 4) return;
 		if (tag  <= curPageIndex * 4) return;
 
@@ -272,13 +300,13 @@ void SkillSelectScene::onSelectUnit(int unitId)
 	{
 	case 1:
 	{
-		displayUnit(button1,_skill1NameLabel, unitId);
+		displayUnit(_skillSlot1->getClickableButton(),_skill1NameLabel, unitId);
 		_allSelectedSkilId[0] = _allSkillInfo[unitId].id;
 		break;
 	}
 	case 2:
 	{
-		displayUnit(button2,_skill2NameLabel, unitId);
+		displayUnit(_skillSlot2->getClickableButton(),_skill2NameLabel, unitId);
 		_allSelectedSkilId[1] = _allSkillInfo[unitId].id;
 		break;
 	}
@@ -340,10 +368,10 @@ void SkillSelectScene::createAllUnitView()
 
 	float space = baseSize.width - 150;
 
-	_mainPage = PageView::create();
-	_mainPage->setContentSize(Size(space, baseSize.height - 40));
-	_mainPage->setPosition(Vec2(75, 0));
-	_mainPage->removeAllPages();
+	_mainPageView = PageView::create();
+	_mainPageView->setContentSize(Size(space, baseSize.height - 40));
+	_mainPageView->setPosition(Vec2(75, 0));
+	_mainPageView->removeAllPages();
 
 	_pageNum = (_allSkillInfo.size() / 4);
 	if (_pageNum * 4 < _allSkillInfo.size()) {
@@ -377,30 +405,15 @@ void SkillSelectScene::createAllUnitView()
 				mum->addChild(sprite);
 			}
 		}
-		_mainPage->insertPage(lay, i);
-		_mainPage->setSwallowTouches(false);
-		_mainPage->setUsingCustomScrollThreshold(true);
-		_mainPage->setCustomScrollThreshold(space / 6);
+		_mainPageView->insertPage(lay, i);
+		_mainPageView->setSwallowTouches(false);
+		_mainPageView->setUsingCustomScrollThreshold(true);
+		_mainPageView->setCustomScrollThreshold(space / 6);
 	}
 	//_mainPage->removePageAtIndex(0);
-	_mainPage->addEventListener(CC_CALLBACK_2(SkillSelectScene::pageViewEvent, this));
-	spite->addChild(_mainPage);
+	_mainPageView->addEventListener(CC_CALLBACK_2(SkillSelectScene::pageViewEvent, this));
+	spite->addChild(_mainPageView);
 	
-}
-
-ClippingNode* SkillSelectScene::createSlot(Vec2 position)
-{
-	auto clipNode = ClippingNode::create();
-	clipNode->setAlphaThreshold(0);
-	clipNode->setPosition(Vec2::ZERO);
-	clipNode->setTag(111);
-	clipNode->setAnchorPoint(Vec2::ANCHOR_BOTTOM_LEFT);
-
-	auto mask = Sprite::create("image/screen/skillSelect/slot_rect.png");
-	mask->setPosition(position);
-	clipNode->setStencil(mask);
-
-	return clipNode;
 }
 
 void SkillSelectScene::pageViewEvent(Ref *pSender, PageView::EventType type)
@@ -435,15 +448,19 @@ void SkillSelectScene::setSelectedSlot(int slotNum)
 	{
 	case 1:
 	{
-		_slot1BackGroundButton->loadTextureNormal("image/screen/skillSelect/00_frame.png");
-		_slot2BackGroundButton->loadTextureNormal("image/screen/skillSelect/00_frame_inactive.png");
+		_skillSlot1->setSelected(true);
+		_skillSlot2->setSelected(false);
+// 		_slot1BackGroundButton->loadTextureNormal("image/screen/skillSelect/00_frame.png");
+// 		_slot2BackGroundButton->loadTextureNormal("image/screen/skillSelect/00_frame_inactive.png");
 		//_slot3BackGroundButton->loadTextureNormal("image/screen/skillSelect/00_frame_inactive.png");
 		break;
 	}
 	case 2:
 	{
-		_slot2BackGroundButton->loadTextureNormal("image/screen/skillSelect/00_frame.png");
-		_slot1BackGroundButton->loadTextureNormal("image/screen/skillSelect/00_frame_inactive.png");
+		_skillSlot2->setSelected(true);
+		_skillSlot1->setSelected(false);
+// 		_slot2BackGroundButton->loadTextureNormal("image/screen/skillSelect/00_frame.png");
+// 		_slot1BackGroundButton->loadTextureNormal("image/screen/skillSelect/00_frame_inactive.png");
 		//_slot3BackGroundButton->loadTextureNormal("image/screen/skillSelect/00_frame_inactive.png");
 		break;
 	}
@@ -498,7 +515,7 @@ void SkillSelectScene::leftArrowClickCallback(Ref *pSender, Widget::TouchEventTy
 		break;
 	case cocos2d::ui::Widget::TouchEventType::ENDED:
 	{
-		_mainPage->scrollToPage(_mainPage->getCurPageIndex() - 1);
+		_mainPageView->scrollToPage(_mainPageView->getCurPageIndex() - 1);
 		break;
 	}
 	case cocos2d::ui::Widget::TouchEventType::CANCELED:
@@ -518,7 +535,7 @@ void SkillSelectScene::rightArrowClickCallback(Ref *pSender, Widget::TouchEventT
 		break;
 	case cocos2d::ui::Widget::TouchEventType::ENDED:
 	{
-		_mainPage->scrollToPage(_mainPage->getCurPageIndex() + 1);
+		_mainPageView->scrollToPage(_mainPageView->getCurPageIndex() + 1);
 		break;
 	}
 	case cocos2d::ui::Widget::TouchEventType::CANCELED:

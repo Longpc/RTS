@@ -14,16 +14,19 @@ public:
 	bool init(MyTouchEvent dCall, MyTouchEvent ccCall);
 
 private:
+	///VARIABLES///////////////////////////////////////////////////////////////////////
+	Sprite *backGround;
+	int selectMode;
+	CheckBox *_mode1;
+	CheckBox *_mode2;
+
+	///FUNCTIONS///////////////////////////////////////////////////////////////////////
 	virtual void onExit();
 	void touchMode1Callback(Ref *pSender, CheckBox::EventType type);
 	void touchMove2Callback(Ref *pSender, CheckBox::EventType type);
+	virtual void decideButtonCallback(Ref *pSender, Widget::TouchEventType type);
 
-	Sprite *backGround;
-
-	int selectMode;
-
-	CheckBox *_mode1;
-	CheckBox *_mode2;
+	
 };
 
 

@@ -20,6 +20,23 @@ public:
 	bool init();
 protected:
 private:
+	///VARIABLES///////////////////////////////////////////////////////////////////////
+	Sprite *_usernameBg;
+
+	vector<UserInfo> _roomUserInfo;
+	vector<UserInfo> _blueTeamUserInfo;
+	vector<UserInfo> _redTeamUserInfo;
+
+	int _curRoomId = 1;
+	int _curUserId = 1;
+
+	UserInfo _currentUserInfo;
+	int _blueTeamId = 1;
+	int _redTeamId = 2;
+
+	bool _onAccess = true;
+
+	///FUNCTIONS///////////////////////////////////////////////////////////////////////
 	virtual void onBackButtonClick(Ref *pSender);
 
 	virtual void redTeamButtonCallback(Ref *pSender, Widget::TouchEventType type);
@@ -53,23 +70,6 @@ private:
 	virtual void enterTeam(int teamId);
 
 	virtual void testFullTeam(Ref *pSender, Widget::TouchEventType type);
-
-	Sprite *_usernameBg;
-
-
-
-	vector<UserInfo> _roomUserInfo;
-	vector<UserInfo> _blueTeamUserInfo;
-	vector<UserInfo> _redTeamUserInfo;
-
-	int _curRoomId = 1;
-	int _curUserId = 1;
-
-	UserInfo _currentUserInfo;
-	int _blueTeamId = 1;
-	int _redTeamId = 2;
-
-	bool _onAccess = true;
 
 };
 #endif

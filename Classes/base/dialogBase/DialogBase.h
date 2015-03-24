@@ -14,13 +14,12 @@ public:
 	virtual Sprite* getBackGroundSprite();
 	virtual void setDialogbackGroundImagePath();
 	virtual Button* getCloseButton();
-	virtual void onExit();
-private :
 	virtual void closeButtonCallback(Ref *pSender, Widget::TouchEventType type);
 	virtual void decideButtonCallback(Ref *pSender, Widget::TouchEventType type);
 	virtual void closeDialog();
-
-	virtual bool onTouchBegan(Touch *touch, Event *unused_event);
+	virtual void onExit();
+private :
+	///VARIABLES///////////////////////////////////////////////////////////////////////
 	MyTouchEvent _decideCallback;
 	MyTouchEvent _ccCallback;
 
@@ -28,6 +27,10 @@ private :
 	Sprite* _dialogBackground;
 	Button* decideButton;
 	Button* closeButton;
+
+	///FUNCTIONS///////////////////////////////////////////////////////////////////////
+	virtual bool onTouchBegan(Touch *touch, Event *unused_event);
+	
 
 };
 

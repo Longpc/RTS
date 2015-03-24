@@ -11,18 +11,18 @@ public:
 	bool init(SkillInfoNew unit, MyTouchEvent decideCallback, MyTouchEvent ccelCallback);
 
 private:
-	virtual void closeButtonCallback(Ref *pSender, Widget::TouchEventType type);
-	virtual void decideButtonCallback(Ref *pSender, Widget::TouchEventType type);
-	virtual void closeDialog();
-
-	virtual void displayUnitInfo(Sprite *parent);
-
+	///VARIABLES///////////////////////////////////////////////////////////////////////
 	Sprite *statusTab;
-	
-
 	SkillInfoNew _skillInfo;
 	MyTouchEvent _decideCallback;
 	MyTouchEvent _ccCallback;
+
+	///FUNCTIONS///////////////////////////////////////////////////////////////////////
+	virtual void closeButtonCallback(Ref *pSender, Widget::TouchEventType type);
+	virtual void decideButtonCallback(Ref *pSender, Widget::TouchEventType type);
+	virtual void closeDialog();
+	virtual void displayUnitInfo(Sprite *parent);
+
 };
 
 

@@ -3,6 +3,7 @@
 #include "base/LayerBase.h"
 #include "base/Define.h"
 #include "ModeSelectScene/ModeSelectScene.h"
+#include "base/baseButton/ClippingButtonBase.h"
 class BatleResultScene : public LayerBase
 {
 
@@ -11,16 +12,7 @@ public:
 	CREATE_FUNC(BatleResultScene);
 	bool init();
 private:
-	virtual void createContent();
-	ClippingNode* createSlot(Vec2 position);
-	virtual void nextButtonCallback(Ref *pSender, Widget::TouchEventType type);
-	virtual void statusButtonCallback(Ref *pSender, Widget::TouchEventType type);
-	virtual void skillButonCallback(Ref *pSEnder, Widget::TouchEventType type);
-
-	virtual Button* createSlotBaseSprite(Vec2 pos);
-	virtual Sprite* createUnitNameBg(Vec2 pos);
-	virtual Label* createUniNameLabel(Vec2 pos);
-	
+	///VARIABLES///////////////////////////////////////////////////////////////////////
 	Sprite *statusTab;
 	Sprite *skillTab;
 	Button *_blueTeamButton;
@@ -37,6 +29,18 @@ private:
 	ClippingNode *_slot1;
 	ClippingNode *_slot2;
 	ClippingNode *_slot3;
+
+	///FUNCTIONS///////////////////////////////////////////////////////////////////////
+	virtual void createContent();
+	ClippingNode* createSlot(Vec2 position);
+	virtual void nextButtonCallback(Ref *pSender, Widget::TouchEventType type);
+	virtual void statusButtonCallback(Ref *pSender, Widget::TouchEventType type);
+	virtual void skillButonCallback(Ref *pSEnder, Widget::TouchEventType type);
+
+	virtual Button* createSlotBaseSprite(Vec2 pos);
+	virtual Sprite* createUnitNameBg(Vec2 pos);
+	virtual Label* createUniNameLabel(Vec2 pos);
+	
 };
 
 

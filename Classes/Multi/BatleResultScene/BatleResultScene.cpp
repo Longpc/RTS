@@ -1,4 +1,4 @@
-#pragma execution_character_set("utf-8")
+ï»¿#pragma execution_character_set("utf-8")
 
 #include "BatleResultScene.h"
 
@@ -86,7 +86,7 @@ void BatleResultScene::createContent()
 	addChild(statusTab, 10);
 
 	std::stringstream info;
-	info << "ƒ`[ƒ€–¼‘O: TEAM BLUE" << "\nUŒ‚ƒ_ƒ[ƒW: " << 1000000 << "\n–hŒä: " << 11110 << "\nSpeed: " << 10;
+	info << "ãƒãƒ¼ãƒ åå‰: TEAM BLUE" << "\næ”»æ’ƒãƒ€ãƒ¡ãƒ¼ã‚¸: " << 1000000 << "\né˜²å¾¡: " << 11110 << "\nSpeed: " << 10;
 	auto label = Label::createWithSystemFont(info.str().c_str(), JAPANESE_FONT_1_BOLD, 25);
 	label->setColor(Color3B::BLACK);
 	label->setPosition(Vec2(150, statusTab->getContentSize().height - 100));

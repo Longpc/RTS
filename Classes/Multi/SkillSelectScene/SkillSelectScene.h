@@ -5,6 +5,7 @@
 #include "Multi/UnitSelectScene/UnitSelectScene.h"
 #include "Multi/SkillSelectScene/SkillDetailDialog.h"
 #include "Multi/BatleScene/BatleScene.h"
+#include "base/baseButton/ClippingButtonBase.h"
 
 class SkillSelectScene : public LayerBase
 {
@@ -14,6 +15,32 @@ public:
 	bool init(int unit);
 
 private:
+	///VARIABLES///////////////////////////////////////////////////////////////////////
+	int _onSelectedSlot = 1;
+	int _onSelectedUnitId = 0;
+	int _roomId;
+
+	ClipingButtonBase *_skillSlot1;
+	ClipingButtonBase *_skillSlot2;
+
+	Label *_skill1NameLabel;
+	Label *_skill2NameLabel;
+
+	PageView *_mainPageView;
+	int _pageNum;
+	Button *lArrow;
+	Button *rArrow;
+
+	int _selectedUnitId;
+	vector<SkillInfoNew> _allSkillInfo;
+
+	bool _onTouchDisable = false;
+	Vec2 _beginTouchPoint;
+
+	int _selectedSkillNum = 0;
+	vector<int> _allSelectedSkilId;
+
+	///FUNCTIONS///////////////////////////////////////////////////////////////////////
 	virtual void onEnter();
 	virtual void update(float delta);
 
@@ -24,7 +51,6 @@ private:
 	void onTouchMoved(Touch *touch, Event *unused_event);
 
 	virtual void createAllUnitView();
-	virtual ClippingNode* createSlot(Vec2 position);
 
 	virtual void onTouchUnitSlot1(Ref *pSender, Widget::TouchEventType type);
 	virtual void onTouchUnitSlot2(Ref *pSender, Widget::TouchEventType type);
@@ -37,7 +63,6 @@ private:
 	virtual void cancelCallBack(Ref *pSender, Widget::TouchEventType type);
 
 	virtual void displayUnit(Button * parent,Label *label, int unitId);
-
 
 	virtual void onBackButtonClick(Ref *pSender);
 	virtual void nextButtonCallback(Ref *pSender, Widget::TouchEventType type);
@@ -52,41 +77,6 @@ private:
 	virtual void leftArrowClickCallback(Ref *pSender, Widget::TouchEventType type);
 	virtual void rightArrowClickCallback(Ref *pSender, Widget::TouchEventType type);
 
-	int _onSelectedSlot = 1;
-	int _onSelectedUnitId = 0;
-	int _roomId;
-
-	Button *button1;
-	Button *button2;
-	//Button *button3;
-
-	Button *_slot1BackGroundButton;
-	Button *_slot2BackGroundButton;
-	//Button *_slot3BackGroundButton;
-
-	Label *_skill1NameLabel;
-	Label *_skill2NameLabel;
-	//LabelTTF *_skill3nameLabel;
-
-	ClippingNode *_slot1;
-	ClippingNode *_slot2;
-	//ClippingNode *_slot3;
-
-	PageView *_mainPage;
-	int _pageNum;
-	Button *lArrow;
-	Button *rArrow;
-
-
-	int _selectedUnitId;
-
-	vector<SkillInfoNew> _allSkillInfo;
-
-	bool _onTouchDisable = false;
-	Vec2 _beginTouchPoint;
-
-	int _selectedSkillNum = 0;
-	vector<int> _allSelectedSkilId;
 };
 
 #endif

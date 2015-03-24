@@ -182,7 +182,7 @@ void MultiTeamSelectScene::getAndShowTeamInfo(int teamId,Sprite *parent)
 	}
 	std::stringstream memNum;
 	memNum << "プレイヤー数: "<< teamInfo.size();
-	auto teamLabel = Label::create(memNum.str().c_str(), JAPANESE_FONT_1_BOLD, 30);
+	auto teamLabel = Label::createWithSystemFont(memNum.str().c_str(), JAPANESE_FONT_1_BOLD, 30);
 	teamLabel->setPosition(Vec2(50, parent->getContentSize().height - 20));
 	teamLabel->setAnchorPoint(Vec2::ANCHOR_TOP_LEFT);
 	teamLabel->setColor(Color3B::BLACK);
@@ -273,7 +273,7 @@ Sprite* MultiTeamSelectScene::createUsernameBackground(Vec2 position)
 
 Label* MultiTeamSelectScene::createLabelWithStringandPosition(string text, Vec2 pos)
 {
-	auto lb = Label::create(text.c_str(), JAPANESE_FONT_1_BOLD, 25);
+	auto lb = Label::createWithSystemFont(text.c_str(), JAPANESE_FONT_1_BOLD, 25);
 	lb->setHorizontalAlignment(TextHAlignment::LEFT);
 	lb->setAnchorPoint(Vec2::ANCHOR_MIDDLE_LEFT);
 	lb->setColor(Color3B::BLACK);

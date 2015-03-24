@@ -33,81 +33,44 @@ public:
 	static BatleScene* create(int unitId, vector<SkillInfoNew> playerSkills);
 	bool init(int unitId, vector<SkillInfoNew> playerSkills);
 private:
-	///DATABASE///////////////////////////////////////////////////////////////////////
-	virtual UnitInforNew getUnitDataFromDataBase(int unitId);
-	virtual vector<SkillInfoNew> getUnitSkillFromDataBase(int unitId);
-	virtual vector<UnitInforNew> getEnemyUnitsData(vector<int> enemyIdList);
-	///LAYOUT BASE///////////////////////////////////////////////////////////////////////
-	virtual void onEnter();
+	///VARIABLES///////////////////////////////////////////////////////////////////////
+	struct tm day;
+	time_t timer;
+	struct tm * timeinfo;
+	int _oldSecond = 0;
+	///UI///
+	Button *_menuButton;
 
-	///CREATE UI CONTENT + PHYSIC WORLD///////////////////////////////////////////////////////////////////////
-	virtual void createContent();
-	virtual void displaySkillMpInButton(Button *parent, int mp);
-	virtual Sprite* createBackground(Vec2 pos);
-	virtual void createPhysicBolder();
-	virtual Node* createHBolder();
-	virtual Node* createVBolder();
+	Button *_skill1Button;
+	Button *_skill2Button;
+	Button *_skill3Button;
+	Button *_skill4Button;
 
-	virtual void createRandomRock();
+	Label *_timeViewLabel;
+	Sprite *_miniMap;
+	Sprite *_selectRect;
+	Sprite *_mainCharacterAvata;
+
+	Node *_battleBackround;
+
+	ClippingNode *_characterImageViewNode;
+
+	///TOUCH EVENT AND DETECT MOVE DIRECTION///
+	Vec2 _touchStartPoint;
+	Sprite *_touchMoveBeginSprite;
+	Sprite *_touchMoveEndSprite;
+
+	int _moveMode;
+	////PHYSICAL///
+	PhysicsWorld *_myWorld;
+
 	vector<Sprite*> _allStone;
 
-	virtual void onPhysicContactBegin(const PhysicsContact &contact);
-
-	///BUTTON CALLBACK///////////////////////////////////////////////////////////////////////
-	virtual void nextButtonCallback(Ref *pSender, Widget::TouchEventType type);
-	virtual void menuButtonCallback(Ref *pSender, Widget::TouchEventType type);
-	virtual void skill1ButtonCallback(Ref *pSender, Widget::TouchEventType type);
-// 	virtual void skill2ButtonCallback(Ref *pSender, Widget::TouchEventType type);
-// 	virtual void skill3ButtonCallback(Ref *pSender, Widget::TouchEventType type);
-// 	virtual void skill4ButtonCallback(Ref *pSender, Widget::TouchEventType type);
-// 	
-	virtual void debugPhysicButtonCallback(Ref *pSEnder, Widget::TouchEventType type);
-	virtual void changeImageButtonCallback(Ref *pSender, Widget::TouchEventType type);
-
-	///MAIN TOUCH EVENT///////////////////////////////////////////////////////////////////////
-	virtual bool onTouchBegan(Touch *touch, Event *unused_event);
-	virtual void onTouchMoved(Touch *touch, Event *unused_event);
-	virtual void onTouchEnded(Touch *touch, Event *unused_event);
-	
-	///CHARACTER MOVE LOGIC///////////////////////////////////////////////////////////////////////
-	virtual bool caculAvgAngle(int avg, float angle);
-	virtual int detectDirectionBaseOnTouchAngle(float angle);
-	
-	///CHARACTER MOVE ACTION///////////////////////////////////////////////////////////////////////
-	virtual void actionCharacter(int directionId);
-	
-	virtual void selectAttackTarget();
-	virtual void runAttackAnimation();
-	virtual Animation* createMoveAnimationWithDefine(int imageId, string path);
-	virtual Animation* createAttackAnimationWithDefine(int imageId, string path);
-	virtual void rotateCharacter(Sprite *target, int direc);
-
-	virtual void removeMoveDisableFlg();
-	virtual void removeceAttackDelayFlg();
-
-	/*Remove enemy attack delay flag. Default attack delay time is 1s*/
-	virtual void removeEnemyAttackDelayFlg(Ref *pSender);
-
-	/*This function will be call when main character attack animation finished ( 0.5s)*/
-	virtual void characerAttackCallback();
-	/*This function will be called when enemy (as pSender) attack animation was finished*/
-	virtual void enemyAttackCallback(Ref *pSEnder);
-	
-	virtual void showAttackDame(int dameValue, Vec2 pos, int colorType);
-
-	virtual void enemyDieAction(int id);
-
-	virtual void runRespawnAction();
-	virtual void removeReSpawnFlg();
-
-	///OPTION DIALOG CALLBACK///////////////////////////////////////////////////////////////////////
-	virtual void optionDecideCallback(Ref *pSEnder, Widget::TouchEventType type);
-	virtual void optionCancelCallback(Ref *pSEnder, Widget::TouchEventType type);
 	string _moveImagePath;
 	string _attackImagePath;
 	Sprite *_selectTargetSprite;
 
-	///ATTACK LOGIC///////////////////////////////////////////////////////////////////////
+	///ATTACK LOGIC///
 	Sprite *_autoAttackArea;
 	//Sprite *_testAttackTarget;
 	vector<Sprite*> _allEnemyUnitSprite;
@@ -125,52 +88,8 @@ private:
 
 	int _indexOfBeAttackEnemy = -1;
 
-	///MINIMAP LOGIC///////////////////////////////////////////////////////////////////////
-	virtual void updateMiniMap();
-	virtual void checkForAutoAttack();
-	void update(float delta);
-	///FAKE  Z Order///////////////////////////////////////////////////////////////////////
-	void fakeZOrder();
-	///BATLE TIME///
-	void updateTime();
-	string makeTimeString(int second);
-
-	struct tm day;
-	time_t timer;
-	struct tm * timeinfo;
-
-	///UI///////////////////////////////////////////////////////////////////////
-	Button *_menuButton;
-
-	Button *_skill1Button;
-	Button *_skill2Button;
-	Button *_skill3Button;
-	Button *_skill4Button;
-
-	Label *_timeViewLabel;
-	Sprite *_miniMap;
-	Sprite *_selectRect;
-	Sprite *_mainCharacterAvata;
-
-	Node *_battleBackround;
-
-	ClippingNode *_characterImageViewNode;
-
-	///TOUCH EVENT AND DETECT MOVE DIRECTION///////////////////////////////////////////////////////////////////////
-	Vec2 _touchStartPoint;
-	Sprite *_touchMoveBeginSprite;
-	Sprite *_touchMoveEndSprite;
-
-	int _moveMode;
-
-	////PHYSICAL//////////////////////////////////////////////////////////////////////
-	PhysicsWorld *_myWorld;
-	virtual void savePhysicWorld(PhysicsWorld *world);
-
-	///PLAYER///////////////////////////////////////////////////////////////////////
-
 	vector<SkillInfoNew> _playerSkills;
-	///CHARACTER///////////////////////////////////////////////////////////////////////
+	///CHARACTER///
 
 	int _selectedUnitId;
 	UnitInforNew _mainCharacterData;
@@ -195,18 +114,102 @@ private:
 	vector<Slider*> _allAlliedUnitHpBar;
 	vector<Sprite*> _allAlliedUnitSprite;
 
-	virtual void changeImagePathforTest();
+	float _helpAttackValue = 1.0f;
+	float _helpDefenceValue = 1.0f;
+	float _helpHpValue = 1.0f;
+
+	UnitInforNew _redTeamTowerData;
+	UnitInforNew _blueTeamTowerData;
+
+	int _currentPlayerTeamFlg = TEAM_FLG_BLUE;
+
+	///FUNCTIONS///////////////////////////////////////////////////////////////////////
+
+	///DATABASE///
+	virtual UnitInforNew getUnitDataFromDataBase(int unitId);
+	virtual vector<SkillInfoNew> getUnitSkillFromDataBase(int unitId);
+	virtual vector<UnitInforNew> getEnemyUnitsData(vector<int> enemyIdList);
+	///LAYOUT BASE///
+	virtual void onEnter();
+
+	///CREATE UI CONTENT + PHYSIC WORLD///
+	virtual void createContent();
+	virtual void displaySkillMpInButton(Button *parent, int mp);
+	virtual Sprite* createBackground(Vec2 pos);
+	virtual void createPhysicBolder();
+	virtual Node* createHBolder();
+	virtual Node* createVBolder();
+	virtual void createRandomRock();
+	virtual void onPhysicContactBegin(const PhysicsContact &contact);
+
+	///BUTTON CALLBACK///
+	virtual void nextButtonCallback(Ref *pSender, Widget::TouchEventType type);
+	virtual void menuButtonCallback(Ref *pSender, Widget::TouchEventType type);
+	virtual void skill1ButtonCallback(Ref *pSender, Widget::TouchEventType type);
+// 	virtual void skill2ButtonCallback(Ref *pSender, Widget::TouchEventType type);
+// 	virtual void skill3ButtonCallback(Ref *pSender, Widget::TouchEventType type);
+// 	virtual void skill4ButtonCallback(Ref *pSender, Widget::TouchEventType type);
+// 	
+	virtual void debugPhysicButtonCallback(Ref *pSEnder, Widget::TouchEventType type);
+	virtual void changeImageButtonCallback(Ref *pSender, Widget::TouchEventType type);
+
+	///MAIN TOUCH EVENT///
+	virtual bool onTouchBegan(Touch *touch, Event *unused_event);
+	virtual void onTouchMoved(Touch *touch, Event *unused_event);
+	virtual void onTouchEnded(Touch *touch, Event *unused_event);
+	
+	///CHARACTER MOVE LOGIC///
+	virtual bool caculAvgAngle(int avg, float angle);
+	virtual int detectDirectionBaseOnTouchAngle(float angle);
+	
+	///CHARACTER MOVE ACTION///
+	virtual void actionCharacter(int directionId);
+	
+	//virtual void selectAttackTarget();
+	//virtual void runAttackAnimation();
+	virtual Animation* createMoveAnimationWithDefine(int imageId, string path);
+	virtual Animation* createAttackAnimationWithDefine(int imageId, string path);
+	virtual void rotateCharacter(Sprite *target, int direc);
+
+	//virtual void removeMoveDisableFlg();
+	virtual void removeceAttackDelayFlg();
+
+	/*Remove enemy attack delay flag. Default attack delay time is 1s*/
+	virtual void removeEnemyAttackDelayFlg(Ref *pSender);
+
+	/*This function will be call when main character attack animation finished ( 0.5s)*/
+	virtual void characerAttackCallback();
+	/*This function will be called when enemy (as pSender) attack animation was finished*/
+	virtual void enemyAttackCallback(Ref *pSEnder);
+	
+	virtual void showAttackDame(int dameValue, Vec2 pos, int colorType);
+
+	virtual void enemyDieAction(int id);
+
+	virtual void runRespawnAction();
+	virtual void removeReSpawnFlg();
+
+	///OPTION DIALOG CALLBACK///
+	virtual void optionDecideCallback(Ref *pSEnder, Widget::TouchEventType type);
+	virtual void optionCancelCallback(Ref *pSEnder, Widget::TouchEventType type);
+
+	///MINIMAP LOGIC///
+	virtual void updateMiniMap();
+	virtual void checkForAutoAttack();
+	void update(float delta);
+	///FAKE  Z Order///
+	void fakeZOrder();
+	///BATLE TIME///
+	void updateTime();
+	string makeTimeString(int second);
+
+	virtual void savePhysicWorld(PhysicsWorld *world);
+
+	virtual void changeAnimationImagePathByUnitId(int unitId);
 	virtual void autoRestoreHpAndMp();
 	virtual void updateSlider();
 
 	virtual void updateHpAndMpViewLabel();
-
-	int _oldSecond = 0;
-
-	bool _skill1CooldownFlg = false;
-	bool _skill2CooldownFlg = false;
-	bool _skill3CooldownFlg = false;
-	bool _skill4CooldownFlg = false;
 
 	virtual void removeSkillDisableFlg(int skillnum);
 
@@ -226,15 +229,6 @@ private:
 	virtual void skillAttackAction(SkillInfoNew skillInfo);
 	virtual void skillAttackAll(SkillInfoNew skillInfo);
 	virtual void skillAttackOne(SkillInfoNew skillInfo);
-
-	float _helpAttackValue = 1.0f;
-	float _helpDefenceValue = 1.0f;
-	float _helpHpValue = 1.0f;
-
-	UnitInforNew _redTeamTowerData;
-	UnitInforNew _blueTeamTowerData;
-	
-	int _currentPlayerTeamFlg = TEAM_FLG_BLUE;
 
 	virtual void endBattle();
 	virtual float caculDameRate(int mainC, int enemy);

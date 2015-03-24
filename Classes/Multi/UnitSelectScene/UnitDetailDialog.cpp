@@ -260,8 +260,3 @@ void UnitDetailDialog::getUnitSkillDataFromDatabase()
 	*/
 	_allUnitSkill =  SkillData::getUnitSkillsByUnitId(_unitInfo.id);
 }
-
-void UnitDetailDialog::testLog()
-{
-	log("LOG LOG LOG");
-}

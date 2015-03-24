@@ -32,7 +32,8 @@ LOCAL_SRC_FILES := hellocpp/main.cpp \
 				   ../../Classes/base/database/SqlUtils.cpp \
 				   ../../Classes/dataController/SkillData/SkillData.cpp \
 				   ../../Classes/dataController/UnitData/UnitData.cpp \
-				   ../../Classes/Multi/BatleScene/Effect.cpp
+				   ../../Classes/Multi/BatleScene/Effect.cpp \
+				   ../../Classes/base/baseButton/ClippingButtonBase.cpp
 
 LOCAL_C_INCLUDES := $(LOCAL_PATH)/../../Classes
 

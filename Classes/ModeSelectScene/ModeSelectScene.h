@@ -21,6 +21,13 @@ public:
 protected:
 
 private:
+	///VARIABLES///////////////////////////////////////////////////////////////////////
+	/*this flag is false when selected room was full*/
+	bool _onAccess = true;
+	bool _onDisableTouch = false;
+	int _retryCount = 1;
+
+	///FUNCTIONS///////////////////////////////////////////////////////////////////////
 	virtual void multiButtonCallback(Ref *pSender, Widget::TouchEventType type);
 	virtual void soloButtonCallback(Ref *pSender, Widget::TouchEventType type);
 	/*
@@ -34,12 +41,6 @@ private:
 	/*Create data base*/
 	virtual void downloadDatabase();
 	virtual void serverCallback(HttpClient* client, HttpResponse* response);
-
-
-	bool _onAccess = true;
-	bool _onDisableTouch = false;
-
-	int _retryCount = 1;
 };
 
 #endif

@@ -12,17 +12,7 @@ public:
 	bool init(UnitInforNew unit, MyTouchEvent decideCallback, MyTouchEvent ccelCallback);
 
 private:
-	virtual void getUnitSkillDataFromDatabase();
-
-	virtual void closeButtonCallback(Ref *pSender, Widget::TouchEventType type);
-	virtual void decideButtonCallback(Ref *pSender, Widget::TouchEventType type);
-	virtual void closeDialog();
-
-	virtual void displayUnitInfo(Sprite *parent);
-	virtual void statusButtonCallback(Ref *pSender, Widget::TouchEventType type);
-	virtual void skillButonCallback(Ref *pSEnder, Widget::TouchEventType type);
-
-
+	///VARIABLES///////////////////////////////////////////////////////////////////////
 	Label *statusLabel;
 	Node *skillLabel;
 
@@ -35,7 +25,17 @@ private:
 	MyTouchEvent _decideCallback;
 	MyTouchEvent _ccCallback;
 
-	virtual void testLog();
+	///FUNCTIONS///////////////////////////////////////////////////////////////////////
+	virtual void getUnitSkillDataFromDatabase();
+
+	virtual void closeButtonCallback(Ref *pSender, Widget::TouchEventType type);
+	virtual void decideButtonCallback(Ref *pSender, Widget::TouchEventType type);
+	virtual void closeDialog();
+
+	virtual void displayUnitInfo(Sprite *parent);
+	virtual void statusButtonCallback(Ref *pSender, Widget::TouchEventType type);
+	virtual void skillButonCallback(Ref *pSEnder, Widget::TouchEventType type);
+
 };
 
 

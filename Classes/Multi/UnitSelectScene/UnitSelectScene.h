@@ -8,6 +8,7 @@
 #include "Multi/UnitSelectScene/UnitDetailDialog.h"
 #include "Multi/SkillSelectScene/SkillSelectScene.h"
 #include "ModeSelectScene/ModeSelectScene.h"
+#include "base/baseButton/ClippingButtonBase.h"
 
 
 ///Include library header here///
@@ -27,13 +28,45 @@ public:
 	bool init(int roomId, int pageFlg);
 protected:
 private:
+	///VARIABLES///////////////////////////////////////////////////////////////////////
+	int _onSelectedSlot = 1;
+	int _onSelectedUnitTag = 0;
+	int _decidedUnitId = 0;
+
+	int _roomId;
+	int _pageFlg;
+
+	Layer *layer;
+
+	ClipingButtonBase* _buttonSlot1;
+	ClipingButtonBase* _buttonSlot2;
+	ClipingButtonBase* _buttonSlot3;
+
+	Button *lArrow;
+	Button *rArrow;
+
+	Label *selectedUnit1Name;
+	Label *selectedUnit2Name;
+	Label *selectedUnit3Name;
+
+	PageView *_mainPage;
+	int _pageNum;
+
+	//vector<UnitInfo> _allUnitInfo;
+	vector<UnitInforNew> _allUnitInfoNew;
+
+	bool _onTouchDisable;
+	Vec2 _touchBeginPoint;
+
+	int _selectedUnit = 0;
+
+	///FUNCTIONS///////////////////////////////////////////////////////////////////////
 	virtual void getDataFromDataBase();
 	virtual void onEnter();
 	virtual void update(float delta);
 	bool onTouchBegan(Touch *touch, Event *unused_event);
 	void onTouchEnded(Touch *touch, Event *unused_event);
 	void onTouchMoved(Touch *touch, Event *unused_event);
-	ClippingNode* createSlot(Vec2 position);
 	virtual void createAllUnitView();
 
 	virtual void onTouchUnitSlot1(Ref *pSender, Widget::TouchEventType type);
@@ -60,44 +93,6 @@ private:
 
 	virtual void leftArrowClickCallback(Ref *pSender, Widget::TouchEventType type);
 	virtual void rightArrowClickCallback(Ref *pSender, Widget::TouchEventType type);
-
-	int _onSelectedSlot = 1;
-	int _onSelectedUnitTag = 0;
-	int _decidedUnitId = 0;
-
-	int _roomId;
-	int _pageFlg;
-
-	Layer *layer;
-	Button *button1;
-	Button *button2;
-	Button *button3;
-
-	Button *baseSlot1;
-	Button *baseSlot2;
-	Button *baseSlot3;
-
-	Button *lArrow;
-	Button *rArrow;
-
-	Label *selectedUnit1Name;
-	Label *selectedUnit2Name;
-	Label *selectedUnit3Name;
-
-	ClippingNode *_slot1;
-	ClippingNode *_slot2;
-	ClippingNode *_slot3;
-
-	PageView *_mainPage;
-	int _pageNum;
-
-	//vector<UnitInfo> _allUnitInfo;
-	vector<UnitInforNew> _allUnitInfoNew;
-
-	bool _onTouchDisable;
-	Vec2 _touchBeginPoint;
-
-	int _selectedUnit = 0;
 
 };
 

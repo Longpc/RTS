@@ -38,62 +38,44 @@ bool MultiUnitSelectScene::init(int roomId,int pageFlg)
 
 	_defaultLabel->setString("ユニットを選択して下さい");
 	
-	baseSlot1 = createSlotBaseSprite(Vec2(_visibleSize.width / 2 - 150, _visibleSize.height - 150));
-	addChild(baseSlot1);
-	baseSlot1->loadTextureNormal("image/screen/unitSelect/active.png");
+	_buttonSlot1 = ClipingButtonBase::create("image/navigator/selct_scene_circle.png", "image/screen/unitSelect/inactive.png", "image/screen/unitSelect/active.png");
+	addChild(_buttonSlot1, 100);
+	_buttonSlot1->setPosition(Vec2(_visibleSize.width / 2 - 150, _visibleSize.height - 150));
+	_buttonSlot1->setSelected(true);
+	_buttonSlot1->addTouchEvent(CC_CALLBACK_2(MultiUnitSelectScene::onTouchUnitSlot1, this));
+
+	Button *baseSlot1 = _buttonSlot1->getBackgroundButton();
 	float baseX = baseSlot1->getContentSize().width / 2;
 	baseSlot1->addChild(createUnitNameBg(Vec2(baseX, 0)));
 	selectedUnit1Name = createUniNameLabel(Vec2(baseX, 0));
 	baseSlot1->addChild(selectedUnit1Name);
 
-
-	baseSlot2 = createSlotBaseSprite(Vec2(_visibleSize.width / 2, _visibleSize.height - 150));
-	addChild(baseSlot2);
+	_buttonSlot2 = ClipingButtonBase::create("image/navigator/selct_scene_circle.png", "image/screen/unitSelect/inactive.png", "image/screen/unitSelect/active.png");
+	addChild(_buttonSlot2, 100);
+	_buttonSlot2->setPosition(Vec2(_visibleSize.width / 2, _visibleSize.height - 150));
+	_buttonSlot2->addTouchEvent(CC_CALLBACK_2(MultiUnitSelectScene::onTouchUnitSlot2, this));
+	_buttonSlot2->setSelected(false);
+	Button * baseSlot2 = _buttonSlot2->getBackgroundButton();
 	baseSlot2->addChild(createUnitNameBg(Vec2(baseX, 0)));
 	selectedUnit2Name = createUniNameLabel(Vec2(baseX, 0));
 	baseSlot2->addChild(selectedUnit2Name);
 
-	baseSlot3 = createSlotBaseSprite(Vec2(_visibleSize.width / 2 + 150, _visibleSize.height - 150));
-	addChild(baseSlot3);
+	_buttonSlot3 = ClipingButtonBase::create("image/navigator/selct_scene_circle.png", "image/screen/unitSelect/inactive.png", "image/screen/unitSelect/active.png");
+	addChild(_buttonSlot3, 100);
+	_buttonSlot3->setPosition(Vec2(_visibleSize.width / 2 + 150, _visibleSize.height - 150));
+	_buttonSlot3->addTouchEvent(CC_CALLBACK_2(MultiUnitSelectScene::onTouchUnitSlot3, this));
+	_buttonSlot3->setSelected(false);
+	Button *baseSlot3 = _buttonSlot3->getBackgroundButton();
 	baseSlot3->addChild(createUnitNameBg(Vec2(baseX, 0)));
 	selectedUnit3Name = createUniNameLabel(Vec2(baseX, 0));
 	baseSlot3->addChild(selectedUnit3Name);
-
-	_slot1 = createSlot(Vec2(_visibleSize.width / 2 - 150, _visibleSize.height - 150));
-	_slot2 = createSlot(Vec2(_visibleSize.width / 2, _visibleSize.height - 150));
-	_slot3 = createSlot(Vec2(_visibleSize.width / 2 + 150, _visibleSize.height - 150));
-
-	addChild(_slot1);
-	addChild(_slot2);
-	addChild(_slot3);
-	//On creating Cliping Node Base. When it was completed. This code will be remove;
-	button1 = Button::create();
-	button1->loadTextureNormal("image/screen/unitSelect/slot.png");
-	button1->setTouchEnabled(true);
-	button1->addTouchEventListener(CC_CALLBACK_2(MultiUnitSelectScene::onTouchUnitSlot1, this));
-	button1->setPosition(Vec2(_visibleSize.width / 2 - 150, _visibleSize.height - 150));
-	_slot1->addChild(button1,9);
-
-	button2 = Button::create();
-	button2->loadTextureNormal("image/screen/unitSelect/slot.png");
-	button2->setTouchEnabled(true);
-	button2->addTouchEventListener(CC_CALLBACK_2(MultiUnitSelectScene::onTouchUnitSlot2, this));
-	button2->setPosition(Vec2(_visibleSize.width / 2, _visibleSize.height - 150));
-	_slot2->addChild(button2,9);
-
-	button3 = Button::create();
-	button3->loadTextureNormal("image/screen/unitSelect/slot.png");
-	button3->setTouchEnabled(true);
-	button3->addTouchEventListener(CC_CALLBACK_2(MultiUnitSelectScene::onTouchUnitSlot3, this));
-	button3->setPosition(Vec2(_visibleSize.width / 2 + 150, _visibleSize.height - 150));
-	_slot3->addChild(button3,9);
 
 	auto nextButton = Button::create();
 	nextButton->loadTextureNormal("image/button/new/button_decide.png");
 	nextButton->setPosition(Vec2(_visibleSize.width - 50, _visibleSize.height-100));
 	nextButton->setTouchEnabled(true);
 	nextButton->addTouchEventListener(CC_CALLBACK_2(MultiUnitSelectScene::nextButtonCallback, this));
-	addChild(nextButton, 10);
+	addChild(nextButton, 10); 
 	//auto menu = Menu::create(slot1, slot2, slot3, nullptr);
 	///menu->setPosition(Vec2::ZERO);
 	//addChild(menu);
@@ -134,22 +116,6 @@ void MultiUnitSelectScene::onTouchMoved(Touch *touch, Event *unused_event)
 
 }
 
-
-ClippingNode* MultiUnitSelectScene::createSlot(Vec2 position)
-{
-	auto clipNode = ClippingNode::create();
-	clipNode->setAlphaThreshold(0);
-	clipNode->setPosition(Vec2::ZERO);
-	clipNode->setTag(111);
-	clipNode->setAnchorPoint(Vec2::ANCHOR_BOTTOM_LEFT);
-
-	auto mask = Sprite::create("image/navigator/selct_scene_circle.png");
-	mask->setPosition(position);
-	clipNode->setStencil(mask);
-
-	return clipNode;
-}
-
 void MultiUnitSelectScene::onTouchUnitSlot1(Ref *pSender, Widget::TouchEventType type)
 {
 	if (_onTouchDisable) return;
@@ -180,17 +146,17 @@ void MultiUnitSelectScene::onSelectUnit(int unitId)
 	{
 	case 1:
 	{
-		displayUnit(button1, selectedUnit1Name,unitId);
+		displayUnit(_buttonSlot1->getClickableButton(), selectedUnit1Name,unitId);
 		break;
 	}
 	case 2:
 	{
-		displayUnit(button2,selectedUnit2Name, unitId);
+		displayUnit(_buttonSlot2->getClickableButton(),selectedUnit2Name, unitId);
 		break;
 	}
 	case 3:
 	{
-		displayUnit(button3, selectedUnit3Name,unitId);
+		displayUnit(_buttonSlot3->getClickableButton(), selectedUnit3Name,unitId);
 		break;
 	}
 	default:
@@ -461,7 +427,7 @@ Sprite* MultiUnitSelectScene::createUnitNameBg(Vec2 pos)
 
 Label* MultiUnitSelectScene::createUniNameLabel(Vec2 pos)
 {
-	auto lb = Label::create("", JAPANESE_FONT_1_BOLD, 20);
+	auto lb = Label::createWithSystemFont("", JAPANESE_FONT_1_BOLD, 20);
 	lb->setPosition(pos);
 	lb->setHorizontalAlignment(TextHAlignment::CENTER);
 	lb->setColor(Color3B::BLACK);
@@ -500,23 +466,23 @@ void MultiUnitSelectScene::setSelectedSlot(int slotNum)
 	{
 	case 1:
 	{
-		baseSlot1->loadTextureNormal("image/screen/unitSelect/active.png");
-		baseSlot2->loadTextureNormal("image/screen/unitSelect/inactive.png");
-		baseSlot3->loadTextureNormal("image/screen/unitSelect/inactive.png");
+		_buttonSlot1->setSelected(true);
+		_buttonSlot2->setSelected(false);
+		_buttonSlot3->setSelected(false);
 		break;
 	}
 	case 2:
 	{
-		baseSlot2->loadTextureNormal("image/screen/unitSelect/active.png");
-		baseSlot1->loadTextureNormal("image/screen/unitSelect/inactive.png");
-		baseSlot3->loadTextureNormal("image/screen/unitSelect/inactive.png");
+		_buttonSlot2->setSelected(true);
+		_buttonSlot1->setSelected(false);
+		_buttonSlot3->setSelected(false);
 		break;
 	}
 	case 3:
 	{
-		baseSlot3->loadTextureNormal("image/screen/unitSelect/active.png");
-		baseSlot1->loadTextureNormal("image/screen/unitSelect/inactive.png");
-		baseSlot2->loadTextureNormal("image/screen/unitSelect/inactive.png");
+		_buttonSlot3->setSelected(true);
+		_buttonSlot1->setSelected(false);
+		_buttonSlot2->setSelected(false);
 		break;
 	}
 	default:
