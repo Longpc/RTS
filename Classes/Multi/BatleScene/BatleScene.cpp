@@ -238,7 +238,7 @@ void BatleScene::createContent()
 
 	auto icon = Sprite::create(_mainCharacterData.image);
 	icon->setPosition(slotPos + Vec2(0,0));
-	icon->setScale(1.4);
+	icon->setScale(1.4f);
 	icon->setTag(ICON);
 	_characterImageViewNode->addChild(icon);
 	topMenu->addChild(_characterImageViewNode);
@@ -588,6 +588,7 @@ void BatleScene::characerAttackCallback()
 		if (dame <= 0) {
 			dame = 1;
 		}
+		showAttackDame(dame, _allEnemyUnitSprite[_indexOfBeAttackEnemy]->getPosition() + Vec2(0, 100), 1);
 		_allEnemyCurentHp[_indexOfBeAttackEnemy] -= dame;
 		if (_allEnemyCurentHp[_indexOfBeAttackEnemy] <= 0)
 		{
@@ -595,7 +596,7 @@ void BatleScene::characerAttackCallback()
 			return;
 		}
 		_allEnemyHpBar[_indexOfBeAttackEnemy]->setPercent(ceil((_allEnemyCurentHp[_indexOfBeAttackEnemy] * 100.0f / _allEnemyUnitData[_indexOfBeAttackEnemy].hp)));
-		showAttackDame(dame, _allEnemyUnitSprite[_indexOfBeAttackEnemy]->getPosition() + Vec2(0, 100),1);
+		
 
 	}
 	else {
@@ -635,6 +636,7 @@ void BatleScene::enemyAttackCallback(Ref *pSEnder)
 			{
 				dame = 1;
 			}
+			showAttackDame(dame, testObject->getPosition() + Vec2(0, 100), 2);
 			_allAlliedUnitCurrentHp[0] -= dame;
 			if (_allAlliedUnitCurrentHp[0] <= 0) {
 				runRespawnAction();
@@ -643,7 +645,7 @@ void BatleScene::enemyAttackCallback(Ref *pSEnder)
 			//log("Percent: %d", ceil(float(float(_characterCurentHp) / float(_unitData.hp)) * 100));
 			_mainCharacterMiniHpBar->setPercent(ceil((_allAlliedUnitCurrentHp[0] * 100.0f / _mainCharacterData.hp)));
 			_mainCharacterHpBar->setPercent(_mainCharacterMiniHpBar->getPercent());
-			showAttackDame(dame, testObject->getPosition() + Vec2(0, 100),2);
+			
 		}
 	}
 	else {
@@ -680,7 +682,7 @@ void BatleScene::runRespawnAction()
 {
 	if (_onRespwanFlg) return;
 	_onRespwanFlg = true;
-	auto timeLb = Label::create("5", JAPANESE_FONT_1_HEAVY, 150);
+	auto timeLb = Label::createWithSystemFont("5", JAPANESE_FONT_1_HEAVY, 150);
 	_battleBackround->addChild(timeLb, 1000);
 	timeLb->setPosition(testObject->getPosition());
 	timeLb->setColor(Color3B::RED);
@@ -1524,12 +1526,14 @@ void BatleScene::skillHelpAll(SkillInfoNew skillInfo)
 void BatleScene::skillHelpOne(SkillInfoNew skillInfo)
 {
 	float value = 1.0f;
+	int pureValue = 0;
 	switch (skillInfo.dame_type)
 	{
 	case DAME_TYPE_PERCENT:
 		value = ceil(skillInfo.dame_value / 100.0f);
 		break;
 	case DAME_TYPE_PURE:
+		pureValue = skillInfo.dame_value;
 		break;
 	default:
 		break;
@@ -1539,49 +1543,49 @@ void BatleScene::skillHelpOne(SkillInfoNew skillInfo)
 	switch (skillInfo.skill_help_type)
 	{
 	case SKILL_HELP_TYPE::HP:
-		saveValue = _mainCharacterData.hp;
-		_mainCharacterData.hp = ceil(1.0f*_mainCharacterData.hp * value);
+		saveValue = 1.0f*_mainCharacterData.hp*(value - 1.0f) + pureValue;
+		_mainCharacterData.hp += saveValue;
 		runAction(Sequence::create(DelayTime::create(skillInfo.duration), CallFuncN::create([&, saveValue](Ref *pSEnder){
-			_mainCharacterData.hp = saveValue;
+			_mainCharacterData.hp -= saveValue;
 		}), nullptr));
 		break;
 	case SKILL_HELP_TYPE::HP_RESTORE:
-		saveValue = _mainCharacterData.hp_restore;
-		_mainCharacterData.hp_restore = ceil(1.0f*value*_mainCharacterData.hp_restore);
+		saveValue = 1.0f*_mainCharacterData.hp_restore*(value -1.0f) + pureValue;
+		_mainCharacterData.hp_restore += saveValue;
 		runAction(Sequence::create(DelayTime::create(skillInfo.duration), CallFuncN::create([&, saveValue](Ref *pSEnder){
-			_mainCharacterData.hp_restore = saveValue;
+			_mainCharacterData.hp_restore -= saveValue;
 		}), nullptr));
 		break;
 	case SKILL_HELP_TYPE::MP:
-		saveValue = _mainCharacterData.mp;
-		_mainCharacterData.mp = ceil(1.0f*value*_mainCharacterData.mp);
+		saveValue = 1.0f*_mainCharacterData.mp*(value-1.0f) + pureValue;
+		_mainCharacterData.mp += saveValue;
 		runAction(Sequence::create(DelayTime::create(skillInfo.duration), CallFuncN::create([&, saveValue](Ref *pSEnder){
-			_mainCharacterData.mp = saveValue;
+			_mainCharacterData.mp -= saveValue;
 		}), nullptr));
 		break;
 	case SKILL_HELP_TYPE::MP_RESTORE:
-		saveValue = _mainCharacterData.mp_restore;
-		_mainCharacterData.mp_restore = ceil(1.0f*value*_mainCharacterData.mp_restore);
+		saveValue = 1.0f*_mainCharacterData.mp_restore*(value-1.0f) + pureValue;
+		_mainCharacterData.mp_restore += saveValue;
 		runAction(Sequence::create(DelayTime::create(skillInfo.duration), CallFuncN::create([&, saveValue](Ref *pSEnder){
-			_mainCharacterData.mp_restore = saveValue;
+			_mainCharacterData.mp_restore -= saveValue;
 		}), nullptr));
 		break;
 	case SKILL_HELP_TYPE::ATTACK_DAME:
 	{
-		saveValue = _mainCharacterData.attack_dame;
-		_mainCharacterData.attack_dame = ceil(1.0f*value*_mainCharacterData.attack_dame);
+		saveValue = 1.0f*_mainCharacterData.attack_dame*(value - 1.0f) + pureValue;
+		_mainCharacterData.attack_dame += saveValue;
 		runAction(Sequence::create(DelayTime::create(skillInfo.duration), CallFuncN::create([&, saveValue](Ref *pSEnder){
-			_mainCharacterData.attack_dame = saveValue;
+			_mainCharacterData.attack_dame -= saveValue;
 		}), nullptr));
 		break;
 	}
 	case SKILL_HELP_TYPE::DEFENCE:
 	{
 		log("increase defence by %f", value);
-		saveValue = _mainCharacterData.defence;
-		_mainCharacterData.defence = ceil(1.0f*value*_mainCharacterData.defence);
+		saveValue = 1.0f*_mainCharacterData.defence*(value-1.0f) + pureValue;
+		_mainCharacterData.defence += saveValue;
 		runAction(Sequence::create(DelayTime::create(skillInfo.duration), CallFuncN::create([&, saveValue](Ref *pSEnder){
-			_mainCharacterData.defence = saveValue;
+			_mainCharacterData.defence = -saveValue;
 			log("remove defence buff");
 		}), nullptr));
 		effect->createEffectHelp(testObject, "Effect/particle_defence_05s_h.plist", "Effect/particle_defence_05s_v.plist", "image/screen/battle/magic/200x200/magic_blue200x200.png");
@@ -1589,17 +1593,17 @@ void BatleScene::skillHelpOne(SkillInfoNew skillInfo)
 		break;
 	}
 	case SKILL_HELP_TYPE::ATTACK_RANGE:
-		saveValue = _mainCharacterData.attack_sight;
-		_mainCharacterData.attack_sight = ceil(1.0f*value*_mainCharacterData.attack_sight);
+		saveValue = 1.0f*_mainCharacterData.attack_sight*(value-1.0f) + pureValue;
+		_mainCharacterData.attack_sight += saveValue;
 		runAction(Sequence::create(DelayTime::create(skillInfo.duration), CallFuncN::create([&, saveValue](Ref *pSEnder){
-			_mainCharacterData.attack_sight = saveValue;
+			_mainCharacterData.attack_sight -= saveValue;
 		}), nullptr));
 		break;
 	case SKILL_HELP_TYPE::MOVESPEED:
-		saveValue = _mainCharacterData.move_speed;
-		_mainCharacterData.move_speed = ceil(1.0f *value*_mainCharacterData.move_speed);
+		saveValue = 1.0f* _mainCharacterData.move_speed *(value - 1.0f) + pureValue;
+		_mainCharacterData.move_speed += saveValue;
 		runAction(Sequence::create(DelayTime::create(skillInfo.duration), CallFuncN::create([&, saveValue](Ref *pSEnder){
-			_mainCharacterData.move_speed = saveValue;
+			_mainCharacterData.move_speed -= saveValue;
 		}), nullptr));
 		break;
 	default:
@@ -1624,6 +1628,8 @@ void BatleScene::skillAttackAll(SkillInfoNew skillInfo)
 	default:
 		break;
 	}
+
+
 	if (skillInfo.aoe > 0) {
 
 		// Do tim cac unit trong khu vuc aoe
@@ -1635,6 +1641,7 @@ void BatleScene::skillAttackAll(SkillInfoNew skillInfo)
 			dame = ceil(random(0.85f, 1.0f)*dame*defaultDameRate);
 
 			if (dame <= 0) dame = 1;
+			showAttackDame(dame, _allEnemyUnitSprite[index]->getPosition() + Vec2(0, 100), 1);
 			_allEnemyCurentHp[index] -= dame;
 			if (_allEnemyCurentHp[index] <= 0) {
 				enemyDieAction(index);
@@ -1642,8 +1649,7 @@ void BatleScene::skillAttackAll(SkillInfoNew skillInfo)
 			}
 			if (_allEnemyUnitSprite[index]->isVisible())
 			{
-				_allEnemyHpBar[index]->setPercent(_allEnemyCurentHp[index] * 100.0f / _allEnemyUnitData[index].hp);
-				showAttackDame(dame, _allEnemyUnitSprite[index]->getPosition() + Vec2(0, 100), 1);
+				_allEnemyHpBar[index]->setPercent(_allEnemyCurentHp[index] * 100.0f / _allEnemyUnitData[index].hp);	
 			}
 			
 			
@@ -1660,7 +1666,10 @@ void BatleScene::skillAttackAll(SkillInfoNew skillInfo)
 		for (int i = 0; i < _allEnemyUnitData.size(); i++)
 		{
 			int dame = (value - _allEnemyUnitData[i].defence);
+			float defaultDameRate = caculDameRate(_mainCharacterData.attr, _allEnemyUnitData[i].attr);
+			dame = ceil(random(0.85f, 1.0f)*dame*defaultDameRate);
 			if (dame <= 0) dame = 1;
+			showAttackDame(dame, _allEnemyUnitSprite[i]->getPosition() + Vec2(0, 100), 1);
 			_allEnemyCurentHp[i] -= dame;
 			if (_allEnemyCurentHp[i] <= 0) {
 				enemyDieAction(i);
@@ -1669,7 +1678,6 @@ void BatleScene::skillAttackAll(SkillInfoNew skillInfo)
 			if (_allEnemyUnitSprite[i]->isVisible())
 			{
 				_allEnemyHpBar[i]->setPercent(_allEnemyCurentHp[i] * 100.0f / _allEnemyUnitData[i].hp);
-				showAttackDame(dame, _allEnemyUnitSprite[i]->getPosition() + Vec2(0, 100), 1);
 			}
 
 			//RUN EFFECT ATTACK ALL
@@ -1706,6 +1714,7 @@ void BatleScene::skillAttackOne(SkillInfoNew skillInfo)
 	dame = ceil(random(0.85f, 1.0f)*dame*defaultDameRate);
 
 	if (dame <= 0) dame = 1;
+	showAttackDame(dame, _allEnemyUnitSprite[_indexOfBeAttackEnemy]->getPosition() + Vec2(0, 100), 1);
 	_allEnemyCurentHp[_indexOfBeAttackEnemy] -= dame;
 	if (_allEnemyCurentHp[_indexOfBeAttackEnemy] <= 0)
 	{
@@ -1713,7 +1722,6 @@ void BatleScene::skillAttackOne(SkillInfoNew skillInfo)
 		return;
 	}
 	_allEnemyHpBar[_indexOfBeAttackEnemy]->setPercent(_allEnemyCurentHp[_indexOfBeAttackEnemy] * 100.0f / _allEnemyUnitData[_indexOfBeAttackEnemy].hp);
-	showAttackDame(dame, _allEnemyUnitSprite[_indexOfBeAttackEnemy]->getPosition() + Vec2(0, 100), 1);
 	
 	//RUN EFFECT ATTACK ONE UNIT
 

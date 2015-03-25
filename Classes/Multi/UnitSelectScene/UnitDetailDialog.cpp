@@ -182,6 +182,15 @@ void UnitDetailDialog::displayUnitInfo(Sprite *parent)
 	skillButton->setPosition(statusButton->getPosition() + Vec2(skillButton->getContentSize().width,0));
 	skillButton->addTouchEventListener(CC_CALLBACK_2(UnitDetailDialog::skillButonCallback, this));
 	parent->addChild(skillButton,10);
+// 	RichText *text1 = RichText::create();
+// 	text1->ignoreContentAdaptWithSize(false);
+// 	text1->setContentSize(Size(100, 100));
+// 	RichElementText *ele1 = RichElementText::create(1, Color3B::RED, 255, "名前: \n", JAPANESE_FONT_1_BOLD, 25);
+// 	RichElementText *ele2 = RichElementText::create(2, Color3B::BLACK, 255, _unitInfo.name.c_str(), JAPANESE_FONT_1_BOLD, 25);
+// 
+// 	text1->pushBackElement(ele1);
+// 	text1->pushBackElement(ele2);
+// 	parent->addChild(text1);
 }
 
 void UnitDetailDialog::statusButtonCallback(Ref *pSender, Widget::TouchEventType type)
