@@ -115,6 +115,9 @@ void BatleScene::createContent()
 	_battleBackround->setAnchorPoint(Vec2::ANCHOR_TOP_RIGHT);
 	addChild(_battleBackround);
 
+// 	auto tempNode = Node::create();
+// 	tempNode->setScaleY(SKILL_AOE_Y_SCALE);
+// 	_battleBackround->addChild(tempNode,MID);
 	_skillAOEShowSprite = Sprite::create("image/screen/battle/magic/200x200/magic_black200x200.png");
 	_skillAOEShowSprite->setVisible(false);
 	_skillAOEShowSprite->setPosition(Vec2(0, 0));
@@ -186,11 +189,11 @@ void BatleScene::createContent()
 	testObject->getPhysicsBody()->setRotationEnable(false);
 	testObject->setScale(IMAGE_SCALE);
 
-// 	ArmatureDataManager::getInstance()->addArmatureFileInfo("animation/walk/walk.ExportJson");
-// 	testArmature = Armature::create("walk");
-// 	testArmature->setPosition(Vec2(0, 0));
-// 	testObject->addChild(testArmature);
-// 	testArmature->setScale(1.0f);
+//  	ArmatureDataManager::getInstance()->addArmatureFileInfo("animation/walk/walk.ExportJson");
+//  	testArmature = Armature::create("walk");
+//  	testArmature->setPosition(Vec2(0, 0));
+//  	testObject->addChild(testArmature);
+//  	testArmature->setScale(1.0f);
 
 	_mainCharacterMiniHpBar = Slider::create();
 	_mainCharacterMiniHpBar->loadBarTexture("image/screen/battle/mini_hp_base.png");
@@ -554,7 +557,7 @@ void BatleScene::checkForAutoAttack()
 		int direc = detectDirectionBaseOnTouchAngle(-posDistan.getAngle()*RAD_DEG + 90);
 		if (posDistan.length() < ATTACK_AOE*_mainCharacterData.attack_sight/100.0f && _allEnemyUnitSprite[i]->isVisible()) {
 			if (testObject->getActionByTag(_currentAttackActionTag) == nullptr && _onDelayAttackFlg == false) {
-				//rotateCharacter(testObject,direc);
+				rotateCharacter(testObject,direc);
 				auto ani = createAttackAnimationWithDefine(direc, _attackImagePath);
 				//auto action = RepeatForever::create(Animate::create(ani)); //user repeat for change in future
 				auto call1 = CallFuncN::create(CC_CALLBACK_0(BatleScene::characerAttackCallback, this));
@@ -573,6 +576,7 @@ void BatleScene::checkForAutoAttack()
 			if (_allEnemyUnitSprite[i]->getNumberOfRunningActions() < 1 && _allEnemyAttachDelay[i] == false) {
 				string path = "image/unit_new/attack/red/";
 				auto target_ani = createAttackAnimationWithDefine(10 - direc, path);
+// 				rotateCharacter(_allEnemyUnitSprite[i], 10 - direc);
 				auto call2 = CallFuncN::create(CC_CALLBACK_1(BatleScene::enemyAttackCallback, this));
 				auto action2 = Sequence::create(Animate::create(target_ani), call2, nullptr);
 
@@ -865,10 +869,10 @@ void BatleScene::actionCharacter(int directionId)
 	_currentMoveActionTag = directionId;
 	testObject->runAction(repeat);
 
-// 	char type[30] = { 0 };
-// 	sprintf(type, "walk_0%d", directionId);
-// 	testArmature->getAnimation()->stop();
-// 	testArmature->getAnimation()->play(type);
+//  	char type[30] = { 0 };
+//  	sprintf(type, "walk_0%d", directionId);
+//  	testArmature->getAnimation()->stop();
+//  	testArmature->getAnimation()->play(type);
 
 }
 void BatleScene::updateMiniMap()
@@ -1106,8 +1110,8 @@ void BatleScene::rotateCharacter(Sprite *target, int direc)
 	//log("Rotate direc %d", direc);
 	auto animation = Animation::create();
 	char szName[100] = { 0 };
-	sprintf(szName, "unit_00_0%d_attack_%d.png", direc, 1);
-	string p = _attackImagePath;
+	sprintf(szName, "unit_00_0%d_%d.png", direc, 1);
+	string p = _moveImagePath;
 	p.append(szName);
 	//log("%s", p.c_str());
 	animation->addSpriteFrameWithFile(p.c_str());
@@ -1288,10 +1292,13 @@ void BatleScene::updateSlider()
 }
 void BatleScene::skill1ButtonCallback(Ref *pSender, Widget::TouchEventType type)
 {
+	if (_onRespwanFlg) return;
 	Button* bt = dynamic_cast<Button*>(pSender);
 	int tag = bt->getTag();
 	bt->stopActionByTag(TAG_SKILL_AOE);
+	_skillAOEShowSprite->stopAllActions();
 	_skillAOEShowSprite->setVisible(false);
+ 	
 	SkillInfoNew skill;
 	if (tag == TAG_SKILL_1 || tag == TAG_SKILL_2)
 	{
@@ -1708,9 +1715,7 @@ void BatleScene::skillAttackAll(SkillInfoNew skillInfo)
 					"image/screen/battle/magic/200x200/magic_orange200x200.png",
 					_allEnemyUnitSprite[i]->getPosition());
 			}
-			
 
-			
 		}
 	}
 	
@@ -1779,6 +1784,7 @@ vector<int> BatleScene::detectUnitInAoe(float detectAoe, int unitFlg)
 	for (int i = 0; i < allUnit.size(); i++)
 	{
 		Vec2 distan = allUnit[i]->getPosition() - testObject->getPosition();
+// 		distan.y = distan.y *SKILL_AOE_Y_SCALE;
 		if (distan.length() < detectAoe) {
 			resultUnitId.push_back(i);
 		}
@@ -1817,6 +1823,7 @@ void BatleScene::longPressAction(Button *pSender,SkillInfoNew skill)
 	auto action = Sequence::create(DelayTime::create(SKILL_TOUCH_DELAY), CallFuncN::create([&, skill](Ref *pSender) {
 		_skillAOEShowSprite->setPosition(testObject->getPosition());
 		_skillAOEShowSprite->setVisible(true);
+		_skillAOEShowSprite->runAction(RepeatForever::create(Spawn::create(RotateBy::create(1.0f, 90),Sequence::create(FadeOut::create(0.5f),FadeIn::create(0.5f),nullptr),nullptr)));
 		_skillAOEShowSprite->setScale(1.0f*skill.aoe/(_skillAOEShowSprite->getContentSize().width/2));
 	}), nullptr);
 	action->setTag(TAG_SKILL_AOE);

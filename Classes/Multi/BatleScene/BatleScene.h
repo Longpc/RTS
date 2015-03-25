@@ -27,6 +27,7 @@
 #define TAG_MP_LABEL 1
 #define TAG_SKILL_AOE 111
 #define SKILL_TOUCH_DELAY 1
+#define SKILL_AOE_Y_SCALE 0.75f
 
 using namespace cocostudio;
 class BatleScene : public LayerBase
