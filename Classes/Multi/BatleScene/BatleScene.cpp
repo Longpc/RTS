@@ -115,6 +115,12 @@ void BatleScene::createContent()
 	_battleBackround->setAnchorPoint(Vec2::ANCHOR_TOP_RIGHT);
 	addChild(_battleBackround);
 
+	_skillAOEShowSprite = Sprite::create("image/screen/battle/magic/200x200/magic_black200x200.png");
+	_skillAOEShowSprite->setVisible(false);
+	_skillAOEShowSprite->setPosition(Vec2(0, 0));
+	_battleBackround->addChild(_skillAOEShowSprite, 100);
+
+
 	auto part1 = createBackground(_visibleSize);
 	part1->setAnchorPoint(Vec2::ANCHOR_TOP_RIGHT);
 	_battleBackround->addChild(part1);
@@ -179,6 +185,12 @@ void BatleScene::createContent()
 	testObject->setPhysicsBody(PhysicsBody::createCircle(50, PhysicsMaterial(1, 0, 1)));
 	testObject->getPhysicsBody()->setRotationEnable(false);
 	testObject->setScale(IMAGE_SCALE);
+
+// 	ArmatureDataManager::getInstance()->addArmatureFileInfo("animation/walk/walk.ExportJson");
+// 	testArmature = Armature::create("walk");
+// 	testArmature->setPosition(Vec2(0, 0));
+// 	testObject->addChild(testArmature);
+// 	testArmature->setScale(1.0f);
 
 	_mainCharacterMiniHpBar = Slider::create();
 	_mainCharacterMiniHpBar->loadBarTexture("image/screen/battle/mini_hp_base.png");
@@ -816,6 +828,7 @@ void BatleScene::onTouchMoved(Touch *touch, Event *unused_event)
 	if(direc != 0) actionCharacter(direc);
 	//_touchStartPoint = touch->getLocation();
 	
+	
 }
 int BatleScene::detectDirectionBaseOnTouchAngle(float angle)
 {
@@ -851,6 +864,12 @@ void BatleScene::actionCharacter(int directionId)
 	repeat->setTag(directionId);
 	_currentMoveActionTag = directionId;
 	testObject->runAction(repeat);
+
+// 	char type[30] = { 0 };
+// 	sprintf(type, "walk_0%d", directionId);
+// 	testArmature->getAnimation()->stop();
+// 	testArmature->getAnimation()->play(type);
+
 }
 void BatleScene::updateMiniMap()
 {
@@ -1269,9 +1288,22 @@ void BatleScene::updateSlider()
 }
 void BatleScene::skill1ButtonCallback(Ref *pSender, Widget::TouchEventType type)
 {
+	Button* bt = dynamic_cast<Button*>(pSender);
+	int tag = bt->getTag();
+	bt->stopActionByTag(TAG_SKILL_AOE);
+	_skillAOEShowSprite->setVisible(false);
+	SkillInfoNew skill;
+	if (tag == TAG_SKILL_1 || tag == TAG_SKILL_2)
+	{
+		skill = _mainCharacterSkillData[tag - 1];
+	}
+	else {
+		skill = _playerSkills[tag - 3];
+	}
 	switch (type)
 	{
 	case cocos2d::ui::Widget::TouchEventType::BEGAN:
+		if(skill.aoe > 0 ) longPressAction(bt,skill);
 		break;
 	case cocos2d::ui::Widget::TouchEventType::MOVED:
 		break;
@@ -1282,20 +1314,10 @@ void BatleScene::skill1ButtonCallback(Ref *pSender, Widget::TouchEventType type)
 
 		//Effect *effect = new Effect();
 		//effect->createEffectHelp(testObject, "Effect/particle_defence_05s_h.plist", "Effect/particle_defence_05s_v.plist", "image/screen/battle/magic_circle_blue.png");
+		
 
-
-		Button* bt = dynamic_cast<Button*>(pSender);
-		int tag = bt->getTag();
+		
 		//Progress Timer
-
-		SkillInfoNew skill;
-		if (tag == TAG_SKILL_1 || tag == TAG_SKILL_2)
-		{
-			skill = _mainCharacterSkillData[tag - 1];
-		}
-		else {
-			skill = _playerSkills[tag - 3];
-		}
 
 		if (skill.target_type == TARGET_ONE && skill.skill_type == TYPE_ATTACK && _indexOfBeAttackEnemy < 0) {
 			log("Invalid attack target");
@@ -1641,24 +1663,24 @@ void BatleScene::skillAttackAll(SkillInfoNew skillInfo)
 			dame = ceil(random(0.85f, 1.0f)*dame*defaultDameRate);
 
 			if (dame <= 0) dame = 1;
-			showAttackDame(dame, _allEnemyUnitSprite[index]->getPosition() + Vec2(0, 100), 1);
-			_allEnemyCurentHp[index] -= dame;
-			if (_allEnemyCurentHp[index] <= 0) {
-				enemyDieAction(index);
-				return;
-			}
+			
 			if (_allEnemyUnitSprite[index]->isVisible())
 			{
+				showAttackDame(dame, _allEnemyUnitSprite[index]->getPosition() + Vec2(0, 100), 1);
 				_allEnemyHpBar[index]->setPercent(_allEnemyCurentHp[index] * 100.0f / _allEnemyUnitData[index].hp);	
-			}
-			
-			
-			/////////////EFFECET ATTACK AOE
-			Effect* attackAllAOE = new Effect();
-			ParticleSystemQuad* attackAllAOEEffect = attackAllAOE->createEffectAttackFire("Effect/particle_fire.plist");
-			attackAllAOE->runEffectAttackFire(testObject, attackAllAOEEffect,
-				"image/screen/battle/magic/200x200/magic_orange200x200.png" ,
-				_allEnemyUnitSprite[index]->getPosition());
+				_allEnemyCurentHp[index] -= dame;
+				if (_allEnemyCurentHp[index] <= 0) {
+					enemyDieAction(index);
+					continue;
+				}
+
+				/////////////EFFECET ATTACK AOE
+				Effect* attackAllAOE = new Effect();
+				ParticleSystemQuad* attackAllAOEEffect = attackAllAOE->createEffectAttackFire("Effect/particle_fire.plist");
+				attackAllAOE->runEffectAttackFire(testObject, attackAllAOEEffect,
+					"image/screen/battle/magic/200x200/magic_orange200x200.png",
+					_allEnemyUnitSprite[index]->getPosition());
+			}	
 		}
 	}
 	else 
@@ -1669,24 +1691,26 @@ void BatleScene::skillAttackAll(SkillInfoNew skillInfo)
 			float defaultDameRate = caculDameRate(_mainCharacterData.attr, _allEnemyUnitData[i].attr);
 			dame = ceil(random(0.85f, 1.0f)*dame*defaultDameRate);
 			if (dame <= 0) dame = 1;
-			showAttackDame(dame, _allEnemyUnitSprite[i]->getPosition() + Vec2(0, 100), 1);
-			_allEnemyCurentHp[i] -= dame;
-			if (_allEnemyCurentHp[i] <= 0) {
-				enemyDieAction(i);
-				return;
-			}
 			if (_allEnemyUnitSprite[i]->isVisible())
 			{
+				showAttackDame(dame, _allEnemyUnitSprite[i]->getPosition() + Vec2(0, 100), 1);
 				_allEnemyHpBar[i]->setPercent(_allEnemyCurentHp[i] * 100.0f / _allEnemyUnitData[i].hp);
+				_allEnemyCurentHp[i] -= dame;
+				if (_allEnemyCurentHp[i] <= 0) {
+					enemyDieAction(i);
+					continue;
+				}
+				//RUN EFFECT ATTACK ALL
+				//////////// RUN EFFECT ATTACK ALL
+				Effect* attackAll = new Effect();
+				ParticleSystemQuad* attackAllEffect = attackAll->createEffectAttackThunder("Effect/particle_fire.plist");
+				attackAll->runEffectAttackFire(testObject, attackAllEffect,
+					"image/screen/battle/magic/200x200/magic_orange200x200.png",
+					_allEnemyUnitSprite[i]->getPosition());
 			}
+			
 
-			//RUN EFFECT ATTACK ALL
-			//////////// RUN EFFECT ATTACK ALL
-			Effect* attackAll = new Effect();
-			ParticleSystemQuad* attackAllEffect = attackAll->createEffectAttackThunder("Effect/particle_fire.plist");
-			attackAll->runEffectAttackFire(testObject, attackAllEffect,
-				"image/screen/battle/magic/200x200/magic_orange200x200.png",
-				_allEnemyUnitSprite[i]->getPosition());
+			
 		}
 	}
 	
@@ -1786,6 +1810,17 @@ float BatleScene::caculDameRate(int mainC, int enemy)
 		return 1.5f;
 	}
 	return 0.5f;
+}
+
+void BatleScene::longPressAction(Button *pSender,SkillInfoNew skill)
+{
+	auto action = Sequence::create(DelayTime::create(SKILL_TOUCH_DELAY), CallFuncN::create([&, skill](Ref *pSender) {
+		_skillAOEShowSprite->setPosition(testObject->getPosition());
+		_skillAOEShowSprite->setVisible(true);
+		_skillAOEShowSprite->setScale(1.0f*skill.aoe/(_skillAOEShowSprite->getContentSize().width/2));
+	}), nullptr);
+	action->setTag(TAG_SKILL_AOE);
+	pSender->runAction(action);
 }
 
 

@@ -10,6 +10,7 @@
 #include "dataController/SkillData/SkillData.h"
 #include "Effect.h"
 
+#include "cocostudio/CocoStudio.h"
 #include <time.h>
 
 #define ENEMY_NUM 5
@@ -24,7 +25,10 @@
 #define ALLIED_FLAG 2
 
 #define TAG_MP_LABEL 1
+#define TAG_SKILL_AOE 111
+#define SKILL_TOUCH_DELAY 1
 
+using namespace cocostudio;
 class BatleScene : public LayerBase
 {
 
@@ -72,6 +76,7 @@ private:
 
 	///ATTACK LOGIC///
 	Sprite *_autoAttackArea;
+	Sprite *_skillAOEShowSprite;
 	//Sprite *_testAttackTarget;
 	vector<Sprite*> _allEnemyUnitSprite;
 	vector<Sprite*> _allEnemyIconInMinimap;
@@ -122,6 +127,10 @@ private:
 	UnitInforNew _blueTeamTowerData;
 
 	int _currentPlayerTeamFlg = TEAM_FLG_BLUE;
+
+/*	Armature *testArmature;*/
+
+
 
 	///FUNCTIONS///////////////////////////////////////////////////////////////////////
 
@@ -233,6 +242,7 @@ private:
 	virtual void endBattle();
 	virtual float caculDameRate(int mainC, int enemy);
 
+	virtual void longPressAction(Button *pSender, SkillInfoNew skill);
 };
 
 
