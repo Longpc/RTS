@@ -1,6 +1,11 @@
 ﻿#pragma execution_character_set("utf-8")
 #include "ModeSelectScene.h"
 
+const static int PLAYER_TEXT_X = 900;
+const static int OTHER_TEXT_X = 50;
+const static int TEXT_H = 60;
+
+using namespace cocos2d::network;
 Scene * ModeSelectScene::createScene()
 {
 	auto scene = Scene::create();
@@ -58,6 +63,19 @@ bool ModeSelectScene::init()
 // 	nextButton->setTouchEnabled(true);
 // 	nextButton->addTouchEventListener(CC_CALLBACK_2(ModeSelectScene::testDialog, this));
 // 	addChild(nextButton, 10);
+
+	editBox = TextField::create("please input text", "Meiryo", 40);
+	editBox->setContentSize(Size(_visibleSize.width, 50));
+	editBox->setPosition(Point(_visibleSize.width / 2, 100));
+	editBox->addEventListener(CC_CALLBACK_2(ModeSelectScene::textFieldEvent, this));
+	this->addChild(editBox,1000);
+
+	// ここでsocket.io connection開始。clientを持っておく
+	log("----> connect");
+	_client = SocketIO::connect("ws://192.168.0.226:8080/", *this);
+	//_client = SocketIO::connect("ws://localhost:8080/", *this);
+	//CCLOG("----> on hello");
+	_client->on("hello", CC_CALLBACK_2(ModeSelectScene::onReceiveEvent, this));
 
 	return true;
 }
@@ -185,4 +203,132 @@ void ModeSelectScene::serverCallback(HttpClient* client, HttpResponse* response)
 			log("CONNECT TO SERVER FAILED. DATABASE  UPDATE FAILED");
 		}
 	}
+}
+void ModeSelectScene::onConnect(SIOClient* client){
+	CCLOG("---->onConnect");
+	// SocketIO::connect success
+}
+
+void ModeSelectScene::onMessage(SIOClient* client, const std::string& data){
+	CCLOG("---->onMessage");
+	// SocketIO::send receive
+}
+void ModeSelectScene::onClose(SIOClient* client){
+	CCLOG("---->onClose");
+	// //CCLOG("Err:%d", GetLastError());
+	// SocketIO::disconnect success
+}
+void ModeSelectScene::onError(SIOClient* client, const std::string& data){
+	CCLOG("---->onError");
+	//CCLOG("JSB SocketIO::SIODelegate->onError method called from native with data: %s", data.c_str());
+	// SocketIO::failed
+}
+
+/**
+* serverからのemit("hello")をここでlisten
+*/
+void ModeSelectScene::onReceiveEvent(SIOClient* client, const std::string& data){
+
+	CCLOG("---->onReceiveEvent");
+	rapidjson::Document doc;
+	doc.Parse<rapidjson::kParseDefaultFlags>(data.c_str());
+	rapidjson::Value &val = doc["args"];
+	std::string value = val[rapidjson::SizeType(0)]["value"].GetString();
+
+	addTalkOther(value);
+};
+
+//------------------------------------------------------
+// ここからUI周り
+
+/**
+* textFieldの処理
+*/
+void ModeSelectScene::textFieldEvent(Ref *pSender, TextField::EventType type)
+{
+	TextField* text;
+	std::string sendText;
+	switch (type)
+	{
+		// IMEが閉じた時 
+	case TextField::EventType::DETACH_WITH_IME:
+		text = (TextField*)pSender;
+
+		sendText = "[{\"value\":\"" + text->getStringValue() + "\"}]";
+		_client->emit("hello", sendText);
+		addTalkPlayer(text->getStringValue());
+		break;
+	default:
+		break;
+	}
+}
+
+/**
+* プレイヤーUI
+*/
+void ModeSelectScene::addTalkPlayer(const std::string& str){
+	Size size = Director::getInstance()->getVisibleSize();
+
+	DrawNode* draw = DrawNode::create();
+
+	int originalX = PLAYER_TEXT_X;
+	int originalY = size.height - (TEXT_H * (index + 1));
+
+	int x = originalX - 290;
+	int y = originalY - 60;
+	int w = 300;
+	int h = 60;
+
+	Vec2 points[] = {
+		Vec2(x, y),
+		Vec2(x + w, y),
+		Vec2(x + w, y + h),
+		Vec2(x, y + h),
+	};
+
+	this->addChild(draw);
+	draw->drawPolygon(points, 4, Color4F(0, 0.5, 0, 1), 1, Color4F(0, 0, 1, 1));
+
+	auto text = Text::create(str, "Meiryo", 40);
+	text->setTextHorizontalAlignment(TextHAlignment::RIGHT);
+	text->setAnchorPoint(Point(1.0, 1.0));
+	text->setPosition(Point(originalX, originalY));
+
+	this->addChild(text);
+	index++;
+}
+
+/**
+* その他UI
+*/
+void ModeSelectScene::addTalkOther(const std::string& str){
+	Size size = Director::getInstance()->getVisibleSize();
+
+	DrawNode* draw = DrawNode::create();
+
+	int originalX = OTHER_TEXT_X;
+	int originalY = size.height - (TEXT_H * (index + 1));
+
+	int x = originalX - 10;
+	int y = originalY - 60;
+	int w = 300;
+	int h = 60;
+
+	Vec2 points[] = {
+		Vec2(x, y),
+		Vec2(x + w, y),
+		Vec2(x + w, y + h),
+		Vec2(x, y + h),
+	};
+
+	this->addChild(draw);
+	draw->drawPolygon(points, 4, Color4F(0.5, 0, 0, 1), 1, Color4F(1, 0, 0, 1));
+
+	auto text = Text::create(str, "Meiryo", 40);
+	text->setTextHorizontalAlignment(TextHAlignment::LEFT);
+	text->setAnchorPoint(Point(0.0, 1.0));
+	text->setPosition(Point(originalX, originalY));
+	text->setColor(Color3B(255, 255, 0));
+	this->addChild(text,1000);
+	index++;
 }

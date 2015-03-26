@@ -56,6 +56,7 @@ struct SkillInfoNew {
 	string plistpath;
 	string icon;
 	int skill_help_type;
+	int area_type;
 
 };
 

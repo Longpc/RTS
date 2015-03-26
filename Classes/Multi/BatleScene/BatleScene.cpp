@@ -531,7 +531,7 @@ Node* BatleScene::createVBolder()
 void BatleScene::onEnter()
 {
 	LayerBase::onEnter();
-	srand(time(NULL));
+// 	srand(time(NULL));
 	time(&timer);
 	timeinfo = localtime(&timer);
 
@@ -1373,6 +1373,10 @@ void BatleScene::showCoolDown(Button *parentButton, int time)
 
 void BatleScene::playSkill(SkillInfoNew skillData)
 {
+	for (auto& e :_allEnemyUnitSprite)
+	{
+		e->setColor(Color3B::WHITE);
+	}
 	SkillInfoNew skill = skillData;
 	_characterCurentMp -= skill.mp_cost;
 	_mainCharacterMpBar->setPercent(ceil(_characterCurentMp*100.0f / _mainCharacterData.mp));
@@ -1789,7 +1793,6 @@ vector<int> BatleScene::detectUnitInAoe(float detectAoe, int unitFlg)
 			resultUnitId.push_back(i);
 		}
 	}
-
 	return resultUnitId;
 }
 
@@ -1820,7 +1823,7 @@ float BatleScene::caculDameRate(int mainC, int enemy)
 
 void BatleScene::longPressAction(Button *pSender,SkillInfoNew skill)
 {
-	auto action = Sequence::create(DelayTime::create(SKILL_TOUCH_DELAY), CallFuncN::create([&, skill](Ref *pSender) {
+	auto action = Sequence::create(/*DelayTime::create(SKILL_TOUCH_DELAY), */CallFuncN::create([&, skill](Ref *pSender) {
 		_skillAOEShowSprite->setPosition(testObject->getPosition());
 		_skillAOEShowSprite->setVisible(true);
 		_skillAOEShowSprite->runAction(RepeatForever::create(Spawn::create(RotateBy::create(1.0f, 90),Sequence::create(FadeOut::create(0.5f),FadeIn::create(0.5f),nullptr),nullptr)));
@@ -1828,7 +1831,15 @@ void BatleScene::longPressAction(Button *pSender,SkillInfoNew skill)
 	}), nullptr);
 	action->setTag(TAG_SKILL_AOE);
 	pSender->runAction(action);
+	auto a = detectUnitInAoe(skill.aoe, ENEMY_FLAG);
+
+	for (auto& enemy : a)
+	{
+		_allEnemyUnitSprite[enemy]->setColor(Color3B::RED);
+	}
 }
+
+
 
 
 

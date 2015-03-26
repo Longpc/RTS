@@ -129,7 +129,7 @@ private:
 
 	int _currentPlayerTeamFlg = TEAM_FLG_BLUE;
 
-/*	Armature *testArmature;*/
+	Armature *testArmature;
 
 
 

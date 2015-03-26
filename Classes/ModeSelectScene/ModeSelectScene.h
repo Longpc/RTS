@@ -12,7 +12,10 @@
 ///Include library header here///
 #include <string.h>
 
-class ModeSelectScene :public LayerBase
+//#include "network/WebSocket.h"
+#include "network/SocketIO.h"
+
+class ModeSelectScene :public LayerBase, public SocketIO::SIODelegate
 {
 public:
 	static Scene *createScene();
@@ -21,6 +24,29 @@ public:
 protected:
 
 private:
+	int index;
+	SIOClient* _client;
+	TextField* editBox;
+	// socket.io event‚Ìevent listener
+	void onReceiveEvent(SIOClient* client, const std::string& data);
+	// SIODelegate
+	virtual void onConnect(SIOClient* client);
+	virtual void onMessage(SIOClient* client, const std::string& data);
+	virtual void onClose(SIOClient* client);
+	virtual void onError(SIOClient* client, const std::string& data);
+	void textFieldEvent(Ref *pSender, TextField::EventType type);
+	void addTalkPlayer(const std::string& str);
+	void addTalkOther(const std::string& str);
+
+	/* websocket ver
+	cocos2d::network::WebSocket* websocket;
+	cocos2d::LabelTTF* status;
+	virtual void onOpen(cocos2d::network::WebSocket* ws);
+	virtual void onMessage(cocos2d::network::WebSocket* ws, const cocos2d::network::WebSocket::Data& data);
+	virtual void onClose(cocos2d::network::WebSocket* ws);
+	virtual void onError(cocos2d::network::WebSocket* ws, const cocos2d::network::WebSocket::ErrorCode& error);
+	void sendMessage(float dt);
+	*/
 	///VARIABLES///////////////////////////////////////////////////////////////////////
 	/*this flag is false when selected room was full*/
 	bool _onAccess = true;
