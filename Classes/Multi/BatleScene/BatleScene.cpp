@@ -405,7 +405,6 @@ void BatleScene::createContent()
 	_miniMap->addChild(node, 1);
 
 	_characterCurentMp = _mainCharacterData.mp;
-	
 
 
 	/*_testAttackTarget = Sprite::create("image/unit_new/move/red/unit_00_02_2.png");
@@ -1663,68 +1662,47 @@ void BatleScene::skillAttackAll(SkillInfoNew skillInfo)
 		break;
 	}
 
-
+	vector<int> unitIndex;
 	if (skillInfo.aoe > 0) {
 
-		// Do tim cac unit trong khu vuc aoe
-		vector<int> unitIndex = detectUnitInAoe(skillInfo, ENEMY_FLAG);
-		for (int &index : unitIndex)
+		unitIndex = detectUnitInAoe(skillInfo, ENEMY_FLAG);
+	}
+	else 
+	{
+		for (int i = 0; i < _allEnemyUnitData.size(); i++)
 		{
-			int dame = (value - _allEnemyUnitData[index].defence);
-			float defaultDameRate = caculDameRate(_mainCharacterData.attr, _allEnemyUnitData[index].attr);
-			dame = ceil(random(0.85f, 1.0f)*dame*defaultDameRate);
+			unitIndex.push_back(i);
+		}
+	}
+	for (int &index : unitIndex)
+	{
+		int dame = (value - _allEnemyUnitData[index].defence);
+		float defaultDameRate = caculDameRate(_mainCharacterData.attr, _allEnemyUnitData[index].attr);
+		dame = ceil(random(0.85f, 1.0f)*dame*defaultDameRate);
 
-			if (dame <= 0) dame = 1;
-			
-			if (_allEnemyUnitSprite[index]->isVisible())
-			{
+		if (dame <= 0) dame = 1;
+
+		if (_allEnemyUnitSprite[index]->isVisible())
+		{
+			auto action = Spawn::create(Sequence::create(DelayTime::create(2), CallFuncN::create([&, this, index, dame](Ref *p) {
 				showAttackDame(dame, _allEnemyUnitSprite[index]->getPosition() + Vec2(0, 100), 1);
-				_allEnemyHpBar[index]->setPercent(_allEnemyCurentHp[index] * 100.0f / _allEnemyUnitData[index].hp);	
+				_allEnemyHpBar[index]->setPercent(_allEnemyCurentHp[index] * 100.0f / _allEnemyUnitData[index].hp);
 				_allEnemyCurentHp[index] -= dame;
 				if (_allEnemyCurentHp[index] <= 0) {
 					enemyDieAction(index);
-					continue;
 				}
-
+			}), nullptr), CallFuncN::create([&, this, index](Ref *p) {
 				/////////////EFFECET ATTACK AOE
 				Effect* attackAllAOE = new Effect();
 				ParticleSystemQuad* attackAllAOEEffect = attackAllAOE->createEffectAttackFire("Effect/particle_fire.plist");
 				attackAllAOE->runEffectAttackFire(testObject, attackAllAOEEffect,
 					"image/screen/battle/magic/200x200/magic_orange200x200.png",
 					_allEnemyUnitSprite[index]->getPosition());
-			}	
+			}), nullptr);
+			_allEnemyUnitSprite[index]->setTag(index);
+			_allEnemyUnitSprite[index]->runAction(action);
 		}
 	}
-	else 
-	{
-		for (int i = 0; i < _allEnemyUnitData.size(); i++)
-		{
-			int dame = (value - _allEnemyUnitData[i].defence);
-			float defaultDameRate = caculDameRate(_mainCharacterData.attr, _allEnemyUnitData[i].attr);
-			dame = ceil(random(0.85f, 1.0f)*dame*defaultDameRate);
-			if (dame <= 0) dame = 1;
-			if (_allEnemyUnitSprite[i]->isVisible())
-			{
-				showAttackDame(dame, _allEnemyUnitSprite[i]->getPosition() + Vec2(0, 100), 1);
-				_allEnemyHpBar[i]->setPercent(_allEnemyCurentHp[i] * 100.0f / _allEnemyUnitData[i].hp);
-				_allEnemyCurentHp[i] -= dame;
-				if (_allEnemyCurentHp[i] <= 0) {
-					enemyDieAction(i);
-					continue;
-				}
-				//RUN EFFECT ATTACK ALL
-				//////////// RUN EFFECT ATTACK ALL
-				Effect* attackAll = new Effect();
-				ParticleSystemQuad* attackAllEffect = attackAll->createEffectAttackThunder("Effect/particle_fire.plist");
-				attackAll->runEffectAttackFire(testObject, attackAllEffect,
-					"image/screen/battle/magic/200x200/magic_orange200x200.png",
-					_allEnemyUnitSprite[i]->getPosition());
-			}
-
-		}
-	}
-	
-	
 }
 
 void BatleScene::skillAttackOne(SkillInfoNew skillInfo)

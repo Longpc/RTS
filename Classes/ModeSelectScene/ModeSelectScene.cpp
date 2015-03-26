@@ -71,11 +71,11 @@ bool ModeSelectScene::init()
 	this->addChild(editBox,1000);
 
 	// ここでsocket.io connection開始。clientを持っておく
-	log("----> connect");
+	/*log("----> connect");
 	_client = SocketIO::connect("ws://192.168.0.226:8080/", *this);
 	//_client = SocketIO::connect("ws://localhost:8080/", *this);
 	//CCLOG("----> on hello");
-	_client->on("hello", CC_CALLBACK_2(ModeSelectScene::onReceiveEvent, this));
+	_client->on("hello", CC_CALLBACK_2(ModeSelectScene::onReceiveEvent, this));*/
 
 	return true;
 }
