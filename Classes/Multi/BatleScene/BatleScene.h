@@ -29,6 +29,8 @@
 #define SKILL_TOUCH_DELAY 1
 #define SKILL_AOE_Y_SCALE 0.75f
 
+#define DRAW_UNIT 999
+
 using namespace cocostudio;
 class BatleScene : public LayerBase
 {
@@ -226,7 +228,7 @@ private:
 	virtual void showCoolDown(Button *parentButton, int cooldownTime);
 
 	virtual void playSkill(SkillInfoNew skillData);
-	virtual vector<int> detectUnitInAoe(float aoe, int unitFlg);
+	virtual vector<int> detectUnitInAoe(SkillInfoNew skill, int unitFlg);
 
 	virtual void skillRestoreAction(SkillInfoNew skillInfo);
 	virtual void skillRestoreAll(SkillInfoNew skillInfo);
@@ -244,6 +246,9 @@ private:
 	virtual float caculDameRate(int mainC, int enemy);
 
 	virtual void longPressAction(Button *pSender, SkillInfoNew skill);
+
+	virtual void getBattleInformationFromSocketIO(int sID);
+	virtual void senInformationToServer(int sID, string data);
 };
 
 

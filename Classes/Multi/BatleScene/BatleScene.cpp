@@ -1320,10 +1320,7 @@ void BatleScene::skill1ButtonCallback(Ref *pSender, Widget::TouchEventType type)
 		//selectAttackTarget();
 
 		//Effect *effect = new Effect();
-		//effect->createEffectHelp(testObject, "Effect/particle_defence_05s_h.plist", "Effect/particle_defence_05s_v.plist", "image/screen/battle/magic_circle_blue.png");
-		
-
-		
+		//effect->createEffectHelp(testObject, "Effect/particle_defence_05s_h.plist", "Effect/particle_defence_05s_v.plist", "image/screen/battle/magic_circle_blue.png");	
 		//Progress Timer
 
 		if (skill.target_type == TARGET_ONE && skill.skill_type == TYPE_ATTACK && _indexOfBeAttackEnemy < 0) {
@@ -1339,6 +1336,10 @@ void BatleScene::skill1ButtonCallback(Ref *pSender, Widget::TouchEventType type)
 			bt->runAction(Sequence::create(DelayTime::create(skill.cooldown), CallFuncN::create([&, tag](Ref *p) {
 				removeSkillDisableFlg(tag);
 			}), nullptr));
+			while (_battleBackround->getChildByTag(DRAW_UNIT))
+			{
+				_battleBackround->removeChildByTag(DRAW_UNIT);
+			}
 			
 		}
 		else {
@@ -1489,7 +1490,7 @@ void BatleScene::skillRestoreAll(SkillInfoNew skillInfo)
 
 	if (skillInfo.aoe > 0) 
 	{
-		vector<int> allUnitIndex = detectUnitInAoe(skillInfo.aoe, ALLIED_FLAG);
+		vector<int> allUnitIndex = detectUnitInAoe(skillInfo, ALLIED_FLAG);
 		for (int &index : allUnitIndex)
 		{
 			_allAlliedUnitCurrentHp[index] += value;
@@ -1666,7 +1667,7 @@ void BatleScene::skillAttackAll(SkillInfoNew skillInfo)
 	if (skillInfo.aoe > 0) {
 
 		// Do tim cac unit trong khu vuc aoe
-		vector<int> unitIndex = detectUnitInAoe(skillInfo.aoe, ENEMY_FLAG);
+		vector<int> unitIndex = detectUnitInAoe(skillInfo, ENEMY_FLAG);
 		for (int &index : unitIndex)
 		{
 			int dame = (value - _allEnemyUnitData[index].defence);
@@ -1769,7 +1770,7 @@ void BatleScene::skillAttackOne(SkillInfoNew skillInfo)
 		);
 }
 
-vector<int> BatleScene::detectUnitInAoe(float detectAoe, int unitFlg)
+vector<int> BatleScene::detectUnitInAoe(SkillInfoNew skill, int unitFlg)
 {
 	vector<int> resultUnitId;
 	vector<Sprite*> allUnit;
@@ -1784,14 +1785,45 @@ vector<int> BatleScene::detectUnitInAoe(float detectAoe, int unitFlg)
 	default:
 		break;
 	}
+	auto pos = testObject->getPosition();
 
+	DrawNode *draw = DrawNode::create();
+	switch (skill.area_type)
+	{
+	case 1:
+		draw->drawRect(Vec2::ZERO, Vec2(skill.aoe, skill.aoe), Color4F::RED);
+		draw->setPosition(pos - Vec2(skill.aoe / 2, skill.aoe / 2));
+		draw->setTag(DRAW_UNIT);
+		break;
+	default:
+		draw->drawCircle(Vec2::ZERO, skill.aoe, 360.0f, 50, false, Color4F::RED);
+		draw->setPosition(pos);
+		draw->setTag(DRAW_UNIT);
+		break;
+	}
+	_battleBackround->addChild(draw);
 	for (int i = 0; i < allUnit.size(); i++)
 	{
-		Vec2 distan = allUnit[i]->getPosition() - testObject->getPosition();
-// 		distan.y = distan.y *SKILL_AOE_Y_SCALE;
-		if (distan.length() < detectAoe) {
-			resultUnitId.push_back(i);
+		//rectangle
+		Rect a;
+		switch (skill.area_type)
+		{
+		case 1:
+			a = Rect(pos.x - skill.aoe / 2, pos.y - skill.aoe / 2, skill.aoe, skill.aoe);
+			if (a.containsPoint(allUnit[i]->getPosition())) {
+				resultUnitId.push_back(i);
+			}
+			break;
+		default:
+			//round
+			Vec2 distan = allUnit[i]->getPosition() - pos;
+			// 		distan.y = distan.y *SKILL_AOE_Y_SCALE;
+			if (distan.length() < skill.aoe) {
+				resultUnitId.push_back(i);
+			}
+			break;
 		}
+		
 	}
 	return resultUnitId;
 }
@@ -1823,15 +1855,18 @@ float BatleScene::caculDameRate(int mainC, int enemy)
 
 void BatleScene::longPressAction(Button *pSender,SkillInfoNew skill)
 {
-	auto action = Sequence::create(/*DelayTime::create(SKILL_TOUCH_DELAY), */CallFuncN::create([&, skill](Ref *pSender) {
-		_skillAOEShowSprite->setPosition(testObject->getPosition());
-		_skillAOEShowSprite->setVisible(true);
-		_skillAOEShowSprite->runAction(RepeatForever::create(Spawn::create(RotateBy::create(1.0f, 90),Sequence::create(FadeOut::create(0.5f),FadeIn::create(0.5f),nullptr),nullptr)));
-		_skillAOEShowSprite->setScale(1.0f*skill.aoe/(_skillAOEShowSprite->getContentSize().width/2));
-	}), nullptr);
-	action->setTag(TAG_SKILL_AOE);
-	pSender->runAction(action);
-	auto a = detectUnitInAoe(skill.aoe, ENEMY_FLAG);
+// 	auto action = Sequence::create(/*DelayTime::create(SKILL_TOUCH_DELAY), */CallFuncN::create([&, skill](Ref *pSender) {
+// 		_skillAOEShowSprite->setPosition(testObject->getPosition());
+// 		_skillAOEShowSprite->setVisible(true);
+// 		_skillAOEShowSprite->runAction(RepeatForever::create(Spawn::create(RotateBy::create(1.0f, 90),Sequence::create(FadeOut::create(0.5f),FadeIn::create(0.5f),nullptr),nullptr)));
+// 		_skillAOEShowSprite->setScale(1.0f*skill.aoe/(_skillAOEShowSprite->getContentSize().width/2));
+// 	}), nullptr);
+// 	DrawNode *draw = DrawNode::create();
+// 	_skillAOEShowSprite->addChild(draw);
+// 	draw->drawRect(Vec2::ZERO, Vec2(_skillAOEShowSprite->getContentSize()), Color4F::RED);
+// 	action->setTag(TAG_SKILL_AOE);
+// 	pSender->runAction(action);
+	auto a = detectUnitInAoe(skill, ENEMY_FLAG);
 
 	for (auto& enemy : a)
 	{
@@ -1839,26 +1874,12 @@ void BatleScene::longPressAction(Button *pSender,SkillInfoNew skill)
 	}
 }
 
+void BatleScene::getBattleInformationFromSocketIO(int sID)
+{
 
+}
 
+void BatleScene::senInformationToServer(int sID, string data)
+{
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+}
