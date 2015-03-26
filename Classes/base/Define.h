@@ -60,6 +60,33 @@ struct SkillInfoNew {
 
 };
 
+
+
+//////////////////////////////////////////////////////////////////////////
+// EFFECT PLIST FILE PATH
+//////////////////////////////////////////////////////////////////////////
+
+#define PARTICLE_DEFENCE_H "Effect/particle_defence_05s_h.plist"
+#define PARTICLE_DEFENCE_V "Effect/particle_defence_05s_v.plist"
+#define PARTICLE_FIRE "Effect/particle_fire.plist"
+#define PARTICLE_HEAL "Effect/particle_heal_1s.plist"
+#define PARTICLE_MOVESPEED "Effect/particle_movespeed.plist"
+#define PARTICLE_THUNDER "Effect/particle_thunder.plist"
+
+//////////////////////////////////////////////////////////////////////////
+// SORCERY IMAGE PATH
+//////////////////////////////////////////////////////////////////////////
+#define SORCERY_BLACK "image/screen/battle/magic/200x200/magic_black200x200.png"
+#define SORCERY_BLUE "image/screen/battle/magic/200x200/magic_blue200x200.png"
+#define SORCERY_ORANGE "image/screen/battle/magic/200x200/magic_orange200x200.png"
+#define SORCERY_GREEN "image/screen/battle/magic/200x200/magic_green200x200.png"
+#define SORCERY_PINK "image/screen/battle/magic/200x200/magic_pink200x200.png"
+#define SORCERY_PURPLE "image/screen/battle/magic/200x200/magic_purple200x200.png"
+#define SORCERY_RED "image/screen/battle/magic/200x200/magic_red200x200.png"
+
+//////////////////////////////////////////////////////////////////////////
+// VALUE
+//////////////////////////////////////////////////////////////////////////
 #define ATTACK_AOE 100.0f
 #define TYPE_HELP 1
 #define TYPE_RESTORE 2

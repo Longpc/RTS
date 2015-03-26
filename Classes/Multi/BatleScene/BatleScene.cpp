@@ -575,7 +575,6 @@ void BatleScene::checkForAutoAttack()
 			if (_allEnemyUnitSprite[i]->getNumberOfRunningActions() < 1 && _allEnemyAttachDelay[i] == false) {
 				string path = "image/unit_new/attack/red/";
 				auto target_ani = createAttackAnimationWithDefine(10 - direc, path);
-// 				rotateCharacter(_allEnemyUnitSprite[i], 10 - direc);
 				auto call2 = CallFuncN::create(CC_CALLBACK_1(BatleScene::enemyAttackCallback, this));
 				auto action2 = Sequence::create(Animate::create(target_ani), call2, nullptr);
 
@@ -794,18 +793,6 @@ bool BatleScene::onTouchBegan(Touch *touch, Event *unused_event)
 
 void BatleScene::onTouchMoved(Touch *touch, Event *unused_event)
 {
-	/*if (_moveDisableFlg == true) {
-		_touchMoveBeginSprite->setVisible(false);
-		_touchMoveEndSprite->setVisible(false);
-		_selectTargetSprite->setVisible(true);
-		auto dis = touch->getLocation() - testObject->getPosition();
-		_selectTargetSprite->setPosition(_battleBackround->convertTouchToNodeSpace(touch));
-		_mainCharacterAvata->setRotation(-(dis.getAngle() * RAD_DEG) + 90);
-		int direc = detectDirectionBaseOnTouchAngle(_mainCharacterAvata->getRotation());
-		if (direc == 0) return;
-		rotateCharacter(testObject, direc);
-		return;
-	}*/
 	fakeZOrder();
 	auto distanVector = touch->getLocation() - _touchStartPoint;
 	if (distanVector.length() < 200) {
@@ -1002,17 +989,6 @@ void BatleScene::changeAnimationImagePathByUnitId(int unitId)
 		_attackImagePath = "image/unit_new/attack/red/";
 		break;
 	}
-	
-	/*_characterImageViewNode->removeChildByTag(ICON);
-	string path = _moveImagePath;
-	path.append("unit_00_02_1.png");
-	Vec2 slotPos = Vec2(45, 45);
-	auto icon = Sprite::create(path.c_str());
-	icon->setPosition(slotPos + Vec2(5, -10));
-	icon->setScale(IMAGE_SCALE);
-	icon->setTag(ICON);
-	_characterImageViewNode->addChild(icon);*/
-
 }
 
 void BatleScene::createRandomRock()
@@ -1076,33 +1052,6 @@ void BatleScene::onPhysicContactBegin(const PhysicsContact &contact)
 {
 
 }
-
-/*void BatleScene::runAttackAnimation()
-{
-	int direc = detectDirectionBaseOnTouchAngle(_mainCharacterAvata->getRotation());
-	if (direc == 0) return;
-	//testObject->stopAllActions();
-
-	auto action = Animate::create(createAttackAnimationWithDefine(direc, _attackImagePath));
-	float time = action->getDuration();
-	testObject->runAction(action);
-	CallFuncN *callF = CallFuncN::create(CC_CALLBACK_0(BatleScene::removeMoveDisableFlg, this));
-	this->runAction(Sequence::create(DelayTime::create(time),callF,nullptr));
-
-}*/
-
-/*void BatleScene::removeMoveDisableFlg()
-{
-	_moveDisableFlg = false;
-}
-*/
-/*void BatleScene::selectAttackTarget()
-{
-	testObject->stopActionByTag(_currentMoveActionTag);
-	_moveDisableFlg = true;
-	_selectTargetSprite->setPosition(testObject->getPosition());
-	_selectTargetSprite->setVisible(true);
-}*/
 
 void BatleScene::rotateCharacter(Sprite *target, int direc)
 {
@@ -1474,8 +1423,6 @@ void BatleScene::skillAttackAction(SkillInfoNew skillInfo)
 
 void BatleScene::skillRestoreAll(SkillInfoNew skillInfo)
 {
-	log("Restore All");
-
 	int value = 0;
 	switch (skillInfo.dame_type)
 	{
@@ -1487,9 +1434,14 @@ void BatleScene::skillRestoreAll(SkillInfoNew skillInfo)
 		break;
 	}
 
+	///////////RUN EFFECT HEAL ONE
+	Effect* effect = new Effect();
+
 	if (skillInfo.aoe > 0) 
 	{
+
 		vector<int> allUnitIndex = detectUnitInAoe(skillInfo, ALLIED_FLAG);
+
 		for (int &index : allUnitIndex)
 		{
 			_allAlliedUnitCurrentHp[index] += value;
@@ -1500,8 +1452,19 @@ void BatleScene::skillRestoreAll(SkillInfoNew skillInfo)
 		}
 
 		//RUN EFFECT AOE
+		/*
+		ParticleSystemQuad* skillHealEffect = effect->createEffectHeal(PARTICLE_HEAL, effect->EC_Other);
+		effect->runEffectHeal(
+			testObject
+			, skillHealEffect
+			, SORCERY_GREEN);
+		*/
+
 	}
 	else {
+
+		log("Restore All");
+
 		for (int i = 0; i < _allAlliedUnitData.size(); i++)
 		{
 			_allAlliedUnitCurrentHp[i] += value;
@@ -1514,11 +1477,17 @@ void BatleScene::skillRestoreAll(SkillInfoNew skillInfo)
 
 		//RUN EFFECT HEAL ALL
 		//_mainCharacterMiniHpBar->setPercent(_allAlliedUnitCurrentHp[0] * 100.0f / _mainCharacterData.hp);
-
+		//RUN EFFECT AOE
+		/*
+		ParticleSystemQuad* skillHealEffect = effect->createEffectHeal(PARTICLE_HEAL, effect->EC_Other);
+		effect->runEffectHeal(
+			testObject
+			, skillHealEffect
+			, SORCERY_GREEN);
+		*/
 
 
 	}
-
 
 }
 
@@ -1530,9 +1499,11 @@ void BatleScene::skillRestoreOne(SkillInfoNew skillInfo)
 	switch (skillInfo.dame_type)
 	{
 	case DAME_TYPE_PERCENT:
+		log("Restore One: DAME_TYPE_PERCENT");
 		value = ceil(1.0f*_mainCharacterData.hp *skillInfo.dame_value/100.0f);
 		break;
 	case DAME_TYPE_PURE:
+		log("Restore One: DAME_TYPE_PURE");
 		value = ceil(skillInfo.dame_value);
 		break;
 	}
@@ -1547,8 +1518,11 @@ void BatleScene::skillRestoreOne(SkillInfoNew skillInfo)
 	///////////RUN EFFECT HEAL ONE
 	Effect* effect = new Effect();
 
-	ParticleSystemQuad* skillHealEffect = effect->createEffectHeal("Effect/particle_heal_1s.plist", effect->EC_Other);
-	effect->runEffectHeal(testObject, skillHealEffect, "image/screen/battle/magic/200x200/magic_green200x200.png");
+	ParticleSystemQuad* skillHealEffect = effect->createEffectHeal(PARTICLE_HEAL, effect->EC_Other);
+	effect->runEffectHeal(
+		testObject
+		, skillHealEffect
+		, SORCERY_GREEN);
 }
 
 void BatleScene::skillHelpAll(SkillInfoNew skillInfo)
@@ -1576,20 +1550,44 @@ void BatleScene::skillHelpOne(SkillInfoNew skillInfo)
 	switch (skillInfo.skill_help_type)
 	{
 	case SKILL_HELP_TYPE::HP:
+	{
+		log("help HP");
 		saveValue = 1.0f*_mainCharacterData.hp*(value - 1.0f) + pureValue;
 		_mainCharacterData.hp += saveValue;
 		runAction(Sequence::create(DelayTime::create(skillInfo.duration), CallFuncN::create([&, saveValue](Ref *pSEnder){
 			_mainCharacterData.hp -= saveValue;
 		}), nullptr));
+		
+		
+		//////////////////////
+		ParticleSystemQuad* skillHealEffect = effect->createEffectHeal(PARTICLE_HEAL, effect->EC_Other);
+		effect->runEffectHeal(
+			testObject
+			, skillHealEffect
+			, SORCERY_GREEN);
+
 		break;
+	}
 	case SKILL_HELP_TYPE::HP_RESTORE:
-		saveValue = 1.0f*_mainCharacterData.hp_restore*(value -1.0f) + pureValue;
+	{
+		log("help HP_Restore");
+		saveValue = 1.0f*_mainCharacterData.hp_restore*(value - 1.0f) + pureValue;
 		_mainCharacterData.hp_restore += saveValue;
 		runAction(Sequence::create(DelayTime::create(skillInfo.duration), CallFuncN::create([&, saveValue](Ref *pSEnder){
 			_mainCharacterData.hp_restore -= saveValue;
 		}), nullptr));
+
+		ParticleSystemQuad* skillHealEffect = effect->createEffectHeal(PARTICLE_HEAL, effect->EC_Other);
+		effect->runEffectHeal(
+			testObject
+			, skillHealEffect
+			, SORCERY_GREEN);
+
+
 		break;
+	}
 	case SKILL_HELP_TYPE::MP:
+		log("help MP");
 		saveValue = 1.0f*_mainCharacterData.mp*(value-1.0f) + pureValue;
 		_mainCharacterData.mp += saveValue;
 		runAction(Sequence::create(DelayTime::create(skillInfo.duration), CallFuncN::create([&, saveValue](Ref *pSEnder){
@@ -1597,6 +1595,7 @@ void BatleScene::skillHelpOne(SkillInfoNew skillInfo)
 		}), nullptr));
 		break;
 	case SKILL_HELP_TYPE::MP_RESTORE:
+		log("help MP_Restore");
 		saveValue = 1.0f*_mainCharacterData.mp_restore*(value-1.0f) + pureValue;
 		_mainCharacterData.mp_restore += saveValue;
 		runAction(Sequence::create(DelayTime::create(skillInfo.duration), CallFuncN::create([&, saveValue](Ref *pSEnder){
@@ -1605,6 +1604,7 @@ void BatleScene::skillHelpOne(SkillInfoNew skillInfo)
 		break;
 	case SKILL_HELP_TYPE::ATTACK_DAME:
 	{
+		log("help attack_dame");
 		saveValue = 1.0f*_mainCharacterData.attack_dame*(value - 1.0f) + pureValue;
 		_mainCharacterData.attack_dame += saveValue;
 		runAction(Sequence::create(DelayTime::create(skillInfo.duration), CallFuncN::create([&, saveValue](Ref *pSEnder){
@@ -1614,6 +1614,7 @@ void BatleScene::skillHelpOne(SkillInfoNew skillInfo)
 	}
 	case SKILL_HELP_TYPE::DEFENCE:
 	{
+		log("help defence");
 		log("increase defence by %f", value);
 		saveValue = 1.0f*_mainCharacterData.defence*(value-1.0f) + pureValue;
 		_mainCharacterData.defence += saveValue;
@@ -1621,24 +1622,42 @@ void BatleScene::skillHelpOne(SkillInfoNew skillInfo)
 			_mainCharacterData.defence = -saveValue;
 			log("remove defence buff");
 		}), nullptr));
-		effect->createEffectHelp(testObject, "Effect/particle_defence_05s_h.plist", "Effect/particle_defence_05s_v.plist", "image/screen/battle/magic/200x200/magic_blue200x200.png");
+		
+		/////////////////////////////////////////
+		effect->createEffectHelpDefence(testObject
+			, PARTICLE_DEFENCE_H
+			, PARTICLE_DEFENCE_V
+			, SORCERY_BLUE
+			, effect->EC_Other);
 
 		break;
 	}
 	case SKILL_HELP_TYPE::ATTACK_RANGE:
-		saveValue = 1.0f*_mainCharacterData.attack_sight*(value-1.0f) + pureValue;
+	{
+		log("help attack_range");
+		saveValue = 1.0f*_mainCharacterData.attack_sight*(value - 1.0f) + pureValue;
 		_mainCharacterData.attack_sight += saveValue;
 		runAction(Sequence::create(DelayTime::create(skillInfo.duration), CallFuncN::create([&, saveValue](Ref *pSEnder){
 			_mainCharacterData.attack_sight -= saveValue;
 		}), nullptr));
 		break;
+	}
 	case SKILL_HELP_TYPE::MOVESPEED:
+	{
+		log("help move speed");
 		saveValue = 1.0f* _mainCharacterData.move_speed *(value - 1.0f) + pureValue;
 		_mainCharacterData.move_speed += saveValue;
 		runAction(Sequence::create(DelayTime::create(skillInfo.duration), CallFuncN::create([&, saveValue](Ref *pSEnder){
 			_mainCharacterData.move_speed -= saveValue;
 		}), nullptr));
+
+		ParticleSystemQuad* moveSpeedEffect = effect->createEffectHelp(PARTICLE_MOVESPEED, effect->EC_Other);
+		effect->runEffectHelp(testObject
+			, moveSpeedEffect
+			, SORCERY_BLUE);
+
 		break;
+	}
 	default:
 		break;
 	}
@@ -1648,8 +1667,6 @@ void BatleScene::skillHelpOne(SkillInfoNew skillInfo)
 
 void BatleScene::skillAttackAll(SkillInfoNew skillInfo)
 {
-	log("Attack All");
-
 	int value = 0;
 	switch (skillInfo.dame_type)
 	{
@@ -1670,6 +1687,7 @@ void BatleScene::skillAttackAll(SkillInfoNew skillInfo)
 	else 
 	{
 		for (int i = 0; i < _allEnemyUnitData.size(); i++)
+
 		{
 			unitIndex.push_back(i);
 		}
@@ -1693,11 +1711,14 @@ void BatleScene::skillAttackAll(SkillInfoNew skillInfo)
 				}
 			}), nullptr), CallFuncN::create([&, this, index](Ref *p) {
 				/////////////EFFECET ATTACK AOE
+				// fire
 				Effect* attackAllAOE = new Effect();
-				ParticleSystemQuad* attackAllAOEEffect = attackAllAOE->createEffectAttackFire("Effect/particle_fire.plist");
-				attackAllAOE->runEffectAttackFire(testObject, attackAllAOEEffect,
-					"image/screen/battle/magic/200x200/magic_orange200x200.png",
-					_allEnemyUnitSprite[index]->getPosition());
+				ParticleSystemQuad* attackAllAOEEffect = attackAllAOE->createEffectAttackFire(PARTICLE_FIRE);
+				attackAllAOE->runEffectAttackFire(
+					testObject
+					, attackAllAOEEffect
+					, SORCERY_ORANGE
+					, _allEnemyUnitSprite[index]->getPosition());
 			}), nullptr);
 			_allEnemyUnitSprite[index]->setTag(index);
 			_allEnemyUnitSprite[index]->runAction(action);
@@ -1720,35 +1741,56 @@ void BatleScene::skillAttackOne(SkillInfoNew skillInfo)
 	default:
 		break;
 	}
+
+
 	int dame = (value - _allEnemyUnitData[_indexOfBeAttackEnemy].defence);
 	float defaultDameRate = caculDameRate(_mainCharacterData.attr, _allEnemyUnitData[_indexOfBeAttackEnemy].attr);
 
 	dame = ceil(random(0.85f, 1.0f)*dame*defaultDameRate);
-
 	if (dame <= 0) dame = 1;
-	showAttackDame(dame, _allEnemyUnitSprite[_indexOfBeAttackEnemy]->getPosition() + Vec2(0, 100), 1);
-	_allEnemyCurentHp[_indexOfBeAttackEnemy] -= dame;
-	if (_allEnemyCurentHp[_indexOfBeAttackEnemy] <= 0)
-	{
-		enemyDieAction(_indexOfBeAttackEnemy);
-		return;
-	}
-	_allEnemyHpBar[_indexOfBeAttackEnemy]->setPercent(_allEnemyCurentHp[_indexOfBeAttackEnemy] * 100.0f / _allEnemyUnitData[_indexOfBeAttackEnemy].hp);
-	
-	//RUN EFFECT ATTACK ONE UNIT
 
-	//////////// ATTACK ONE
-	Effect* attackOne = new Effect();
-	ParticleSystemQuad* attackOneEffect = attackOne->createEffectAttackFire("Effect/particle_fire.plist");
-	attackOne->runEffectAttackFire(
-		testObject,
-		attackOneEffect,
-		"image/screen/battle/magic/200x200/magic_orange200x200.png",
-		_allEnemyUnitSprite[_indexOfBeAttackEnemy]->getPosition()
-		);
+	int indexValue = _indexOfBeAttackEnemy;
+
+	auto action = Spawn::create(
+		Sequence::create(
+		//////Start Sequence
+		DelayTime::create(DELAY_ATTACK_MOVE + DELAY_ATTACK_FIRE_LIFE), 
+		CallFuncN::create([&, this, dame, indexValue](Ref *p) {
+		showAttackDame(dame, _allEnemyUnitSprite[indexValue]->getPosition() + Vec2(0, 100), 1);
+		_allEnemyHpBar[indexValue]->setPercent(_allEnemyCurentHp[indexValue] * 100.0f / _allEnemyUnitData[indexValue].hp);
+		_allEnemyCurentHp[indexValue] -= dame;
+		
+		if (_allEnemyCurentHp[indexValue] <= 0)
+		{
+			enemyDieAction(indexValue);
+			return;
+		}
+		
+		}), nullptr), 
+		////////End Sequence
+		CallFuncN::create([&, this](Ref *p) {
+		///////////////////////////////////////////////////
+		//RUN EFFECT ATTACK ONE UNIT
+		///////////////////////////////////////////////////
+		Effect* attackOne = new Effect();
+		ParticleSystemQuad* attackOneEffect = attackOne->createEffectAttackFire(PARTICLE_FIRE);
+
+		attackOne->runEffectAttackFire(
+			testObject
+			, attackOneEffect
+			, SORCERY_ORANGE
+			, _allEnemyUnitSprite[_indexOfBeAttackEnemy]->getPosition()
+			);
+	}), nullptr);
+
+
+	_allEnemyUnitSprite[_indexOfBeAttackEnemy]->runAction(action);
+
 }
 
+
 vector<int> BatleScene::detectUnitInAoe(SkillInfoNew skill, int unitFlg)
+
 {
 	vector<int> resultUnitId;
 	vector<Sprite*> allUnit;
@@ -1833,17 +1875,6 @@ float BatleScene::caculDameRate(int mainC, int enemy)
 
 void BatleScene::longPressAction(Button *pSender,SkillInfoNew skill)
 {
-// 	auto action = Sequence::create(/*DelayTime::create(SKILL_TOUCH_DELAY), */CallFuncN::create([&, skill](Ref *pSender) {
-// 		_skillAOEShowSprite->setPosition(testObject->getPosition());
-// 		_skillAOEShowSprite->setVisible(true);
-// 		_skillAOEShowSprite->runAction(RepeatForever::create(Spawn::create(RotateBy::create(1.0f, 90),Sequence::create(FadeOut::create(0.5f),FadeIn::create(0.5f),nullptr),nullptr)));
-// 		_skillAOEShowSprite->setScale(1.0f*skill.aoe/(_skillAOEShowSprite->getContentSize().width/2));
-// 	}), nullptr);
-// 	DrawNode *draw = DrawNode::create();
-// 	_skillAOEShowSprite->addChild(draw);
-// 	draw->drawRect(Vec2::ZERO, Vec2(_skillAOEShowSprite->getContentSize()), Color4F::RED);
-// 	action->setTag(TAG_SKILL_AOE);
-// 	pSender->runAction(action);
 	auto a = detectUnitInAoe(skill, ENEMY_FLAG);
 
 	for (auto& enemy : a)

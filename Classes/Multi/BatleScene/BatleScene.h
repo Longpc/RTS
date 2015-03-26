@@ -158,10 +158,7 @@ private:
 	virtual void nextButtonCallback(Ref *pSender, Widget::TouchEventType type);
 	virtual void menuButtonCallback(Ref *pSender, Widget::TouchEventType type);
 	virtual void skill1ButtonCallback(Ref *pSender, Widget::TouchEventType type);
-// 	virtual void skill2ButtonCallback(Ref *pSender, Widget::TouchEventType type);
-// 	virtual void skill3ButtonCallback(Ref *pSender, Widget::TouchEventType type);
-// 	virtual void skill4ButtonCallback(Ref *pSender, Widget::TouchEventType type);
-// 	
+
 	virtual void debugPhysicButtonCallback(Ref *pSEnder, Widget::TouchEventType type);
 	virtual void changeImageButtonCallback(Ref *pSender, Widget::TouchEventType type);
 
@@ -247,8 +244,13 @@ private:
 
 	virtual void longPressAction(Button *pSender, SkillInfoNew skill);
 
+
 	virtual void getBattleInformationFromSocketIO(int sID);
 	virtual void senInformationToServer(int sID, string data);
+
+
+
+	
 };
 
 
