@@ -101,6 +101,7 @@ private:
 
 	int _selectedUnitId;
 	UnitInforNew _mainCharacterData;
+	UnitInforNew _saveMainStatusData;
 	vector<SkillInfoNew> _mainCharacterSkillData;
 	Sprite *testObject;
 

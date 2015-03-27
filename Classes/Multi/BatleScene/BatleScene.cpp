@@ -67,7 +67,7 @@ bool BatleScene::init(int unitId,vector<SkillInfoNew> skills)
 
 
 	_allAlliedUnitData.push_back(_mainCharacterData);
-
+	_saveMainStatusData = _mainCharacterData;
 	_allAlliedUnitCurrentHp.push_back(_mainCharacterData.hp);
 
 	//Bellow vector is store  list of enemy unit id.
@@ -1427,7 +1427,7 @@ void BatleScene::skillRestoreAll(SkillInfoNew skillInfo)
 	switch (skillInfo.dame_type)
 	{
 	case DAME_TYPE_PERCENT:
-		value = ceil(1.0f*_mainCharacterData.hp *skillInfo.dame_value/100.0f);
+		value = ceil(1.0f*_saveMainStatusData.hp *skillInfo.dame_value/100.0f);
 		break;
 	case DAME_TYPE_PURE:
 		value = ceil(skillInfo.dame_value);
@@ -1499,8 +1499,7 @@ void BatleScene::skillRestoreOne(SkillInfoNew skillInfo)
 	switch (skillInfo.dame_type)
 	{
 	case DAME_TYPE_PERCENT:
-		log("Restore One: DAME_TYPE_PERCENT");
-		value = ceil(1.0f*_mainCharacterData.hp *skillInfo.dame_value/100.0f);
+		value = ceil(1.0f*_saveMainStatusData.hp *skillInfo.dame_value/100.0f);
 		break;
 	case DAME_TYPE_PURE:
 		log("Restore One: DAME_TYPE_PURE");
@@ -1552,7 +1551,7 @@ void BatleScene::skillHelpOne(SkillInfoNew skillInfo)
 	case SKILL_HELP_TYPE::HP:
 	{
 		log("help HP");
-		saveValue = 1.0f*_mainCharacterData.hp*(value - 1.0f) + pureValue;
+		saveValue = 1.0f*_saveMainStatusData.hp*(value - 1.0f) + pureValue;
 		_mainCharacterData.hp += saveValue;
 		runAction(Sequence::create(DelayTime::create(skillInfo.duration), CallFuncN::create([&, saveValue](Ref *pSEnder){
 			_mainCharacterData.hp -= saveValue;
@@ -1570,8 +1569,7 @@ void BatleScene::skillHelpOne(SkillInfoNew skillInfo)
 	}
 	case SKILL_HELP_TYPE::HP_RESTORE:
 	{
-		log("help HP_Restore");
-		saveValue = 1.0f*_mainCharacterData.hp_restore*(value - 1.0f) + pureValue;
+		saveValue = 1.0f*_saveMainStatusData.hp_restore*(value -1.0f) + pureValue;
 		_mainCharacterData.hp_restore += saveValue;
 		runAction(Sequence::create(DelayTime::create(skillInfo.duration), CallFuncN::create([&, saveValue](Ref *pSEnder){
 			_mainCharacterData.hp_restore -= saveValue;
@@ -1587,16 +1585,14 @@ void BatleScene::skillHelpOne(SkillInfoNew skillInfo)
 		break;
 	}
 	case SKILL_HELP_TYPE::MP:
-		log("help MP");
-		saveValue = 1.0f*_mainCharacterData.mp*(value-1.0f) + pureValue;
+		saveValue = 1.0f*_saveMainStatusData.mp*(value-1.0f) + pureValue;
 		_mainCharacterData.mp += saveValue;
 		runAction(Sequence::create(DelayTime::create(skillInfo.duration), CallFuncN::create([&, saveValue](Ref *pSEnder){
 			_mainCharacterData.mp -= saveValue;
 		}), nullptr));
 		break;
 	case SKILL_HELP_TYPE::MP_RESTORE:
-		log("help MP_Restore");
-		saveValue = 1.0f*_mainCharacterData.mp_restore*(value-1.0f) + pureValue;
+		saveValue = 1.0f*_saveMainStatusData.mp_restore*(value-1.0f) + pureValue;
 		_mainCharacterData.mp_restore += saveValue;
 		runAction(Sequence::create(DelayTime::create(skillInfo.duration), CallFuncN::create([&, saveValue](Ref *pSEnder){
 			_mainCharacterData.mp_restore -= saveValue;
@@ -1604,8 +1600,7 @@ void BatleScene::skillHelpOne(SkillInfoNew skillInfo)
 		break;
 	case SKILL_HELP_TYPE::ATTACK_DAME:
 	{
-		log("help attack_dame");
-		saveValue = 1.0f*_mainCharacterData.attack_dame*(value - 1.0f) + pureValue;
+		saveValue = 1.0f*_saveMainStatusData.attack_dame*(value - 1.0f) + pureValue;
 		_mainCharacterData.attack_dame += saveValue;
 		runAction(Sequence::create(DelayTime::create(skillInfo.duration), CallFuncN::create([&, saveValue](Ref *pSEnder){
 			_mainCharacterData.attack_dame -= saveValue;
@@ -1614,13 +1609,15 @@ void BatleScene::skillHelpOne(SkillInfoNew skillInfo)
 	}
 	case SKILL_HELP_TYPE::DEFENCE:
 	{
-		log("help defence");
-		log("increase defence by %f", value);
-		saveValue = 1.0f*_mainCharacterData.defence*(value-1.0f) + pureValue;
+		saveValue = 1.0f*_saveMainStatusData.defence*(value-1.0f) + pureValue;
+		log("increase defence by %d", saveValue);
 		_mainCharacterData.defence += saveValue;
 		runAction(Sequence::create(DelayTime::create(skillInfo.duration), CallFuncN::create([&, saveValue](Ref *pSEnder){
-			_mainCharacterData.defence = -saveValue;
-			log("remove defence buff");
+			if (saveValue > 0) {
+				_mainCharacterData.defence  -= saveValue;
+			}
+			
+			log("remove defence buff %d",saveValue);
 		}), nullptr));
 		
 		/////////////////////////////////////////
@@ -1634,8 +1631,7 @@ void BatleScene::skillHelpOne(SkillInfoNew skillInfo)
 	}
 	case SKILL_HELP_TYPE::ATTACK_RANGE:
 	{
-		log("help attack_range");
-		saveValue = 1.0f*_mainCharacterData.attack_sight*(value - 1.0f) + pureValue;
+		saveValue = 1.0f*_saveMainStatusData.attack_sight*(value-1.0f) + pureValue;
 		_mainCharacterData.attack_sight += saveValue;
 		runAction(Sequence::create(DelayTime::create(skillInfo.duration), CallFuncN::create([&, saveValue](Ref *pSEnder){
 			_mainCharacterData.attack_sight -= saveValue;
@@ -1644,8 +1640,7 @@ void BatleScene::skillHelpOne(SkillInfoNew skillInfo)
 	}
 	case SKILL_HELP_TYPE::MOVESPEED:
 	{
-		log("help move speed");
-		saveValue = 1.0f* _mainCharacterData.move_speed *(value - 1.0f) + pureValue;
+		saveValue = 1.0f* _saveMainStatusData.move_speed *(value - 1.0f) + pureValue;
 		_mainCharacterData.move_speed += saveValue;
 		runAction(Sequence::create(DelayTime::create(skillInfo.duration), CallFuncN::create([&, saveValue](Ref *pSEnder){
 			_mainCharacterData.move_speed -= saveValue;
@@ -1892,3 +1887,4 @@ void BatleScene::senInformationToServer(int sID, string data)
 {
 
 }
+
