@@ -1152,6 +1152,8 @@ void BatleScene::changeImageButtonCallback(Ref *pSender, Widget::TouchEventType 
 	case cocos2d::ui::Widget::TouchEventType::ENDED:
 	{
 		//changeAnimationImagePathByUnitId();
+		vector<int> test = { 1, 2, 3, 4, 5, 6, 7 };
+		this->runAction(CallFuncN::create(CC_CALLBACK_1(BatleScene::demoCallbackNotUserInlineFunction, this, test)));
 		break;
 	}
 	case cocos2d::ui::Widget::TouchEventType::CANCELED:
@@ -1258,7 +1260,7 @@ void BatleScene::skill1ButtonCallback(Ref *pSender, Widget::TouchEventType type)
 	switch (type)
 	{
 	case cocos2d::ui::Widget::TouchEventType::BEGAN:
-		if(skill.aoe > 0 ) longPressAction(bt,skill);
+		if(skill.aoe > 0 && skill.mp_cost <= _characterCurentMp ) longPressAction(bt,skill);
 		break;
 	case cocos2d::ui::Widget::TouchEventType::MOVED:
 		break;
@@ -1801,17 +1803,28 @@ vector<int> BatleScene::detectUnitInAoe(SkillInfoNew skill, int unitFlg)
 		break;
 	}
 	auto pos = testObject->getPosition();
-
+	vector<Vec2> vec;
+	vec.push_back(Vec2(-skill.aoe / 2, -skill.aoe * 1 / 3));
+	vec.push_back(Vec2(skill.aoe / 2, -skill.aoe / 3));
+	vec.push_back(Vec2(0, skill.aoe * 2 / 3));
 	DrawNode *draw = DrawNode::create();
 	switch (skill.area_type)
 	{
+
 	case 1:
 		draw->drawRect(Vec2::ZERO, Vec2(skill.aoe, skill.aoe), Color4F::RED);
 		draw->setPosition(pos - Vec2(skill.aoe / 2, skill.aoe / 2));
 		draw->setTag(DRAW_UNIT);
 		break;
+	case 2:
+		draw->drawPolygon(&vec[0],3, Color4F::WHITE,3,Color4F::RED);
+		draw->setPosition(pos);
+		draw->setTag(DRAW_UNIT);
+		break;
+	case 3:
+		//draw->drawPolygon()
 	default:
-		draw->drawCircle(Vec2::ZERO, skill.aoe, 360.0f, 50, false, Color4F::RED);
+		draw->drawCircle(Vec2::ZERO, skill.aoe, 360.0f, 50, false, Color4F(200,0,0,50));
 		draw->setPosition(pos);
 		draw->setTag(DRAW_UNIT);
 		break;
@@ -1826,6 +1839,11 @@ vector<int> BatleScene::detectUnitInAoe(SkillInfoNew skill, int unitFlg)
 		case 1:
 			a = Rect(pos.x - skill.aoe / 2, pos.y - skill.aoe / 2, skill.aoe, skill.aoe);
 			if (a.containsPoint(allUnit[i]->getPosition())) {
+				resultUnitId.push_back(i);
+			}
+			break;
+		case 2:
+			if (detectPointInTriangle(allUnit[i]->getPosition(), vec)) {
 				resultUnitId.push_back(i);
 			}
 			break;
@@ -1886,5 +1904,44 @@ void BatleScene::getBattleInformationFromSocketIO(int sID)
 void BatleScene::senInformationToServer(int sID, string data)
 {
 
+}
+
+void BatleScene::demoCallbackNotUserInlineFunction(Ref *pSender, vector<int> a)
+{
+	for (auto &i : a)
+	{
+		log("%d", i);
+	}
+}
+
+bool BatleScene::detectPointInTriangle(Vec2 point, vector<Vec2> points)
+{
+	Vec2 v0 = makePoint(points[1]+testObject->getPosition(), points[0]+testObject->getPosition());
+	Vec2 v1 = makePoint(points[2]+testObject->getPosition(), points[0]+testObject->getPosition());
+	Vec2 v2 = makePoint(point, points[0]+testObject->getPosition());
+
+	float dot00 = makeDot(v0, v0);
+	float dot01 = makeDot(v0, v1);
+	float dot02 = makeDot(v0, v2);
+	float dot11 = makeDot(v1, v1);
+	float dot12 = makeDot(v1, v2);
+
+	float invDenom = 1 / (dot00 * dot11 - dot01 * dot01);
+	float u = (dot11 * dot02 - dot01 * dot12) * invDenom;
+	float v = (dot00 * dot12 - dot01 * dot02) * invDenom;
+
+	// Check if point is in triangle
+	return (u > 0) && (v > 0) && (u + v < 1);
+
+}
+
+float BatleScene::makeDot(Vec2 v1, Vec2 v2)
+{
+	return v1.x*v2.x + v1.y * v2.y;
+}
+
+Vec2 BatleScene::makePoint(Vec2 v1, Vec2 v2)
+{
+	return Vec2(v1.x - v2.x, v1.y - v2.y);
 }
 

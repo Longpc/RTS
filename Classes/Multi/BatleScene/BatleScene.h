@@ -249,8 +249,10 @@ private:
 	virtual void getBattleInformationFromSocketIO(int sID);
 	virtual void senInformationToServer(int sID, string data);
 
-
-
+	virtual void demoCallbackNotUserInlineFunction(Ref *pSender, vector<int> a);
+	virtual bool detectPointInTriangle(Vec2 point, vector<Vec2> points);
+	virtual float makeDot(Vec2 v1, Vec2 v2);
+	virtual Vec2 makePoint(Vec2 v1, Vec2 v2);
 	
 };
 
