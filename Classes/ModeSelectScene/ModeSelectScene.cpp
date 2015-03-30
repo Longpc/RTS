@@ -21,15 +21,14 @@ bool ModeSelectScene::init()
 	if (!LayerBase::init()) {
 		return false;
 	}
-	if (CC_TARGET_PLATFORM != CC_PLATFORM_WIN32)
-	{
-		downloadDatabase();
-	}
-
 	auto config = Configuration::getInstance();
 	if (config->getValue("ServerAddress").isNull())
 	{
 		config->loadConfigFile("configs/config-test-ok.plist");
+	}
+	if (CC_TARGET_PLATFORM != CC_PLATFORM_WIN32)
+	{
+		downloadDatabase();
 	}
 
 	_item1->setEnabled(false);
@@ -172,10 +171,16 @@ void ModeSelectScene::downloadDatabase()
 	auto client = HttpClient::getInstance();
 	client->enableCookies(NULL);
 	client->send(request);
+	request->release();
 }
 
 void ModeSelectScene::serverCallback(HttpClient* client, HttpResponse* response)
 {
+	if (!response)
+	{
+		log("No Response from server");
+		return;
+	}
 	if (response->getResponseCode() == 200)
 	{
 		auto fileUtils = FileUtils::getInstance();

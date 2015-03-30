@@ -13,7 +13,7 @@
 #include "cocostudio/CocoStudio.h"
 #include <time.h>
 
-#define ENEMY_NUM 5
+#define ENEMY_NUM 3
 #define RESTORE_MULTI 5
 
 #define TAG_SKILL_1 1
@@ -36,6 +36,8 @@ class BatleScene : public LayerBase
 {
 
 public:
+	BatleScene();
+	~BatleScene();
 	static Scene* createScene(int selectedUnitId, vector<SkillInfoNew> playerSkills);
 	static BatleScene* create(int unitId, vector<SkillInfoNew> playerSkills);
 	bool init(int unitId, vector<SkillInfoNew> playerSkills);
@@ -131,9 +133,12 @@ private:
 	UnitInforNew _blueTeamTowerData;
 
 	int _currentPlayerTeamFlg = TEAM_FLG_BLUE;
-
+	int _currentEnemyTeamFlg = TEAM_FLG_RED;
 	Armature *testArmature;
 
+	//For battle result
+	vector<UserBattleInfo> _blueTeamInfo;
+	vector<UserBattleInfo> _redTeamInfo;
 
 
 	///FUNCTIONS///////////////////////////////////////////////////////////////////////
@@ -196,7 +201,7 @@ private:
 
 	virtual void enemyDieAction(int id);
 
-	virtual void runRespawnAction();
+	virtual void runRespawnAction(int killerId);
 	virtual void removeReSpawnFlg();
 
 	///OPTION DIALOG CALLBACK///
@@ -253,6 +258,10 @@ private:
 	virtual bool detectPointInTriangle(Vec2 point, vector<Vec2> points);
 	virtual float makeDot(Vec2 v1, Vec2 v2);
 	virtual Vec2 makePoint(Vec2 v1, Vec2 v2);
+
+	virtual void saveDameInfo(int dame, int attackUnitId, int beAttackUnitId, int teamFlg);
+	virtual void saveKillDeadInfo(int killerId, int deadUnitId, int teamFlg);
+
 	
 };
 

@@ -8,39 +8,32 @@ class BatleResultScene : public LayerBase
 {
 
 public:
-	static Scene* createScene();
-	CREATE_FUNC(BatleResultScene);
-	bool init();
+	static Scene* createScene(vector<UserBattleInfo> blueTeamInfo, vector<UserBattleInfo> readTeamInfo);
+	static BatleResultScene* create(vector<UserBattleInfo> blueTeamInfo, vector<UserBattleInfo> readTeamInfo);
+	bool init(vector<UserBattleInfo> blueTeamInfo, vector<UserBattleInfo> readTeamInfo);
 private:
 	///VARIABLES///////////////////////////////////////////////////////////////////////
-	Sprite *statusTab;
-	Sprite *skillTab;
+	Sprite *_blueTeamTabBackground;
+	Sprite *_redTeamTabBackground;
 	Button *_blueTeamButton;
 	Button *_redTeamButton;
 
-	Button *_slot1BackgroundButon;
-	Button *_slot2BackgroundButon;
-	Button *_slot3BackgroundButon;
+	vector<Label*> _unitNameLabel;
 
-	Label *selectedUnit1Name;
-	Label *selectedUnit2Name;
-	Label *selectedUnit3Name;
+	vector<ClipingButtonBase*> _allSlot;
 
-	ClippingNode *_slot1;
-	ClippingNode *_slot2;
-	ClippingNode *_slot3;
+	vector<UserBattleInfo> _blueTeamInfo;
+	vector<UserBattleInfo> _readTeamInfo;
 
 	///FUNCTIONS///////////////////////////////////////////////////////////////////////
 	virtual void createContent();
-	ClippingNode* createSlot(Vec2 position);
 	virtual void nextButtonCallback(Ref *pSender, Widget::TouchEventType type);
-	virtual void statusButtonCallback(Ref *pSender, Widget::TouchEventType type);
-	virtual void skillButonCallback(Ref *pSEnder, Widget::TouchEventType type);
+	virtual void tabButtonClickCallback(Ref *pSender, Widget::TouchEventType type);
 
-	virtual Button* createSlotBaseSprite(Vec2 pos);
 	virtual Sprite* createUnitNameBg(Vec2 pos);
 	virtual Label* createUniNameLabel(Vec2 pos);
-	
+	virtual void createBattleInfo(Sprite *parent, vector<UserBattleInfo> info);
+	virtual void updateUnitSlot(vector<UserBattleInfo> info);
 };
 
 

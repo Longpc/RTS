@@ -2,21 +2,34 @@
 
 #include "BatleResultScene.h"
 
-Scene* BatleResultScene::createScene()
+Scene* BatleResultScene::createScene(vector<UserBattleInfo> blueTeamInfo, vector<UserBattleInfo> readTeamInfo)
 {
 	auto scene = Scene::create();
-	auto lay = BatleResultScene::create();
+	auto lay = BatleResultScene::create(blueTeamInfo,readTeamInfo);
 
 	scene->addChild(lay);
 	return scene;
 }
+BatleResultScene* BatleResultScene::create(vector<UserBattleInfo> blueTeamInfo, vector<UserBattleInfo> readTeamInfo)
+{
+	BatleResultScene *layer = new BatleResultScene();
+	if (layer && layer->init(blueTeamInfo, readTeamInfo)) {
+		layer->autorelease();
+		return layer;
+	}
 
-bool BatleResultScene::init()
+	CC_SAFE_DELETE(layer);
+	return NULL;
+}
+bool BatleResultScene::init(vector<UserBattleInfo> blueTeamInfo, vector<UserBattleInfo> readTeamInfo)
 {
 	if (!LayerBase::init()) {
 		return false;
 	}
 	_menu->setVisible(false);
+
+	_blueTeamInfo = blueTeamInfo;
+	_readTeamInfo = readTeamInfo;
 	_defaultLabel->setString("TEAM BLUE WIN");
 	auto homeButton = Button::create();
 	homeButton->loadTextureNormal("image/button/new/button_home.png");
@@ -52,100 +65,51 @@ void BatleResultScene::nextButtonCallback(Ref *pSender, Widget::TouchEventType t
 void BatleResultScene::createContent()
 {
 
-	_slot1BackgroundButon = createSlotBaseSprite(Vec2(_visibleSize.width / 2 - 200, _visibleSize.height - 150));
-	addChild(_slot1BackgroundButon);
-	_slot1BackgroundButon->loadTextureNormal("image/screen/unitSelect/active.png");
-	float baseX = _slot1BackgroundButon->getContentSize().width / 2;
-	_slot1BackgroundButon->addChild(createUnitNameBg(Vec2(baseX, 0)));
-	selectedUnit1Name = createUniNameLabel(Vec2(baseX, 0));
-	_slot1BackgroundButon->addChild(selectedUnit1Name);
+	for (int i = 0; i < 3; i++)
+	{
+		auto slot = ClipingButtonBase::create("image/navigator/selct_scene_circle.png", "image/screen/unitSelect/inactive.png", "image/screen/unitSelect/active.png");
+		slot->setPosition(Vec2(_visibleSize.width / 2 + 200*(i-1)  , _visibleSize.height - 150));
+		slot->setSelected(false);
+		Button * back = slot->getBackgroundButton();
+		back->addChild(createUnitNameBg(Vec2(back->getContentSize().width/2, 0)));
+		_unitNameLabel.push_back(createUniNameLabel(Vec2(back->getContentSize().width / 2, 0)));
+		back->addChild(_unitNameLabel.back());
+		_allSlot.push_back(slot);
+		addChild(_allSlot.back(), 100);
+	}
+	_allSlot[0]->setSelected(true);
 
+	_blueTeamTabBackground = Sprite::create("image/screen/battleResult/back.png");
+	_blueTeamTabBackground->setPosition(Vec2(_visibleSize.width/2,_visibleSize.height/2 - 95));
+	addChild(_blueTeamTabBackground, 10);
 
-	_slot2BackgroundButon = createSlotBaseSprite(Vec2(_visibleSize.width / 2, _visibleSize.height - 150));
-	addChild(_slot2BackgroundButon);
-	_slot2BackgroundButon->addChild(createUnitNameBg(Vec2(baseX, 0)));
-	selectedUnit2Name = createUniNameLabel(Vec2(baseX, 0));
-	_slot2BackgroundButon->addChild(selectedUnit2Name);
+	createBattleInfo(_blueTeamTabBackground,_blueTeamInfo);
+	updateUnitSlot(_blueTeamInfo);
 
-	_slot3BackgroundButon = createSlotBaseSprite(Vec2(_visibleSize.width / 2 + 200, _visibleSize.height - 150));
-	addChild(_slot3BackgroundButon);
-	_slot3BackgroundButon->addChild(createUnitNameBg(Vec2(baseX, 0)));
-	selectedUnit3Name = createUniNameLabel(Vec2(baseX, 0));
-	_slot3BackgroundButon->addChild(selectedUnit3Name);
+	_redTeamTabBackground = Sprite::create("image/screen/battleResult/back.png");
+	_redTeamTabBackground->setPosition(_blueTeamTabBackground->getPosition());
+	addChild(_redTeamTabBackground, 10);
+	_redTeamTabBackground->setVisible(false);
 
-	_slot1 = createSlot(Vec2(_visibleSize.width / 2 - 200, _visibleSize.height - 150));
-	_slot2 = createSlot(Vec2(_visibleSize.width / 2, _visibleSize.height - 150));
-	_slot3 = createSlot(Vec2(_visibleSize.width / 2 + 200, _visibleSize.height - 150));
-
-	addChild(_slot1);
-	addChild(_slot2);
-	addChild(_slot3);
-
-	statusTab = Sprite::create("image/screen/unitSelect/back.png");
-	statusTab->setPosition(Vec2(_visibleSize.width/2,_visibleSize.height/2 - 95));
-	addChild(statusTab, 10);
-
-	std::stringstream info;
-	info << "チーム名前: TEAM BLUE" << "\n攻撃ダメージ: " << 1000000 << "\n防御: " << 11110 << "\nSpeed: " << 10;
-	auto label = Label::createWithSystemFont(info.str().c_str(), JAPANESE_FONT_1_BOLD, 25);
-	label->setColor(Color3B::BLACK);
-	label->setPosition(Vec2(150, statusTab->getContentSize().height - 100));
-	label->setHorizontalAlignment(TextHAlignment::LEFT);
-	statusTab->addChild(label);
-
-	skillTab = Sprite::create("image/screen/unitSelect/back.png");
-	skillTab->setPosition(statusTab->getPosition());
-	addChild(skillTab, 10);
-	skillTab->setVisible(false);
-
-	std::stringstream info2;
-	info2 << "Name: TEAM RED " << "\nAttack: " << 100 << "\nDefense: " << 100 << "\nSpeed: " << 10110;
-	auto label2 = Label::createWithSystemFont(info2.str().c_str(), JAPANESE_FONT_1_BOLD, 25);
-	label2->setColor(Color3B::BLACK);
-	label2->setPosition(Vec2(150, statusTab->getContentSize().height - 100));
-	label2->setHorizontalAlignment(TextHAlignment::LEFT);
-	skillTab->addChild(label2);
-
+	createBattleInfo(_redTeamTabBackground, _readTeamInfo);
+	
 	_blueTeamButton = Button::create();
 	_blueTeamButton->loadTextureNormal("image/tab/new/blue_team_tab.png");
-	_blueTeamButton->setPosition(Vec2(statusTab->getPositionX() + statusTab->getContentSize().width / 2 - _blueTeamButton->getContentSize().width / 2 - 10, statusTab->getPositionY() - statusTab->getContentSize().height/2 - 20));
-	_blueTeamButton->addTouchEventListener(CC_CALLBACK_2(BatleResultScene::statusButtonCallback, this));
+	_blueTeamButton->setPosition(Vec2(_blueTeamTabBackground->getPositionX() + _blueTeamTabBackground->getContentSize().width / 2 - _blueTeamButton->getContentSize().width / 2 - 10, _blueTeamTabBackground->getPositionY() - _blueTeamTabBackground->getContentSize().height/2 - 20));
+	_blueTeamButton->addTouchEventListener(CC_CALLBACK_2(BatleResultScene::tabButtonClickCallback, this));
 	addChild(_blueTeamButton, 10);
 
 	_redTeamButton = Button::create();
 	_redTeamButton->loadTextureNormal("image/tab/new/red_tab_disable.png");
 	_redTeamButton->setPosition(_blueTeamButton->getPosition() - Vec2(_redTeamButton->getContentSize().width, 0));
-	_redTeamButton->addTouchEventListener(CC_CALLBACK_2(BatleResultScene::skillButonCallback, this));
+	_redTeamButton->addTouchEventListener(CC_CALLBACK_2(BatleResultScene::tabButtonClickCallback, this));
 	addChild(_redTeamButton, 10);
 
 
 }
 
-ClippingNode* BatleResultScene::createSlot(Vec2 position)
-{
-	auto clipNode = ClippingNode::create();
-	clipNode->setAlphaThreshold(0);
-	clipNode->setPosition(Vec2::ZERO);
-	clipNode->setTag(111);
-	clipNode->setAnchorPoint(Vec2::ANCHOR_BOTTOM_LEFT);
 
-	auto mask = Sprite::create("image/navigator/selct_scene_circle.png");
-	mask->setPosition(position);
-	clipNode->setStencil(mask);
-
-	// add "HelloWorld" splash screen"
-	auto sprite = Sprite::create("image/unit/1(3).png");
-
-	// position the sprite on the center of the screen
-	sprite->setPosition(position);
-
-	// add the sprite as a child to this layer
-	clipNode->addChild(sprite, 0);
-
-	return clipNode;
-}
-
-void BatleResultScene::statusButtonCallback(Ref *pSender, Widget::TouchEventType type)
+void BatleResultScene::tabButtonClickCallback(Ref *pSender, Widget::TouchEventType type)
 {
 	switch (type)
 	{
@@ -155,10 +119,23 @@ void BatleResultScene::statusButtonCallback(Ref *pSender, Widget::TouchEventType
 		break;
 	case cocos2d::ui::Widget::TouchEventType::ENDED:
 	{
-		statusTab->setVisible(true);
-		skillTab->setVisible(false);
-		_blueTeamButton->loadTextureNormal("image/tab/new/blue_team_tab.png");
-		_redTeamButton->loadTextureNormal("image/tab/new/red_tab_disable.png");
+		if (!_blueTeamTabBackground->isVisible())
+		{
+			_allSlot[0]->setSelected(true);
+			_blueTeamTabBackground->setVisible(true);
+			_redTeamTabBackground->setVisible(false);
+			_blueTeamButton->loadTextureNormal("image/tab/new/blue_team_tab.png");
+			updateUnitSlot(_blueTeamInfo);
+		}
+		else {
+			_allSlot[0]->setSelected(false);
+			_blueTeamTabBackground->setVisible(false);
+			_redTeamTabBackground->setVisible(true);
+			_blueTeamButton->loadTextureNormal("image/tab/new/blue_team_tab_disable.png");
+			_redTeamButton->loadTextureNormal("image/tab/new/red_team_tab.png");
+			updateUnitSlot(_readTeamInfo);
+		}
+		
 		break;
 	}
 	case cocos2d::ui::Widget::TouchEventType::CANCELED:
@@ -168,36 +145,6 @@ void BatleResultScene::statusButtonCallback(Ref *pSender, Widget::TouchEventType
 	}
 }
 
-void BatleResultScene::skillButonCallback(Ref *pSEnder, Widget::TouchEventType type)
-{
-	switch (type)
-	{
-	case cocos2d::ui::Widget::TouchEventType::BEGAN:
-		break;
-	case cocos2d::ui::Widget::TouchEventType::MOVED:
-		break;
-	case cocos2d::ui::Widget::TouchEventType::ENDED:
-	{
-		statusTab->setVisible(false);
-		skillTab->setVisible(true);
-		_blueTeamButton->loadTextureNormal("image/tab/new/blue_team_tab_disable.png");
-		_redTeamButton->loadTextureNormal("image/tab/new/red_team_tab.png");
-		break;
-	}
-	case cocos2d::ui::Widget::TouchEventType::CANCELED:
-		break;
-	default:
-		break;
-	}
-}
-Button* BatleResultScene::createSlotBaseSprite(Vec2 pos)
-{
-	auto sp = Button::create();
-	sp->loadTextureNormal("image/screen/unitSelect/inactive.png");
-	sp->setEnabled(false);
-	sp->setPosition(pos);
-	return sp;
-}
 
 Sprite* BatleResultScene::createUnitNameBg(Vec2 pos)
 {
@@ -213,5 +160,41 @@ Label* BatleResultScene::createUniNameLabel(Vec2 pos)
 	lb->setColor(Color3B::BLACK);
 	return lb;
 }
+
+void BatleResultScene::createBattleInfo(Sprite *parent, vector<UserBattleInfo> info)
+{
+	string tempStr = "キル\nデス\nアシスト\n連続キル\n同時キル\n与ダメージ\n被ダメージ";
+
+	auto tempLabel = Label::createWithSystemFont(tempStr.c_str(), JAPANESE_FONT_1_REGULAR, 30);
+	tempLabel->setPosition(Vec2(40, parent->getContentSize().height - 50));
+	tempLabel->setColor(Color3B::BLACK);
+	tempLabel->setAnchorPoint(Vec2::ANCHOR_TOP_LEFT);
+	tempLabel->setHorizontalAlignment(TextHAlignment::LEFT);
+	parent->addChild(tempLabel);
+
+	for (int i = 0; i < info.size(); i++)
+	{
+		stringstream dm;
+		dm << info[i].killNum << "\n" << info[i].deadNum << "\n" << info[i].assistNum << "\n" << info[i].longestKillstreak << "\n" << info[i].maxKillCombo << "\n" << info[i].totalDealDame << "\n" << info[i].totalReceivedDame;
+		auto label = Label::createWithSystemFont(dm.str().c_str(), JAPANESE_FONT_1_BOLD, 30);
+		label->setColor(Color3B::BLACK);
+		label->setPosition(Vec2(270 + 200 * i, parent->getContentSize().height - 50));
+		label->setHorizontalAlignment(TextHAlignment::RIGHT);
+		label->setAnchorPoint(Vec2::ANCHOR_TOP_RIGHT);
+		parent->addChild(label);
+	}
+}
+
+void BatleResultScene::updateUnitSlot(vector<UserBattleInfo> info)
+{
+	for (int i = 0; i < info.size(); i++)
+	{
+		_unitNameLabel[i]->setString(info[i].name);
+		_allSlot[i]->getClickableButton()->loadTextureNormal(info[i].imagePath);
+		//update image
+	}
+}
+
+
 
 

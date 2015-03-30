@@ -60,6 +60,19 @@ struct SkillInfoNew {
 
 };
 
+struct UserBattleInfo
+{
+	string name = "Temp";
+	int unitId = 2;
+	string imagePath ="image/unit/1(3).png";
+	int killNum = 0;
+	int deadNum = 0;
+	int assistNum = 0;
+	int longestKillstreak = 0;
+	int maxKillCombo = 0;
+	int totalDealDame = 0;
+	int totalReceivedDame = 0;
+};
 
 
 //////////////////////////////////////////////////////////////////////////

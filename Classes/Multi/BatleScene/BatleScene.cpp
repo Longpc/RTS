@@ -106,6 +106,39 @@ bool BatleScene::init(int unitId,vector<SkillInfoNew> skills)
 	addChild(changeImage, 10);
 
 	createContent();
+
+	if (_currentPlayerTeamFlg == TEAM_FLG_BLUE) {
+		UserBattleInfo info;
+		info.name = _mainCharacterData.name;
+		info.unitId = _mainCharacterData.id;
+		info.imagePath = _mainCharacterData.image;
+		_blueTeamInfo.push_back(info);
+		for (int i = 0; i < ENEMY_NUM; i++)
+		{
+			UserBattleInfo enemy;
+			enemy.name = _allEnemyUnitData[i].name;
+			enemy.unitId = _allEnemyUnitData[i].id;
+			enemy.imagePath = _allEnemyUnitData[i].image;
+			_redTeamInfo.push_back(enemy);
+		}
+		
+	}
+	else {
+		UserBattleInfo info;
+		info.name = _mainCharacterData.name;
+		info.unitId = _mainCharacterData.id;
+		info.imagePath = _mainCharacterData.image;
+		_redTeamInfo.push_back(info);
+		for (int i = 0; i < ENEMY_NUM; i++)
+		{
+			UserBattleInfo enemy;
+			enemy.name = _allEnemyUnitData[i].name;
+			enemy.unitId = _allEnemyUnitData[i].id;
+			enemy.imagePath = _allEnemyUnitData[i].image;
+			_blueTeamInfo.push_back(enemy);
+		}
+	}
+
 	return true;
 }
 void BatleScene::createContent()
@@ -544,6 +577,14 @@ void BatleScene::update(float delta)
 	updateTime();
 	updateHpAndMpViewLabel();
 	checkForAutoAttack();
+	auto child = _battleBackround->getChildren();
+	for (auto &sp : child)
+	{
+		if (sp->getTag() == DRAW_UNIT) {
+			sp->setPosition(testObject->getPosition());
+		}
+	}
+
 
 }
 void BatleScene::checkForAutoAttack()
@@ -604,6 +645,7 @@ void BatleScene::characerAttackCallback()
 		}
 		showAttackDame(dame, _allEnemyUnitSprite[_indexOfBeAttackEnemy]->getPosition() + Vec2(0, 100), 1);
 		_allEnemyCurentHp[_indexOfBeAttackEnemy] -= dame;
+		saveDameInfo(dame, 0, _indexOfBeAttackEnemy, _currentPlayerTeamFlg);
 		if (_allEnemyCurentHp[_indexOfBeAttackEnemy] <= 0)
 		{
 			enemyDieAction(_indexOfBeAttackEnemy);
@@ -622,6 +664,7 @@ void BatleScene::enemyDieAction(int id)
 {
 	_allEnemyUnitSprite[id]->setVisible(false);
 	_allEnemyIconInMinimap[id]->setVisible(false);
+	saveKillDeadInfo(0, id, _currentPlayerTeamFlg);
 	_indexOfBeAttackEnemy = -1;
 	testObject->stopActionByTag(_currentAttackActionTag);
 	if (id == _allEnemyUnitData.size() - 1) {
@@ -652,8 +695,10 @@ void BatleScene::enemyAttackCallback(Ref *pSEnder)
 			}
 			showAttackDame(dame, testObject->getPosition() + Vec2(0, 100), 2);
 			_allAlliedUnitCurrentHp[0] -= dame;
+			saveDameInfo(dame, id, 0, _currentEnemyTeamFlg);
+
 			if (_allAlliedUnitCurrentHp[0] <= 0) {
-				runRespawnAction();
+				runRespawnAction(id);
 				return;
 			}
 			//log("Percent: %d", ceil(float(float(_characterCurentHp) / float(_unitData.hp)) * 100));
@@ -663,7 +708,7 @@ void BatleScene::enemyAttackCallback(Ref *pSEnder)
 		}
 	}
 	else {
-		runRespawnAction();
+		runRespawnAction(id);
 	}
 	
 
@@ -692,15 +737,28 @@ void BatleScene::showAttackDame(int dameValue, Vec2 pos,int type)
 	s->runAction(action);
 }
 
-void BatleScene::runRespawnAction()
+void BatleScene::runRespawnAction(int killerId)
 {
 	if (_onRespwanFlg) return;
 	_onRespwanFlg = true;
+
+	saveKillDeadInfo(killerId, 0, _currentEnemyTeamFlg);
+
 	auto timeLb = Label::createWithSystemFont("5", JAPANESE_FONT_1_HEAVY, 150);
 	_battleBackround->addChild(timeLb, 1000);
 	timeLb->setPosition(testObject->getPosition());
 	timeLb->setColor(Color3B::RED);
-
+	/* Move skill area sprite
+	*/
+	while (_battleBackround->getChildByTag(DRAW_UNIT))
+	{
+		_battleBackround->removeChildByTag(DRAW_UNIT);
+	}
+	/*reset enemy unit color*/
+	for (auto& e : _allEnemyUnitSprite)
+	{
+		e->setColor(Color3B::WHITE);
+	}
 	_mainCharacterMiniHpBar->setPercent(100);
 	_mainCharacterHpBar->setPercent(100);
 	_mainCharacterMpBar->setPercent(100);
@@ -813,6 +871,7 @@ void BatleScene::onTouchMoved(Touch *touch, Event *unused_event)
 	testObject->stopActionByTag(_currentAttackActionTag);
 	testObject->getPhysicsBody()->setVelocity(Vect(_mainCharacterData.move_speed*cos(distanVector.getAngle()),_mainCharacterData.move_speed*sin(distanVector.getAngle())));
 	_mainCharacterAvata->setRotation(-(distanVector.getAngle() * RAD_DEG) + 90);
+
 	//log("%f", _mini_Icon->getRotation());
 	int direc = detectDirectionBaseOnTouchAngle(_mainCharacterAvata->getRotation());
 	if(direc != 0) actionCharacter(direc);
@@ -1703,6 +1762,7 @@ void BatleScene::skillAttackAll(SkillInfoNew skillInfo)
 				showAttackDame(dame, _allEnemyUnitSprite[index]->getPosition() + Vec2(0, 100), 1);
 				_allEnemyHpBar[index]->setPercent(_allEnemyCurentHp[index] * 100.0f / _allEnemyUnitData[index].hp);
 				_allEnemyCurentHp[index] -= dame;
+				saveDameInfo(dame, 0, index, TEAM_FLG_BLUE);
 				if (_allEnemyCurentHp[index] <= 0) {
 					enemyDieAction(index);
 				}
@@ -1756,7 +1816,7 @@ void BatleScene::skillAttackOne(SkillInfoNew skillInfo)
 		showAttackDame(dame, _allEnemyUnitSprite[indexValue]->getPosition() + Vec2(0, 100), 1);
 		_allEnemyHpBar[indexValue]->setPercent(_allEnemyCurentHp[indexValue] * 100.0f / _allEnemyUnitData[indexValue].hp);
 		_allEnemyCurentHp[indexValue] -= dame;
-		
+		saveDameInfo(dame, 0, indexValue, TEAM_FLG_BLUE);
 		if (_allEnemyCurentHp[indexValue] <= 0)
 		{
 			enemyDieAction(indexValue);
@@ -1804,25 +1864,37 @@ vector<int> BatleScene::detectUnitInAoe(SkillInfoNew skill, int unitFlg)
 	}
 	auto pos = testObject->getPosition();
 	vector<Vec2> vec;
-	vec.push_back(Vec2(-skill.aoe / 2, -skill.aoe * 1 / 3));
-	vec.push_back(Vec2(skill.aoe / 2, -skill.aoe / 3));
-	vec.push_back(Vec2(0, skill.aoe * 2 / 3));
 	DrawNode *draw = DrawNode::create();
 	switch (skill.area_type)
 	{
 
 	case 1:
-		draw->drawRect(Vec2::ZERO, Vec2(skill.aoe, skill.aoe), Color4F::RED);
-		draw->setPosition(pos - Vec2(skill.aoe / 2, skill.aoe / 2));
+		draw->drawRect(Vec2(-skill.aoe/2,-skill.aoe/2), Vec2(skill.aoe/2, skill.aoe/2), Color4F::RED);
+		draw->setPosition(pos/* - Vec2(skill.aoe / 2, skill.aoe / 2)*/);
 		draw->setTag(DRAW_UNIT);
 		break;
 	case 2:
-		draw->drawPolygon(&vec[0],3, Color4F::WHITE,3,Color4F::RED);
+		vec.push_back(Vec2(-skill.aoe / 2, -skill.aoe * 1 / 3));
+		vec.push_back(Vec2(skill.aoe / 2, -skill.aoe / 3));
+		vec.push_back(Vec2(0, skill.aoe * 2 / 3));
+		draw->drawPoly(&vec[0], 3, true, Color4F::RED);
 		draw->setPosition(pos);
 		draw->setTag(DRAW_UNIT);
 		break;
 	case 3:
 		//draw->drawPolygon()
+		vec.push_back(Vec2(-skill.aoe / 2, 0));
+		vec.push_back(Vec2(-100, -100));
+		vec.push_back(Vec2(0, -skill.aoe / 2));
+		vec.push_back(Vec2(skill.aoe / 6, -skill.aoe / 6));
+		vec.push_back(Vec2(skill.aoe / 2, 0));
+		vec.push_back(Vec2(skill.aoe / 6, skill.aoe / 6));
+		vec.push_back(Vec2(0, skill.aoe / 2));
+		vec.push_back(Vec2(-skill.aoe / 6, skill.aoe / 6));
+		draw->drawPoly(&vec[0], vec.size(),true, Color4F::MAGENTA);
+		draw->setPosition(pos);
+		draw->setTag(DRAW_UNIT);
+		break;
 	default:
 		draw->drawCircle(Vec2::ZERO, skill.aoe, 360.0f, 50, false, Color4F(200,0,0,50));
 		draw->setPosition(pos);
@@ -1830,10 +1902,12 @@ vector<int> BatleScene::detectUnitInAoe(SkillInfoNew skill, int unitFlg)
 		break;
 	}
 	_battleBackround->addChild(draw);
+
 	for (int i = 0; i < allUnit.size(); i++)
 	{
 		//rectangle
 		Rect a;
+		Vec2 distan = allUnit[i]->getPosition() - pos;
 		switch (skill.area_type)
 		{
 		case 1:
@@ -1847,9 +1921,33 @@ vector<int> BatleScene::detectUnitInAoe(SkillInfoNew skill, int unitFlg)
 				resultUnitId.push_back(i);
 			}
 			break;
+		case 3:
+			if (detectPointInTriangle(allUnit[i]->getPosition(), {vec[0],vec[1],vec[7]})) {
+				resultUnitId.push_back(i);
+				break;
+			}
+			if (detectPointInTriangle(allUnit[i]->getPosition(), {vec[1],vec[2],vec[3]}))
+			{
+				resultUnitId.push_back(i);
+				break;
+			}
+			if (detectPointInTriangle(allUnit[i]->getPosition(), { vec[3], vec[4], vec[5] })) {
+				resultUnitId.push_back(i);
+				break;
+			}
+			if (detectPointInTriangle(allUnit[i]->getPosition(), { vec[7], vec[5], vec[6] })) {
+				resultUnitId.push_back(i);
+				break;
+			}
+			if (distan.length() < (skill.aoe / 6 * sqrt(2))) {
+				resultUnitId.push_back(i);
+				break;
+			}
+
+			break;
 		default:
 			//round
-			Vec2 distan = allUnit[i]->getPosition() - pos;
+			
 			// 		distan.y = distan.y *SKILL_AOE_Y_SCALE;
 			if (distan.length() < skill.aoe) {
 				resultUnitId.push_back(i);
@@ -1871,7 +1969,7 @@ void BatleScene::updateHpAndMpViewLabel()
 
 void BatleScene::endBattle()
 {
-	Director::getInstance()->replaceScene(TransitionMoveInR::create(SCREEN_TRANSI_DELAY, BatleResultScene::createScene()));
+	Director::getInstance()->replaceScene(TransitionMoveInR::create(SCREEN_TRANSI_DELAY, BatleResultScene::createScene(_blueTeamInfo,_redTeamInfo)));
 }
 
 float BatleScene::caculDameRate(int mainC, int enemy)
@@ -1943,5 +2041,83 @@ float BatleScene::makeDot(Vec2 v1, Vec2 v2)
 Vec2 BatleScene::makePoint(Vec2 v1, Vec2 v2)
 {
 	return Vec2(v1.x - v2.x, v1.y - v2.y);
+}
+
+BatleScene::BatleScene() :
+	_oldSecond(0),
+	_indexOfBeAttackEnemy(-1),
+	_allAlliedUnitData({}),
+	_allAlliedUnitSprite({}),
+	_allAlliedUnitHpBar({}),
+	_allAlliedUnitCurrentHp({})
+{
+
+}
+
+BatleScene::~BatleScene()
+{
+	Director::getInstance()->getScheduler()->unschedule(schedule_selector(BatleScene::update), this);
+}
+
+void BatleScene::saveDameInfo(int dame, int attackUnitId, int beAttackUnitId, int teamFlg)
+{
+	switch (teamFlg)
+	{
+	case TEAM_FLG_BLUE:
+		_blueTeamInfo[attackUnitId].totalDealDame += dame;
+		if (beAttackUnitId < ENEMY_NUM)
+		{
+			_redTeamInfo[beAttackUnitId].totalReceivedDame += dame;
+		}	
+		break;
+	case TEAM_FLG_RED:
+		_blueTeamInfo[beAttackUnitId].totalReceivedDame += dame;
+		if (attackUnitId < ENEMY_NUM)
+		{
+			_redTeamInfo[attackUnitId].totalDealDame += dame;
+		}
+		
+		break;
+	default:
+		break;
+	}
+}
+
+void BatleScene::saveKillDeadInfo(int killerId, int deadUnitId, int teamFlg)
+{
+	if (teamFlg == _currentPlayerTeamFlg) {
+		switch (_currentPlayerTeamFlg)
+		{
+		case TEAM_FLG_BLUE:
+			_blueTeamInfo[killerId].killNum++;
+			if(deadUnitId < ENEMY_NUM) _redTeamInfo[deadUnitId].deadNum++;
+			break;
+		case TEAM_FLG_RED:
+			_redTeamInfo[killerId].killNum++;
+			if(deadUnitId < ENEMY_NUM)_blueTeamInfo[deadUnitId].deadNum++;
+			break;
+		default:
+			break;
+		}
+	}
+	else {
+		if (teamFlg == _currentEnemyTeamFlg)
+		{
+			switch (_currentPlayerTeamFlg)
+			{
+			case TEAM_FLG_BLUE:
+				_blueTeamInfo[deadUnitId].deadNum++;
+				if(killerId < ENEMY_NUM) _redTeamInfo[killerId].killNum++;
+
+				break;
+			case TEAM_FLG_RED:
+				_redTeamInfo[deadUnitId].deadNum++;
+				if(killerId < ENEMY_NUM)_blueTeamInfo[killerId].killNum++;
+				break;
+			default:
+				break;
+			}
+		}
+	}
 }
 
