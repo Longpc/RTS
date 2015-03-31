@@ -13,6 +13,19 @@
 #include "cocostudio/CocoStudio.h"
 #include <time.h>
 
+#define MOVE_SPEED 250
+#define IMAGE_SCALE 0.6f
+#define ANIMETE_DELAY 0.25f
+#define ATTACK_ANIMATION_DELAY 1
+
+#define LOW 1
+#define MID 2
+#define HIGH 3
+
+#define ICON 10
+
+#define RESPAWN_DELAY 0.6f
+
 #define ENEMY_NUM 3
 #define RESTORE_MULTI 5
 
@@ -30,6 +43,22 @@
 #define SKILL_AOE_Y_SCALE 0.75f
 
 #define DRAW_UNIT 999
+
+#define STATUS_CHANGE_TIME 0.5f
+#define STATUS_DELAY_TIME 0.2f
+
+#define POISON 1
+#define STUN 2
+#define BUFF_ATTACK 3
+#define BUFF_DEFENCE 4
+#define DEBUFF_ATTACK 5
+
+#define POISON_STEP_TIME 2.0f
+
+#define FOUNTAIN_ACTION 555
+
+#define ENEMY_RESPAW_ACTION_TAG 101
+#define BUFF_STATUS_TAG 102
 
 using namespace cocostudio;
 class BatleScene : public LayerBase
@@ -106,6 +135,7 @@ private:
 	UnitInforNew _saveMainStatusData;
 	vector<SkillInfoNew> _mainCharacterSkillData;
 	Sprite *testObject;
+	Node *_statusContainer;
 
 	Slider *_mainCharacterMiniHpBar;
 	bool _onRespwanFlg = false;
@@ -140,6 +170,9 @@ private:
 	vector<UserBattleInfo> _blueTeamInfo;
 	vector<UserBattleInfo> _redTeamInfo;
 
+	/*All battle variables*/
+	int _alliedTeamTotalDead = 0;
+	int _enemyTeamTotalDead = 0;
 
 	///FUNCTIONS///////////////////////////////////////////////////////////////////////
 
@@ -178,8 +211,8 @@ private:
 	virtual int detectDirectionBaseOnTouchAngle(float angle);
 	
 	///CHARACTER MOVE ACTION///
-	virtual void actionCharacter(int directionId);
-	
+	virtual void actionCharacter(int directionId, Sprite *characterSprite);
+	virtual void actionCharacterCopy(int directionId, Sprite *sprite);
 	//virtual void selectAttackTarget();
 	//virtual void runAttackAnimation();
 	virtual Animation* createMoveAnimationWithDefine(int imageId, string path);
@@ -190,12 +223,12 @@ private:
 	virtual void removeceAttackDelayFlg();
 
 	/*Remove enemy attack delay flag. Default attack delay time is 1s*/
-	virtual void removeEnemyAttackDelayFlg(Ref *pSender);
+	virtual void removeEnemyAttackDelayFlg(Ref *pSender, int index);
 
 	/*This function will be call when main character attack animation finished ( 0.5s)*/
 	virtual void characerAttackCallback();
 	/*This function will be called when enemy (as pSender) attack animation was finished*/
-	virtual void enemyAttackCallback(Ref *pSEnder);
+	virtual void enemyAttackCallback(Ref *pSEnder, int index);
 	
 	virtual void showAttackDame(int dameValue, Vec2 pos, int colorType);
 
@@ -245,6 +278,11 @@ private:
 	virtual void skillAttackAll(SkillInfoNew skillInfo);
 	virtual void skillAttackOne(SkillInfoNew skillInfo);
 
+	virtual void skillPoisonAction(SkillInfoNew skillInfo);
+	virtual void skillStunAction(SkillInfoNew skillInfo);
+
+	virtual void poisonEffectAction(SkillInfoNew skill, int index);
+
 	virtual void endBattle();
 	virtual float caculDameRate(int mainC, int enemy);
 
@@ -262,7 +300,13 @@ private:
 	virtual void saveDameInfo(int dame, int attackUnitId, int beAttackUnitId, int teamFlg);
 	virtual void saveKillDeadInfo(int killerId, int deadUnitId, int teamFlg);
 
-	
+	virtual void displayUnitStatus(Sprite *parent, int statusType, SkillInfoNew skillInfo);
+	virtual Animation*  createStatusAnimation(string imagePath);
+
+	virtual void enemyUnitAutoMoveTest();
+	/*define the function to play effect and logic when player move on fountain area*/
+	virtual void fountainRestoreEffect();
+	virtual void enemyRespawAction(int index);
 };
 
 

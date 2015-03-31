@@ -1,19 +1,6 @@
 #include "BatleScene.h"
 
 
-#define MOVE_SPEED 250
-#define IMAGE_SCALE 0.6f
-#define ANIMETE_DELAY 0.25f
-#define ATTACK_ANIMATION_DELAY 1
-
-#define LOW 1
-#define MID 2
-#define HIGH 3
-
-#define ICON 10
-
-#define RESPAWN_DELAY 0.6f
-
 Scene* BatleScene::createScene(int selectedUnitId, vector<SkillInfoNew> playerSkills)
 {
 	auto scene = Scene::createWithPhysics();
@@ -172,8 +159,14 @@ void BatleScene::createContent()
 
 	createPhysicBolder();
 
+	auto line = DrawNode::create();
+	line->drawLine(Vec2(0, 150), Vec2(_visibleSize.width * 2, 150), Color4F::BLUE);
+	line->drawLine(Vec2(0, _visibleSize.height * 2 - 150), Vec2(_visibleSize.width * 2, _visibleSize.height * 2 - 150), Color4F::RED);
+	line->drawRect(Vec2(_visibleSize.width - 100, 0), Vec2(_visibleSize.width + 100, 150), Color4F::BLUE);
+	line->drawRect(Vec2(_visibleSize.width - 100, _visibleSize.height * 2 - 150), Vec2(_visibleSize.width + 100, _visibleSize.height * 2),Color4F::RED);
+	_battleBackround->addChild(line);
 	auto redTower = Sprite::create("tower_red.png");
-	redTower->setPosition(Vec2(_visibleSize.width, _visibleSize.height * 2 - 250));
+	redTower->setPosition(Vec2(_visibleSize.width, _visibleSize.height * 2 - 150));
 	//redTower->setAnchorPoint(Vec2::ANCHOR_MIDDLE_BOTTOM);
 	_battleBackround->addChild(redTower);
 	MyBodyParser::getInstance()->parseJsonFile("json/tower.json");
@@ -217,10 +210,15 @@ void BatleScene::createContent()
 	path.append("unit_00_08_1.png");
 	testObject = Sprite::create(path.c_str());
 	_battleBackround->addChild(testObject, MID);
-	testObject->setPosition(Vec2(100, 100));
-	testObject->setPhysicsBody(PhysicsBody::createCircle(50, PhysicsMaterial(1, 0, 1)));
-	testObject->getPhysicsBody()->setRotationEnable(false);
+	testObject->setPosition(Vec2(_visibleSize.width, 100));
 	testObject->setScale(IMAGE_SCALE);
+	testObject->setPhysicsBody(PhysicsBody::createCircle(30, PhysicsMaterial(1, 0, 1),Vec2(0,-50)));
+	testObject->getPhysicsBody()->setRotationEnable(false);
+
+	_statusContainer = Node::create();
+	testObject->addChild(_statusContainer);
+	_statusContainer->setPosition(Vec2(testObject->getContentSize().width / 2, testObject->getContentSize().height));
+
 
 //  	ArmatureDataManager::getInstance()->addArmatureFileInfo("animation/walk/walk.ExportJson");
 //  	testArmature = Armature::create("walk");
@@ -409,9 +407,12 @@ void BatleScene::createContent()
 	for (int i = 0; i < ENEMY_NUM; i++)
 	{
 		auto sp = Sprite::create("image/unit_new/move/red/unit_00_02_2.png");
-		sp->setPosition(Vec2(2 * _visibleSize.width*random(0.2f, 0.8f), 2 * _visibleSize.height*random(0.2f, 0.8f)));
+		sp->setPosition(Vec2(_visibleSize.width +(i-1) * 70, 2 * _visibleSize.height-100));
 		sp->setScale(IMAGE_SCALE);
 		sp->setTag(i);
+		sp->setPhysicsBody(PhysicsBody::createCircle(30, PhysicsMaterial(1, 0, 0), Vec2(0, -50)));
+		sp->getPhysicsBody()->setRotationEnable(false);
+		sp->getPhysicsBody()->setGravityEnable(false);
 
 		auto hpB = Slider::create();
 		hpB->loadBarTexture("image/screen/battle/mini_hp_base.png");
@@ -584,7 +585,10 @@ void BatleScene::update(float delta)
 			sp->setPosition(testObject->getPosition());
 		}
 	}
-
+	if (random(1,20) < 2)
+	{
+		enemyUnitAutoMoveTest();
+	}
 
 }
 void BatleScene::checkForAutoAttack()
@@ -611,24 +615,30 @@ void BatleScene::checkForAutoAttack()
 				this->runAction(Sequence::create(DelayTime::create(_mainCharacterData.attack_delay), CallFuncN::create(CC_CALLBACK_0(BatleScene::removeceAttackDelayFlg, this)), nullptr));
 			}
 		}
-		if (posDistan.length() < ATTACK_AOE*_allEnemyUnitData[i].attack_sight/100.0f && _allEnemyUnitSprite[i]->isVisible()) {
+		if (posDistan.length() < ATTACK_AOE*_allEnemyUnitData[i].attack_sight/100.0f && _allEnemyUnitSprite[i]->isVisible() && !_allEnemyUnitData[i].isStun) {
 
-			if (_allEnemyUnitSprite[i]->getNumberOfRunningActions() < 1 && _allEnemyAttachDelay[i] == false) {
+			if (/*_allEnemyUnitSprite[i]->getNumberOfRunningActions() < 1 &&*/ _allEnemyAttachDelay[i] == false) {
+				_allEnemyUnitSprite[i]->stopAllActionsByTag(_allEnemyUnitSprite[i]->getTag());
 				string path = "image/unit_new/attack/red/";
 				auto target_ani = createAttackAnimationWithDefine(10 - direc, path);
-				auto call2 = CallFuncN::create(CC_CALLBACK_1(BatleScene::enemyAttackCallback, this));
+				auto call2 = CallFuncN::create(CC_CALLBACK_1(BatleScene::enemyAttackCallback, this,i));
 				auto action2 = Sequence::create(Animate::create(target_ani), call2, nullptr);
 
-				auto forCallback = Sequence::create(DelayTime::create(_allEnemyUnitData[i].attack_delay), CallFuncN::create(CC_CALLBACK_1(BatleScene::removeEnemyAttackDelayFlg, this)), nullptr);
-
-
-				action2->setTag(1);
+				auto forCallback = Sequence::create(DelayTime::create(_allEnemyUnitData[i].attack_delay), CallFuncN::create(CC_CALLBACK_1(BatleScene::removeEnemyAttackDelayFlg, this,i)), nullptr);
+				action2->setTag(1111);
 				//rotateCharacter(_alltargetUnit[i], 10 - direc);
 				_allEnemyAttachDelay[i] = true;
 				_allEnemyUnitSprite[i]->runAction(Spawn::create(action2, forCallback, nullptr));
 				//_indexOfRunningActionTarget = i;
 			}
 		}
+	}
+	if( (testObject->getPosition()-Vec2(_visibleSize.width,0)).length() < 150)
+	{
+		fountainRestoreEffect();
+	}
+	else {
+		testObject->stopActionByTag(FOUNTAIN_ACTION);
 	}
 }
 void BatleScene::characerAttackCallback()
@@ -656,12 +666,20 @@ void BatleScene::characerAttackCallback()
 
 	}
 	else {
-		enemyDieAction(_indexOfBeAttackEnemy);
+		//enemyDieAction(_indexOfBeAttackEnemy);
 	}
 }
 
 void BatleScene::enemyDieAction(int id)
 {
+	
+	_allEnemyUnitSprite[id]->stopAllActions();
+	while (_allEnemyUnitSprite[id]->getChildByTag(BUFF_STATUS_TAG) != nullptr)
+	{
+		_allEnemyUnitSprite[id]->removeChildByTag(BUFF_STATUS_TAG);
+	}
+	_allEnemyUnitData[id].isStun = false;
+	_allEnemyAttachDelay[id] = false;
 	_allEnemyUnitSprite[id]->setVisible(false);
 	_allEnemyIconInMinimap[id]->setVisible(false);
 	saveKillDeadInfo(0, id, _currentPlayerTeamFlg);
@@ -670,20 +688,25 @@ void BatleScene::enemyDieAction(int id)
 	if (id == _allEnemyUnitData.size() - 1) {
 		endBattle();
 	}
+	enemyRespawAction(id);
+	_enemyTeamTotalDead += 1;
+	if (_enemyTeamTotalDead == 5)
+	{
+		endBattle();
+	}
 }
-void BatleScene::enemyAttackCallback(Ref *pSEnder)
+void BatleScene::enemyAttackCallback(Ref *pSEnder, int i)
 {
 	if (_onRespwanFlg) return;
 	Sprite *_sprite = (Sprite*)pSEnder;
-	_sprite->stopActionByTag(1);
-	int id = _sprite->getTag();
+	_sprite->stopActionByTag(1111);
 	//log("enemy");
 	if (_allAlliedUnitCurrentHp[0] > 0)
 	{
 		if (!_onRespwanFlg)
 		{
-			int dame = _allEnemyUnitData[id].attack_dame - _mainCharacterData.defence;
-			float defaultDameRate = caculDameRate(_allEnemyUnitData[id].attr, _mainCharacterData.attr);
+			int dame = _allEnemyUnitData[i].attack_dame - _mainCharacterData.defence;
+			float defaultDameRate = caculDameRate(_allEnemyUnitData[i].attr, _mainCharacterData.attr);
 
 			dame = ceil(random(0.85f, 1.0f)*dame*defaultDameRate);
 			if (dame <= 0) {
@@ -695,10 +718,10 @@ void BatleScene::enemyAttackCallback(Ref *pSEnder)
 			}
 			showAttackDame(dame, testObject->getPosition() + Vec2(0, 100), 2);
 			_allAlliedUnitCurrentHp[0] -= dame;
-			saveDameInfo(dame, id, 0, _currentEnemyTeamFlg);
+			saveDameInfo(dame, i, 0, _currentEnemyTeamFlg);
 
 			if (_allAlliedUnitCurrentHp[0] <= 0) {
-				runRespawnAction(id);
+				runRespawnAction(i);
 				return;
 			}
 			//log("Percent: %d", ceil(float(float(_characterCurentHp) / float(_unitData.hp)) * 100));
@@ -708,16 +731,15 @@ void BatleScene::enemyAttackCallback(Ref *pSEnder)
 		}
 	}
 	else {
-		runRespawnAction(id);
+		runRespawnAction(i);
 	}
 	
 
 }
-void BatleScene::removeEnemyAttackDelayFlg(Ref *pSender) {
+void BatleScene::removeEnemyAttackDelayFlg(Ref *pSender, int index) {
 	Sprite *_sprite = (Sprite*)pSender;
-	int a = _sprite->getTag();
-	if (a < _allEnemyAttachDelay.size()) {
-		_allEnemyAttachDelay[a] = false;
+	if (index < _allEnemyAttachDelay.size()) {
+		_allEnemyAttachDelay[index] = false;
 	}
 
 
@@ -741,9 +763,12 @@ void BatleScene::runRespawnAction(int killerId)
 {
 	if (_onRespwanFlg) return;
 	_onRespwanFlg = true;
-
 	saveKillDeadInfo(killerId, 0, _currentEnemyTeamFlg);
-
+	_alliedTeamTotalDead += 1;
+	if (_alliedTeamTotalDead == 5)
+	{
+		endBattle();
+	}
 	auto timeLb = Label::createWithSystemFont("5", JAPANESE_FONT_1_HEAVY, 150);
 	_battleBackround->addChild(timeLb, 1000);
 	timeLb->setPosition(testObject->getPosition());
@@ -773,7 +798,7 @@ void BatleScene::runRespawnAction(int killerId)
 	auto action2 = CallFuncN::create([&](Ref *pSEnder){
 		Label* lb = dynamic_cast<Label*>(pSEnder);
 		lb->removeFromParentAndCleanup(true);
-		testObject->setPosition(Vec2(100, 100));
+		testObject->setPosition(Vec2(_visibleSize.width, 100));
 		testObject->setVisible(true);
 		auto action = Spawn::create(Blink::create(0.6f, 6), Sequence::create(DelayTime::create(RESPAWN_DELAY), CallFuncN::create(CC_CALLBACK_0(BatleScene::removeReSpawnFlg, this)), nullptr), nullptr);
 		testObject->runAction(action);
@@ -874,7 +899,7 @@ void BatleScene::onTouchMoved(Touch *touch, Event *unused_event)
 
 	//log("%f", _mini_Icon->getRotation());
 	int direc = detectDirectionBaseOnTouchAngle(_mainCharacterAvata->getRotation());
-	if(direc != 0) actionCharacter(direc);
+	if(direc != 0) actionCharacter(direc,testObject);
 	//_touchStartPoint = touch->getLocation();
 	
 	
@@ -899,20 +924,20 @@ bool BatleScene::caculAvgAngle(int avg, float angle)
 	if (angle > avg - 22 && angle < avg + 22) return true;
 	return false;
 }
-void BatleScene::actionCharacter(int directionId)
+void BatleScene::actionCharacter(int directionId, Sprite *characterSprite)
 {
-	if (testObject->getNumberOfRunningActions() > 0) {
-		if (testObject->getActionByTag(directionId) != nullptr) {
+	if (characterSprite->getNumberOfRunningActions() > 0) {
+		if (characterSprite->getActionByTag(directionId) != nullptr) {
 			//log("!!!");
 			return;
 		}
 	}
-	testObject->stopActionByTag(_currentMoveActionTag);
+	characterSprite->stopActionByTag(_currentMoveActionTag);
 	auto action = Animate::create(createMoveAnimationWithDefine(directionId, _moveImagePath));
 	auto repeat = RepeatForever::create(action);
 	repeat->setTag(directionId);
 	_currentMoveActionTag = directionId;
-	testObject->runAction(repeat);
+	characterSprite->runAction(repeat);
 
 //  	char type[30] = { 0 };
 //  	sprintf(type, "walk_0%d", directionId);
@@ -928,7 +953,10 @@ void BatleScene::updateMiniMap()
 	float positionXScaleRate = _miniMap->getContentSize().width / (_visibleSize.width * 2);
 	float positionYScaleRate = _miniMap->getContentSize().height / (_visibleSize.height * 2);
 	_selectRect->setPosition(Vec2(objectPos.x*positionXScaleRate,objectPos.y*positionYScaleRate));
-
+	for (int i = 0; i < ENEMY_NUM; i++)
+	{
+		_allEnemyIconInMinimap[i]->setPosition(Vec2(_allEnemyUnitSprite[i]->getPositionX()*positionXScaleRate, _allEnemyUnitSprite[i]->getPositionY()*positionYScaleRate));
+	}
 }
 
 
@@ -1401,6 +1429,12 @@ void BatleScene::playSkill(SkillInfoNew skillData)
 	case TYPE_ATTACK:
 		skillAttackAction(skill);
 		break;
+	case TYPE_POISON:
+		skillPoisonAction(skill);
+		break;
+	case TYPE_STUN:
+		skillStunAction(skill);
+		break;
 	default:
 		break;
 	}
@@ -1666,6 +1700,8 @@ void BatleScene::skillHelpOne(SkillInfoNew skillInfo)
 		runAction(Sequence::create(DelayTime::create(skillInfo.duration), CallFuncN::create([&, saveValue](Ref *pSEnder){
 			_mainCharacterData.attack_dame -= saveValue;
 		}), nullptr));
+
+		displayUnitStatus(testObject, BUFF_ATTACK, skillInfo);
 		break;
 	}
 	case SKILL_HELP_TYPE::DEFENCE:
@@ -1673,6 +1709,8 @@ void BatleScene::skillHelpOne(SkillInfoNew skillInfo)
 		saveValue = 1.0f*_saveMainStatusData.defence*(value-1.0f) + pureValue;
 		log("increase defence by %d", saveValue);
 		_mainCharacterData.defence += saveValue;
+
+		displayUnitStatus(testObject, BUFF_DEFENCE, skillInfo);
 		runAction(Sequence::create(DelayTime::create(skillInfo.duration), CallFuncN::create([&, saveValue](Ref *pSEnder){
 			if (saveValue > 0) {
 				_mainCharacterData.defence  -= saveValue;
@@ -2119,5 +2157,171 @@ void BatleScene::saveKillDeadInfo(int killerId, int deadUnitId, int teamFlg)
 			}
 		}
 	}
+}
+/*status type: POISON, STUN, BUFF_ATTACK, BUFF_DEFENCE, DEBUFF_ATTACK*/
+void BatleScene::displayUnitStatus(Sprite *parent, int statusType, SkillInfoNew skill)
+{
+	string imagePath;
+	switch (statusType)
+	{
+	case POISON:
+		imagePath = "balloon_badstatus_poison_";
+		break;
+	case STUN:
+		imagePath = "balloon_badstatus_stun_";
+		break;
+	case BUFF_ATTACK:
+		imagePath = "balloon_buff_attack_";
+		break;
+	case BUFF_DEFENCE:
+		imagePath = "balloon_buff_defence_";
+		break;
+	case DEBUFF_ATTACK:
+		imagePath = "baloon_debuff_attack_";
+		break;
+	default:
+		break;
+	}
+	auto animate = Animate::create(createStatusAnimation(imagePath));
+	auto sprite = Sprite::create("test.png");
+	sprite->setTag(BUFF_STATUS_TAG);
+	sprite->setPosition(Vec2(parent->getContentSize().width / 2, parent->getContentSize().height));
+	sprite->setScale(1 / IMAGE_SCALE);
+	sprite->runAction(Sequence::create(Repeat::create(animate,ceil(skill.duration / animate->getDuration())),RemoveSelf::create(true),nullptr));
+	parent->addChild(sprite,-1);
+}
+
+Animation* BatleScene::createStatusAnimation(string imagePath)
+{
+	auto animation = Animation::create();
+	for (int i = 1; i < 3; i++)
+	{
+		char szName[100] = { 0 };
+		sprintf(szName, "%s%d.png", imagePath.c_str(), i);
+		string p = "image/status/";
+		p.append(szName);
+		//log("%s", p.c_str());
+		animation->addSpriteFrameWithFile(p.c_str());
+	}
+	// should last 2.8 seconds. And there are 14 frames.
+	animation->setDelayPerUnit(STATUS_DELAY_TIME);
+	animation->setRestoreOriginalFrame(true);
+	animation->setLoops(true);
+	return animation;
+}
+
+void BatleScene::skillPoisonAction(SkillInfoNew skillInfo)
+{
+	vector<int> units = detectUnitInAoe(skillInfo, ENEMY_FLAG);
+	for (auto & index :units)
+	{
+		displayUnitStatus(_allEnemyUnitSprite[index], POISON, skillInfo);
+		poisonEffectAction(skillInfo, index);
+	}
+}
+
+void BatleScene::skillStunAction(SkillInfoNew skillInfo)
+{
+	vector<int> units = detectUnitInAoe(skillInfo,ENEMY_FLAG);
+	for (auto& i : units)
+	{
+		displayUnitStatus(_allEnemyUnitSprite[i], STUN, skillInfo);
+		_allEnemyUnitData[i].isStun = true;
+		_allEnemyUnitSprite[i]->runAction(Sequence::create(DelayTime::create(skillInfo.duration), CallFuncN::create([&,i](Ref *p){
+			_allEnemyUnitData[i].isStun = false;
+		}), nullptr));
+	}
+}
+
+void BatleScene::poisonEffectAction(SkillInfoNew skill, int index)
+{
+	int dame =ceil(1.0f*_allEnemyUnitData[index].hp * 0.05f);
+	auto action = Sequence::create( CallFuncN::create([&, index, dame](Ref *p){
+		showAttackDame(dame, _allEnemyUnitSprite[index]->getPosition(), 1);
+		_allEnemyCurentHp[index] -= dame;
+		_allEnemyHpBar[index]->setPercent(ceil(100.0f*_allEnemyCurentHp[index] / _allEnemyUnitData[index].hp));
+		if (_allEnemyCurentHp[index] <= 0)
+		{
+			enemyDieAction(index);
+		}
+	}), DelayTime::create(POISON_STEP_TIME), nullptr);
+
+	_allEnemyUnitSprite[index]->runAction(Repeat::create(action, ceil(skill.duration / POISON_STEP_TIME)));
+}
+
+void BatleScene::enemyUnitAutoMoveTest()
+{
+	for (int i = 0; i < ENEMY_NUM; i++)
+	{
+		if (!_allEnemyUnitSprite[i]->isVisible())
+		{
+			continue;
+		}
+		auto body = _allEnemyUnitSprite[i]->getPhysicsBody();
+		if (_allEnemyUnitData[i].isStun)
+		{
+			body->setVelocity(Vect::ZERO);
+			_allEnemyUnitSprite[i]->stopActionByTag(_allEnemyUnitSprite[i]->getTag());
+			continue;
+		}
+		float angle = random(-90.0f,270.0f);
+		body->setVelocity(Vect(_mainCharacterData.move_speed*cos(angle), _mainCharacterData.move_speed*sin(angle)));
+		int direc = detectDirectionBaseOnTouchAngle(_mainCharacterAvata->getRotation());
+		if (direc != 0) actionCharacterCopy(direc,_allEnemyUnitSprite[i]);
+	}
+}
+
+void BatleScene::actionCharacterCopy(int directionId, Sprite *sprite)
+{
+	if (sprite->getNumberOfRunningActions() > 0) {
+		if (sprite->getActionByTag(directionId) != nullptr) {
+			//log("!!!");
+			return;
+		}
+	}
+	sprite->stopActionByTag(sprite->getTag());
+	auto action = Animate::create(createMoveAnimationWithDefine(directionId, "image/unit_new/move/red/"));
+	auto repeat = RepeatForever::create(action);
+	repeat->setTag(directionId);
+	sprite->setTag(directionId);
+	sprite->runAction(repeat);
+}
+
+void BatleScene::fountainRestoreEffect()
+{
+	if (testObject->getActionByTag(FOUNTAIN_ACTION) != nullptr)
+	{
+		return;
+	}
+	auto action = RepeatForever::create(Sequence::create(CallFuncN::create([&](Ref *p){
+		_characterCurentMp += ceil(_saveMainStatusData.mp *0.05f);
+		if (_characterCurentMp > _mainCharacterData.mp)
+		{
+			_characterCurentMp = _mainCharacterData.mp;
+		}
+		_mainCharacterMpBar->setPercent(ceil(100.0f*_characterCurentMp / _saveMainStatusData.mp));
+		_allAlliedUnitCurrentHp[0] += ceil(_saveMainStatusData.hp * 0.05f);
+		if (_allAlliedUnitCurrentHp[0] > _mainCharacterData.hp) {
+			_allAlliedUnitCurrentHp[0] = _mainCharacterData.hp;
+		}
+		_allAlliedUnitHpBar[0]->setPercent(ceil(100.0f*_allAlliedUnitCurrentHp[0] / _saveMainStatusData.hp));
+		_mainCharacterHpBar->setPercent(ceil(100.0f*_allAlliedUnitCurrentHp[0] / _saveMainStatusData.hp));
+		updateSlider();
+	}), DelayTime::create(1), nullptr));
+	action->setTag(FOUNTAIN_ACTION);
+	testObject->runAction(action);
+}
+
+void BatleScene::enemyRespawAction(int index)
+{
+	auto action = (Sequence::create(DelayTime::create(5), CallFuncN::create([&, index](Ref *pSEnder){
+		_allEnemyUnitSprite[index]->setPosition(Vec2(_visibleSize.width + (index - 1) * 70, _visibleSize.height * 2 - 100));
+		_allEnemyUnitSprite[index]->setVisible(true);
+		_allEnemyIconInMinimap[index]->setVisible(true);
+		_allEnemyCurentHp[index] = _allEnemyUnitData[index].hp;
+		updateSlider();
+	}), nullptr));
+	action->setTag(ENEMY_RESPAW_ACTION_TAG);
+	_allEnemyUnitSprite[index]->runAction(action);
 }
 

@@ -13,15 +13,6 @@ struct UserInfo
 	string _name;
 	int _onTeam = 0;
 };
-struct UnitInfo
-{
-	string _name;
-	int _unitId;
-	string _imagePath;
-	int _hp;
-	int _attack;
-	int _defence;
-};
 
 struct UnitInforNew 
 {
@@ -39,6 +30,7 @@ struct UnitInforNew
 	int type;
 	string image;
 	int attack_delay;
+	bool isStun = false;
 };
 
 struct SkillInfoNew {
@@ -104,6 +96,8 @@ struct UserBattleInfo
 #define TYPE_HELP 1
 #define TYPE_RESTORE 2
 #define TYPE_ATTACK 3
+#define TYPE_POISON 4
+#define TYPE_STUN 5
 
 #define TARGET_ALL 0
 #define TARGET_ONE 1

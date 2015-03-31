@@ -70,11 +70,11 @@ bool ModeSelectScene::init()
 	this->addChild(editBox,1000);
 
 	// ここでsocket.io connection開始。clientを持っておく
-	/*log("----> connect");
-	_client = SocketIO::connect("ws://192.168.0.226:8080/", *this);
-	//_client = SocketIO::connect("ws://localhost:8080/", *this);
-	//CCLOG("----> on hello");
-	_client->on("hello", CC_CALLBACK_2(ModeSelectScene::onReceiveEvent, this));*/
+// 	log("----> connect");
+// 	_client = SocketIO::connect("ws://192.168.0.226:8080/", *this);
+// 	//_client = SocketIO::connect("ws://localhost:8080/", *this);
+// 	//CCLOG("----> on hello");
+// 	_client->on("hello", CC_CALLBACK_2(ModeSelectScene::onReceiveEvent, this));
 
 	return true;
 }
@@ -210,21 +210,21 @@ void ModeSelectScene::serverCallback(HttpClient* client, HttpResponse* response)
 	}
 }
 void ModeSelectScene::onConnect(SIOClient* client){
-	CCLOG("---->onConnect");
+	//CCLOG("---->onConnect");
 	// SocketIO::connect success
 }
 
 void ModeSelectScene::onMessage(SIOClient* client, const std::string& data){
-	CCLOG("---->onMessage");
+	//CCLOG("---->onMessage");
 	// SocketIO::send receive
 }
 void ModeSelectScene::onClose(SIOClient* client){
-	CCLOG("---->onClose");
+	//CCLOG("---->onClose");
 	// //CCLOG("Err:%d", GetLastError());
 	// SocketIO::disconnect success
 }
 void ModeSelectScene::onError(SIOClient* client, const std::string& data){
-	CCLOG("---->onError");
+	//CCLOG("---->onError");
 	//CCLOG("JSB SocketIO::SIODelegate->onError method called from native with data: %s", data.c_str());
 	// SocketIO::failed
 }
@@ -235,11 +235,11 @@ void ModeSelectScene::onError(SIOClient* client, const std::string& data){
 void ModeSelectScene::onReceiveEvent(SIOClient* client, const std::string& data){
 
 	CCLOG("---->onReceiveEvent");
+	log("%s", data.c_str());
 	rapidjson::Document doc;
 	doc.Parse<rapidjson::kParseDefaultFlags>(data.c_str());
 	rapidjson::Value &val = doc["args"];
 	std::string value = val[rapidjson::SizeType(0)]["value"].GetString();
-
 	addTalkOther(value);
 };
 

@@ -125,6 +125,7 @@ void BatleResultScene::tabButtonClickCallback(Ref *pSender, Widget::TouchEventTy
 			_blueTeamTabBackground->setVisible(true);
 			_redTeamTabBackground->setVisible(false);
 			_blueTeamButton->loadTextureNormal("image/tab/new/blue_team_tab.png");
+			_redTeamButton->loadTextureNormal("image/tab/new/red_tab_disable.png");
 			updateUnitSlot(_blueTeamInfo);
 		}
 		else {
