@@ -1,125 +1,135 @@
+//////////////////////////////////////////////////////////////////////////////////////
+// CLASS EFFECT EXTENDS SPRITE
+//////////////////////////////////////////////////////////////////////////////////////
 #include "Effect.h"
 
 USING_NS_CC;
 
+/////////////////////////////////////////////////////////////////////////////////////////
+// CONTRUCTER AND DETRUCTOR
+/////////////////////////////////////////////////////////////////////////////////////////
+Effect::Effect() : _spriteAttack(nullptr)
+{
+
+}
+
+Effect::~Effect()
+{
+	_spriteAttack = nullptr;
+	unschedule(schedule_selector(Effect::updateAttackMove, this));
+}
+
+
 
 /////////////////////////////////////////////////////////////////////////////////////////
-// SKILL EFFECT HELP RESTORE
+// CREATE EFFECT WITH VOID AND PARTICLE
 /////////////////////////////////////////////////////////////////////////////////////////
-ParticleSystemQuad* Effect::createEffectHelp(std::string plistEffectPath, int effectColor)
+Effect* Effect::create()
 {
-	ParticleSystemQuad* skillHelpEffect = ParticleSystemQuad::create(plistEffectPath); //_1s
-	skillHelpEffect->setDuration(DELAY_HELP_LIFE);
-	setColorEffect(skillHelpEffect, effectColor);
-	return skillHelpEffect;
-
+	auto effect = new Effect();
+	if (effect && effect->init())
+	{
+		effect->autorelease();
+		return effect;
+	}
+	CC_SAFE_DELETE(effect);
+	return nullptr;
 }
 
-void Effect::runEffectHelp(Sprite* spriteUnit, ParticleSystemQuad* skillHelpEffect, std::string eclipseFilePath)
+bool Effect::init()
 {
-	log("Create Effect Help");
-	auto sorcery = createSorceryEclipse(spriteUnit, eclipseFilePath);
-
-
-	spriteUnit->addChild(skillHelpEffect);
-	skillHelpEffect->setPosition(Vec2(
-		spriteUnit->getContentSize().width / 2,
-		spriteUnit->getContentSize().height / 2 - sorcery->getBoundingBox().getMaxY()
-		));
-
-	//removeSorceryEclipse
-	auto sequence = Sequence::create(
-		DelayTime::create(DELAY_REMOVE_ECLIPSE),
-		CallFuncN::create(CC_CALLBACK_1(Effect::removeSorceryEclipse, this)),
-		NULL
-		);
-	sorcery->runAction(sequence);
+	if (!Sprite::init())
+	{
+		return false;
+	}
+	return true;
 }
 
 
-void Effect::createEffectHelpDefence(Sprite* spriteUnit, std::string plistPathHorizontal, std::string plistPathVertical, std::string eclipseImagePath, int effectColor)
+/*
+	Create Effect using Particle File
+	@param plistEffectPath: ParticleFile Path
+	@param effectColor: int effectColor(blue=1 , red=2 , green=3 , yellow=4 , other = 0)
+	@param skillType: int skillType(restore=1 , help=2 , attack=3)
+*/
+Effect* Effect::createWithParticle(std::string plistEffectPath, int effectColor , int skillType)
 {
-	// Eclipse create and rotate
-	auto sorcery = createSorceryEclipse(spriteUnit, eclipseImagePath);
+	auto effect = new Effect();
+	if (effect && effect->initWithParticle(plistEffectPath, effectColor , skillType))
+	{
+		effect->autorelease();
+		return effect;
+	}
+	CC_SAFE_DELETE(effect);
 
-	// 4‚Â–Ê‚Ì–hŒä
-	createHelpWallTop(spriteUnit, plistPathHorizontal, effectColor);
-	createHelpWallRight(spriteUnit, plistPathVertical, effectColor);
-	createHelpWallBottom(spriteUnit, plistPathHorizontal, effectColor);
-	createHelpWallLeft(spriteUnit, plistPathVertical, effectColor);
-
-	// Create effect and remove eclipse
-	Sequence *runEffect = Sequence::create(
-		DelayTime::create(DELAY_REMOVE_ECLIPSE), // Thgian cho 4 effect kia thuc hien xong
-		CallFuncN::create(CC_CALLBACK_1(Effect::removeSorceryEclipse, this)),
-		NULL
-		);
-	sorcery->runAction(runEffect);
-	
-
-}
-
-void Effect::createHelpWallTop(Sprite* spriteUnit, const std::string plistPathHorizontal, int effectColor)
-{
-	Vec2 pos = Vec2(
-		spriteUnit->getContentSize().width / 2,
-		spriteUnit->getContentSize().height / 2 + spriteUnit->getContentSize().height / 4
-		);
-
-	//"skillEffect/particle_defence_05s_h.plist"
-	ParticleSystemQuad* helpEffect = ParticleSystemQuad::create(plistPathHorizontal);
-	helpEffect->setDuration(DELAY_HELP_LIFE);
-	setColorEffect(helpEffect, effectColor);
-	spriteUnit->addChild(helpEffect);
-	helpEffect->setPosition(pos);
-}
-
-void Effect::createHelpWallBottom(Sprite* spriteUnit, const std::string plistPathHorizontal, int effectColor)
-{
-	Vec2 pos = Vec2(
-		spriteUnit->getContentSize().width / 2,
-		spriteUnit->getContentSize().height / 2 - spriteUnit->getContentSize().height / 8
-		);
-
-	//"skillEffect/particle_defence_05s_h.plist"
-	ParticleSystemQuad* helpEffect = ParticleSystemQuad::create(plistPathHorizontal);
-	helpEffect->setDuration(DELAY_HELP_LIFE);
-	setColorEffect(helpEffect, effectColor);
-	spriteUnit->addChild(helpEffect);
-	helpEffect->setPosition(pos);
-}
-
-void Effect::createHelpWallLeft(Sprite* spriteUnit, const std::string plistPathVertical, int effectColor)
-{
-	Vec2 pos = Vec2(
-		spriteUnit->getContentSize().width / 2 - spriteUnit->getContentSize().width / 4,
-		spriteUnit->getContentSize().height / 2
-		);
-
-	ParticleSystemQuad* helpEffect = ParticleSystemQuad::create(plistPathVertical);
-	helpEffect->setDuration(DELAY_HELP_LIFE);
-
-	setColorEffect(helpEffect, effectColor);
-
-	spriteUnit->addChild(helpEffect);
-	helpEffect->setPosition(pos);
+	return nullptr;
 }
 
 
-void Effect::createHelpWallRight(Sprite* spriteUnit, const std::string plistPathVertical, int effectColor)
+/*
+	Init Effect using Particle File
+	@param plistEffectPath: ParticleFile Path
+	@param effectColor: int effectColor(blue=1 , red=2 , green=3 , yellow=4 , other = 0)
+	@param skillType: int skillType(restore=1 , help=2 , attack=3)
+*/
+bool Effect::initWithParticle(std::string plistEffectPath, int effectColor , int skillType)
 {
-	Vec2 pos = Vec2(
-		spriteUnit->getContentSize().width / 2 + spriteUnit->getContentSize().width / 4,
-		spriteUnit->getContentSize().height / 2
-		);
+	if (!Sprite::init())
+	{
+		return false;
+	}
 
-	ParticleSystemQuad* helpEffect = ParticleSystemQuad::create(plistPathVertical);
-	helpEffect->setDuration(DELAY_HELP_LIFE);
+	ParticleSystemQuad* skillEffect;
 
-	setColorEffect(helpEffect, effectColor);
+	switch (skillType)
+	{
+	case SkillType::Restore:
+		createEffectHeal(plistEffectPath, effectColor);
+		break;
+	case SkillType::Help:
+		createEffectHelp(plistEffectPath, effectColor);
+		break;
+	case SkillType::Attack:
+		createEffectAttackFire(plistEffectPath, effectColor);
+		break;
+	case SkillType::Help_Defence:
+		createEffectHelpDefence(plistEffectPath, effectColor);
+		break;
+	default:
+		break;
+	}
 
-	spriteUnit->addChild(helpEffect);
-	helpEffect->setPosition(pos);
+	return true;
+}
+
+
+void Effect::onEnter()
+{
+	Sprite::onEnter();
+
+	if (_spriteAttack != nullptr)
+	{
+		schedule(schedule_selector(Effect::updateAttackMove, this), MOVE_TIME_INTERVAL);
+	}
+	else
+	{
+		return;
+	}
+}
+
+void Effect::updateAttackMove(float dt)
+{
+	//_indexOfBeAttackEnemy
+	Vec2 pos1 = _spriteAttack->getPosition();
+	Vec2 pos2 = this->getPosition();
+
+	auto move = MoveTo::create(dt , pos1);
+	this->runAction(move);
+}
+
+void Effect::setTargetAttack(Sprite* attackSprite)
+{
+	_spriteAttack = attackSprite;
 }
 
 
@@ -127,93 +137,120 @@ void Effect::createHelpWallRight(Sprite* spriteUnit, const std::string plistPath
 // SKILL EFFECT HEAL
 /////////////////////////////////////////////////////////////////////////////////////////
 
-ParticleSystemQuad* Effect::createEffectHeal(std::string plistEffectPath, int effectColor)
+void Effect::createEffectHeal(std::string plistEffectPath, int effectColor)
 {
-	ParticleSystemQuad* skillHealEffect = ParticleSystemQuad::create(plistEffectPath); //_1s
+	log("Create Effect Restore");
+	ParticleSystemQuad* skillHealEffect = ParticleSystemQuad::create(plistEffectPath);
+	skillHealEffect->setPosition(Vec2::ZERO);
 	setColorEffect(skillHealEffect, effectColor);
-
-	return skillHealEffect;
-
+	this->addChild(skillHealEffect);
 }
 
-void Effect::runEffectHeal(Sprite* spriteUnit, ParticleSystemQuad* skillHealEffect, std::string eclipseFilePath)
+
+/////////////////////////////////////////////////////////////////////////////////////////
+// SKILL EFFECT HELP RESTORE
+/////////////////////////////////////////////////////////////////////////////////////////
+
+void Effect::createEffectHelp(std::string plistEffectPath, int effectColor)
 {
-	log("Create Effect Heal Restore");
-	auto sorcery = createSorceryEclipse(spriteUnit, eclipseFilePath);
+	log("Create Effect Help");
+	ParticleSystemQuad* skillHelpEffect = ParticleSystemQuad::create(plistEffectPath);
+	skillHelpEffect->setDuration(DELAY_HELP);
+	skillHelpEffect->setPosition(Vec2::ZERO);
+	setColorEffect(skillHelpEffect, effectColor);
 
-
-	spriteUnit->addChild(skillHealEffect);
-	skillHealEffect->setPosition(Vec2(
-		spriteUnit->getContentSize().width / 2,
-		spriteUnit->getContentSize().height / 2
-		));
-
-	//removeSorceryEclipse
-	auto sequence = Sequence::create(
-		DelayTime::create(DELAY_REMOVE_ECLIPSE),
-		CallFuncN::create(CC_CALLBACK_1(Effect::removeSorceryEclipse, this)),
-		NULL
-		);
-	sorcery->runAction(sequence);
+	this->addChild(skillHelpEffect);
 }
+
+
+void Effect::createEffectHelpDefence(std::string plistEffectPath, int effectColor)
+{
+	log("Create Effect Help Defence");
+	// Unit size (70x120)
+
+	// 4‚Â–Ê‚Ì–hŒä
+	////////////////////TOP
+	Vec2 posTop = Vec2(
+		this->getPositionX(),
+		this->getPositionY() + 20
+		);
+
+	ParticleSystemQuad* defenceTop = ParticleSystemQuad::create(plistEffectPath);
+	defenceTop->setDuration(DELAY_HELP);
+	setColorEffect(defenceTop, effectColor);
+	this->addChild(defenceTop);
+	defenceTop->setPosition(posTop);
+
+
+	////////////////////RIGHT
+	Vec2 posRight = Vec2(
+		this->getPositionX() + 70 ,
+		this->getPositionY()
+		);
+
+	ParticleSystemQuad* defenceRight = ParticleSystemQuad::create(plistEffectPath);
+	defenceRight->setScaleX(0.2f);
+	defenceRight->setDuration(DELAY_HELP);
+	setColorEffect(defenceRight, effectColor);
+	this->addChild(defenceRight);
+	defenceRight->setPosition(posRight);
+
+
+	////////////////////BOTTOM
+	Vec2 posBottom = Vec2(
+		this->getPositionX(),
+		this->getPositionY() - 20
+		);
+
+	ParticleSystemQuad* defenceBottom = ParticleSystemQuad::create(plistEffectPath);
+	defenceBottom->setDuration(DELAY_HELP);
+	setColorEffect(defenceBottom, effectColor);
+	this->addChild(defenceBottom);
+	defenceBottom->setPosition(posBottom);
+
+
+	////////////////////LEFT
+	Vec2 posLeft = Vec2(
+		this->getPositionX() - 70,
+		this->getPositionY()
+		);
+
+	ParticleSystemQuad* defenceLeft = ParticleSystemQuad::create(plistEffectPath);
+	defenceLeft->setScaleX(0.2f);
+	defenceLeft->setDuration(DELAY_HELP);
+	setColorEffect(defenceLeft, effectColor);
+	this->addChild(defenceLeft);
+	defenceLeft->setPosition(posLeft);
+
+
+}
+
 
 /////////////////////////////////////////////////////////////////////////////////////////
 // SKILL EFFECT ATTACK
 /////////////////////////////////////////////////////////////////////////////////////////
-ParticleSystemQuad* Effect::createEffectAttackFire(std::string plistEffectPath)
+
+void Effect::createEffectAttackFire(std::string plistEffectPath, int effectColor)
 {
 	ParticleSystemQuad* skillAttackFire = ParticleSystemQuad::create(plistEffectPath); //_1s
+	skillAttackFire->setDuration(20);
 	skillAttackFire->setScale(0.6f);
+	setColorEffect(skillAttackFire , effectColor);
 
-	return skillAttackFire;
+	this->addChild(skillAttackFire, 100);
+	skillAttackFire->setPosition(Vec2::ZERO);
+	//skillAttackFire->setDuration(DELAY_ATTACK_FIRE_LIFE);
+	
 
 }
 
-void Effect::runEffectAttackFire(Sprite* spriteUnit, ParticleSystemQuad* skillAttackFireEffect, std::string eclipseFilePath, Vec2 attackPositon)
-{
-	auto sorcery = createSorceryEclipse(spriteUnit, eclipseFilePath);
-
-	// create effect with time 1s
-	spriteUnit->getParent()->addChild(skillAttackFireEffect, 100);
-
-	skillAttackFireEffect->setDuration(DELAY_ATTACK_FIRE_LIFE);
-	skillAttackFireEffect->setPosition(spriteUnit->getPosition());
-
-	skillAttackFireEffect->runAction(MoveTo::create(DELAY_ATTACK_MOVE, attackPositon));
-
-	//removeSorceryEclipse
-	auto sequenceRemoveEclipse = Sequence::create(
-		DelayTime::create(DELAY_REMOVE_ECLIPSE), // Delay remove eclipse >= effect run time
-		CallFuncN::create(CC_CALLBACK_1(Effect::removeSorceryEclipse, this)),
-		NULL
-		);
-	sorcery->runAction(sequenceRemoveEclipse);
-}
-
-ParticleSystemQuad* Effect::createEffectAttackThunder(std::string plistEffectPath)
+void Effect::createEffectAttackThunder(std::string plistEffectPath, int effectColor , Vec2 attackPositon)
 {
 	ParticleSystemQuad* skillAttackThunder = ParticleSystemQuad::create(plistEffectPath);
-
-	return skillAttackThunder;
-}
-
-void Effect::runEffectAttackThunder(Sprite* spriteUnit, ParticleSystemQuad* skillAttackThunderEffect, std::string eclipseFilePath, Vec2 attackPositon)
-{
-	auto sorcery = createSorceryEclipse(spriteUnit, eclipseFilePath);
-
-	// Thuc hien effect 1s
-	spriteUnit->getParent()->addChild(skillAttackThunderEffect, 100);
-
-	skillAttackThunderEffect->setDuration(DELAY_ATTACK_THUNDER_LIFE);
-	skillAttackThunderEffect->setPosition(attackPositon);
-
-	//removeSorceryEclipse
-	auto sequenceRemoveEclipse = Sequence::create(
-		DelayTime::create(DELAY_REMOVE_ECLIPSE), // Delay remove eclipse >= effect run time
-		CallFuncN::create(CC_CALLBACK_1(Effect::removeSorceryEclipse, this)),
-		NULL
-		);
-	sorcery->runAction(sequenceRemoveEclipse);
+	
+	setColorEffect(skillAttackThunder , effectColor);
+	this->addChild(skillAttackThunder , 100);
+	skillAttackThunder->setPosition(attackPositon);
 }
 
 
@@ -246,53 +283,3 @@ void Effect::setColorEffect(ParticleSystemQuad* effect, int effectColor)
 		break;
 	}
 }
-
-/////////////////////////////////////////////////////////////////////////////////////////
-// SORCERY CREATE AND EFFECT
-/////////////////////////////////////////////////////////////////////////////////////////
-
-Sprite* Effect::createSorceryEclipse(Sprite* spriteUnit, std::string eclipseFilePath)
-{
-
-	log("Create Eclipse");
-
-	auto nodeFather = Sprite::create();
-	spriteUnit->addChild(nodeFather, -10);
-	nodeFather->setPosition(Vec2(
-		spriteUnit->getContentSize().width / 2,
-		spriteUnit->getContentSize().height / 2 - spriteUnit->getContentSize().height / 4
-		));
-
-	// Create Eclipse
-	auto sorcery = Sprite::create(eclipseFilePath);
-	sorcery->setScale(1.5f);
-	sorcery->setPosition(Vec2(0, 0));
-
-	nodeFather->addChild(sorcery, -10);
-
-	auto actionRotate = RotateBy::create(1.0f, Vec3(0, 0, 150));
-	auto repeat = RepeatForever::create(actionRotate);
-	sorcery->runAction(repeat);
-
-	nodeFather->setScaleY(0.5f);
-
-	return nodeFather;
-}
-
-
-void Effect::removeSorceryEclipse(Ref* pSender)
-{
-	log("Remove eclipse");
-
-	Sprite* sorcery = dynamic_cast<Sprite*>(pSender);
-
-	if (sorcery != nullptr)
-	{
-		sorcery->removeFromParentAndCleanup(true);
-	}
-	else
-	{
-		return;
-	}
-}
-

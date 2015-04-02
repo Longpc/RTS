@@ -174,6 +174,7 @@ private:
 	int _alliedTeamTotalDead = 0;
 	int _enemyTeamTotalDead = 0;
 
+
 	///FUNCTIONS///////////////////////////////////////////////////////////////////////
 
 	///DATABASE///
@@ -307,6 +308,13 @@ private:
 	/*define the function to play effect and logic when player move on fountain area*/
 	virtual void fountainRestoreEffect();
 	virtual void enemyRespawAction(int index);
+
+
+	/////////ECLIPSE ROTATE EFFECT
+
+	virtual void createSorceryEffect(Sprite* spriteUnit, std::string eclipseFilePath);
+	virtual void removeSorceryEclipse(Ref* pSender);
+	virtual void removeEffect(Ref* pSender);
 };
 
 

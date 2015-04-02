@@ -1353,11 +1353,6 @@ void BatleScene::skill1ButtonCallback(Ref *pSender, Widget::TouchEventType type)
 		break;
 	case cocos2d::ui::Widget::TouchEventType::ENDED:
 	{
-		//testObject->stopActionByTag(_currentMoveActionTag);
-		//selectAttackTarget();
-
-		//Effect *effect = new Effect();
-		//effect->createEffectHelp(testObject, "Effect/particle_defence_05s_h.plist", "Effect/particle_defence_05s_v.plist", "image/screen/battle/magic_circle_blue.png");	
 		//Progress Timer
 
 		if (skill.target_type == TARGET_ONE && skill.skill_type == TYPE_ATTACK && _indexOfBeAttackEnemy < 0) {
@@ -1529,8 +1524,7 @@ void BatleScene::skillRestoreAll(SkillInfoNew skillInfo)
 		break;
 	}
 
-	///////////RUN EFFECT HEAL ONE
-	Effect* effect = new Effect();
+	createSorceryEffect(testObject, SORCERY_GREEN);
 
 	if (skillInfo.aoe > 0) 
 	{
@@ -1544,22 +1538,27 @@ void BatleScene::skillRestoreAll(SkillInfoNew skillInfo)
 				_allAlliedUnitCurrentHp[index] = _allAlliedUnitData[index].hp;
 			}
 			_allAlliedUnitHpBar[index]->setPercent(_allAlliedUnitCurrentHp[index] * 100.0f / _allAlliedUnitData[index].hp);
+		
+			//////////////RUN EFFECT AOE
+			/*
+			Effect* effectHeal = Effect::createWithParticle(PARTICLE_HEAL, effectHeal->EC_Other, effectHeal->Restore);
+			_allAlliedUnitSprite[index]->addChild(effectHeal);
+			effectHeal->setPosition(Vec2(_allAlliedUnitSprite[index]->getContentSize().width / 2 , _allAlliedUnitSprite[index]->getContentSize().height / 2));
+			
+			auto healSequence = Sequence::create(
+				DelayTime::create(DELAY_RESTORE)
+				, CallFuncN::create(CC_CALLBACK_1(BatleScene::removeEffect, this))
+				, nullptr);
+			effectHeal->runAction(healSequence);
+			
+			*/
+		
+		
 		}
-
-		//RUN EFFECT AOE
-		/*
-		ParticleSystemQuad* skillHealEffect = effect->createEffectHeal(PARTICLE_HEAL, effect->EC_Other);
-		effect->runEffectHeal(
-			testObject
-			, skillHealEffect
-			, SORCERY_GREEN);
-		*/
-
 	}
 	else {
 
 		log("Restore All");
-
 		for (int i = 0; i < _allAlliedUnitData.size(); i++)
 		{
 			_allAlliedUnitCurrentHp[i] += value;
@@ -1568,20 +1567,21 @@ void BatleScene::skillRestoreAll(SkillInfoNew skillInfo)
 			}
 			_allAlliedUnitHpBar[i]->setPercent(_allAlliedUnitCurrentHp[i] * 100.0f / _allAlliedUnitData[i].hp);
 
+			////////RUN EFFECT HEAL ALL
+			/*
+			Effect* effectHeal = Effect::createWithParticle(PARTICLE_HEAL, effectHeal->EC_Other, effectHeal->Restore);
+			_allAlliedUnitSprite[i]->addChild(effectHeal);
+			effectHeal->setPosition(Vec2(_allAlliedUnitSprite[i]->getContentSize().width / 2,_allAlliedUnitSprite[i]->getContentSize().height / 2));
+			
+			auto healSequence = Sequence::create(
+				DelayTime::create(DELAY_RESTORE)
+				, CallFuncN::create(CC_CALLBACK_1(BatleScene::removeEffect, this))
+				, nullptr);
+			effectHeal->runAction(healSequence);
+			
+			*/
+		
 		}
-
-		//RUN EFFECT HEAL ALL
-		//_mainCharacterMiniHpBar->setPercent(_allAlliedUnitCurrentHp[0] * 100.0f / _mainCharacterData.hp);
-		//RUN EFFECT AOE
-		/*
-		ParticleSystemQuad* skillHealEffect = effect->createEffectHeal(PARTICLE_HEAL, effect->EC_Other);
-		effect->runEffectHeal(
-			testObject
-			, skillHealEffect
-			, SORCERY_GREEN);
-		*/
-
-
 	}
 
 }
@@ -1608,15 +1608,21 @@ void BatleScene::skillRestoreOne(SkillInfoNew skillInfo)
 	_mainCharacterMiniHpBar->setPercent(_allAlliedUnitCurrentHp[0] * 100.0f / _mainCharacterData.hp);
 	_mainCharacterHpBar->setPercent(_mainCharacterMiniHpBar->getPercent());
 	
-	
+	/////////////////////////////////////////
 	///////////RUN EFFECT HEAL ONE
-	Effect* effect = new Effect();
+	createSorceryEffect(testObject , SORCERY_GREEN);
 
-	ParticleSystemQuad* skillHealEffect = effect->createEffectHeal(PARTICLE_HEAL, effect->EC_Other);
-	effect->runEffectHeal(
-		testObject
-		, skillHealEffect
-		, SORCERY_GREEN);
+	Effect* effectHeal = Effect::createWithParticle(PARTICLE_HEAL, effectHeal->EC_Other, effectHeal->Restore);
+	effectHeal->setTag(10);
+	testObject->addChild(effectHeal);
+	effectHeal->setPosition(Vec2(testObject->getContentSize().width / 2, testObject->getContentSize().height / 2));
+
+	auto healSequence = Sequence::create(
+		DelayTime::create(DELAY_RESTORE)
+		, CallFuncN::create(CC_CALLBACK_1(BatleScene::removeEffect, this))
+		, nullptr);
+	effectHeal->runAction(healSequence);
+
 }
 
 void BatleScene::skillHelpAll(SkillInfoNew skillInfo)
@@ -1640,7 +1646,9 @@ void BatleScene::skillHelpOne(SkillInfoNew skillInfo)
 		break;
 	}
 	int saveValue = 0;
+
 	Effect* effect = new Effect();
+
 	switch (skillInfo.skill_help_type)
 	{
 	case SKILL_HELP_TYPE::HP:
@@ -1652,13 +1660,20 @@ void BatleScene::skillHelpOne(SkillInfoNew skillInfo)
 			_mainCharacterData.hp -= saveValue;
 		}), nullptr));
 		
-		
-		//////////////////////
-		ParticleSystemQuad* skillHealEffect = effect->createEffectHeal(PARTICLE_HEAL, effect->EC_Other);
-		effect->runEffectHeal(
-			testObject
-			, skillHealEffect
-			, SORCERY_GREEN);
+
+		/////////////////////////////////////////
+		///////////RUN EFFECT HP RESTORE
+		createSorceryEffect(testObject, SORCERY_GREEN);
+
+		Effect* hp = Effect::createWithParticle(PARTICLE_HEAL, effect->EC_Other, effect->Restore);
+		testObject->addChild(hp);
+		hp->setPosition(Vec2(testObject->getContentSize().width / 2, testObject->getContentSize().height / 2));
+
+		auto hpSequence = Sequence::create(
+			DelayTime::create(DELAY_HELP)
+			, CallFuncN::create(CC_CALLBACK_1(BatleScene::removeEffect, this))
+			, nullptr);
+		hp->runAction(hpSequence);
 
 		break;
 	}
@@ -1670,12 +1685,19 @@ void BatleScene::skillHelpOne(SkillInfoNew skillInfo)
 			_mainCharacterData.hp_restore -= saveValue;
 		}), nullptr));
 
-		ParticleSystemQuad* skillHealEffect = effect->createEffectHeal(PARTICLE_HEAL, effect->EC_Other);
-		effect->runEffectHeal(
-			testObject
-			, skillHealEffect
-			, SORCERY_GREEN);
+		/////////////////////////////////////////
+		///////////RUN EFFECT HP RESTORE
+		createSorceryEffect(testObject, SORCERY_GREEN);
 
+		Effect* hpRestore = Effect::createWithParticle(PARTICLE_HEAL, effect->EC_Other, effect->Restore);
+		testObject->addChild(hpRestore);
+		hpRestore->setPosition(Vec2(testObject->getContentSize().width / 2, testObject->getContentSize().height / 2));
+
+		auto hpRestoreSequence = Sequence::create(
+			DelayTime::create(DELAY_HELP)
+			, CallFuncN::create(CC_CALLBACK_1(BatleScene::removeEffect, this))
+			, nullptr);
+		hpRestore->runAction(hpRestoreSequence);
 
 		break;
 	}
@@ -1720,11 +1742,19 @@ void BatleScene::skillHelpOne(SkillInfoNew skillInfo)
 		}), nullptr));
 		
 		/////////////////////////////////////////
-		effect->createEffectHelpDefence(testObject
-			, PARTICLE_DEFENCE_H
-			, PARTICLE_DEFENCE_V
-			, SORCERY_BLUE
-			, effect->EC_Other);
+		///////////RUN EFFECT HELP DEFENCE
+		createSorceryEffect(testObject, SORCERY_BLUE);
+
+		Effect* effectHelpDefence = Effect::createWithParticle(PARTICLE_DEFENCE_H, effect->EC_Other, effect->Help_Defence);
+		testObject->addChild(effectHelpDefence);
+		effectHelpDefence->setPosition(Vec2(testObject->getContentSize().width / 2, testObject->getContentSize().height / 2));
+
+		auto helpDefenceSequence = Sequence::create(
+			DelayTime::create(DELAY_HELP)
+			, CallFuncN::create(CC_CALLBACK_1(BatleScene::removeEffect, this))
+			, nullptr);
+		effectHelpDefence->runAction(helpDefenceSequence);
+
 
 		break;
 	}
@@ -1745,10 +1775,19 @@ void BatleScene::skillHelpOne(SkillInfoNew skillInfo)
 			_mainCharacterData.move_speed -= saveValue;
 		}), nullptr));
 
-		ParticleSystemQuad* moveSpeedEffect = effect->createEffectHelp(PARTICLE_MOVESPEED, effect->EC_Other);
-		effect->runEffectHelp(testObject
-			, moveSpeedEffect
-			, SORCERY_BLUE);
+		/////////////////////////////////////////
+		///////////RUN EFFECT HELP MOVE SPEED
+		createSorceryEffect(testObject, SORCERY_BLUE);
+
+		Effect* effectHelpMoveSpeed = Effect::createWithParticle(PARTICLE_MOVESPEED, effect->EC_Other, effect->Help);
+		testObject->addChild(effectHelpMoveSpeed);
+		effectHelpMoveSpeed->setPosition(Vec2(testObject->getContentSize().width / 2, testObject->getContentSize().height / 2));
+
+		auto helpmMoveSpeedSequence = Sequence::create(
+			DelayTime::create(DELAY_HELP)
+			, CallFuncN::create(CC_CALLBACK_1(BatleScene::removeEffect, this))
+			, nullptr);
+		effectHelpMoveSpeed->runAction(helpmMoveSpeedSequence);
 
 		break;
 	}
@@ -1805,15 +1844,24 @@ void BatleScene::skillAttackAll(SkillInfoNew skillInfo)
 					enemyDieAction(index);
 				}
 			}), nullptr), CallFuncN::create([&, this, index](Ref *p) {
-				/////////////EFFECET ATTACK AOE
-				// fire
-				Effect* attackAllAOE = new Effect();
-				ParticleSystemQuad* attackAllAOEEffect = attackAllAOE->createEffectAttackFire(PARTICLE_FIRE);
-				attackAllAOE->runEffectAttackFire(
-					testObject
-					, attackAllAOEEffect
-					, SORCERY_ORANGE
-					, _allEnemyUnitSprite[index]->getPosition());
+				
+				///////////////////////////////////////////////////
+				//RUN EFFECT ATTACK ONE UNIT
+				///////////////////////////////////////////////////
+
+				createSorceryEffect(testObject, SORCERY_RED);
+				// Create attack effect
+				Effect* attackFire = Effect::createWithParticle(PARTICLE_FIRE, attackFire->EC_Other, attackFire->Help);
+				attackFire->setTargetAttack(_allEnemyUnitSprite[index]);
+				testObject->getParent()->addChild(attackFire);
+				attackFire->setPosition(testObject->getPosition());
+
+				auto attackFireSequence = Sequence::create(
+					DelayTime::create(DELAY_HELP)
+					, CallFuncN::create(CC_CALLBACK_1(BatleScene::removeEffect, this))
+					, nullptr);
+				attackFire->runAction(attackFireSequence);
+
 			}), nullptr);
 			_allEnemyUnitSprite[index]->setTag(index);
 			_allEnemyUnitSprite[index]->runAction(action);
@@ -1846,10 +1894,11 @@ void BatleScene::skillAttackOne(SkillInfoNew skillInfo)
 
 	int indexValue = _indexOfBeAttackEnemy;
 
+
 	auto action = Spawn::create(
 		Sequence::create(
 		//////Start Sequence
-		DelayTime::create(DELAY_ATTACK_MOVE + DELAY_ATTACK_FIRE_LIFE), 
+		DelayTime::create(5),  //DELAY_ATTACK_MOVE + DELAY_ATTACK_FIRE_LIFE
 		CallFuncN::create([&, this, dame, indexValue](Ref *p) {
 		showAttackDame(dame, _allEnemyUnitSprite[indexValue]->getPosition() + Vec2(0, 100), 1);
 		_allEnemyHpBar[indexValue]->setPercent(_allEnemyCurentHp[indexValue] * 100.0f / _allEnemyUnitData[indexValue].hp);
@@ -1862,22 +1911,28 @@ void BatleScene::skillAttackOne(SkillInfoNew skillInfo)
 		}
 		
 		}), nullptr), 
+		
 		////////End Sequence
-		CallFuncN::create([&, this](Ref *p) {
-		///////////////////////////////////////////////////
-		//RUN EFFECT ATTACK ONE UNIT
-		///////////////////////////////////////////////////
-		Effect* attackOne = new Effect();
-		ParticleSystemQuad* attackOneEffect = attackOne->createEffectAttackFire(PARTICLE_FIRE);
+		CallFuncN::create([&, this, indexValue](Ref *p) {
+	///////////////////////////////////////////////////
+	//RUN EFFECT ATTACK ONE UNIT
+	///////////////////////////////////////////////////
 
-		attackOne->runEffectAttackFire(
-			testObject
-			, attackOneEffect
-			, SORCERY_ORANGE
-			, _allEnemyUnitSprite[_indexOfBeAttackEnemy]->getPosition()
-			);
-	}), nullptr);
+	createSorceryEffect(testObject, SORCERY_ORANGE);
+	// Create attack effect
+	Effect* attackFire = Effect::createWithParticle(PARTICLE_FIRE, attackFire->EC_Other, attackFire->Help);
+	attackFire->setTargetAttack(_allEnemyUnitSprite[indexValue]);
+	testObject->getParent()->addChild(attackFire);
+	attackFire->setPosition(testObject->getPosition());
 
+	// Effect life in 1s , remove Effect
+	auto attackFireSequence = Sequence::create(
+		DelayTime::create(DELAY_ATTACK_FIRE_LIFE)
+		, CallFuncN::create(CC_CALLBACK_1(BatleScene::removeEffect, this))
+		, nullptr);
+	attackFire->runAction(attackFireSequence);
+
+	}), nullptr); 
 
 	_allEnemyUnitSprite[_indexOfBeAttackEnemy]->runAction(action);
 
@@ -2325,3 +2380,74 @@ void BatleScene::enemyRespawAction(int index)
 	_allEnemyUnitSprite[index]->runAction(action);
 }
 
+//////////////////////////////////////////////////////////////////////////////////////
+// SORCERY EFFECT AND REMOVE EFFECT OBJECT AFTER RUN
+// Created by Vien
+//////////////////////////////////////////////////////////////////////////////////////
+void BatleScene::createSorceryEffect(Sprite* spriteUnit, std::string eclipseFilePath)
+{
+	auto nodeFather = Sprite::create();
+
+	spriteUnit->addChild(nodeFather, -10);
+	nodeFather->setPosition(Vec2(
+		spriteUnit->getContentSize().width / 2,
+		spriteUnit->getContentSize().height / 2 - spriteUnit->getContentSize().height / 4
+		));
+
+	// Create Eclipse
+	auto sorcery = Sprite::create(eclipseFilePath);
+	sorcery->setScale(1.5f);
+	sorcery->setPosition(Vec2(0, 0));
+
+	nodeFather->addChild(sorcery, -10);
+
+	auto actionRotate = RotateBy::create(1.0f, Vec3(0, 0, 150));
+	auto repeat = RepeatForever::create(actionRotate);
+	sorcery->runAction(repeat);
+
+	nodeFather->setScaleY(0.5f);
+
+
+	//removeSorceryEclipse
+	auto sequence = Sequence::create(
+		DelayTime::create(DELAY_REMOVE_ECLIPSE),
+		CallFuncN::create(CC_CALLBACK_1(BatleScene::removeSorceryEclipse, this)),
+		NULL
+		);
+
+	nodeFather->runAction(sequence);
+}
+
+void BatleScene::removeSorceryEclipse(Ref* pSender)
+{
+	Sprite* sorcery = dynamic_cast<Sprite*>(pSender);
+
+	if (sorcery != nullptr)
+	{
+		sorcery->removeFromParentAndCleanup(true);
+		log("Remove eclipse");
+	}
+	else
+	{
+		log("Remove eclipse");
+		return;
+	}
+}
+
+
+void BatleScene::removeEffect(Ref* pSender)
+{
+
+	auto effect = dynamic_cast<Sprite*>(pSender);
+
+	if (effect != nullptr)
+	{
+		effect->removeFromParentAndCleanup(true);
+		log("Remove Effect");
+	}
+	else
+	{
+		log("Remove Effect");
+		return;
+	}
+}
