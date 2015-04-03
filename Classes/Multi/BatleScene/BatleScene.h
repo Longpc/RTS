@@ -12,6 +12,7 @@
 
 #include "cocostudio/CocoStudio.h"
 #include <time.h>
+#include "Server/Server.h"
 
 #define MOVE_SPEED 250
 #define IMAGE_SCALE 0.6f

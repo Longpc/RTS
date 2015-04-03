@@ -61,6 +61,12 @@
     <Filter Include="src\dataController\SkillData">
       <UniqueIdentifier>{53a2c2ed-57f1-4e61-92d0-86c7689c58ac}</UniqueIdentifier>
     </Filter>
+    <Filter Include="src\Server">
+      <UniqueIdentifier>{ae0940ec-d72c-426a-be42-e2bd1a7c7dfc}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\UserSelectScene">
+      <UniqueIdentifier>{dbe5f6e0-060a-449e-add1-f3522f40bc51}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -143,6 +149,12 @@
     </ClCompile>
     <ClCompile Include="..\Classes\Multi\BatleScene\Effect.cpp">
       <Filter>src\Multi\BatleScene</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Classes\Server\Server.cpp">
+      <Filter>src\Server</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Classes\UserSelectScene\UserSelectScene.cpp">
+      <Filter>src\UserSelectScene</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -229,6 +241,12 @@
     </ClInclude>
     <ClInclude Include="..\Classes\Multi\BatleScene\Effect.h">
       <Filter>src\Multi\BatleScene</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Classes\Server\Server.h">
+      <Filter>src\Server</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Classes\UserSelectScene\UserSelectScene.h">
+      <Filter>src\UserSelectScene</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

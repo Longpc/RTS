@@ -30,6 +30,11 @@ bool BatleScene::init(int unitId,vector<SkillInfoNew> skills)
 		return false;
 	}
 
+	auto b = TestServer::getInstance();
+	log("String: %s",b->getString().c_str());
+	b->sendMessageWithName(b->getString().c_str(), "test String from battle scene");
+	SIOClient* c = b->getClient();
+	c->emit(b->getString().c_str(), "this is text from get CLient");
 	if (UserDefault::getInstance()->getIntegerForKey(MOVE_KEY) == 0)
 	{
 		UserDefault::getInstance()->setIntegerForKey(MOVE_KEY, MOVE_AUTO);

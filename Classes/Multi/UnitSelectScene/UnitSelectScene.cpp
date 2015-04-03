@@ -186,7 +186,7 @@ void MultiUnitSelectScene::onBackButtonClick(Ref *pSender)
 	}
 	case MULTI_MODE:
 	{
-		Director::getInstance()->replaceScene(TransitionMoveInL::create(SCREEN_TRANSI_DELAY, MultiTeamSelectScene::createScene()));
+		Director::getInstance()->replaceScene(TransitionMoveInL::create(SCREEN_TRANSI_DELAY, MultiTeamSelectScene::createScene(/*global uerId*/0)));
 		break;
 	}
 		

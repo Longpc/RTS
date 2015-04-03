@@ -40,10 +40,10 @@ bool LayerBase::init()
 
 	_curUserInfo._name = "Long";
 
-	auto userNameLabel = Label::createWithSystemFont(_curUserInfo._name, JAPANESE_FONT_1_BOLD, 30);
-	userNameLabel->setPosition(Vec2(50,_usernameBg->getContentSize().height/2));
-	userNameLabel->setColor(Color3B::BLACK);
-	_usernameBg->addChild(userNameLabel,1);
+	_userNameLabel = Label::createWithSystemFont(_curUserInfo._name, JAPANESE_FONT_1_BOLD, 30);
+	_userNameLabel->setPosition(Vec2(50,_usernameBg->getContentSize().height/2));
+	_userNameLabel->setColor(Color3B::BLACK);
+	_usernameBg->addChild(_userNameLabel,1);
 
 	this->setSwallowsTouches(true);
 

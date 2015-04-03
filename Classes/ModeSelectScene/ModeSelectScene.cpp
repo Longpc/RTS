@@ -71,11 +71,13 @@ bool ModeSelectScene::init()
 
 	// ここでsocket.io connection開始。clientを持っておく
 // 	log("----> connect");
-// 	_client = SocketIO::connect("ws://192.168.0.226:8080/", *this);
+ 	//_client = SocketIO::connect("ws://192.168.0.126:8080/", *this);
 // 	//_client = SocketIO::connect("ws://localhost:8080/", *this);
 // 	//CCLOG("----> on hello");
-// 	_client->on("hello", CC_CALLBACK_2(ModeSelectScene::onReceiveEvent, this));
+ 	//_client->on("hello", CC_CALLBACK_2(ModeSelectScene::onReceiveEvent, this));
 
+	auto sv = TestServer::getInstance();
+	sv->startConnectWithHandler("hello", CC_CALLBACK_2(ModeSelectScene::onReceiveEvent, this));
 	return true;
 }
 
@@ -93,7 +95,7 @@ void ModeSelectScene::multiButtonCallback(Ref *pSender, Widget::TouchEventType t
 	case cocos2d::ui::Widget::TouchEventType::ENDED:
 	{
 		if (checkRoomMember() == true) {
-			Director::getInstance()->replaceScene(TransitionMoveInR::create(SCREEN_TRANSI_DELAY, MultiTeamSelectScene::createScene()));
+			Director::getInstance()->replaceScene(TransitionMoveInR::create(SCREEN_TRANSI_DELAY, UserSelect::createScene()));
 		}
 		else {
 			//WARNING LAYER
@@ -209,25 +211,6 @@ void ModeSelectScene::serverCallback(HttpClient* client, HttpResponse* response)
 		}
 	}
 }
-void ModeSelectScene::onConnect(SIOClient* client){
-	//CCLOG("---->onConnect");
-	// SocketIO::connect success
-}
-
-void ModeSelectScene::onMessage(SIOClient* client, const std::string& data){
-	//CCLOG("---->onMessage");
-	// SocketIO::send receive
-}
-void ModeSelectScene::onClose(SIOClient* client){
-	//CCLOG("---->onClose");
-	// //CCLOG("Err:%d", GetLastError());
-	// SocketIO::disconnect success
-}
-void ModeSelectScene::onError(SIOClient* client, const std::string& data){
-	//CCLOG("---->onError");
-	//CCLOG("JSB SocketIO::SIODelegate->onError method called from native with data: %s", data.c_str());
-	// SocketIO::failed
-}
 
 /**
 * serverからのemit("hello")をここでlisten
@@ -260,8 +243,9 @@ void ModeSelectScene::textFieldEvent(Ref *pSender, TextField::EventType type)
 		text = (TextField*)pSender;
 
 		sendText = "[{\"value\":\"" + text->getStringValue() + "\"}]";
-		_client->emit("hello", sendText);
-		addTalkPlayer(text->getStringValue());
+		//_client->emit("hello", sendText);
+		TestServer::getInstance()->sendMessageWithName("hello", sendText);
+		addTalkPlayer(text->getString());
 		break;
 	default:
 		break;
@@ -294,12 +278,12 @@ void ModeSelectScene::addTalkPlayer(const std::string& str){
 	this->addChild(draw);
 	draw->drawPolygon(points, 4, Color4F(0, 0.5, 0, 1), 1, Color4F(0, 0, 1, 1));
 
-	auto text = Text::create(str, "Meiryo", 40);
+	auto text = Text::create(str, "", 40);
 	text->setTextHorizontalAlignment(TextHAlignment::RIGHT);
 	text->setAnchorPoint(Point(1.0, 1.0));
 	text->setPosition(Point(originalX, originalY));
 
-	this->addChild(text);
+	this->addChild(text,999);
 	index++;
 }
 

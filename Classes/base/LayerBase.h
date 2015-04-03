@@ -44,7 +44,7 @@ public:
 
 	UserInfo _curUserInfo;
 	Sprite *_usernameBg;
-
+	Label *_userNameLabel;
 	bool _disableFlag;
 
 protected:

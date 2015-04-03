@@ -3,7 +3,7 @@
 ///Include scene header here///
 #include "base/Define.h"
 #include "base/LayerBase.h"
-#include "ModeSelectScene/ModeSelectScene.h"
+#include "UserSelectScene/UserSelectScene.h"
 #include "Multi/UnitSelectScene/UnitSelectScene.h"
 #include "Multi/MemberFullDialogLayer.h"
 
@@ -15,7 +15,7 @@ USING_NS_CC_EXT;
 class MultiTeamSelectScene :public LayerBase
 {
 public:
-	static Scene *createScene();
+	static Scene *createScene(int userId);
 	CREATE_FUNC(MultiTeamSelectScene);
 	bool init();
 protected:
@@ -35,6 +35,8 @@ private:
 	int _redTeamId = 2;
 
 	bool _onAccess = true;
+
+	string _userName;
 
 	///FUNCTIONS///////////////////////////////////////////////////////////////////////
 	virtual void onBackButtonClick(Ref *pSender);

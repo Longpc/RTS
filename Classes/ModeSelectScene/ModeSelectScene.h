@@ -6,6 +6,8 @@
 #include "Multi/MemberFullDialogLayer.h"
 #include "Multi/UnitSelectScene/UnitSelectScene.h"
 
+#include "UserSelectScene/UserSelectScene.h"
+
 //for test
 #include "Multi/BatleScene/BatleScene.h"
 
@@ -15,7 +17,9 @@
 //#include "network/WebSocket.h"
 #include "network/SocketIO.h"
 
-class ModeSelectScene :public LayerBase, public SocketIO::SIODelegate
+#include "Server/Server.h"
+
+class ModeSelectScene :public LayerBase
 {
 public:
 	static Scene *createScene();
@@ -29,11 +33,6 @@ private:
 	TextField* editBox;
 	// socket.io event‚Ìevent listener
 	void onReceiveEvent(SIOClient* client, const std::string& data);
-	// SIODelegate
-	virtual void onConnect(SIOClient* client);
-	virtual void onMessage(SIOClient* client, const std::string& data);
-	virtual void onClose(SIOClient* client);
-	virtual void onError(SIOClient* client, const std::string& data);
 	void textFieldEvent(Ref *pSender, TextField::EventType type);
 	void addTalkPlayer(const std::string& str);
 	void addTalkOther(const std::string& str);

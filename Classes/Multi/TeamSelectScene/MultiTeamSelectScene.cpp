@@ -1,7 +1,7 @@
 ﻿#pragma execution_character_set("utf-8")
 #include "MultiTeamSelectScene.h"
 
-Scene * MultiTeamSelectScene::createScene()
+Scene * MultiTeamSelectScene::createScene(int userId)
 {
 	auto scene = Scene::create();
 	auto layer = MultiTeamSelectScene::create();
@@ -21,7 +21,8 @@ bool MultiTeamSelectScene::init()
 	if (_defaultLabel != nullptr) {
 		_defaultLabel->setString("チームを選択してください");
 	}
-	
+	//getUserInfor
+	_userNameLabel->setString("テスト");
 	auto blueTeamBg = Sprite::create("image/screen/base.png");
 	blueTeamBg->setPosition(Vec2(_visibleSize.width / 2,10+(_visibleSize.height - 100) * 1 / 4));
 	addChild(blueTeamBg, 1);
@@ -60,7 +61,7 @@ bool MultiTeamSelectScene::init()
 
 void MultiTeamSelectScene::onBackButtonClick(Ref *pSender)
 {
-	Director::getInstance()->replaceScene(TransitionMoveInL::create(SCREEN_TRANSI_DELAY,ModeSelectScene::createScene()));
+	Director::getInstance()->replaceScene(TransitionMoveInL::create(SCREEN_TRANSI_DELAY,UserSelect::createScene()));
 }
 
 void MultiTeamSelectScene::redTeamButtonCallback(Ref *pSender, Widget::TouchEventType type)
@@ -181,7 +182,7 @@ void MultiTeamSelectScene::getAndShowTeamInfo(int teamId,Sprite *parent)
 		teamInfo.push_back(temp);
 	}
 	std::stringstream memNum;
-	memNum << "プレイヤー数: "<< teamInfo.size();
+	memNum << "メンバー数: "<< teamInfo.size();
 	auto teamLabel = Label::createWithSystemFont(memNum.str().c_str(), JAPANESE_FONT_1_BOLD, 30);
 	teamLabel->setPosition(Vec2(50, parent->getContentSize().height - 20));
 	teamLabel->setAnchorPoint(Vec2::ANCHOR_TOP_LEFT);
