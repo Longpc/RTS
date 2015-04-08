@@ -1,4 +1,4 @@
-#include "BatleScene.h"
+﻿#include "BatleScene.h"
 
 
 Scene* BatleScene::createScene(int selectedUnitId, vector<SkillInfoNew> playerSkills)
@@ -30,11 +30,8 @@ bool BatleScene::init(int unitId,vector<SkillInfoNew> skills)
 		return false;
 	}
 
-	auto b = TestServer::getInstance();
-	log("String: %s",b->getString().c_str());
-	b->sendMessageWithName(b->getString().c_str(), "test String from battle scene");
-	SIOClient* c = b->getClient();
-	c->emit(b->getString().c_str(), "this is text from get CLient");
+	TestServer::getInstance()->sendMessageWithName("hello", "Message from battle");
+
 	if (UserDefault::getInstance()->getIntegerForKey(MOVE_KEY) == 0)
 	{
 		UserDefault::getInstance()->setIntegerForKey(MOVE_KEY, MOVE_AUTO);
@@ -140,36 +137,59 @@ void BatleScene::createContent()
 	_battleBackround->setAnchorPoint(Vec2::ANCHOR_TOP_RIGHT);
 	addChild(_battleBackround);
 
-// 	auto tempNode = Node::create();
-// 	tempNode->setScaleY(SKILL_AOE_Y_SCALE);
-// 	_battleBackround->addChild(tempNode,MID);
-	_skillAOEShowSprite = Sprite::create("image/screen/battle/magic/200x200/magic_black200x200.png");
-	_skillAOEShowSprite->setVisible(false);
-	_skillAOEShowSprite->setPosition(Vec2(0, 0));
-	_battleBackround->addChild(_skillAOEShowSprite, 100);
+	string pathFIle = FileUtils::getInstance()->fullPathForFilename("map/map3.tmx");
+	_myMap = TMXTiledMap::create(pathFIle.c_str());
 
+	if (_myMap != nullptr)
+	{
+		_battleBackround->addChild(_myMap);
+		Size CC_UNUSED s = _myMap->getContentSize();
+		log("ContentSize: %f, %f", s.width, s.height);
+		Vec2 ts = _myMap->getTileSize();
+		log("Title Size: %f, %f", ts.x, ts.y);
+		Vec2 ts2 = _myMap->getMapSize();
+		log("map Size: %f, %f", ts2.x, ts2.y);
+		auto& children = _myMap->getChildren();
+		SpriteBatchNode* child = nullptr;
 
-	auto part1 = createBackground(_visibleSize);
-	part1->setAnchorPoint(Vec2::ANCHOR_TOP_RIGHT);
-	_battleBackround->addChild(part1);
-	auto part2 = createBackground(_visibleSize);
-	part2->setAnchorPoint(Vec2::ANCHOR_TOP_LEFT);
-	_battleBackround->addChild(part2);
-	auto part3 = createBackground(_visibleSize);
-	part3->setAnchorPoint(Vec2::ANCHOR_BOTTOM_RIGHT);
-	_battleBackround->addChild(part3);
-	auto part4 = createBackground(_visibleSize);
-	part4->setAnchorPoint(Vec2::ANCHOR_BOTTOM_LEFT);
-	_battleBackround->addChild(part4);
+		for (const auto &obj : children) {
+			child = static_cast<SpriteBatchNode*>(obj);
+			child->getTexture()->setAntiAliasTexParameters();
+		}
+	}
+	else {
+		log("null");
+	}
+
 
 	createPhysicBolder();
-
+	/*create blue and red line*/
 	auto line = DrawNode::create();
 	line->drawLine(Vec2(0, 150), Vec2(_visibleSize.width * 2, 150), Color4F::BLUE);
 	line->drawLine(Vec2(0, _visibleSize.height * 2 - 150), Vec2(_visibleSize.width * 2, _visibleSize.height * 2 - 150), Color4F::RED);
 	line->drawRect(Vec2(_visibleSize.width - 100, 0), Vec2(_visibleSize.width + 100, 150), Color4F::BLUE);
 	line->drawRect(Vec2(_visibleSize.width - 100, _visibleSize.height * 2 - 150), Vec2(_visibleSize.width + 100, _visibleSize.height * 2),Color4F::RED);
 	_battleBackround->addChild(line);
+
+	auto blueTeamAreaNode = Node::create();
+	blueTeamAreaNode->setPhysicsBody(PhysicsBody::createBox(Size(200, 150), PhysicsMaterial(1, 0, 0)));
+	blueTeamAreaNode->setPosition(Vec2(_visibleSize.width, 75));
+	blueTeamAreaNode->getPhysicsBody()->setCategoryBitmask(ALLIED_CONTACT_CATEGORY_BITMAP);
+	blueTeamAreaNode->getPhysicsBody()->setCollisionBitmask(ALLIED_CONTACT_COLLISION_BITMAP);
+	blueTeamAreaNode->getPhysicsBody()->setGravityEnable(false);
+	blueTeamAreaNode->getPhysicsBody()->setDynamic(false);
+	_battleBackround->addChild(blueTeamAreaNode);
+
+	auto redTeamAreaNode = Node::create();
+	redTeamAreaNode->setPhysicsBody(PhysicsBody::createBox(Size(200, 150), PhysicsMaterial(1, 0, 0)));
+	redTeamAreaNode->getPhysicsBody()->setCategoryBitmask(ENEMY_CONTACT_CATEGORY_BITMAP);
+	redTeamAreaNode->getPhysicsBody()->setCollisionBitmask(ENEMY_CONTACT_COLLISION_BITMAP);
+	redTeamAreaNode->getPhysicsBody()->setGravityEnable(false);
+	redTeamAreaNode->getPhysicsBody()->setDynamic(false);
+	redTeamAreaNode->setPosition(Vec2(_visibleSize.width, 2 * _visibleSize.height - 75));
+	_battleBackround->addChild(redTeamAreaNode);
+
+
 	auto redTower = Sprite::create("tower_red.png");
 	redTower->setPosition(Vec2(_visibleSize.width, _visibleSize.height * 2 - 150));
 	//redTower->setAnchorPoint(Vec2::ANCHOR_MIDDLE_BOTTOM);
@@ -178,6 +198,7 @@ void BatleScene::createContent()
 	PhysicsBody* redTBody = MyBodyParser::getInstance()->bodyFormJson(redTower, "tower");
 	redTBody->setDynamic(false);
 	redTBody->setGravityEnable(false);
+	redTBody->setContactTestBitmask(0x1);
 	redTower->setPhysicsBody(redTBody);
 	
 	auto redTHpBar = Slider::create();
@@ -198,6 +219,7 @@ void BatleScene::createContent()
 	PhysicsBody* blueTBody = MyBodyParser::getInstance()->bodyFormJson(blueTower, "tower");
 	blueTBody->setDynamic(false);
 	blueTBody->setGravityEnable(false);
+	blueTBody->setContactTestBitmask(0x1);
 	blueTower->setPhysicsBody(blueTBody);
 
 	auto blueTHpBar = Slider::create();
@@ -219,6 +241,10 @@ void BatleScene::createContent()
 	testObject->setScale(IMAGE_SCALE);
 	testObject->setPhysicsBody(PhysicsBody::createCircle(30, PhysicsMaterial(1, 0, 1),Vec2(0,-50)));
 	testObject->getPhysicsBody()->setRotationEnable(false);
+	testObject->getPhysicsBody()->setContactTestBitmask(0x1);
+	testObject->getPhysicsBody()->setCategoryBitmask(ALLIED_CONTACT_CATEGORY_BITMAP);
+	testObject->getPhysicsBody()->setCollisionBitmask(ALLIED_CONTACT_COLLISION_BITMAP);
+
 
 	_statusContainer = Node::create();
 	testObject->addChild(_statusContainer);
@@ -418,7 +444,9 @@ void BatleScene::createContent()
 		sp->setPhysicsBody(PhysicsBody::createCircle(30, PhysicsMaterial(1, 0, 0), Vec2(0, -50)));
 		sp->getPhysicsBody()->setRotationEnable(false);
 		sp->getPhysicsBody()->setGravityEnable(false);
-
+		sp->getPhysicsBody()->setContactTestBitmask(0x1);
+		sp->getPhysicsBody()->setCategoryBitmask(ENEMY_CONTACT_CATEGORY_BITMAP);
+		sp->getPhysicsBody()->setCollisionBitmask(ENEMY_CONTACT_COLLISION_BITMAP);
 		auto hpB = Slider::create();
 		hpB->loadBarTexture("image/screen/battle/mini_hp_base.png");
 		hpB->setPercent(100);
@@ -439,6 +467,9 @@ void BatleScene::createContent()
 		_allEnemyAttachDelay.push_back(false);
 		_allEnemyCurentHp.push_back(_allEnemyUnitData[i].hp);
 		_allEnemyCurentMp.push_back(_allEnemyUnitData[i].mp);
+
+		vector<string> tmp = {};
+		_enemyStatusImagePath.push_back(tmp);
 	}
 
 	_miniMap->addChild(node, 1);
@@ -453,7 +484,7 @@ void BatleScene::createContent()
 
 	auto enemyIcon1 = Sprite::create("image/screen/battle/enemyicon.png");
 	enemyIcon1->setOpacity(255);
-
+	vector<string> tmp1 = {};
 	switch (_currentPlayerTeamFlg)
 	{
 	case TEAM_FLG_RED:
@@ -467,7 +498,8 @@ void BatleScene::createContent()
 		_allEnemyHpBar.push_back(blueTHpBar);
 		_allEnemyUnitData.push_back(_blueTeamTowerData);
 		_allEnemyUnitSprite.push_back(blueTower);
-
+		
+		_enemyStatusImagePath.push_back(tmp1);
 		
 // 		float positionXScaleRate = _miniMap->getContentSize().width / (_visibleSize.width * 2);
 // 		float positionYScaleRate = _miniMap->getContentSize().height / (_visibleSize.height * 2);
@@ -487,7 +519,7 @@ void BatleScene::createContent()
 		_allEnemyHpBar.push_back(redTHpBar);
 		_allEnemyUnitData.push_back(_redTeamTowerData);
 		_allEnemyUnitSprite.push_back(redTower);
-
+		_enemyStatusImagePath.push_back(tmp1);
 
 		enemyIcon1->setPosition(Vec2(redTower->getPositionX()*positionXScaleRate, redTower->getPositionY()*positionYScaleRate));
 		_allEnemyIconInMinimap.push_back(enemyIcon1);
@@ -510,13 +542,6 @@ void BatleScene::displaySkillMpInButton(Button *parent, int mp)
 	parent->addChild(lb);
 }
 
-
-Sprite* BatleScene::createBackground(Vec2 pos)
-{
-	auto sp = Sprite::create("image/screen/battle/bg.png");
-	sp->setPosition(pos);
-	return sp;
-}
 void BatleScene::createPhysicBolder()
 {
 	auto bottomB = createHBolder();
@@ -573,7 +598,13 @@ void BatleScene::onEnter()
 	time(&timer);
 	timeinfo = localtime(&timer);
 
+	auto dispath = Director::getInstance()->getEventDispatcher();
+	auto contactListener = EventListenerPhysicsContact::create();
+	contactListener->onContactBegin = CC_CALLBACK_1(BatleScene::onPhysicContactBegin, this);
+	contactListener->onContactPreSolve = CC_CALLBACK_2(BatleScene::onPhysicContactPreSolve, this);
+	dispath->addEventListenerWithSceneGraphPriority(contactListener, this);
 	scheduleUpdate();
+
 }
 
 void BatleScene::update(float delta)
@@ -590,7 +621,28 @@ void BatleScene::update(float delta)
 			sp->setPosition(testObject->getPosition());
 		}
 	}
-	if (random(1,20) < 2)
+
+	//logic for detect unit in area when main character moved
+	if (_showSkillTargetFlag) {
+		for (auto &a : _allEnemyUnitSprite)
+		{
+			a->setColor(Color3B::WHITE);
+		}
+		vector<int> detectedUnit = detectUnitInAoe(_onSelectSkillData, ENEMY_FLAG, false);
+		for (auto &c : detectedUnit)
+		{
+			_allEnemyUnitSprite[c]->setColor(Color3B::RED);
+		}
+	}
+	for (int i = 0; i < _allEnemyUnitSprite.size(); i++)
+	{
+		if (_allEnemyUnitData[i].isStun)
+		{
+			_allEnemyUnitSprite[i]->getPhysicsBody()->setVelocity(Vect::ZERO);
+			_allEnemyUnitSprite[i]->stopActionByTag(_allEnemyUnitSprite[i]->getTag());
+		}
+	}
+	if (random(1,50) < 2)
 	{
 		enemyUnitAutoMoveTest();
 	}
@@ -604,12 +656,12 @@ void BatleScene::checkForAutoAttack()
 	{
 		auto posDistan = _allEnemyUnitSprite[i]->getPosition() - testObject->getPosition();
 		int direc = detectDirectionBaseOnTouchAngle(-posDistan.getAngle()*RAD_DEG + 90);
-		if (posDistan.length() < ATTACK_AOE*_mainCharacterData.attack_sight/100.0f && _allEnemyUnitSprite[i]->isVisible()) {
+		if (posDistan.length() - _allEnemyUnitSprite[i]->getBoundingBox().size.width/4 < ATTACK_AOE*_mainCharacterData.attack_sight/100.0f && _allEnemyUnitSprite[i]->isVisible()) {
 			if (testObject->getActionByTag(_currentAttackActionTag) == nullptr && _onDelayAttackFlg == false) {
 				rotateCharacter(testObject,direc);
 				auto ani = createAttackAnimationWithDefine(direc, _attackImagePath);
 				//auto action = RepeatForever::create(Animate::create(ani)); //user repeat for change in future
-				auto call1 = CallFuncN::create(CC_CALLBACK_0(BatleScene::characerAttackCallback, this));
+				auto call1 = CallFuncN::create(CC_CALLBACK_0(BatleScene::characterAttackCallback, this));
 				auto action = Sequence::create(Animate::create(ani),call1,nullptr);
 				action->setTag(direc * 10);
 				_currentAttackActionTag = direc * 10;
@@ -646,7 +698,7 @@ void BatleScene::checkForAutoAttack()
 		testObject->stopActionByTag(FOUNTAIN_ACTION);
 	}
 }
-void BatleScene::characerAttackCallback()
+void BatleScene::characterAttackCallback()
 {
 	if (_onRespwanFlg) return;
 	//log("charater");
@@ -887,10 +939,10 @@ void BatleScene::onTouchMoved(Touch *touch, Event *unused_event)
 		_touchMoveEndSprite->setPosition(touch->getLocation());
 	}
 	else {
-		_touchMoveEndSprite->setPosition(_touchStartPoint +Vec2(200*cos(distanVector.getAngle()), 200*sin(distanVector.getAngle())));
+		_touchMoveEndSprite->setPosition(_touchStartPoint + Vec2(200 * cos(distanVector.getAngle()), 200 * sin(distanVector.getAngle())));
 	}
 	_touchMoveEndSprite->setVisible(true);
-	
+
 
 	if (distanVector.length() < _touchMoveBeginSprite->getContentSize().width / 6) {
 		testObject->getPhysicsBody()->setVelocity(Vect(0, 0));
@@ -899,12 +951,21 @@ void BatleScene::onTouchMoved(Touch *touch, Event *unused_event)
 	}
 
 	testObject->stopActionByTag(_currentAttackActionTag);
-	testObject->getPhysicsBody()->setVelocity(Vect(_mainCharacterData.move_speed*cos(distanVector.getAngle()),_mainCharacterData.move_speed*sin(distanVector.getAngle())));
-	_mainCharacterAvata->setRotation(-(distanVector.getAngle() * RAD_DEG) + 90);
+	if (_moveMode == MOVE_MANUAL) {
+		testObject->getPhysicsBody()->setVelocity(Vect(_mainCharacterData.move_speed*cos(distanVector.getAngle()), _mainCharacterData.move_speed*sin(distanVector.getAngle())));
+		_mainCharacterAvata->setRotation(-(distanVector.getAngle() * RAD_DEG) + 90);
 
-	//log("%f", _mini_Icon->getRotation());
-	int direc = detectDirectionBaseOnTouchAngle(_mainCharacterAvata->getRotation());
-	if(direc != 0) actionCharacter(direc,testObject);
+		//log("%f", _mini_Icon->getRotation());
+		int direc = detectDirectionBaseOnTouchAngle(_mainCharacterAvata->getRotation());
+		if (direc != 0) actionCharacter(direc, testObject);
+	}
+	else {
+		
+	}
+
+	
+	
+	
 	//_touchStartPoint = touch->getLocation();
 	
 	
@@ -974,10 +1035,35 @@ void BatleScene::onTouchEnded(Touch *touch, Event *unused_event)
 		//_moveDisableFlg = false;
 	}
 	else {*/
-		testObject->getPhysicsBody()->setVelocity(Vect::ZERO);
-		testObject->stopActionByTag(_currentMoveActionTag);
+	testObject->stopActionByTag(_currentAttackActionTag);
+	if (_moveMode == MOVE_MANUAL) {
+			testObject->getPhysicsBody()->setVelocity(Vect::ZERO);
+			testObject->stopActionByTag(_currentMoveActionTag);
+			_touchMoveBeginSprite->setVisible(false);
+			_touchMoveEndSprite->setVisible(false);
+	}
+	else {
+		fakeZOrder();
 		_touchMoveBeginSprite->setVisible(false);
 		_touchMoveEndSprite->setVisible(false);
+		auto distanVector = touch->getLocation() - Vec2(_visibleSize / 2);
+		auto vec = AStarPathFindingAlgorithm(testObject->getPosition(), testObject->getPosition() + distanVector);
+		/*auto move = MoveBy::create(distanVector.length() / _mainCharacterData.move_speed, distanVector);
+		auto moveAction = Sequence::create(move, CallFuncN::create([&](Ref *p){
+			_touchMoveBeginSprite->setVisible(false);
+			_touchMoveEndSprite->setVisible(false);
+			testObject->stopActionByTag(_currentMoveActionTag);
+			testObject->stopActionByTag(88);
+		}), nullptr);
+		moveAction->setTag(88);
+		testObject->stopActionByTag(88);
+		testObject->runAction(moveAction);
+		_mainCharacterAvata->setRotation(-(distanVector.getAngle() * RAD_DEG) + 90);
+
+		//log("%f", _mini_Icon->getRotation());
+		int direc = detectDirectionBaseOnTouchAngle(_mainCharacterAvata->getRotation());
+		if (direc != 0) actionCharacter(direc, testObject);*/
+	}
 	/*}*/
 	
 }
@@ -1093,6 +1179,7 @@ void BatleScene::createRandomRock()
 		body->setDynamic(false);
 		body->getShape(0)->setRestitution(0);
 		body->setGravityEnable(false);
+		body->setContactTestBitmask(0x1);
 		sp->setPhysicsBody(body);
 		sp->setAnchorPoint(Vec2::ANCHOR_MIDDLE);
 		
@@ -1108,6 +1195,7 @@ void BatleScene::createRandomRock()
 		body->setDynamic(false);
 		body->getShape(0)->setRestitution(0);
 		body->setGravityEnable(false);
+		body->setContactTestBitmask(0x1);
 		tree->setPhysicsBody(body);
 		tree->setAnchorPoint(Vec2::ANCHOR_MIDDLE_BOTTOM);
 		tree->setPosition(Vec2(random(0.1f, 0.9f)*_visibleSize.width * 2, random(0.1f, 0.9f)*_visibleSize.height * 2));
@@ -1120,7 +1208,7 @@ void BatleScene::fakeZOrder()
 {
 	for (auto &stone : _allStone)
 	{
-		if (stone->getPositionY() - stone->getContentSize().height/2 < testObject->getPositionY())
+		if (stone->getPositionY() /*- stone->getContentSize().height/2*/ < testObject->getPositionY())
 		{
 			stone->setLocalZOrder(HIGH);
 		}
@@ -1140,9 +1228,18 @@ void BatleScene::fakeZOrder()
 	}
 }
 
-void BatleScene::onPhysicContactBegin(const PhysicsContact &contact)
+bool BatleScene::onPhysicContactBegin(const PhysicsContact &contact)
 {
+	return true;
+}
 
+bool BatleScene::onPhysicContactPreSolve(PhysicsContact& contact, PhysicsContactPreSolve& solve)
+{
+// 	log("contact pre solve");
+	auto spriteA = contact.getShapeA()->getBody()->getNode();
+	auto spriteB = contact.getShapeB()->getBody()->getNode();
+
+	return true;
 }
 
 void BatleScene::rotateCharacter(Sprite *target, int direc)
@@ -1338,8 +1435,6 @@ void BatleScene::skill1ButtonCallback(Ref *pSender, Widget::TouchEventType type)
 	Button* bt = dynamic_cast<Button*>(pSender);
 	int tag = bt->getTag();
 	bt->stopActionByTag(TAG_SKILL_AOE);
-	_skillAOEShowSprite->stopAllActions();
-	_skillAOEShowSprite->setVisible(false);
  	
 	SkillInfoNew skill;
 	if (tag == TAG_SKILL_1 || tag == TAG_SKILL_2)
@@ -1353,13 +1448,14 @@ void BatleScene::skill1ButtonCallback(Ref *pSender, Widget::TouchEventType type)
 	{
 	case cocos2d::ui::Widget::TouchEventType::BEGAN:
 		if(skill.aoe > 0 && skill.mp_cost <= _characterCurentMp ) longPressAction(bt,skill);
+		_showSkillTargetFlag = true;
 		break;
 	case cocos2d::ui::Widget::TouchEventType::MOVED:
 		break;
 	case cocos2d::ui::Widget::TouchEventType::ENDED:
 	{
 		//Progress Timer
-
+		_showSkillTargetFlag = false;
 		if (skill.target_type == TARGET_ONE && skill.skill_type == TYPE_ATTACK && _indexOfBeAttackEnemy < 0) {
 			log("Invalid attack target");
 			return;
@@ -1385,6 +1481,15 @@ void BatleScene::skill1ButtonCallback(Ref *pSender, Widget::TouchEventType type)
 		
 		break; }
 	case cocos2d::ui::Widget::TouchEventType::CANCELED:
+		_showSkillTargetFlag = false;
+		while (_battleBackround->getChildByTag(DRAW_UNIT))
+		{
+			_battleBackround->removeChildByTag(DRAW_UNIT);
+		}
+		for (auto &a : _allEnemyUnitSprite)
+		{
+			a->setColor(Color3B::WHITE);
+		}
 		break;
 	default:
 		break;
@@ -1724,8 +1829,10 @@ void BatleScene::skillHelpOne(SkillInfoNew skillInfo)
 	{
 		saveValue = 1.0f*_saveMainStatusData.attack_dame*(value - 1.0f) + pureValue;
 		_mainCharacterData.attack_dame += saveValue;
+		log("increase attack by %d", saveValue);
 		runAction(Sequence::create(DelayTime::create(skillInfo.duration), CallFuncN::create([&, saveValue](Ref *pSEnder){
 			_mainCharacterData.attack_dame -= saveValue;
+			log("remove attack buff %d", saveValue);
 		}), nullptr));
 
 		displayUnitStatus(testObject, BUFF_ATTACK, skillInfo);
@@ -1944,7 +2051,7 @@ void BatleScene::skillAttackOne(SkillInfoNew skillInfo)
 }
 
 
-vector<int> BatleScene::detectUnitInAoe(SkillInfoNew skill, int unitFlg)
+vector<int> BatleScene::detectUnitInAoe(SkillInfoNew skill, int unitFlg, bool drawFlg /*= true*/)
 
 {
 	vector<int> resultUnitId;
@@ -1999,7 +2106,9 @@ vector<int> BatleScene::detectUnitInAoe(SkillInfoNew skill, int unitFlg)
 		draw->setTag(DRAW_UNIT);
 		break;
 	}
-	_battleBackround->addChild(draw);
+	if (drawFlg) {
+		_battleBackround->addChild(draw);
+	}
 
 	for (int i = 0; i < allUnit.size(); i++)
 	{
@@ -2085,7 +2194,7 @@ float BatleScene::caculDameRate(int mainC, int enemy)
 void BatleScene::longPressAction(Button *pSender,SkillInfoNew skill)
 {
 	auto a = detectUnitInAoe(skill, ENEMY_FLAG);
-
+	_onSelectSkillData = skill;
 	for (auto& enemy : a)
 	{
 		_allEnemyUnitSprite[enemy]->setColor(Color3B::RED);
@@ -2097,7 +2206,7 @@ void BatleScene::getBattleInformationFromSocketIO(int sID)
 
 }
 
-void BatleScene::senInformationToServer(int sID, string data)
+void BatleScene::sendInformationToServer(int sID, string data)
 {
 
 }
@@ -2219,7 +2328,7 @@ void BatleScene::saveKillDeadInfo(int killerId, int deadUnitId, int teamFlg)
 	}
 }
 /*status type: POISON, STUN, BUFF_ATTACK, BUFF_DEFENCE, DEBUFF_ATTACK*/
-void BatleScene::displayUnitStatus(Sprite *parent, int statusType, SkillInfoNew skill)
+void BatleScene::displayUnitStatus(Sprite *parent, int statusType, SkillInfoNew skillInfo, int spIndex /*= 0*/)
 {
 	string imagePath;
 	switch (statusType)
@@ -2242,13 +2351,33 @@ void BatleScene::displayUnitStatus(Sprite *parent, int statusType, SkillInfoNew 
 	default:
 		break;
 	}
-	auto animate = Animate::create(createStatusAnimation(imagePath));
-	auto sprite = Sprite::create("test.png");
-	sprite->setTag(BUFF_STATUS_TAG);
-	sprite->setPosition(Vec2(parent->getContentSize().width / 2, parent->getContentSize().height));
-	sprite->setScale(1 / IMAGE_SCALE);
-	sprite->runAction(Sequence::create(Repeat::create(animate,ceil(skill.duration / animate->getDuration())),RemoveSelf::create(true),nullptr));
-	parent->addChild(sprite,-1);
+	if (parent != testObject)
+	{
+// 		auto animate = Animate::create(createStatusAnimation(imagePath));
+// 		auto sprite = Sprite::create("test.png");
+// 		sprite->setTag(BUFF_STATUS_TAG);
+// 		sprite->setPosition(Vec2(parent->getContentSize().width / 2, parent->getContentSize().height));
+// 		sprite->setScale(1 / IMAGE_SCALE);
+// 		sprite->runAction(Sequence::create(Repeat::create(animate, ceil(skillInfo.duration / animate->getDuration())), RemoveSelf::create(true), nullptr));
+// 		parent->addChild(sprite, -1);
+		pushStatusImagePath(imagePath, _enemyStatusImagePath[spIndex]);
+		parent->runAction(Sequence::create(DelayTime::create(skillInfo.duration), CallFuncN::create([&, imagePath,spIndex](Ref* p){
+			removeStatusImagePath(imagePath, _enemyStatusImagePath[spIndex]);
+			displayStatusInTime((Sprite*)p, _enemyStatusImagePath[spIndex]);
+		}), nullptr));
+		displayStatusInTime(parent, _enemyStatusImagePath[spIndex]);
+	}
+	else
+	{
+		pushStatusImagePath(imagePath, _skillStatusImageList);
+		parent->runAction(Sequence::create(DelayTime::create(skillInfo.duration), CallFuncN::create([&, imagePath](Ref* p){
+			removeStatusImagePath(imagePath, _skillStatusImageList);
+			displayStatusInTime((Sprite*)p, _skillStatusImageList);
+		}), nullptr));
+		displayStatusInTime(parent, _skillStatusImageList);
+	}
+
+
 }
 
 Animation* BatleScene::createStatusAnimation(string imagePath)
@@ -2275,7 +2404,7 @@ void BatleScene::skillPoisonAction(SkillInfoNew skillInfo)
 	vector<int> units = detectUnitInAoe(skillInfo, ENEMY_FLAG);
 	for (auto & index :units)
 	{
-		displayUnitStatus(_allEnemyUnitSprite[index], POISON, skillInfo);
+		displayUnitStatus(_allEnemyUnitSprite[index], POISON, skillInfo,index);
 		poisonEffectAction(skillInfo, index);
 	}
 }
@@ -2285,7 +2414,7 @@ void BatleScene::skillStunAction(SkillInfoNew skillInfo)
 	vector<int> units = detectUnitInAoe(skillInfo,ENEMY_FLAG);
 	for (auto& i : units)
 	{
-		displayUnitStatus(_allEnemyUnitSprite[i], STUN, skillInfo);
+		displayUnitStatus(_allEnemyUnitSprite[i], STUN, skillInfo,i);
 		_allEnemyUnitData[i].isStun = true;
 		_allEnemyUnitSprite[i]->runAction(Sequence::create(DelayTime::create(skillInfo.duration), CallFuncN::create([&,i](Ref *p){
 			_allEnemyUnitData[i].isStun = false;
@@ -2430,11 +2559,11 @@ void BatleScene::removeSorceryEclipse(Ref* pSender)
 	if (sorcery != nullptr)
 	{
 		sorcery->removeFromParentAndCleanup(true);
-		log("Remove eclipse");
+		//log("Remove eclipse");
 	}
 	else
 	{
-		log("Remove eclipse");
+		//log("Remove eclipse");
 		return;
 	}
 }
@@ -2448,11 +2577,406 @@ void BatleScene::removeEffect(Ref* pSender)
 	if (effect != nullptr)
 	{
 		effect->removeFromParentAndCleanup(true);
-		log("Remove Effect");
+		//log("Remove Effect");
 	}
 	else
 	{
-		log("Remove Effect");
+		//log("Remove Effect");
 		return;
 	}
+}
+
+void BatleScene::pushStatusImagePath(string imagepath, vector<string> &allImages)
+{
+	for (int i = 1; i < 3; i++)
+	{
+		char szName[100] = { 0 };
+		sprintf(szName, "%s%d.png", imagepath.c_str(), i);
+		string p = "image/status/";
+		p.append(szName);
+		//log("%s", p.c_str());
+		allImages.push_back(p.c_str());
+	}
+
+}
+
+void BatleScene::removeStatusImagePath(string imagepath, vector<string> &allImages)
+{
+	for (int i = 1; i < 3; i++)
+	{
+		char szName[100] = { 0 };
+		sprintf(szName, "%s%d.png", imagepath.c_str(), i);
+		string p = "image/status/";
+		p.append(szName);
+		//log("%s", p.c_str());
+		int index = findIndexOfString(allImages, p.c_str());
+		allImages.erase(allImages.begin()+index); //TODO
+	}
+
+}
+
+void BatleScene::displayStatusInTime(Sprite* parent, vector<string> allImages)
+{
+	
+	if (parent->getChildByTag(BUFF_STATUS_TAG)) {
+		parent->removeChildByTag(BUFF_STATUS_TAG);
+	}
+	if (allImages.size() <= 0) return;
+	auto animation = Animation::create();
+	for (auto &str : allImages)
+	{
+		animation->addSpriteFrameWithFile(str.c_str());
+	}
+	// should last 2.8 seconds. And there are 14 frames.
+	animation->setDelayPerUnit(STATUS_DELAY_TIME);
+	animation->setRestoreOriginalFrame(true);
+	animation->setLoops(true);
+
+	auto animate = Animate::create(animation);
+	auto sprite = Sprite::create("test.png");
+	sprite->setTag(BUFF_STATUS_TAG);
+	sprite->setPosition(Vec2(parent->getContentSize().width / 2, parent->getContentSize().height));
+	sprite->setScale(1 / IMAGE_SCALE);
+	sprite->runAction(RepeatForever::create(animate));
+	parent->addChild(sprite, -1);
+}
+
+int BatleScene::findIndexOfString(vector<string> v, string element)
+{
+	for (int i = 0; i < v.size(); i++)
+	{
+		if (v[i] == element) {
+			return i;
+		}
+	}
+	return 0;
+}
+
+cocos2d::Vec2 BatleScene::getTitlePosForPosition(Vec2 location)
+{
+	int x = location.x / _myMap->getTileSize().width;
+	int y = ((_myMap->getMapSize().height*_myMap->getTileSize().height - location.y) / _myMap->getTileSize().height);
+	return Vec2(x, y);
+}
+cocos2d::Vec2 BatleScene::getPositionForTitleCoord(Vec2 tileCoord)
+{
+	int x = (tileCoord.x * _myMap->getTileSize().width) + _myMap->getTileSize().width / 2;
+	int y = (_myMap->getMapSize().height * _myMap->getTileSize().height) -
+		(tileCoord.y * _myMap->getTileSize().height) - _myMap->getTileSize().height / 2;
+	return Vec2(x, y);
+}
+
+vector<Vec2> BatleScene::AStarPathFindingAlgorithm(Vec2 curentPos, Vec2 destinationPos)
+{
+	vector<Vec2> result = {};
+	
+	Vec2 fromTitleCoord = getTitlePosForPosition(curentPos);
+	Vec2 desTitleCoord = getTitlePosForPosition(destinationPos);
+	if (desTitleCoord.x > _myMap->getMapSize().width) {
+		desTitleCoord.x = _myMap->getMapSize().width;
+	}
+	if (desTitleCoord.y > _myMap->getMapSize().height) {
+		desTitleCoord.y = _myMap->getMapSize().height;
+	}
+	if (desTitleCoord.x < 0) {
+		desTitleCoord.x = 0;
+	}
+	if (desTitleCoord.y < 0) {
+		desTitleCoord.y = 0;
+	}
+	if (fromTitleCoord == destinationPos)
+	{
+		log("You are already in the destination");
+		return result;
+	}
+	//Rock, tree check
+	log("From: %f, %f:", fromTitleCoord.x, fromTitleCoord.y);
+	log("To: %f, %f", desTitleCoord.x, desTitleCoord.y);
+	if (isWallAtTileCoord(desTitleCoord) || !isValidTileCoord(desTitleCoord))
+	{
+		log("you cannot move there");
+		return result;
+	}
+	_spClosedSteps.clear();
+	_spOpenSteps.clear();
+	_shortestPath.clear();
+
+	insertInOpenSteps(ShortestPathStep::createWithPosition(fromTitleCoord));
+
+	do 
+	{
+		ShortestPathStep *curStep = _spOpenSteps.at(0);
+
+		_spClosedSteps.pushBack(curStep);
+
+		_spOpenSteps.erase(0);
+
+		if (curStep->getPosition() == desTitleCoord) {
+			log("Here the path");
+			//
+			constructPathAndStartAnimationFromStep(curStep);
+			_spClosedSteps.clear();
+			_spOpenSteps.clear();
+			break;
+		}
+
+		PointArray *checkStep = allWalkableTitlesCoordForTitleCoord(curStep->getPosition());
+
+		for (size_t i = 0; i < checkStep->count(); i++)
+		{
+			ShortestPathStep *step = ShortestPathStep::createWithPosition(checkStep->getControlPointAtIndex(i));
+
+			if (getStepIndex(_spClosedSteps, step) != -1) {
+				continue;
+			}
+			int moveCost = costToMoveFromStepToAdjacentStep(curStep, step);
+
+			ssize_t index = getStepIndex(_spOpenSteps, step);
+			if (index == -1) {
+				step->setParent(curStep);
+				step->setGScore(curStep->getGScore() + moveCost);
+				step->setHScore(computeHScoreFromCoordToCoord(step->getPosition(),desTitleCoord));
+
+				insertInOpenSteps(step);
+			}
+			else {
+				step = _spOpenSteps.at(index);
+				if (curStep->getGScore() + moveCost < step->getGScore()) {
+					step->setGScore(curStep->getGScore() + moveCost);
+
+					step->retain();
+					_spOpenSteps.erase(index);
+					insertInOpenSteps(step);
+					step->release();
+				}
+			}
+		}
+	} while (_spOpenSteps.size() > 0);
+
+	if (_shortestPath.empty()) {
+		log("cannot move to there");
+	}
+	return result;
+}
+
+void BatleScene::insertInOpenSteps(ShortestPathStep *step)
+{
+	int stepFScore = step->getFScore();
+	ssize_t count = _spOpenSteps.size();
+	ssize_t i = 0;
+	for (; i < count; ++i)
+	{
+		if (stepFScore <= _spOpenSteps.at(i)->getFScore())
+		{
+			break;
+		}
+	}
+	_spOpenSteps.insert(i, step);
+}
+
+int BatleScene::computeHScoreFromCoordToCoord(const Vec2 &fromCoord, const Vec2 &toCoord)
+{
+	return abs(toCoord.x - fromCoord.x) + abs(toCoord.y - fromCoord.y);
+}
+
+int BatleScene::costToMoveFromStepToAdjacentStep(const ShortestPathStep *fromStep, const ShortestPathStep *toStep)
+{
+	return ((fromStep->getPosition().x != toStep->getPosition().x)&& (fromStep->getPosition().y != toStep->getPosition().y)) ? 14 : 10;
+}
+
+ssize_t BatleScene::getStepIndex(const Vector<ShortestPathStep*> &steps, const ShortestPathStep *step)
+{
+	for (ssize_t i = 0; i < steps.size(); ++i)
+	{
+		if (steps.at(i)->isEqual(step))
+		{
+			return i;
+		}
+	}
+	return -1;
+}
+
+bool BatleScene::isValidTileCoord(Vec2 &tileCoord)
+{
+	if (tileCoord.x < 0 || tileCoord.y < 0 ||
+		tileCoord.x >= _myMap->getMapSize().width ||
+		tileCoord.y >= _myMap->getMapSize().height)
+	{
+		return false;
+	}
+	else
+	{
+		return true;
+	}
+}
+bool BatleScene::isWallAtTileCoord(Vec2 &titleCoord)
+{
+	//if this title can not walk thought return true. Else return false
+	Vec2 point = getPositionForTitleCoord(titleCoord);
+	for (auto &sp : _allStone)
+	{
+		if (sp->getBoundingBox().containsPoint(point))
+		{
+			return true;
+		}
+	}
+
+	return false;
+}
+
+PointArray * BatleScene::allWalkableTitlesCoordForTitleCoord(Vec2 tileCoord)
+{
+	PointArray *tmp = PointArray::create(8);
+
+	bool t = false;
+	bool l = false;
+	bool b = false;
+	bool r = false;
+
+	Vec2 p(tileCoord.x, tileCoord.y - 1);
+	if (isValidTileCoord(p) && !isWallAtTileCoord(p))
+	{
+		tmp->addControlPoint(p);
+		t = true;
+	}
+
+	p.setPoint(tileCoord.x - 1, tileCoord.y);
+	if (isValidTileCoord(p) && !isWallAtTileCoord(p))
+	{
+		tmp->addControlPoint(p);
+		l = true;
+	}
+
+	p.setPoint(tileCoord.x, tileCoord.y + 1);
+	if (isValidTileCoord(p) && !isWallAtTileCoord(p))
+	{
+		tmp->addControlPoint(p);
+		b = true;
+	}
+
+	p.setPoint(tileCoord.x + 1, tileCoord.y);
+	if (isValidTileCoord(p) && !isWallAtTileCoord(p))
+	{
+		tmp->addControlPoint(p);
+		r = true;
+	}
+
+	p.setPoint(tileCoord.x - 1, tileCoord.y - 1);
+	if (t && l && isValidTileCoord(p) && !isWallAtTileCoord(p))
+	{
+		tmp->addControlPoint(p);
+	}
+
+	p.setPoint(tileCoord.x - 1, tileCoord.y + 1);
+	if (b && l && isValidTileCoord(p) && !isWallAtTileCoord(p))
+	{
+		tmp->addControlPoint(p);
+	}
+
+	p.setPoint(tileCoord.x + 1, tileCoord.y - 1);
+	if (t && r && isValidTileCoord(p) && !isWallAtTileCoord(p))
+	{
+		tmp->addControlPoint(p);
+	}
+
+	p.setPoint(tileCoord.x + 1, tileCoord.y + 1);
+	if (b && r && isValidTileCoord(p) && !isWallAtTileCoord(p))
+	{
+		tmp->addControlPoint(p);
+	}
+	return tmp;
+}
+
+void BatleScene::constructPathAndStartAnimationFromStep(ShortestPathStep *step)
+{
+	_shortestPath.clear();
+	do
+	{
+		if (step->getParent())
+		{
+			_shortestPath.insert(0, step);
+		}
+		step = step->getParent(); 
+	} while (step);                
+	vector<Vec2> result = {};
+	for (const ShortestPathStep *s : _shortestPath)
+	{
+		log("%s", s->getDescription().c_str());
+		result.push_back(Vec2(s->getPosition().x* _myMap->getTileSize().width, s->getPosition().y * _myMap->getTileSize().height));
+	}
+	//animation
+	modeStepAction();
+}
+
+void BatleScene::modeStepAction()
+{
+	Vec2 curPos = getTitlePosForPosition(testObject->getPosition());
+	if (_shortestPath.size() == 0)
+	{
+		return;
+	}
+
+	ShortestPathStep *s = _shortestPath.at(0);
+
+	MoveTo *moveAction = MoveTo::create(0.1f, getPositionForTitleCoord(s->getPosition()));
+	CallFunc *moveCallback = CallFunc::create(CC_CALLBACK_0(BatleScene::modeStepAction, this));
+
+	_shortestPath.erase(0);
+
+	Sequence *moveSequence = Sequence::create(moveAction, moveCallback, nullptr);
+	moveSequence->setTag(1);
+	testObject->runAction(moveSequence);
+}
+
+
+BatleScene::ShortestPathStep::ShortestPathStep():
+_position(Vec2::ZERO),
+_gScore(0),
+_hScore(0),
+_parent(nullptr)
+{
+
+}
+
+BatleScene::ShortestPathStep::~ShortestPathStep()
+{
+
+}
+
+BatleScene::ShortestPathStep *BatleScene::ShortestPathStep::createWithPosition(const Vec2 pos)
+{
+	ShortestPathStep *pRet = new ShortestPathStep();
+	if (pRet && pRet->initWithPosition(pos))
+	{
+		pRet->autorelease();
+		return pRet;
+	}
+	else
+	{
+		CC_SAFE_DELETE(pRet);
+		return nullptr;
+	}
+}
+
+bool BatleScene::ShortestPathStep::initWithPosition(const Vec2 pos)
+{
+	setPosition(pos);
+	return true;
+}
+
+int BatleScene::ShortestPathStep::getFScore() const
+{
+	return this->getGScore() + this->getHScore();
+}
+
+bool BatleScene::ShortestPathStep::isEqual(const ShortestPathStep *other) const
+{
+	return this->getPosition() == other->getPosition();
+}
+
+std::string BatleScene::ShortestPathStep::getDescription() const
+{
+	return StringUtils::format("pos=[%.0f;%.0f]  g=%d  h=%d  f=%d",
+		this->getPosition().x, this->getPosition().y,
+		this->getGScore(), this->getHScore(), this->getFScore());
 }

@@ -67,6 +67,18 @@
     <Filter Include="src\UserSelectScene">
       <UniqueIdentifier>{dbe5f6e0-060a-449e-add1-f3522f40bc51}</UniqueIdentifier>
     </Filter>
+    <Filter Include="src\Server\API">
+      <UniqueIdentifier>{8a500135-6e30-46fa-90db-3d223acb2937}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\Model">
+      <UniqueIdentifier>{75e19c9d-6a66-42c5-80b2-d965896fac3a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\Model\data">
+      <UniqueIdentifier>{031c8eb7-0c26-4f36-a410-7a146b11f837}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\testPartFinding">
+      <UniqueIdentifier>{41110b2b-d0e3-4feb-89b3-23baea640e14}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -155,6 +167,15 @@
     </ClCompile>
     <ClCompile Include="..\Classes\UserSelectScene\UserSelectScene.cpp">
       <Filter>src\UserSelectScene</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Classes\Server\API\UserLoginServerAPI.cpp">
+      <Filter>src\Server\API</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Classes\Model\data\UserModel.cpp">
+      <Filter>src\Model\data</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Classes\testPartFinding\ShortPath.cpp">
+      <Filter>src\testPartFinding</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -247,6 +268,15 @@
     </ClInclude>
     <ClInclude Include="..\Classes\UserSelectScene\UserSelectScene.h">
       <Filter>src\UserSelectScene</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Classes\Server\API\UserLoginServerAPI.h">
+      <Filter>src\Server\API</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Classes\Model\data\UserModel.h">
+      <Filter>src\Model\data</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Classes\testPartFinding\ShortPath.h">
+      <Filter>src\testPartFinding</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

@@ -310,9 +310,8 @@ void ModeSelectScene::addTalkOther(const std::string& str){
 		Vec2(x, y + h),
 	};
 
-	this->addChild(draw);
 	draw->drawPolygon(points, 4, Color4F(0.5, 0, 0, 1), 1, Color4F(1, 0, 0, 1));
-
+	this->addChild(draw);
 	auto text = Text::create(str, "Meiryo", 40);
 	text->setTextHorizontalAlignment(TextHAlignment::LEFT);
 	text->setAnchorPoint(Point(0.0, 1.0));

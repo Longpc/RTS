@@ -13,6 +13,7 @@
 #include "cocostudio/CocoStudio.h"
 #include <time.h>
 #include "Server/Server.h"
+#include <string.h>
 
 #define MOVE_SPEED 250
 #define IMAGE_SCALE 0.6f
@@ -60,6 +61,11 @@
 
 #define ENEMY_RESPAW_ACTION_TAG 101
 #define BUFF_STATUS_TAG 102
+
+#define ENEMY_CONTACT_CATEGORY_BITMAP 0x00000101
+#define ENEMY_CONTACT_COLLISION_BITMAP 0x00000010
+#define ALLIED_CONTACT_CATEGORY_BITMAP 0x00000110
+#define ALLIED_CONTACT_COLLISION_BITMAP 0x00000001
 
 using namespace cocostudio;
 class BatleScene : public LayerBase
@@ -165,7 +171,6 @@ private:
 
 	int _currentPlayerTeamFlg = TEAM_FLG_BLUE;
 	int _currentEnemyTeamFlg = TEAM_FLG_RED;
-	Armature *testArmature;
 
 	//For battle result
 	vector<UserBattleInfo> _blueTeamInfo;
@@ -175,6 +180,17 @@ private:
 	int _alliedTeamTotalDead = 0;
 	int _enemyTeamTotalDead = 0;
 
+	/*For skill area moved logic*/
+	SkillInfoNew _onSelectSkillData;
+	bool _showSkillTargetFlag = false;
+
+	/*For skill status show*/
+	vector<string> _skillStatusImageList;
+	
+	vector<vector<string>> _enemyStatusImagePath;
+
+	/*Titled Map for Path finding and simple background*/
+	TMXTiledMap* _myMap;
 
 	///FUNCTIONS///////////////////////////////////////////////////////////////////////
 
@@ -188,13 +204,12 @@ private:
 	///CREATE UI CONTENT + PHYSIC WORLD///
 	virtual void createContent();
 	virtual void displaySkillMpInButton(Button *parent, int mp);
-	virtual Sprite* createBackground(Vec2 pos);
 	virtual void createPhysicBolder();
 	virtual Node* createHBolder();
 	virtual Node* createVBolder();
 	virtual void createRandomRock();
-	virtual void onPhysicContactBegin(const PhysicsContact &contact);
-
+	virtual bool onPhysicContactBegin(const PhysicsContact &contact);
+	virtual bool onPhysicContactPreSolve(PhysicsContact& contact, PhysicsContactPreSolve& solve);
 	///BUTTON CALLBACK///
 	virtual void nextButtonCallback(Ref *pSender, Widget::TouchEventType type);
 	virtual void menuButtonCallback(Ref *pSender, Widget::TouchEventType type);
@@ -228,7 +243,7 @@ private:
 	virtual void removeEnemyAttackDelayFlg(Ref *pSender, int index);
 
 	/*This function will be call when main character attack animation finished ( 0.5s)*/
-	virtual void characerAttackCallback();
+	virtual void characterAttackCallback();
 	/*This function will be called when enemy (as pSender) attack animation was finished*/
 	virtual void enemyAttackCallback(Ref *pSEnder, int index);
 	
@@ -266,7 +281,7 @@ private:
 	virtual void showCoolDown(Button *parentButton, int cooldownTime);
 
 	virtual void playSkill(SkillInfoNew skillData);
-	virtual vector<int> detectUnitInAoe(SkillInfoNew skill, int unitFlg);
+	virtual vector<int> detectUnitInAoe(SkillInfoNew skill, int unitFlg, bool drawFlg = true);
 
 	virtual void skillRestoreAction(SkillInfoNew skillInfo);
 	virtual void skillRestoreAll(SkillInfoNew skillInfo);
@@ -292,7 +307,7 @@ private:
 
 
 	virtual void getBattleInformationFromSocketIO(int sID);
-	virtual void senInformationToServer(int sID, string data);
+	virtual void sendInformationToServer(int sID, string data);
 
 	virtual void demoCallbackNotUserInlineFunction(Ref *pSender, vector<int> a);
 	virtual bool detectPointInTriangle(Vec2 point, vector<Vec2> points);
@@ -302,7 +317,7 @@ private:
 	virtual void saveDameInfo(int dame, int attackUnitId, int beAttackUnitId, int teamFlg);
 	virtual void saveKillDeadInfo(int killerId, int deadUnitId, int teamFlg);
 
-	virtual void displayUnitStatus(Sprite *parent, int statusType, SkillInfoNew skillInfo);
+	virtual void displayUnitStatus(Sprite *parent, int statusType, SkillInfoNew skillInfo, int spIndex = 0);
 	virtual Animation*  createStatusAnimation(string imagePath);
 
 	virtual void enemyUnitAutoMoveTest();
@@ -316,6 +331,49 @@ private:
 	virtual void createSorceryEffect(Sprite* spriteUnit, std::string eclipseFilePath);
 	virtual void removeSorceryEclipse(Ref* pSender);
 	virtual void removeEffect(Ref* pSender);
+
+	virtual void pushStatusImagePath(string imagepath, vector<string> &allImages);
+	virtual void removeStatusImagePath(string imagepath, vector<string> &allImages);
+	virtual void displayStatusInTime(Sprite* parent, vector<string> allImages);
+
+	virtual int findIndexOfString(vector<string> v, string element);
+
+	virtual Vec2 getTitlePosForPosition(Vec2 location);
+	virtual Vec2 getPositionForTitleCoord(Vec2 titleCoord);
+	virtual vector<Vec2> AStarPathFindingAlgorithm(Vec2 curentPos, Vec2 destinationPos);
+	virtual bool isValidTileCoord(Vec2 &titleCoord);
+	virtual bool isWallAtTileCoord(Vec2 &titleCoord);
+	virtual PointArray *allWalkableTitlesCoordForTitleCoord(Vec2 titleCoord);
+
+	class ShortestPathStep : public cocos2d::Object
+	{
+	public:
+		ShortestPathStep();
+		~ShortestPathStep();
+
+		static ShortestPathStep *createWithPosition(const Vec2 pos);
+		bool initWithPosition(const Vec2 pos);
+
+		int getFScore() const;
+		bool isEqual(const ShortestPathStep *other) const;
+		std::string getDescription() const;
+
+		CC_SYNTHESIZE(Vec2, _position, Position);
+		CC_SYNTHESIZE(int, _gScore, GScore);
+		CC_SYNTHESIZE(int, _hScore, HScore);
+		CC_SYNTHESIZE(ShortestPathStep*, _parent, Parent);
+	};
+
+	Vector<ShortestPathStep*> _spOpenSteps;
+	Vector<ShortestPathStep*> _spClosedSteps;
+	Vector<ShortestPathStep*> _shortestPath;
+
+	void insertInOpenSteps(ShortestPathStep *step);
+	int computeHScoreFromCoordToCoord(const Vec2 &fromCoord, const Vec2 &toCoord);
+	int costToMoveFromStepToAdjacentStep(const ShortestPathStep *fromStep, const ShortestPathStep *toStep);
+	ssize_t getStepIndex(const Vector<ShortestPathStep*> &steps, const ShortestPathStep *step);
+	void constructPathAndStartAnimationFromStep(ShortestPathStep *step);
+	void modeStepAction();
 };
 
 

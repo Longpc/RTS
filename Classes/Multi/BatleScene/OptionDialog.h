@@ -3,10 +3,6 @@
 
 #include "base/dialogBase/DialogBase.h"
 
-#define MOVE_AUTO 1
-#define MOVE_MANUAL 2
-#define MOVE_KEY "MOVE_MODE"
-
 class OptionDialog : public DialogBase
 {
 public:

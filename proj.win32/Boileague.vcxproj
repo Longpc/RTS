@@ -152,6 +152,7 @@ xcopy /Y /Q "$(EngineRoot)external\websockets\prebuilt\win32\*.*" "$(OutDir)"</C
     <ClCompile Include="..\Classes\dataController\SkillData\SkillData.cpp" />
     <ClCompile Include="..\Classes\dataController\UnitData\UnitData.cpp" />
     <ClCompile Include="..\Classes\HelloWorldScene.cpp" />
+    <ClCompile Include="..\Classes\Model\data\UserModel.cpp" />
     <ClCompile Include="..\Classes\ModeSelectScene\ModeSelectScene.cpp" />
     <ClCompile Include="..\Classes\Multi\BatleResultScene\BatleResultScene.cpp" />
     <ClCompile Include="..\Classes\Multi\BatleScene\BatleScene.cpp" />
@@ -163,7 +164,9 @@ xcopy /Y /Q "$(EngineRoot)external\websockets\prebuilt\win32\*.*" "$(OutDir)"</C
     <ClCompile Include="..\Classes\Multi\TeamSelectScene\MultiTeamSelectScene.cpp" />
     <ClCompile Include="..\Classes\Multi\UnitSelectScene\UnitDetailDialog.cpp" />
     <ClCompile Include="..\Classes\Multi\UnitSelectScene\UnitSelectScene.cpp" />
+    <ClCompile Include="..\Classes\Server\API\UserLoginServerAPI.cpp" />
     <ClCompile Include="..\Classes\Server\Server.cpp" />
+    <ClCompile Include="..\Classes\testPartFinding\ShortPath.cpp" />
     <ClCompile Include="..\Classes\UserSelectScene\UserSelectScene.cpp" />
     <ClCompile Include="main.cpp" />
   </ItemGroup>
@@ -184,6 +187,7 @@ xcopy /Y /Q "$(EngineRoot)external\websockets\prebuilt\win32\*.*" "$(OutDir)"</C
     <ClInclude Include="..\Classes\dataController\SkillData\SkillData.h" />
     <ClInclude Include="..\Classes\dataController\UnitData\UnitData.h" />
     <ClInclude Include="..\Classes\HelloWorldScene.h" />
+    <ClInclude Include="..\Classes\Model\data\UserModel.h" />
     <ClInclude Include="..\Classes\ModeSelectScene\ModeSelectScene.h" />
     <ClInclude Include="..\Classes\Multi\BatleResultScene\BatleResultScene.h" />
     <ClInclude Include="..\Classes\Multi\BatleScene\BatleScene.h" />
@@ -195,7 +199,9 @@ xcopy /Y /Q "$(EngineRoot)external\websockets\prebuilt\win32\*.*" "$(OutDir)"</C
     <ClInclude Include="..\Classes\Multi\TeamSelectScene\MultiTeamSelectScene.h" />
     <ClInclude Include="..\Classes\Multi\UnitSelectScene\UnitDetailDialog.h" />
     <ClInclude Include="..\Classes\Multi\UnitSelectScene\UnitSelectScene.h" />
+    <ClInclude Include="..\Classes\Server\API\UserLoginServerAPI.h" />
     <ClInclude Include="..\Classes\Server\Server.h" />
+    <ClInclude Include="..\Classes\testPartFinding\ShortPath.h" />
     <ClInclude Include="..\Classes\UserSelectScene\UserSelectScene.h" />
     <ClInclude Include="main.h" />
   </ItemGroup>

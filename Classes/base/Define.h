@@ -12,6 +12,7 @@ struct UserInfo
 {
 	string _name;
 	int _onTeam = 0;
+	int _id;
 };
 
 struct UnitInforNew 
@@ -134,6 +135,10 @@ enum SKILL_HELP_TYPE
 #define PI 3.1415926535897932385f
 #define DEG_RAD (PI / 180)
 #define RAD_DEG (180 / PI)
+#define APP_KEY "12345678"
 
+#define MOVE_AUTO 1
+#define MOVE_MANUAL 2
+#define MOVE_KEY "MOVE_MODE"
 
 #endif

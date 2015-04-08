@@ -97,6 +97,7 @@ void BatleResultScene::createContent()
 	_blueTeamButton->loadTextureNormal("image/tab/new/blue_team_tab.png");
 	_blueTeamButton->setPosition(Vec2(_blueTeamTabBackground->getPositionX() + _blueTeamTabBackground->getContentSize().width / 2 - _blueTeamButton->getContentSize().width / 2 - 10, _blueTeamTabBackground->getPositionY() - _blueTeamTabBackground->getContentSize().height/2 - 20));
 	_blueTeamButton->addTouchEventListener(CC_CALLBACK_2(BatleResultScene::tabButtonClickCallback, this));
+	_blueTeamButton->setTouchEnabled(false);
 	addChild(_blueTeamButton, 10);
 
 	_redTeamButton = Button::create();
@@ -126,6 +127,8 @@ void BatleResultScene::tabButtonClickCallback(Ref *pSender, Widget::TouchEventTy
 			_redTeamTabBackground->setVisible(false);
 			_blueTeamButton->loadTextureNormal("image/tab/new/blue_team_tab.png");
 			_redTeamButton->loadTextureNormal("image/tab/new/red_tab_disable.png");
+			_blueTeamButton->setEnabled(false);
+			_redTeamButton->setEnabled(true);
 			updateUnitSlot(_blueTeamInfo);
 		}
 		else {
@@ -134,6 +137,8 @@ void BatleResultScene::tabButtonClickCallback(Ref *pSender, Widget::TouchEventTy
 			_redTeamTabBackground->setVisible(true);
 			_blueTeamButton->loadTextureNormal("image/tab/new/blue_team_tab_disable.png");
 			_redTeamButton->loadTextureNormal("image/tab/new/red_team_tab.png");
+			_blueTeamButton->setEnabled(true);
+			_redTeamButton->setEnabled(false);
 			updateUnitSlot(_readTeamInfo);
 		}
 		

@@ -16,7 +16,7 @@ Effect::Effect() : _spriteAttack(nullptr)
 Effect::~Effect()
 {
 	_spriteAttack = nullptr;
-	unschedule(schedule_selector(Effect::updateAttackMove, this));
+	unschedule(schedule_selector(Effect::updateAttackMove));
 }
 
 
@@ -109,7 +109,7 @@ void Effect::onEnter()
 
 	if (_spriteAttack != nullptr)
 	{
-		schedule(schedule_selector(Effect::updateAttackMove, this), MOVE_TIME_INTERVAL);
+		schedule(schedule_selector(Effect::updateAttackMove), MOVE_TIME_INTERVAL);
 	}
 	else
 	{
@@ -139,7 +139,6 @@ void Effect::setTargetAttack(Sprite* attackSprite)
 
 void Effect::createEffectHeal(std::string plistEffectPath, int effectColor)
 {
-	log("Create Effect Restore");
 	ParticleSystemQuad* skillHealEffect = ParticleSystemQuad::create(plistEffectPath);
 	skillHealEffect->setPosition(Vec2::ZERO);
 	setColorEffect(skillHealEffect, effectColor);
@@ -153,7 +152,6 @@ void Effect::createEffectHeal(std::string plistEffectPath, int effectColor)
 
 void Effect::createEffectHelp(std::string plistEffectPath, int effectColor)
 {
-	log("Create Effect Help");
 	ParticleSystemQuad* skillHelpEffect = ParticleSystemQuad::create(plistEffectPath);
 	skillHelpEffect->setDuration(DELAY_HELP);
 	skillHelpEffect->setPosition(Vec2::ZERO);
@@ -165,7 +163,6 @@ void Effect::createEffectHelp(std::string plistEffectPath, int effectColor)
 
 void Effect::createEffectHelpDefence(std::string plistEffectPath, int effectColor)
 {
-	log("Create Effect Help Defence");
 	// Unit size (70x120)
 
 	// 4‚Â–Ê‚Ì–hŒä

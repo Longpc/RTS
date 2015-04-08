@@ -7,6 +7,8 @@
 #include "Multi/UnitSelectScene/UnitSelectScene.h"
 #include "Multi/MemberFullDialogLayer.h"
 
+#include "Model/data/UserModel.h"
+
 ///Include library header here///
 #include <string.h>
 #include "extensions/cocos-ext.h"

@@ -32,7 +32,7 @@ void TestServer::destroyInstance()
 
 bool TestServer::init()
 {
-	_valueDict = SocketIO::connect("ws://192.168.0.126:3000/", *this);
+	_valueDict = SocketIO::connect("ws://192.168.0.126:8080/", *this);
 	CCASSERT(_valueDict, "Error cannot create Socket IO");
 	return true;
 }
@@ -63,6 +63,7 @@ void TestServer::startConnectWithHandler(string name, SIOEvent event)
 	if (_valueDict)
 	{
 		_valueDict->on(name.c_str(), event);
+		return;
 	}
 	log("Failed in start connect");
 }
@@ -72,7 +73,10 @@ void TestServer::sendMessageWithName(string name, string message)
 	if (_valueDict) {
 		_valueDict->emit(name.c_str(), message.c_str());
 	}
-	log("Failed in send message");
+	else {
+		log("Failed in send message");
+	}
+	
 }
 
 void TestServer::onConnect(SIOClient* client)

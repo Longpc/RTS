@@ -17,12 +17,12 @@ bool MultiTeamSelectScene::init()
 		return false;
 	}
 
-	
+	UserInfo a = UserModel::getInstance()->getUserInfo();
 	if (_defaultLabel != nullptr) {
 		_defaultLabel->setString("チームを選択してください");
 	}
 	//getUserInfor
-	_userNameLabel->setString("テスト");
+	_userNameLabel->setString(a._name.c_str());
 	auto blueTeamBg = Sprite::create("image/screen/base.png");
 	blueTeamBg->setPosition(Vec2(_visibleSize.width / 2,10+(_visibleSize.height - 100) * 1 / 4));
 	addChild(blueTeamBg, 1);
