@@ -32,7 +32,7 @@ void TestServer::destroyInstance()
 
 bool TestServer::init()
 {
-	_valueDict = SocketIO::connect("ws://192.168.0.126:8080/", *this);
+	_valueDict = SocketIO::connect(Configuration::getInstance()->getValue("NodeJSServer").asString().c_str(), *this);
 	CCASSERT(_valueDict, "Error cannot create Socket IO");
 	return true;
 }

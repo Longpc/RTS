@@ -156,6 +156,7 @@ void BatleScene::createContent()
 			child = static_cast<SpriteBatchNode*>(obj);
 			child->getTexture()->setAntiAliasTexParameters();
 		}
+
 	}
 	else {
 		log("null");
@@ -236,10 +237,11 @@ void BatleScene::createContent()
 	string path = _moveImagePath;
 	path.append("unit_00_08_1.png");
 	testObject = Sprite::create(path.c_str());
+	testObject->setAnchorPoint(Vec2::ANCHOR_MIDDLE_BOTTOM);
 	_battleBackround->addChild(testObject, MID);
 	testObject->setPosition(Vec2(_visibleSize.width, 100));
 	testObject->setScale(IMAGE_SCALE);
-	testObject->setPhysicsBody(PhysicsBody::createCircle(30, PhysicsMaterial(1, 0, 1),Vec2(0,-50)));
+	testObject->setPhysicsBody(PhysicsBody::createCircle(30, PhysicsMaterial(1, 0, 1)/*,Vec2(0,-50)*/));
 	testObject->getPhysicsBody()->setRotationEnable(false);
 	testObject->getPhysicsBody()->setContactTestBitmask(0x1);
 	testObject->getPhysicsBody()->setCategoryBitmask(ALLIED_CONTACT_CATEGORY_BITMAP);
@@ -341,9 +343,9 @@ void BatleScene::createContent()
 	_selectRect->setPosition(Vec2(_miniMap->getContentSize().width / 2, _miniMap->getContentSize().height / 2 + _selectRect->getContentSize().height / 2));
 	_miniMap->addChild(_selectRect, 2);
 
-	_mainCharacterAvata = Sprite::create("mini_icon.png");
-	_mainCharacterAvata->setPosition(Vec2(_selectRect->getContentSize().width / 2, _selectRect->getContentSize().height / 2));
-	_selectRect->addChild(_mainCharacterAvata);
+	_mainCharacterIconInMiniMap = Sprite::create("mini_icon.png");
+	_mainCharacterIconInMiniMap->setPosition(Vec2(_selectRect->getContentSize().width / 2, _selectRect->getContentSize().height / 2));
+	_selectRect->addChild(_mainCharacterIconInMiniMap);
 
 
 
@@ -441,7 +443,7 @@ void BatleScene::createContent()
 		sp->setPosition(Vec2(_visibleSize.width +(i-1) * 70, 2 * _visibleSize.height-100));
 		sp->setScale(IMAGE_SCALE);
 		sp->setTag(i);
-		sp->setPhysicsBody(PhysicsBody::createCircle(30, PhysicsMaterial(1, 0, 0), Vec2(0, -50)));
+		sp->setPhysicsBody(PhysicsBody::createCircle(30, PhysicsMaterial(1, 0, 0)/*, Vec2(0, -50)*/));
 		sp->getPhysicsBody()->setRotationEnable(false);
 		sp->getPhysicsBody()->setGravityEnable(false);
 		sp->getPhysicsBody()->setContactTestBitmask(0x1);
@@ -647,6 +649,7 @@ void BatleScene::update(float delta)
 		enemyUnitAutoMoveTest();
 	}
 
+	fakeZOrder();
 }
 void BatleScene::checkForAutoAttack()
 {
@@ -933,7 +936,7 @@ bool BatleScene::onTouchBegan(Touch *touch, Event *unused_event)
 
 void BatleScene::onTouchMoved(Touch *touch, Event *unused_event)
 {
-	fakeZOrder();
+	//fakeZOrder();
 	auto distanVector = touch->getLocation() - _touchStartPoint;
 	if (distanVector.length() < 200) {
 		_touchMoveEndSprite->setPosition(touch->getLocation());
@@ -953,10 +956,10 @@ void BatleScene::onTouchMoved(Touch *touch, Event *unused_event)
 	testObject->stopActionByTag(_currentAttackActionTag);
 	if (_moveMode == MOVE_MANUAL) {
 		testObject->getPhysicsBody()->setVelocity(Vect(_mainCharacterData.move_speed*cos(distanVector.getAngle()), _mainCharacterData.move_speed*sin(distanVector.getAngle())));
-		_mainCharacterAvata->setRotation(-(distanVector.getAngle() * RAD_DEG) + 90);
+		_mainCharacterIconInMiniMap->setRotation(-(distanVector.getAngle() * RAD_DEG) + 90);
 
 		//log("%f", _mini_Icon->getRotation());
-		int direc = detectDirectionBaseOnTouchAngle(_mainCharacterAvata->getRotation());
+		int direc = detectDirectionBaseOnTouchAngle(_mainCharacterIconInMiniMap->getRotation());
 		if (direc != 0) actionCharacter(direc, testObject);
 	}
 	else {
@@ -998,7 +1001,7 @@ void BatleScene::actionCharacter(int directionId, Sprite *characterSprite)
 			return;
 		}
 	}
-	characterSprite->stopActionByTag(_currentMoveActionTag);
+	characterSprite->stopAllActionsByTag(_currentMoveActionTag);
 	auto action = Animate::create(createMoveAnimationWithDefine(directionId, _moveImagePath));
 	auto repeat = RepeatForever::create(action);
 	repeat->setTag(directionId);
@@ -1043,7 +1046,7 @@ void BatleScene::onTouchEnded(Touch *touch, Event *unused_event)
 			_touchMoveEndSprite->setVisible(false);
 	}
 	else {
-		fakeZOrder();
+		//fakeZOrder();
 		_touchMoveBeginSprite->setVisible(false);
 		_touchMoveEndSprite->setVisible(false);
 		auto distanVector = touch->getLocation() - Vec2(_visibleSize / 2);
@@ -1182,7 +1185,7 @@ void BatleScene::createRandomRock()
 		body->setContactTestBitmask(0x1);
 		sp->setPhysicsBody(body);
 		sp->setAnchorPoint(Vec2::ANCHOR_MIDDLE);
-		
+		sp->setTag(2);
 		sp->setPosition(Vec2(random(0.1f, 0.9f)*_visibleSize.width * 2,random(0.1f,0.9f)*_visibleSize.height*2));
 		_allStone.push_back(sp);
 		_battleBackround->addChild(_allStone.back(),ceil(_visibleSize.height * 3 - sp->getPositionY()));
@@ -1198,6 +1201,7 @@ void BatleScene::createRandomRock()
 		body->setContactTestBitmask(0x1);
 		tree->setPhysicsBody(body);
 		tree->setAnchorPoint(Vec2::ANCHOR_MIDDLE_BOTTOM);
+		tree->setTag(1);
 		tree->setPosition(Vec2(random(0.1f, 0.9f)*_visibleSize.width * 2, random(0.1f, 0.9f)*_visibleSize.height * 2));
 		_allStone.push_back(tree);
 		_battleBackround->addChild(_allStone.back(),ceil(_visibleSize.height*3 - tree->getPositionY()));
@@ -1208,12 +1212,16 @@ void BatleScene::fakeZOrder()
 {
 	for (auto &stone : _allStone)
 	{
-		if (stone->getPositionY() /*- stone->getContentSize().height/2*/ < testObject->getPositionY())
+		if (caculAvgAngle(testObject->getPositionY() /*- testObject->getBoundingBox().size.height/2*/,stone->getPositionY()/*- stone->getBoundingBox().size.height/2*/) /*&& stone->getBoundingBox().intersectsRect(testObject->getBoundingBox())*/)
 		{
-			stone->setLocalZOrder(HIGH);
-		}
-		else {
-			stone->setLocalZOrder(LOW);
+			if (testObject->getPositionY()/* - testObject->getBoundingBox().size.height / 2 */> stone->getPositionY()/* - stone->getBoundingBox().size.height / 2*/)
+			{
+				testObject->setLocalZOrder(stone->getLocalZOrder() - 1);
+			}
+			else {
+				testObject->setLocalZOrder(stone->getLocalZOrder()+ 1);
+			}
+			break;
 		}
 	}
 	for (auto &enemy : _allEnemyUnitSprite)
@@ -2454,8 +2462,8 @@ void BatleScene::enemyUnitAutoMoveTest()
 			continue;
 		}
 		float angle = random(-90.0f,270.0f);
-		body->setVelocity(Vect(_mainCharacterData.move_speed*cos(angle), _mainCharacterData.move_speed*sin(angle)));
-		int direc = detectDirectionBaseOnTouchAngle(_mainCharacterAvata->getRotation());
+		body->setVelocity(Vect(_allEnemyUnitData[i].move_speed*cos(angle), _allEnemyUnitData[i].move_speed*sin(angle)));
+		int direc = detectDirectionBaseOnTouchAngle(angle);
 		if (direc != 0) actionCharacterCopy(direc,_allEnemyUnitSprite[i]);
 	}
 }
@@ -2692,7 +2700,7 @@ vector<Vec2> BatleScene::AStarPathFindingAlgorithm(Vec2 curentPos, Vec2 destinat
 	//Rock, tree check
 	log("From: %f, %f:", fromTitleCoord.x, fromTitleCoord.y);
 	log("To: %f, %f", desTitleCoord.x, desTitleCoord.y);
-	if (isWallAtTileCoord(desTitleCoord) || !isValidTileCoord(desTitleCoord))
+	if (!isValidTileCoord(desTitleCoord)|| isWallAtTileCoord(desTitleCoord))
 	{
 		log("you cannot move there");
 		return result;
@@ -2700,7 +2708,7 @@ vector<Vec2> BatleScene::AStarPathFindingAlgorithm(Vec2 curentPos, Vec2 destinat
 	_spClosedSteps.clear();
 	_spOpenSteps.clear();
 	_shortestPath.clear();
-
+	schedule(schedule_selector(BatleScene::countTime));
 	insertInOpenSteps(ShortestPathStep::createWithPosition(fromTitleCoord));
 
 	do 
@@ -2712,6 +2720,9 @@ vector<Vec2> BatleScene::AStarPathFindingAlgorithm(Vec2 curentPos, Vec2 destinat
 		_spOpenSteps.erase(0);
 
 		if (curStep->getPosition() == desTitleCoord) {
+			unschedule(schedule_selector(BatleScene::countTime));
+			log("Cost Time: %f", calCulTime);
+			calCulTime = 0.0f;
 			log("Here the path");
 			//
 			constructPathAndStartAnimationFromStep(curStep);
@@ -2812,15 +2823,33 @@ bool BatleScene::isValidTileCoord(Vec2 &tileCoord)
 bool BatleScene::isWallAtTileCoord(Vec2 &titleCoord)
 {
 	//if this title can not walk thought return true. Else return false
-	Vec2 point = getPositionForTitleCoord(titleCoord);
-	for (auto &sp : _allStone)
+	auto point = getPositionForTitleCoord(titleCoord);
+	for (auto &sp :_allStone)
+ 	{
+		Rect checkBox = Rect(sp->getBoundingBox().getMinX() + 20, sp->getBoundingBox().getMinY(), sp->getBoundingBox().size.width - 40, sp->getBoundingBox().size.height / 2 * sp->getTag());
+		if (checkBox.containsPoint(point)) return true;
+ 	}
+	//check for tower
+	if ((_allAlliedUnitSprite.back()->getPosition() - point).length() <_allAlliedUnitSprite.back()->getBoundingBox().size.width/2)
 	{
-		if (sp->getBoundingBox().containsPoint(point))
-		{
+		return true;
+	}
+	if ((_allEnemyUnitSprite.back()->getPosition() - point).length() < _allEnemyUnitSprite.back()->getBoundingBox().size.width / 2)
+	{
+		return true;
+	}
+	//check EnemyRestoreArea
+	if (_currentPlayerTeamFlg == TEAM_FLG_BLUE){
+		if (Rect(_visibleSize.width - 100, _visibleSize.height * 2 - 150, 200, 150).containsPoint(point)) {
 			return true;
 		}
 	}
-
+	else {
+		if (Rect(_visibleSize.width - 100, 0, 200, 150).containsPoint(point)) {
+			return true;
+		}
+	}
+	//
 	return false;
 }
 
@@ -2905,27 +2934,45 @@ void BatleScene::constructPathAndStartAnimationFromStep(ShortestPathStep *step)
 		result.push_back(Vec2(s->getPosition().x* _myMap->getTileSize().width, s->getPosition().y * _myMap->getTileSize().height));
 	}
 	//animation
-	modeStepAction();
+	testObject->stopAllActionsByTag(AUTO_MOVE_ACTION_TAG);
+	moveStepAction();
 }
 
-void BatleScene::modeStepAction()
+void BatleScene::moveStepAction()
 {
+	//fakeZOrder();
 	Vec2 curPos = getTitlePosForPosition(testObject->getPosition());
 	if (_shortestPath.size() == 0)
 	{
+		testObject->stopAllActionsByTag(_currentMoveActionTag);
 		return;
 	}
 
 	ShortestPathStep *s = _shortestPath.at(0);
 
-	MoveTo *moveAction = MoveTo::create(0.1f, getPositionForTitleCoord(s->getPosition()));
-	CallFunc *moveCallback = CallFunc::create(CC_CALLBACK_0(BatleScene::modeStepAction, this));
+	Vec2 desPos = getPositionForTitleCoord(s->getPosition());
+	Vec2 distanVector = desPos - testObject->getPosition();
+	float time = distanVector.length() / _mainCharacterData.move_speed;
+	MoveTo *moveAction = MoveTo::create(time, desPos );
+	_mainCharacterIconInMiniMap->setRotation(-(distanVector.getAngle() * RAD_DEG) + 90);
+
+	//log("%f", _mini_Icon->getRotation());
+	int direc = detectDirectionBaseOnTouchAngle(_mainCharacterIconInMiniMap->getRotation());
+	if (direc != 0) actionCharacter(direc, testObject);
+
+	CallFunc *moveCallback = CallFunc::create(CC_CALLBACK_0(BatleScene::moveStepAction, this));
 
 	_shortestPath.erase(0);
 
 	Sequence *moveSequence = Sequence::create(moveAction, moveCallback, nullptr);
-	moveSequence->setTag(1);
+	moveSequence->setTag(AUTO_MOVE_ACTION_TAG);
 	testObject->runAction(moveSequence);
+}
+
+void BatleScene::countTime(float dt)
+{
+	log("%f", dt);
+	calCulTime += dt;
 }
 
 

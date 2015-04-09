@@ -94,7 +94,7 @@ private:
 	Label *_timeViewLabel;
 	Sprite *_miniMap;
 	Sprite *_selectRect;
-	Sprite *_mainCharacterAvata;
+	Sprite *_mainCharacterIconInMiniMap;
 
 	Node *_battleBackround;
 
@@ -373,7 +373,10 @@ private:
 	int costToMoveFromStepToAdjacentStep(const ShortestPathStep *fromStep, const ShortestPathStep *toStep);
 	ssize_t getStepIndex(const Vector<ShortestPathStep*> &steps, const ShortestPathStep *step);
 	void constructPathAndStartAnimationFromStep(ShortestPathStep *step);
-	void modeStepAction();
+	void moveStepAction();
+
+	void countTime(float dt);
+	float calCulTime = 0.0f;
 };
 
 

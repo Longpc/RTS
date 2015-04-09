@@ -140,5 +140,6 @@ enum SKILL_HELP_TYPE
 #define MOVE_AUTO 1
 #define MOVE_MANUAL 2
 #define MOVE_KEY "MOVE_MODE"
+#define AUTO_MOVE_ACTION_TAG 9876
 
 #endif
