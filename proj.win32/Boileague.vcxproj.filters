@@ -73,6 +73,9 @@
     <Filter Include="src\Model\data">
       <UniqueIdentifier>{031c8eb7-0c26-4f36-a410-7a146b11f837}</UniqueIdentifier>
     </Filter>
+    <Filter Include="src\Server\API">
+      <UniqueIdentifier>{cd44baf9-4692-416d-a45c-7398e5d96e8f}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -164,6 +167,18 @@
     </ClCompile>
     <ClCompile Include="..\Classes\Model\data\UserModel.cpp">
       <Filter>src\Model\data</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Classes\Server\API\ListUnitPHPAPI.cpp">
+      <Filter>src\Server\API</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Classes\Server\API\HttpClientbase.cpp">
+      <Filter>src\Server\API</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Classes\Server\API\ListUserPHPAPI.cpp">
+      <Filter>src\Server\API</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Classes\Server\API\UserLoginPHPAPI.cpp">
+      <Filter>src\Server\API</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -259,6 +274,18 @@
     </ClInclude>
     <ClInclude Include="..\Classes\Model\data\UserModel.h">
       <Filter>src\Model\data</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Classes\Server\API\ListUnitPHPAPI.h">
+      <Filter>src\Server\API</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Classes\Server\API\HttpClientBase.h">
+      <Filter>src\Server\API</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Classes\Server\API\ListUserPHPAPI.h">
+      <Filter>src\Server\API</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Classes\Server\API\UserLoginPHPAPI.h">
+      <Filter>src\Server\API</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

@@ -17,7 +17,7 @@
 		<key>APIServer</key>
 		<string>http://192.168.0.126/PhpProject1/</string>
 		<key>NodeJSServer</key>
-		<string>ws://54.65.8.104:4123/</string>
+		<string>ws://192.168.0.126:8080/</string>
 	</dict>
 	<key>metadata</key>
 	<dict>

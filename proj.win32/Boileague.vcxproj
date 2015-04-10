@@ -164,6 +164,10 @@ xcopy /Y /Q "$(EngineRoot)external\websockets\prebuilt\win32\*.*" "$(OutDir)"</C
     <ClCompile Include="..\Classes\Multi\TeamSelectScene\MultiTeamSelectScene.cpp" />
     <ClCompile Include="..\Classes\Multi\UnitSelectScene\UnitDetailDialog.cpp" />
     <ClCompile Include="..\Classes\Multi\UnitSelectScene\UnitSelectScene.cpp" />
+    <ClCompile Include="..\Classes\Server\API\HttpClientbase.cpp" />
+    <ClCompile Include="..\Classes\Server\API\ListUnitPHPAPI.cpp" />
+    <ClCompile Include="..\Classes\Server\API\ListUserPHPAPI.cpp" />
+    <ClCompile Include="..\Classes\Server\API\UserLoginPHPAPI.cpp" />
     <ClCompile Include="..\Classes\Server\Server.cpp" />
     <ClCompile Include="..\Classes\UserSelectScene\UserSelectScene.cpp" />
     <ClCompile Include="main.cpp" />
@@ -197,6 +201,10 @@ xcopy /Y /Q "$(EngineRoot)external\websockets\prebuilt\win32\*.*" "$(OutDir)"</C
     <ClInclude Include="..\Classes\Multi\TeamSelectScene\MultiTeamSelectScene.h" />
     <ClInclude Include="..\Classes\Multi\UnitSelectScene\UnitDetailDialog.h" />
     <ClInclude Include="..\Classes\Multi\UnitSelectScene\UnitSelectScene.h" />
+    <ClInclude Include="..\Classes\Server\API\UserLoginPHPAPI.h" />
+    <ClInclude Include="..\Classes\Server\API\HttpClientBase.h" />
+    <ClInclude Include="..\Classes\Server\API\ListUnitPHPAPI.h" />
+    <ClInclude Include="..\Classes\Server\API\ListUserPHPAPI.h" />
     <ClInclude Include="..\Classes\Server\Server.h" />
     <ClInclude Include="..\Classes\UserSelectScene\UserSelectScene.h" />
     <ClInclude Include="main.h" />

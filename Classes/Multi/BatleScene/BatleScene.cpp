@@ -1174,9 +1174,11 @@ void BatleScene::changeAnimationImagePathByUnitId(int unitId)
 
 void BatleScene::createRandomRock()
 {
+	Texture2D *textureStone = Director::getInstance()->getTextureCache()->addImage("stone.png");
+	Texture2D *textureTree = Director::getInstance()->getTextureCache()->addImage("tree.png");
 	for (int i = 1; i < 6; i++)
 	{
-		auto sp = Sprite::create("stone.png");
+		auto sp = Sprite::createWithTexture(textureStone);
 		MyBodyParser::getInstance()->parseJsonFile("json/stone.json");
 		auto body = MyBodyParser::getInstance()->bodyFormJson(sp, "stone");
 		body->setDynamic(false);
@@ -1192,7 +1194,7 @@ void BatleScene::createRandomRock()
 	}
 	for (int i = 1; i < 6; i++)
 	{
-		auto tree = Sprite::create("tree.png");
+		auto tree = Sprite::createWithTexture(textureTree);
 		MyBodyParser::getInstance()->parseJsonFile("json/tree.json");
 		auto body = MyBodyParser::getInstance()->bodyFormJson(tree, "tree");
 		body->setDynamic(false);
@@ -2404,6 +2406,7 @@ Animation* BatleScene::createStatusAnimation(string imagePath)
 	animation->setDelayPerUnit(STATUS_DELAY_TIME);
 	animation->setRestoreOriginalFrame(true);
 	animation->setLoops(true);
+	animation->autorelease();
 	return animation;
 }
 

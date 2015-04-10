@@ -16,7 +16,6 @@ bool MultiTeamSelectScene::init()
 	if (!LayerBase::init()) {
 		return false;
 	}
-
 	UserInfo a = UserModel::getInstance()->getUserInfo();
 	if (_defaultLabel != nullptr) {
 		_defaultLabel->setString("チームを選択してください");

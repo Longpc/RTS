@@ -24,10 +24,10 @@ class MYCLASS_DECLSPEC UserModel : public Ref
 {
 public:
 	static UserModel *getInstance();
-	UserInfo getUserInfo();
-	void setUserInfo(UserInfo ui);
+	CC_SYNTHESIZE(UserInfo, _userInfo, UserInfo);
+	CC_SYNTHESIZE(vector<UnitInforNew>, _listUnit, UserUnitsInfo);
+
 private:
 	static UserModel *s_UserModel;
-	UserInfo _userInfo;
 };
 #endif

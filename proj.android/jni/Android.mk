@@ -36,7 +36,10 @@ LOCAL_SRC_FILES := hellocpp/main.cpp \
 				   ../../Classes/base/baseButton/ClippingButtonBase.cpp \
 				   ../../Classes/Server/Server.cpp \
 				   ../../Classes/UserSelectScene/UserSelectScene.cpp \
-				   ../../Classes/Model/data/UserModel.cpp
+				   ../../Classes/Model/data/UserModel.cpp \
+				   ../../Classes/Server/API/HttpClientbase.cpp \
+				   ../../Classes/Server/API/ListUserPHPAPI.cpp \
+				   ../../Classes/Server/API/UserLoginPHPAPI.cpp
 
 LOCAL_C_INCLUDES := $(LOCAL_PATH)/../../Classes
 
