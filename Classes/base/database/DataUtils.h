@@ -5,6 +5,14 @@
 #include "cocos2d.h"
 #include "extensions/cocos-ext.h"
 
+#include "base/Define.h"
+
+#include <string>
+#include "json/rapidjson.h"
+#include "json/document.h"
+#include "json/writer.h"
+#include "json/stringbuffer.h"
+
 USING_NS_CC;
 USING_NS_CC_EXT;
 using namespace std;
@@ -27,7 +35,8 @@ public:
 	*/
 	static char* MultiByteToUTF8(const char* src);
 
-
+	/*Convert UnitInfoNewTo Json Value*/
+	static rapidjson::Document::GenericValue& convertUnitDataToJsonObject(UnitInforNew unitData, rapidjson::Document::AllocatorType& allo);
 };
 
 #endif

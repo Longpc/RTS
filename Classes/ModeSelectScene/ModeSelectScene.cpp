@@ -76,7 +76,7 @@ bool ModeSelectScene::init()
 // 	//CCLOG("----> on hello");
  	//_client->on("hello", CC_CALLBACK_2(ModeSelectScene::onReceiveEvent, this));
 
-	auto sv = TestServer::getInstance();
+	auto sv = NodeServer::getInstance();
 	sv->startConnectWithHandler("hello", CC_CALLBACK_2(ModeSelectScene::onReceiveEvent, this));
 	return true;
 }
@@ -244,7 +244,7 @@ void ModeSelectScene::textFieldEvent(Ref *pSender, TextField::EventType type)
 
 		sendText = "[{\"value\":\"" + text->getStringValue() + "\"}]";
 		//_client->emit("hello", sendText);
-		TestServer::getInstance()->sendMessageWithName("hello", sendText);
+		NodeServer::getInstance()->sendMessageWithName("hello", sendText);
 		addTalkPlayer(text->getString());
 		break;
 	default:

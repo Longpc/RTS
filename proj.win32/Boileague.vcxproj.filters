@@ -180,6 +180,9 @@
     <ClCompile Include="..\Classes\Server\API\UserLoginPHPAPI.cpp">
       <Filter>src\Server\API</Filter>
     </ClCompile>
+    <ClCompile Include="..\Classes\Server\API\BattleAPI.cpp">
+      <Filter>src\Server\API</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="main.h">
@@ -285,6 +288,9 @@
       <Filter>src\Server\API</Filter>
     </ClInclude>
     <ClInclude Include="..\Classes\Server\API\UserLoginPHPAPI.h">
+      <Filter>src\Server\API</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Classes\Server\API\BattleAPI.h">
       <Filter>src\Server\API</Filter>
     </ClInclude>
   </ItemGroup>

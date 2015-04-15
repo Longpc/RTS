@@ -22,19 +22,19 @@ using namespace std;
 # define MYCLASS_DECLSPEC CC_DLL
 #endif
 
-class MYCLASS_DECLSPEC TestServer : public Ref,public SocketIO::SIODelegate
+class MYCLASS_DECLSPEC NodeServer : public Ref,public SocketIO::SIODelegate
 {
 public:
 
 	/** returns a shared instance of TestServer */
-	static TestServer *getInstance();
+	static NodeServer *getInstance();
 
 	/** purge the shared instance of TestServer */
 	static void destroyInstance();
 
 
 public:
-	virtual ~TestServer();
+	virtual ~NodeServer();
 
 	bool init();
 
@@ -45,8 +45,8 @@ public:
 	void sendMessageWithName(string name, string message);
 	string getString();
 private:
-	TestServer(void);
-	static TestServer    *s_sharedTestServer;
+	NodeServer(void);
+	static NodeServer    *s_sharedTestServer;
 	static std::string		s_configfile;
 
 	virtual void onConnect(SIOClient* client);

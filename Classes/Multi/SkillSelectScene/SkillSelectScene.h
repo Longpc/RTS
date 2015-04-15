@@ -7,6 +7,9 @@
 #include "Multi/BatleScene/BatleScene.h"
 #include "base/baseButton/ClippingButtonBase.h"
 
+#include "Server/Server.h"
+#include "Model/data/UserModel.h"
+
 class SkillSelectScene : public LayerBase
 {
 public:

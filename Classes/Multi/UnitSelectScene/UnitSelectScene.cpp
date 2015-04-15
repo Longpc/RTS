@@ -142,6 +142,15 @@ void MultiUnitSelectScene::onTouchUnitSlot3(Ref *pSender, Widget::TouchEventType
 
 void MultiUnitSelectScene::onSelectUnit(int unitId)
 {
+	auto a = UserModel::getInstance()->getUserInfo();
+	string data = "";
+	data.append("{\"room_id\":\"").append(DataUtils::numberToString(UserModel::getInstance()->getRoomId())).append("\",\"team_id\":\"").append(DataUtils::numberToString(UserModel::getInstance()->getTeamId())).append("\",\"user_id\":\"").append(DataUtils::numberToString(a._id)).append("\",\"unit_id\":\"").append(DataUtils::numberToString(unitId)).append("\"}");
+	auto client = NodeServer::getInstance()->getClient();
+	client->emit("connect_select_unit", data.c_str());
+	client->on("connect_select_unit_end", [&](SIOClient* client, const std::string& data) {
+		log("select unit end data: %s", data.c_str());
+	});
+	
 	switch (_onSelectedSlot)
 	{
 	case 1:
@@ -355,6 +364,7 @@ void MultiUnitSelectScene::decideCallBack(Ref *pSender, Widget::TouchEventType t
 	case cocos2d::ui::Widget::TouchEventType::BEGAN:
 	{
 		_decidedUnitId = _allUnitInfoNew[_onSelectedUnitTag].id;
+		UserModel::getInstance()->setUserUnitsInfo(_allUnitInfoNew[_onSelectedUnitTag]);
 		onSelectUnit(_onSelectedUnitTag);
 		_onTouchDisable = false;
 		break;
@@ -398,6 +408,8 @@ void MultiUnitSelectScene::nextButtonCallback(Ref *pSender, Widget::TouchEventTy
 	case cocos2d::ui::Widget::TouchEventType::ENDED:
 	{
 		if (_decidedUnitId == 0) break;
+
+		UserModel::getInstance()->setSelectedUnitId(_decidedUnitId);
 		Director::getInstance()->replaceScene(TransitionMoveInR::create(SCREEN_TRANSI_DELAY, SkillSelectScene::createScene(_decidedUnitId)));
 		break;
 	}

@@ -86,9 +86,11 @@ void UserSelect::unitSelectButtonClick(Ref *pSender, Widget::TouchEventType type
 	{
 		auto bt = (Button*)pSender;
 		UserModel::getInstance()->setUserInfo(_userList[bt->getTag()]);
+		UserModel::getInstance()->setRoomId(random(1, 5));
 		UserLoginAPI::getInstance()->setLoginCompletedCallback([&](){
 			log("Login Completed");
 		});
+		
 		Director::getInstance()->replaceScene(TransitionMoveInR::create(SCREEN_TRANSI_DELAY, MultiTeamSelectScene::createScene(_userList[bt->getTag()]._id)));
 		break;
 	}

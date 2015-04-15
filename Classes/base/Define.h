@@ -25,7 +25,7 @@ struct UnitInforNew
 	int mp_restore;
 	int attack_dame;
 	int defence;
-	int attack_sight;
+	int attack_range;
 	int move_speed;
 	int attr;
 	int type;

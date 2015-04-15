@@ -14,6 +14,7 @@
 #include <time.h>
 #include "Server/Server.h"
 #include <string.h>
+#include "Server/API/BattleAPI.h"
 
 #define MOVE_SPEED 250
 #define IMAGE_SCALE 0.6f
@@ -123,11 +124,10 @@ private:
 	vector<Sprite*> _allEnemyIconInMinimap;
 	vector<Slider*> _allEnemyHpBar;
 	vector<UnitInforNew> _allEnemyUnitData;
+	vector<int> _allEnemuUnitMaxHp;
 
 	vector<bool> _allEnemyAttachDelay;
 
-	vector<int> _allEnemyCurentHp;
-	vector<int> _allEnemyCurentMp;
 
 	int _currentAttackActionTag;
 	int _currentMoveActionTag;
@@ -144,6 +144,8 @@ private:
 	Sprite *testObject;
 	Node *_statusContainer;
 
+	int _mainCharacerMaxMp;
+
 	Slider *_mainCharacterMiniHpBar;
 	bool _onRespwanFlg = false;
 
@@ -154,13 +156,11 @@ private:
 	Label *_hpViewLabel;
 	Slider *_mainCharacterMpBar;
 	Label *_mpViewlabel;
-	int _characterCurentMp;
-
 	///ALLIED UNIT
 	vector<UnitInforNew> _allAlliedUnitData;
-	vector<int> _allAlliedUnitCurrentHp;
 	vector<Slider*> _allAlliedUnitHpBar;
 	vector<Sprite*> _allAlliedUnitSprite;
+	vector<int> _allAlliedUnitMaxHp;
 
 	float _helpAttackValue = 1.0f;
 	float _helpDefenceValue = 1.0f;

@@ -219,6 +219,22 @@ void SkillSelectScene::nextButtonCallback(Ref *pSender, Widget::TouchEventType t
 			}
 			skills.push_back(_allSkillInfo[var-1]);
 		}
+
+		auto a = UserModel::getInstance()->getUserInfo();
+		string data = "";
+		data.append("{\"room_id\":\"").append(DataUtils::numberToString(UserModel::getInstance()->getRoomId())).append("\",\"team_id\":\"").append(DataUtils::numberToString(UserModel::getInstance()->getTeamId())).append("\",\"user_id\":\"").append(DataUtils::numberToString(a._id)).append("\",\"unit_id\":\"").append(DataUtils::numberToString(_selectedUnitId)).append("\"");
+		data.append(",\"player_skill_list\": [");
+		data.append("{\"mst_skill_id\":\"").append(DataUtils::numberToString(skills[0].id)).append("\"}");
+		data.append(",");
+		data.append("{\"mst_skill_id\":\"").append(DataUtils::numberToString(skills[1].id)).append("\"}");
+		data.append("]");
+		data.append("}");
+		auto client = NodeServer::getInstance()->getClient();
+		client->emit("connect_select_skill", data.c_str());
+		client->on("connect_select_skill_end", [&](SIOClient* client, const std::string& data) {
+			log("select unit end data: %s", data.c_str());
+		});
+
 		Director::getInstance()->replaceScene(TransitionMoveInR::create(SCREEN_TRANSI_DELAY, BatleScene::createScene(_selectedUnitId,skills)));
 		break;
 	}

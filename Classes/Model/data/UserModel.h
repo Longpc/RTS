@@ -25,8 +25,10 @@ class MYCLASS_DECLSPEC UserModel : public Ref
 public:
 	static UserModel *getInstance();
 	CC_SYNTHESIZE(UserInfo, _userInfo, UserInfo);
-	CC_SYNTHESIZE(vector<UnitInforNew>, _listUnit, UserUnitsInfo);
-
+	CC_SYNTHESIZE(UnitInforNew, _listUnit, UserUnitsInfo);
+	CC_SYNTHESIZE(int, _roomId, RoomId);
+	CC_SYNTHESIZE(int, _teamId, TeamId);
+	CC_SYNTHESIZE(int, _selectedUnitId, SelectedUnitId);
 private:
 	static UserModel *s_UserModel;
 };

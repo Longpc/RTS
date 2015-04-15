@@ -1,6 +1,9 @@
 ﻿#pragma execution_character_set("utf-8")
 #include "MultiTeamSelectScene.h"
 
+//FOR TEST
+#include "Server/API/BattleAPI.h"
+
 Scene * MultiTeamSelectScene::createScene(int userId)
 {
 	auto scene = Scene::create();
@@ -22,6 +25,18 @@ bool MultiTeamSelectScene::init()
 	}
 	//getUserInfor
 	_userNameLabel->setString(a._name.c_str());
+
+	string data = "";
+	int roomId = UserModel::getInstance()->getRoomId();
+	data.append("{\"room_id\": \"").append(DataUtils::numberToString(roomId)).append("\",\"user_id\":\"").append(DataUtils::numberToString(a._id)).append("\"}");
+	auto client = NodeServer::getInstance()->getClient();
+	client->emit("connect_begin", data.c_str());
+	client->on("connect_begin_end", [&,roomId](SIOClient* client, const std::string& data) {
+		log("connect end data: %s", data.c_str());
+		/*UserModel::getInstance()->setRoomId(roomId);*/
+	});
+
+
 	auto blueTeamBg = Sprite::create("image/screen/base.png");
 	blueTeamBg->setPosition(Vec2(_visibleSize.width / 2,10+(_visibleSize.height - 100) * 1 / 4));
 	addChild(blueTeamBg, 1);
@@ -236,6 +251,17 @@ bool MultiTeamSelectScene::checkTeamFull(int teamId)
 
 void MultiTeamSelectScene::enterTeam(int teamId)
 {
+	//send event to NodeServer
+	auto a = UserModel::getInstance()->getUserInfo();
+	string data = "";
+	data.append("{\"room_id\": \"").append(DataUtils::numberToString(UserModel::getInstance()->getRoomId())).append("\",\"user_id\":\"").append(DataUtils::numberToString(a._id)).append("\",\"team_id\":\"").append(DataUtils::numberToString(teamId)).append("\"}");
+	auto client = NodeServer::getInstance()->getClient();
+	client->emit("connect_select_team", data.c_str());
+	client->on("connect_select_team_end", [&,teamId](SIOClient* client, const std::string& data) {
+		log("select team end data: %s", data.c_str());
+		UserModel::getInstance()->setTeamId(teamId);
+	});
+	
 	Director::getInstance()->replaceScene(TransitionMoveInR::create(SCREEN_TRANSI_DELAY, MultiUnitSelectScene::createScene(teamId,MULTI_MODE)));
 }
 

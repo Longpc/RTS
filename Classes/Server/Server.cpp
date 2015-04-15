@@ -3,44 +3,45 @@
 #include "platform/CCFileUtils.h"
 
 
-TestServer* TestServer::s_sharedTestServer = nullptr;
+NodeServer* NodeServer::s_sharedTestServer = nullptr;
 
-TestServer::TestServer()
+NodeServer::NodeServer()
 {
 }
 
-TestServer::~TestServer()
+NodeServer::~NodeServer()
 {
 }
 
-TestServer* TestServer::getInstance()
+NodeServer* NodeServer::getInstance()
 {
 	if (!s_sharedTestServer)
 	{
 		log("create new");
-		s_sharedTestServer = new (std::nothrow) TestServer();
+		s_sharedTestServer = new (std::nothrow) NodeServer();
 		s_sharedTestServer->init();
 	}
 
 	return s_sharedTestServer;
 }
 
-void TestServer::destroyInstance()
+void NodeServer::destroyInstance()
 {
 	CC_SAFE_RELEASE_NULL(s_sharedTestServer);
 }
 
-bool TestServer::init()
+bool NodeServer::init()
 {
 	_valueDict = SocketIO::connect(Configuration::getInstance()->getValue("NodeJSServer").asString().c_str(), *this);
 	CCASSERT(_valueDict, "Error cannot create Socket IO");
+	log("Connect to NodeJs server: %s", Configuration::getInstance()->getValue("NodeJSServer").asString().c_str());
 	return true;
 }
 
 //
 // generic getters for properties
 //
-SIOClient* TestServer::getClient()
+SIOClient* NodeServer::getClient()
 {
 	if (_valueDict)
 	{
@@ -53,11 +54,11 @@ SIOClient* TestServer::getClient()
 //
 // load file
 //
-void TestServer::loadConfigFile(const std::string& filename)
+void NodeServer::loadConfigFile(const std::string& filename)
 {
 	
 }
-void TestServer::startConnectWithHandler(string name, SIOEvent event)
+void NodeServer::startConnectWithHandler(string name, SIOEvent event)
 {
 	_name = name;
 	if (_valueDict)
@@ -68,7 +69,7 @@ void TestServer::startConnectWithHandler(string name, SIOEvent event)
 	log("Failed in start connect");
 }
 
-void TestServer::sendMessageWithName(string name, string message)
+void NodeServer::sendMessageWithName(string name, string message)
 {
 	if (_valueDict) {
 		_valueDict->emit(name.c_str(), message.c_str());
@@ -79,28 +80,28 @@ void TestServer::sendMessageWithName(string name, string message)
 	
 }
 
-void TestServer::onConnect(SIOClient* client)
+void NodeServer::onConnect(SIOClient* client)
 {
 	log("----->onConnect");
 }
 
-void TestServer::onMessage(SIOClient* client, const std::string& data)
+void NodeServer::onMessage(SIOClient* client, const std::string& data)
 {
 	log("----->onMessage");
 }
 
-void TestServer::onClose(SIOClient* client)
+void NodeServer::onClose(SIOClient* client)
 {
 	log("----->onClose");
 }
 
-void TestServer::onError(SIOClient* client, const std::string& data)
+void NodeServer::onError(SIOClient* client, const std::string& data)
 {
 	log("----->onError");
 	log("with error: %s", data.c_str());
 }
 
-std::string TestServer::getString()
+std::string NodeServer::getString()
 {
 	return _name;
 }

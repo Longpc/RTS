@@ -41,7 +41,7 @@ UnitInforNew UnitData::convertInfo(vector<string> item)
 	temp.mp_restore = DataUtils::stringToFloat(item[5].c_str());
 	temp.attack_dame = DataUtils::stringToFloat(item[6].c_str());
 	temp.defence = DataUtils::stringToFloat(item[7].c_str());
-	temp.attack_sight = DataUtils::stringToFloat(item[8].c_str());
+	temp.attack_range = DataUtils::stringToFloat(item[8].c_str());
 	temp.move_speed = DataUtils::stringToFloat(item[9].c_str());
 	temp.attr = DataUtils::stringToFloat(item[10].c_str());
 	temp.type = DataUtils::stringToFloat(item[11].c_str());
