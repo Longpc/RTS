@@ -11,6 +11,8 @@
 //for test
 #include "Multi/BatleScene/BatleScene.h"
 
+#include "Server/API/StartPHPAPI.h"
+
 ///Include library header here///
 #include <string.h>
 

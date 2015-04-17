@@ -1,7 +1,7 @@
 ﻿#include "BatleScene.h"
 
 
-Scene* BatleScene::createScene(int selectedUnitId, vector<SkillInfoNew> playerSkills)
+Scene* BatleScene::createScene(int selectedUnitId, vector<UserSkillInfo> playerSkills)
 {
 	auto scene = Scene::createWithPhysics();
 	scene->getPhysicsWorld()->setDebugDrawMask(PhysicsWorld::DEBUGDRAW_NONE);
@@ -12,7 +12,7 @@ Scene* BatleScene::createScene(int selectedUnitId, vector<SkillInfoNew> playerSk
 	return scene;
 }
 
-BatleScene* BatleScene::create(int unitId,vector<SkillInfoNew> skills)
+BatleScene* BatleScene::create(int unitId,vector<UserSkillInfo> skills)
 {
 	BatleScene *layer = new BatleScene();
 	if (layer && layer->init(unitId,skills)) {
@@ -24,7 +24,7 @@ BatleScene* BatleScene::create(int unitId,vector<SkillInfoNew> skills)
 	return NULL;
 }
 
-bool BatleScene::init(int unitId,vector<SkillInfoNew> skills)
+bool BatleScene::init(int unitId,vector<UserSkillInfo> skills)
 {
 	if (!LayerBase::init()) {
 		return false;
@@ -50,7 +50,8 @@ bool BatleScene::init(int unitId,vector<SkillInfoNew> skills)
 
 	///INIT DATA FOR ALL UNIT IN BATTLE
 	_mainCharacterData = getUnitDataFromDataBase(_selectedUnitId);
-	_mainCharacterSkillData = getUnitSkillFromDataBase(_selectedUnitId);
+
+	_mainCharacterSkillData = getUnitSkillFromDataBase(_mainCharacterData);
 
 
 
@@ -63,10 +64,16 @@ bool BatleScene::init(int unitId,vector<SkillInfoNew> skills)
 	vector<int> a;
 	_allEnemyUnitData = getEnemyUnitsData(a);
 
-	_redTeamTowerData = UnitData::getTowerDataByTeamFlg(TEAM_FLG_RED);
-	_blueTeamTowerData = UnitData::getTowerDataByTeamFlg(TEAM_FLG_BLUE);
+	//For test
+	_redTeamTowerData = UserUnit::getInstance()->getUnitInfoById(1);
+	_redTeamTowerData.hp = 5000;
+	_redTeamTowerData.attack_range = 200;
+	_redTeamTowerData.attack_speed = 5;
+	_blueTeamTowerData = UserUnit::getInstance()->getUnitInfoById(2);
 
-
+	_blueTeamTowerData.hp = 5000;
+	_blueTeamTowerData.attack_range = 200;
+	_blueTeamTowerData.attack_speed = 5;
 
 	//////////
 	//_moveImagePath = "image/unit_new/move/red/";
@@ -99,15 +106,14 @@ bool BatleScene::init(int unitId,vector<SkillInfoNew> skills)
 	if (_currentPlayerTeamFlg == TEAM_FLG_BLUE) {
 		UserBattleInfo info;
 		info.name = _mainCharacterData.name;
-		info.unitId = _mainCharacterData.id;
-		info.imagePath = _mainCharacterData.image;
+		info.unitId = _mainCharacterData.mst_unit_id;
+		info.imagePath = UserUnit::getInstance()->getUnitImageById(_mainCharacterData.mst_unit_id);
 		_blueTeamInfo.push_back(info);
 		for (int i = 0; i < ENEMY_NUM; i++)
 		{
 			UserBattleInfo enemy;
 			enemy.name = _allEnemyUnitData[i].name;
-			enemy.unitId = _allEnemyUnitData[i].id;
-			enemy.imagePath = _allEnemyUnitData[i].image;
+			enemy.unitId = _allEnemyUnitData[i].mst_unit_id;
 			_redTeamInfo.push_back(enemy);
 		}
 		
@@ -115,15 +121,13 @@ bool BatleScene::init(int unitId,vector<SkillInfoNew> skills)
 	else {
 		UserBattleInfo info;
 		info.name = _mainCharacterData.name;
-		info.unitId = _mainCharacterData.id;
-		info.imagePath = _mainCharacterData.image;
+		info.unitId = _mainCharacterData.mst_unit_id;
 		_redTeamInfo.push_back(info);
 		for (int i = 0; i < ENEMY_NUM; i++)
 		{
 			UserBattleInfo enemy;
 			enemy.name = _allEnemyUnitData[i].name;
-			enemy.unitId = _allEnemyUnitData[i].id;
-			enemy.imagePath = _allEnemyUnitData[i].image;
+			enemy.unitId = _allEnemyUnitData[i].mst_unit_id;
 			_blueTeamInfo.push_back(enemy);
 		}
 	}
@@ -315,7 +319,7 @@ void BatleScene::createContent()
 	mask->setPosition(slotPos);
 	_characterImageViewNode->setStencil(mask);
 
-	auto icon = Sprite::create(_mainCharacterData.image);
+	auto icon = Sprite::create(UserUnit::getInstance()->getUnitImageById(_mainCharacterData.mst_unit_id));
 	icon->setPosition(slotPos + Vec2(0,0));
 	icon->setScale(1.4f);
 	icon->setTag(ICON);
@@ -355,11 +359,11 @@ void BatleScene::createContent()
 	_timeViewLabel->setPosition(Vec2(timeViewContainer->getContentSize().width / 2, timeViewContainer->getContentSize().height / 2));
 	timeViewContainer->addChild(_timeViewLabel);
 
-	string skill1ImagePath = _mainCharacterSkillData[0].icon;
-	string skill2ImagePath = _mainCharacterSkillData[1].icon;
+	string skill1ImagePath = _mainCharacterSkillData[0].skill_icon_path;
+	string skill2ImagePath = _mainCharacterSkillData[1].skill_icon_path;
 
-	string skill3ImagePath = _playerSkills[0].icon;
-	string skill4ImagePath = _playerSkills[1].icon;
+	string skill3ImagePath = _playerSkills[0].skill_icon_path;
+	string skill4ImagePath = _playerSkills[1].skill_icon_path;
 
 
 
@@ -671,7 +675,7 @@ void BatleScene::checkForAutoAttack()
 				_indexOfBeAttackEnemy = i;
 
 				_onDelayAttackFlg = true;
-				this->runAction(Sequence::create(DelayTime::create(_mainCharacterData.attack_delay), CallFuncN::create(CC_CALLBACK_0(BatleScene::removeceAttackDelayFlg, this)), nullptr));
+				this->runAction(Sequence::create(DelayTime::create(_mainCharacterData.attack_speed), CallFuncN::create(CC_CALLBACK_0(BatleScene::removeceAttackDelayFlg, this)), nullptr));
 			}
 		}
 		if (posDistan.length() < ATTACK_AOE*_allEnemyUnitData[i].attack_range/100.0f && _allEnemyUnitSprite[i]->isVisible() && !_allEnemyUnitData[i].isStun) {
@@ -683,7 +687,7 @@ void BatleScene::checkForAutoAttack()
 				auto call2 = CallFuncN::create(CC_CALLBACK_1(BatleScene::enemyAttackCallback, this,i));
 				auto action2 = Sequence::create(Animate::create(target_ani), call2, nullptr);
 
-				auto forCallback = Sequence::create(DelayTime::create(_allEnemyUnitData[i].attack_delay), CallFuncN::create(CC_CALLBACK_1(BatleScene::removeEnemyAttackDelayFlg, this,i)), nullptr);
+				auto forCallback = Sequence::create(DelayTime::create(_allEnemyUnitData[i].attack_speed), CallFuncN::create(CC_CALLBACK_1(BatleScene::removeEnemyAttackDelayFlg, this,i)), nullptr);
 				action2->setTag(1111);
 				//rotateCharacter(_alltargetUnit[i], 10 - direc);
 				_allEnemyAttachDelay[i] = true;
@@ -705,8 +709,8 @@ void BatleScene::characterAttackCallback()
 	if (_onRespwanFlg) return;
 	//log("charater");
 	if (_allEnemyUnitData[_indexOfBeAttackEnemy].hp > 0) {
-		int dame = (_mainCharacterData.attack_dame - _allEnemyUnitData[_indexOfBeAttackEnemy].defence);
-		float defaultDameRate = caculDameRate(_mainCharacterData.attr, _allEnemyUnitData[_indexOfBeAttackEnemy].attr);
+		int dame = (_mainCharacterData.attack - _allEnemyUnitData[_indexOfBeAttackEnemy].defence);
+		float defaultDameRate = caculDameRate(_mainCharacterData.element, _allEnemyUnitData[_indexOfBeAttackEnemy].element);
 
 		dame = ceil(random(0.85f, 1.0f)*dame*defaultDameRate);
 		if (dame <= 0) {
@@ -764,8 +768,8 @@ void BatleScene::enemyAttackCallback(Ref *pSEnder, int i)
 	{
 		if (!_onRespwanFlg)
 		{
-			int dame = _allEnemyUnitData[i].attack_dame - _mainCharacterData.defence;
-			float defaultDameRate = caculDameRate(_allEnemyUnitData[i].attr, _mainCharacterData.attr);
+			int dame = _allEnemyUnitData[i].attack - _mainCharacterData.defence;
+			float defaultDameRate = caculDameRate(_allEnemyUnitData[i].element, _mainCharacterData.element);
 
 			dame = ceil(random(0.85f, 1.0f)*dame*defaultDameRate);
 			if (dame <= 0) {
@@ -1143,7 +1147,7 @@ In my opinion, animation image path must be store in database or something have 
 void BatleScene::changeAnimationImagePathByUnitId(int unitId)
 {
 
-	switch (unitId-1)
+	switch (unitId)
 	{
 	case 1:
 		_moveImagePath = "image/unit_new/move/red/";
@@ -1355,6 +1359,13 @@ void BatleScene::changeImageButtonCallback(Ref *pSender, Widget::TouchEventType 
 		//changeAnimationImagePathByUnitId();
 		vector<int> test = { 1, 2, 3, 4, 5, 6, 7 };
 		this->runAction(CallFuncN::create(CC_CALLBACK_1(BatleScene::demoCallbackNotUserInlineFunction, this, test)));
+		if (Director::getInstance()->isPaused())
+		{
+			Director::getInstance()->resume();
+		}
+		else {
+			Director::getInstance()->pause();
+		}
 		break;
 	}
 	case cocos2d::ui::Widget::TouchEventType::CANCELED:
@@ -1383,24 +1394,27 @@ void BatleScene::nextButtonCallback(Ref *pSender, Widget::TouchEventType type)
 		break;
 	}
 }
-UnitInforNew BatleScene::getUnitDataFromDataBase(int unitId)
+UserUnitInfo BatleScene::getUnitDataFromDataBase(int unitId)
 {
 
-	return UnitData::getUnitDataById(unitId);
+	return UserUnit::getInstance()->getUnitInfoById(unitId);
 
 }
 
-vector<SkillInfoNew> BatleScene::getUnitSkillFromDataBase(int unitId)
+vector<UserSkillInfo> BatleScene::getUnitSkillFromDataBase(UserUnitInfo unitData)
 {
-	return SkillData::getUnitSkillsByUnitId(unitId);
+	vector<UserSkillInfo> result;
+	result.push_back(UserSkill::getInstance()->getSkillInfoById(unitData.skill1_id));
+	result.push_back(UserSkill::getInstance()->getSkillInfoById(unitData.skill2_id));
+	return result;
 }
 
-vector<UnitInforNew> BatleScene::getEnemyUnitsData(vector<int> enemyIdList)
+vector<UserUnitInfo> BatleScene::getEnemyUnitsData(vector<int> enemyIdList)
 {
-	vector<UnitInforNew> returnData;
+	vector<UserUnitInfo> returnData;
 	for (int i = 0; i < ENEMY_NUM; i++)
 	{
-		returnData.push_back(UnitData::getUnitDataById(2));
+		returnData.push_back(UserUnit::getInstance()->getUnitInfoById(random(1,6)));
 	}
 	
 
@@ -1409,11 +1423,11 @@ vector<UnitInforNew> BatleScene::getEnemyUnitsData(vector<int> enemyIdList)
 
 void BatleScene::autoRestoreHpAndMp()
 { 
-	_mainCharacterData.hp += _mainCharacterData.hp_restore / RESTORE_MULTI;
+	_mainCharacterData.hp += _mainCharacterData.hp_heal / RESTORE_MULTI;
 	if (_mainCharacterData.hp > _allAlliedUnitMaxHp[0]) {
 		_mainCharacterData.hp = _allAlliedUnitMaxHp[0];
 	}
-	_mainCharacterData.mp += _mainCharacterData.mp_restore/RESTORE_MULTI;
+	_mainCharacterData.mp += _mainCharacterData.mp_heal/RESTORE_MULTI;
 	if (_mainCharacterData.mp > _mainCharacerMaxMp)
 	{
 		_mainCharacterData.mp = _mainCharacerMaxMp;
@@ -1421,7 +1435,7 @@ void BatleScene::autoRestoreHpAndMp()
 
 	for (int i = 0; i < _allEnemyUnitData.size(); i++)
 	{
-		_allEnemyUnitData[i].hp += _allEnemyUnitData[i].hp_restore/RESTORE_MULTI;
+		_allEnemyUnitData[i].hp += _allEnemyUnitData[i].hp_heal/RESTORE_MULTI;
 		if (_allEnemyUnitData[i].hp > _allEnemuUnitMaxHp[i]) {
 			_allEnemyUnitData[i].hp = _allEnemuUnitMaxHp[i];
 		}
@@ -1449,7 +1463,7 @@ void BatleScene::skill1ButtonCallback(Ref *pSender, Widget::TouchEventType type)
 	int tag = bt->getTag();
 	bt->stopActionByTag(TAG_SKILL_AOE);
  	
-	SkillInfoNew skill;
+	UserSkillInfo skill;
 	if (tag == TAG_SKILL_1 || tag == TAG_SKILL_2)
 	{
 		skill = _mainCharacterSkillData[tag - 1];
@@ -1460,7 +1474,7 @@ void BatleScene::skill1ButtonCallback(Ref *pSender, Widget::TouchEventType type)
 	switch (type)
 	{
 	case cocos2d::ui::Widget::TouchEventType::BEGAN:
-		if(skill.aoe > 0 && skill.mp_cost <= _mainCharacterData.mp ) longPressAction(bt,skill);
+		if(skill.range_distance > 0 && skill.mp_cost <= _mainCharacterData.mp ) longPressAction(bt,skill);
 		_showSkillTargetFlag = true;
 		break;
 	case cocos2d::ui::Widget::TouchEventType::MOVED:
@@ -1478,8 +1492,8 @@ void BatleScene::skill1ButtonCallback(Ref *pSender, Widget::TouchEventType type)
 			bt->setTouchEnabled(false);
 			bt->setEnabled(true);
 			playSkill(skill);
-			showCoolDown(bt, skill.cooldown);
-			bt->runAction(Sequence::create(DelayTime::create(skill.cooldown), CallFuncN::create([&, tag](Ref *p) {
+			showCoolDown(bt, skill.cooldown_time);
+			bt->runAction(Sequence::create(DelayTime::create(skill.cooldown_time), CallFuncN::create([&, tag](Ref *p) {
 				removeSkillDisableFlg(tag);
 			}), nullptr));
 			while (_battleBackround->getChildByTag(DRAW_UNIT))
@@ -1489,6 +1503,10 @@ void BatleScene::skill1ButtonCallback(Ref *pSender, Widget::TouchEventType type)
 			
 		}
 		else {
+			for (auto &a : _allEnemyUnitSprite)
+			{
+				a->setColor(Color3B::WHITE);
+			}
 			log("Not enough MP");
 		}
 		
@@ -1527,20 +1545,20 @@ void BatleScene::showCoolDown(Button *parentButton, int time)
 	secondLabel->runAction(Spawn::create(action, action2, nullptr));
 }
 
-void BatleScene::playSkill(SkillInfoNew skillData)
+void BatleScene::playSkill(UserSkillInfo skillData)
 {
 	for (auto& e :_allEnemyUnitSprite)
 	{
 		e->setColor(Color3B::WHITE);
 	}
-	SkillInfoNew skill = skillData;
+	UserSkillInfo skill = skillData;
 	_mainCharacterData.mp -= skill.mp_cost;
 	BattleAPI::getInstance()->battleSyncEvent(_mainCharacterData);
 	_mainCharacterMpBar->setPercent(ceil(100.0f * _mainCharacterData.mp / _mainCharacerMaxMp));
-	switch (skill.skill_type)
+	switch (skill.effect_type)
 	{
-	case TYPE_HELP:
-		skillHelpAction(skill);
+	case TYPE_BUFF:
+		skillBuffAction(skill);
 		break;
 	case TYPE_RESTORE:
 		skillRestoreAction(skill);
@@ -1589,9 +1607,9 @@ void BatleScene::removeSkillDisableFlg(int skillnum)
 	}
 }
 
-void BatleScene::skillRestoreAction(SkillInfoNew skillInfo)
+void BatleScene::skillRestoreAction(UserSkillInfo skillInfo)
 {
-	switch (skillInfo.target_type)
+	switch (skillInfo.multi_effect)
 	{
 	case TARGET_ALL:
 		skillRestoreAll(skillInfo);
@@ -1606,9 +1624,9 @@ void BatleScene::skillRestoreAction(SkillInfoNew skillInfo)
 
 }
 
-void BatleScene::skillHelpAction(SkillInfoNew skillInfo)
+void BatleScene::skillBuffAction(UserSkillInfo skillInfo)
 {
-	switch (skillInfo.target_type)
+	switch (skillInfo.multi_effect)
 	{
 	case TARGET_ALL :
 		skillHelpAll(skillInfo);
@@ -1621,9 +1639,9 @@ void BatleScene::skillHelpAction(SkillInfoNew skillInfo)
 	}
 }
 
-void BatleScene::skillAttackAction(SkillInfoNew skillInfo)
+void BatleScene::skillAttackAction(UserSkillInfo skillInfo)
 {
-	switch (skillInfo.target_type)
+	switch (skillInfo.effect_type)
 	{
 	case TARGET_ALL:
 		skillAttackAll(skillInfo);
@@ -1635,22 +1653,22 @@ void BatleScene::skillAttackAction(SkillInfoNew skillInfo)
 	}
 }
 
-void BatleScene::skillRestoreAll(SkillInfoNew skillInfo)
+void BatleScene::skillRestoreAll(UserSkillInfo skillInfo)
 {
 	int value = 0;
-	switch (skillInfo.dame_type)
+	switch (skillInfo.corrett_value)
 	{
 	case DAME_TYPE_PERCENT:
-		value = ceil(1.0f*_saveMainStatusData.hp *skillInfo.dame_value/100.0f);
+		value = ceil(1.0f*_saveMainStatusData.hp *skillInfo.corrett_value/100.0f);
 		break;
 	case DAME_TYPE_PURE:
-		value = ceil(skillInfo.dame_value);
+		value = ceil(skillInfo.corrett_value);
 		break;
 	}
 
 	createSorceryEffect(testObject, SORCERY_GREEN);
 
-	if (skillInfo.aoe > 0) 
+	if (skillInfo.range_distance > 0) 
 	{
 
 		vector<int> allUnitIndex = detectUnitInAoe(skillInfo, ALLIED_FLAG);
@@ -1662,21 +1680,6 @@ void BatleScene::skillRestoreAll(SkillInfoNew skillInfo)
 				_allAlliedUnitData[index].hp = _allAlliedUnitMaxHp[index];
 			}
 			_allAlliedUnitHpBar[index]->setPercent( 100.0f *_allAlliedUnitData[index].hp / _allEnemuUnitMaxHp[index]);
-		
-			//////////////RUN EFFECT AOE
-			/*
-			Effect* effectHeal = Effect::createWithParticle(PARTICLE_HEAL, effectHeal->EC_Other, effectHeal->Restore);
-			_allAlliedUnitSprite[index]->addChild(effectHeal);
-			effectHeal->setPosition(Vec2(_allAlliedUnitSprite[index]->getContentSize().width / 2 , _allAlliedUnitSprite[index]->getContentSize().height / 2));
-			
-			auto healSequence = Sequence::create(
-				DelayTime::create(DELAY_RESTORE)
-				, CallFuncN::create(CC_CALLBACK_1(BatleScene::removeEffect, this))
-				, nullptr);
-			effectHeal->runAction(healSequence);
-			
-			*/
-		
 		
 		}
 	}
@@ -1697,19 +1700,19 @@ void BatleScene::skillRestoreAll(SkillInfoNew skillInfo)
 
 }
 
-void BatleScene::skillRestoreOne(SkillInfoNew skillInfo)
+void BatleScene::skillRestoreOne(UserSkillInfo skillInfo)
 {
 	log("Restore One");
 
 	int value = 0;
-	switch (skillInfo.dame_type)
+	switch (skillInfo.correct_type)
 	{
 	case DAME_TYPE_PERCENT:
-		value = ceil(1.0f*_saveMainStatusData.hp *skillInfo.dame_value/100.0f);
+		value = ceil(1.0f*_saveMainStatusData.hp *skillInfo.corrett_value/100.0f);
 		break;
 	case DAME_TYPE_PURE:
 		log("Restore One: DAME_TYPE_PURE");
-		value = ceil(skillInfo.dame_value);
+		value = ceil(skillInfo.corrett_value);
 		break;
 	}
 	_mainCharacterData.hp += value;
@@ -1737,22 +1740,22 @@ void BatleScene::skillRestoreOne(SkillInfoNew skillInfo)
 
 }
 
-void BatleScene::skillHelpAll(SkillInfoNew skillInfo)
+void BatleScene::skillHelpAll(UserSkillInfo skillInfo)
 {
 	int value = 0;
 }
 
-void BatleScene::skillHelpOne(SkillInfoNew skillInfo)
+void BatleScene::skillHelpOne(UserSkillInfo skillInfo)
 {
 	float value = 1.0f;
 	int pureValue = 0;
-	switch (skillInfo.dame_type)
+	switch (skillInfo.correct_type)
 	{
 	case DAME_TYPE_PERCENT:
-		value = ceil(skillInfo.dame_value / 100.0f);
+		value = ceil(skillInfo.corrett_value / 100.0f);
 		break;
 	case DAME_TYPE_PURE:
-		pureValue = skillInfo.dame_value;
+		pureValue = skillInfo.corrett_value;
 		break;
 	default:
 		break;
@@ -1761,7 +1764,7 @@ void BatleScene::skillHelpOne(SkillInfoNew skillInfo)
 
 	Effect* effect = new Effect();
 
-	switch (skillInfo.skill_help_type)
+	switch (skillInfo.buff_effect_type)
 	{
 	case SKILL_HELP_TYPE::HP:
 	{
@@ -1792,11 +1795,11 @@ void BatleScene::skillHelpOne(SkillInfoNew skillInfo)
 	}
 	case SKILL_HELP_TYPE::HP_RESTORE:
 	{
-		saveValue = 1.0f*_saveMainStatusData.hp_restore*(value -1.0f) + pureValue;
-		_mainCharacterData.hp_restore += saveValue;
+		saveValue = 1.0f*_saveMainStatusData.hp_heal*(value -1.0f) + pureValue;
+		_mainCharacterData.hp_heal += saveValue;
 		BattleAPI::getInstance()->battleSyncEvent(_mainCharacterData);
 		runAction(Sequence::create(DelayTime::create(skillInfo.duration), CallFuncN::create([&, saveValue](Ref *pSEnder){
-			_mainCharacterData.hp_restore -= saveValue;
+			_mainCharacterData.hp_heal -= saveValue;
 		}), nullptr));
 
 		/////////////////////////////////////////
@@ -1824,21 +1827,21 @@ void BatleScene::skillHelpOne(SkillInfoNew skillInfo)
 		}), nullptr));
 		break;
 	case SKILL_HELP_TYPE::MP_RESTORE:
-		saveValue = 1.0f*_saveMainStatusData.mp_restore*(value-1.0f) + pureValue;
-		_mainCharacterData.mp_restore += saveValue;
+		saveValue = 1.0f*_saveMainStatusData.mp_heal*(value-1.0f) + pureValue;
+		_mainCharacterData.mp_heal += saveValue;
 		BattleAPI::getInstance()->battleSyncEvent(_mainCharacterData);
 		runAction(Sequence::create(DelayTime::create(skillInfo.duration), CallFuncN::create([&, saveValue](Ref *pSEnder){
-			_mainCharacterData.mp_restore -= saveValue;
+			_mainCharacterData.mp_heal -= saveValue;
 		}), nullptr));
 		break;
 	case SKILL_HELP_TYPE::ATTACK_DAME:
 	{
-		saveValue = 1.0f*_saveMainStatusData.attack_dame*(value - 1.0f) + pureValue;
-		_mainCharacterData.attack_dame += saveValue;
+		saveValue = 1.0f*_saveMainStatusData.attack*(value - 1.0f) + pureValue;
+		_mainCharacterData.attack += saveValue;
 		BattleAPI::getInstance()->battleSyncEvent(_mainCharacterData);
 		log("increase attack by %d", saveValue);
 		runAction(Sequence::create(DelayTime::create(skillInfo.duration), CallFuncN::create([&, saveValue](Ref *pSEnder){
-			_mainCharacterData.attack_dame -= saveValue;
+			_mainCharacterData.attack -= saveValue;
 			log("remove attack buff %d", saveValue);
 		}), nullptr));
 
@@ -1919,22 +1922,22 @@ void BatleScene::skillHelpOne(SkillInfoNew skillInfo)
 
 }
 
-void BatleScene::skillAttackAll(SkillInfoNew skillInfo)
+void BatleScene::skillAttackAll(UserSkillInfo skillInfo)
 {
 	int value = 0;
-	switch (skillInfo.dame_type)
+	switch (skillInfo.correct_type)
 	{
 	case DAME_TYPE_PERCENT:
-		value = _mainCharacterData.attack_dame*100.0f / skillInfo.dame_value;
+		value = _mainCharacterData.attack*100.0f / skillInfo.corrett_value;
 		break;
 	case DAME_TYPE_PURE:
-		value = skillInfo.dame_value;
+		value = skillInfo.corrett_value;
 	default:
 		break;
 	}
 
 	vector<int> unitIndex;
-	if (skillInfo.aoe > 0) {
+	if (skillInfo.range_distance > 0) {
 
 		unitIndex = detectUnitInAoe(skillInfo, ENEMY_FLAG);
 	}
@@ -1949,7 +1952,7 @@ void BatleScene::skillAttackAll(SkillInfoNew skillInfo)
 	for (int &index : unitIndex)
 	{
 		int dame = (value - _allEnemyUnitData[index].defence);
-		float defaultDameRate = caculDameRate(_mainCharacterData.attr, _allEnemyUnitData[index].attr);
+		float defaultDameRate = caculDameRate(_mainCharacterData.element, _allEnemyUnitData[index].element);
 		dame = ceil(random(0.85f, 1.0f)*dame*defaultDameRate);
 
 		if (dame <= 0) dame = 1;
@@ -1990,25 +1993,25 @@ void BatleScene::skillAttackAll(SkillInfoNew skillInfo)
 	}
 }
 
-void BatleScene::skillAttackOne(SkillInfoNew skillInfo)
+void BatleScene::skillAttackOne(UserSkillInfo skillInfo)
 {
 	log("Attack One");
 
 	int value = 0;
-	switch (skillInfo.dame_type)
+	switch (skillInfo.correct_type)
 	{
 	case DAME_TYPE_PERCENT:
-		value = _mainCharacterData.attack_dame*100.0f / skillInfo.dame_value;
+		value = _mainCharacterData.attack*100.0f / skillInfo.corrett_value;
 		break;
 	case DAME_TYPE_PURE:
-		value = skillInfo.dame_value;
+		value = skillInfo.corrett_value;
 	default:
 		break;
 	}
 
 
 	int dame = (value - _allEnemyUnitData[_indexOfBeAttackEnemy].defence);
-	float defaultDameRate = caculDameRate(_mainCharacterData.attr, _allEnemyUnitData[_indexOfBeAttackEnemy].attr);
+	float defaultDameRate = caculDameRate(_mainCharacterData.element, _allEnemyUnitData[_indexOfBeAttackEnemy].element);
 
 	dame = ceil(random(0.85f, 1.0f)*dame*defaultDameRate);
 	if (dame <= 0) dame = 1;
@@ -2060,7 +2063,7 @@ void BatleScene::skillAttackOne(SkillInfoNew skillInfo)
 }
 
 
-vector<int> BatleScene::detectUnitInAoe(SkillInfoNew skill, int unitFlg, bool drawFlg /*= true*/)
+vector<int> BatleScene::detectUnitInAoe(UserSkillInfo skill, int unitFlg, bool drawFlg /*= true*/)
 
 {
 	vector<int> resultUnitId;
@@ -2079,38 +2082,38 @@ vector<int> BatleScene::detectUnitInAoe(SkillInfoNew skill, int unitFlg, bool dr
 	auto pos = testObject->getPosition();
 	vector<Vec2> vec;
 	DrawNode *draw = DrawNode::create();
-	switch (skill.area_type)
+	switch (skill.range_type)
 	{
 
-	case 1:
-		draw->drawRect(Vec2(-skill.aoe/2,-skill.aoe/2), Vec2(skill.aoe/2, skill.aoe/2), Color4F::RED);
+	case SKILL_RANGE_TYPE::RECTANGLE:
+		draw->drawRect(Vec2(-skill.range_distance/2,-skill.range_distance/2), Vec2(skill.range_distance/2, skill.range_distance/2), Color4F::RED);
 		draw->setPosition(pos/* - Vec2(skill.aoe / 2, skill.aoe / 2)*/);
 		draw->setTag(DRAW_UNIT);
 		break;
-	case 2:
-		vec.push_back(Vec2(-skill.aoe / 2, -skill.aoe * 1 / 3));
-		vec.push_back(Vec2(skill.aoe / 2, -skill.aoe / 3));
-		vec.push_back(Vec2(0, skill.aoe * 2 / 3));
+	case SKILL_RANGE_TYPE::TRIANGLE:
+		vec.push_back(Vec2(-skill.range_distance / 2, -skill.range_distance * 1 / 3));
+		vec.push_back(Vec2(skill.range_distance / 2, -skill.range_distance / 3));
+		vec.push_back(Vec2(0, skill.range_distance * 2 / 3));
 		draw->drawPoly(&vec[0], 3, true, Color4F::RED);
 		draw->setPosition(pos);
 		draw->setTag(DRAW_UNIT);
 		break;
-	case 3:
+	case SKILL_RANGE_TYPE::STAR:
 		//draw->drawPolygon()
-		vec.push_back(Vec2(-skill.aoe / 2, 0));
+		vec.push_back(Vec2(-skill.range_distance / 2, 0));
 		vec.push_back(Vec2(-100, -100));
-		vec.push_back(Vec2(0, -skill.aoe / 2));
-		vec.push_back(Vec2(skill.aoe / 6, -skill.aoe / 6));
-		vec.push_back(Vec2(skill.aoe / 2, 0));
-		vec.push_back(Vec2(skill.aoe / 6, skill.aoe / 6));
-		vec.push_back(Vec2(0, skill.aoe / 2));
-		vec.push_back(Vec2(-skill.aoe / 6, skill.aoe / 6));
+		vec.push_back(Vec2(0, -skill.range_distance / 2));
+		vec.push_back(Vec2(skill.range_distance / 6, -skill.range_distance / 6));
+		vec.push_back(Vec2(skill.range_distance / 2, 0));
+		vec.push_back(Vec2(skill.range_distance / 6, skill.range_distance / 6));
+		vec.push_back(Vec2(0, skill.range_distance / 2));
+		vec.push_back(Vec2(-skill.range_distance / 6, skill.range_distance / 6));
 		draw->drawPoly(&vec[0], vec.size(),true, Color4F::MAGENTA);
 		draw->setPosition(pos);
 		draw->setTag(DRAW_UNIT);
 		break;
 	default:
-		draw->drawCircle(Vec2::ZERO, skill.aoe, 360.0f, 50, false, Color4F(200,0,0,50));
+		draw->drawCircle(Vec2::ZERO, skill.range_distance, 360.0f, 50, false, Color4F(200,0,0,50));
 		draw->setPosition(pos);
 		draw->setTag(DRAW_UNIT);
 		break;
@@ -2124,20 +2127,20 @@ vector<int> BatleScene::detectUnitInAoe(SkillInfoNew skill, int unitFlg, bool dr
 		//rectangle
 		Rect a;
 		Vec2 distan = allUnit[i]->getPosition() - pos;
-		switch (skill.area_type)
+		switch (skill.range_type)
 		{
-		case 1:
-			a = Rect(pos.x - skill.aoe / 2, pos.y - skill.aoe / 2, skill.aoe, skill.aoe);
+		case SKILL_RANGE_TYPE::RECTANGLE:
+			a = Rect(pos.x - skill.range_distance / 2, pos.y - skill.range_distance / 2, skill.range_distance, skill.range_distance);
 			if (a.containsPoint(allUnit[i]->getPosition())) {
 				resultUnitId.push_back(i);
 			}
 			break;
-		case 2:
+		case SKILL_RANGE_TYPE::TRIANGLE:
 			if (detectPointInTriangle(allUnit[i]->getPosition(), vec)) {
 				resultUnitId.push_back(i);
 			}
 			break;
-		case 3:
+		case SKILL_RANGE_TYPE::STAR:
 			if (detectPointInTriangle(allUnit[i]->getPosition(), {vec[0],vec[1],vec[7]})) {
 				resultUnitId.push_back(i);
 				break;
@@ -2155,7 +2158,7 @@ vector<int> BatleScene::detectUnitInAoe(SkillInfoNew skill, int unitFlg, bool dr
 				resultUnitId.push_back(i);
 				break;
 			}
-			if (distan.length() < (skill.aoe / 6 * sqrt(2))) {
+			if (distan.length() < (skill.range_distance / 6 * sqrt(2))) {
 				resultUnitId.push_back(i);
 				break;
 			}
@@ -2165,7 +2168,7 @@ vector<int> BatleScene::detectUnitInAoe(SkillInfoNew skill, int unitFlg, bool dr
 			//round
 			
 			// 		distan.y = distan.y *SKILL_AOE_Y_SCALE;
-			if (distan.length() < skill.aoe) {
+			if (distan.length() < skill.range_distance) {
 				resultUnitId.push_back(i);
 			}
 			break;
@@ -2200,7 +2203,7 @@ float BatleScene::caculDameRate(int mainC, int enemy)
 	return 0.5f;
 }
 
-void BatleScene::longPressAction(Button *pSender,SkillInfoNew skill)
+void BatleScene::longPressAction(Button *pSender,UserSkillInfo skill)
 {
 	auto a = detectUnitInAoe(skill, ENEMY_FLAG);
 	_onSelectSkillData = skill;
@@ -2336,7 +2339,7 @@ void BatleScene::saveKillDeadInfo(int killerId, int deadUnitId, int teamFlg)
 	}
 }
 /*status type: POISON, STUN, BUFF_ATTACK, BUFF_DEFENCE, DEBUFF_ATTACK*/
-void BatleScene::displayUnitStatus(Sprite *parent, int statusType, SkillInfoNew skillInfo, int spIndex /*= 0*/)
+void BatleScene::displayUnitStatus(Sprite *parent, int statusType, UserSkillInfo skillInfo, int spIndex /*= 0*/)
 {
 	string imagePath;
 	switch (statusType)
@@ -2408,7 +2411,7 @@ Animation* BatleScene::createStatusAnimation(string imagePath)
 	return animation;
 }
 
-void BatleScene::skillPoisonAction(SkillInfoNew skillInfo)
+void BatleScene::skillPoisonAction(UserSkillInfo skillInfo)
 {
 	vector<int> units = detectUnitInAoe(skillInfo, ENEMY_FLAG);
 	for (auto & index :units)
@@ -2418,7 +2421,7 @@ void BatleScene::skillPoisonAction(SkillInfoNew skillInfo)
 	}
 }
 
-void BatleScene::skillStunAction(SkillInfoNew skillInfo)
+void BatleScene::skillStunAction(UserSkillInfo skillInfo)
 {
 	vector<int> units = detectUnitInAoe(skillInfo,ENEMY_FLAG);
 	for (auto& i : units)
@@ -2431,14 +2434,14 @@ void BatleScene::skillStunAction(SkillInfoNew skillInfo)
 	}
 }
 
-void BatleScene::poisonEffectAction(SkillInfoNew skill, int index)
+void BatleScene::poisonEffectAction(UserSkillInfo skill, int index)
 {
 	int dame =ceil(1.0f*_allEnemyUnitData[index].hp * 0.05f);
 	auto action = Sequence::create( CallFuncN::create([&, index, dame](Ref *p){
 		showAttackDame(dame, _allEnemyUnitSprite[index]->getPosition(), 1);
 		_allEnemyUnitData[index].hp -= dame;
 		_allEnemyHpBar[index]->setPercent(ceil(100.0f*_allEnemyUnitData[index].hp / _allEnemuUnitMaxHp[index]));
-		if (_allEnemyUnitData[index].hp)
+		if (_allEnemyUnitData[index].hp < 0)
 		{
 			enemyDieAction(index);
 		}

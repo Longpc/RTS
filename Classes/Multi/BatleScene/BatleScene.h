@@ -10,6 +10,11 @@
 #include "dataController/SkillData/SkillData.h"
 #include "Effect.h"
 
+#include "Model/data/UserModel.h"
+#include "Model/data/UserSkill.h"
+#include "Model/data/UserUnit.h"
+
+
 #include "cocostudio/CocoStudio.h"
 #include <time.h>
 #include "Server/Server.h"
@@ -75,9 +80,9 @@ class BatleScene : public LayerBase
 public:
 	BatleScene();
 	~BatleScene();
-	static Scene* createScene(int selectedUnitId, vector<SkillInfoNew> playerSkills);
-	static BatleScene* create(int unitId, vector<SkillInfoNew> playerSkills);
-	bool init(int unitId, vector<SkillInfoNew> playerSkills);
+	static Scene* createScene(int selectedUnitId, vector<UserSkillInfo> playerSkills);
+	static BatleScene* create(int unitId, vector<UserSkillInfo> playerSkills);
+	bool init(int unitId, vector<UserSkillInfo> playerSkills);
 private:
 	///VARIABLES///////////////////////////////////////////////////////////////////////
 	struct tm day;
@@ -123,7 +128,7 @@ private:
 	vector<Sprite*> _allEnemyUnitSprite;
 	vector<Sprite*> _allEnemyIconInMinimap;
 	vector<Slider*> _allEnemyHpBar;
-	vector<UnitInforNew> _allEnemyUnitData;
+	vector<UserUnitInfo> _allEnemyUnitData;
 	vector<int> _allEnemuUnitMaxHp;
 
 	vector<bool> _allEnemyAttachDelay;
@@ -134,13 +139,13 @@ private:
 
 	int _indexOfBeAttackEnemy = -1;
 
-	vector<SkillInfoNew> _playerSkills;
+	vector<UserSkillInfo> _playerSkills;
 	///CHARACTER///
 
 	int _selectedUnitId;
-	UnitInforNew _mainCharacterData;
-	UnitInforNew _saveMainStatusData;
-	vector<SkillInfoNew> _mainCharacterSkillData;
+	UserUnitInfo _mainCharacterData;
+	UserUnitInfo _saveMainStatusData;
+	vector<UserSkillInfo> _mainCharacterSkillData;
 	Sprite *testObject;
 	Node *_statusContainer;
 
@@ -157,7 +162,7 @@ private:
 	Slider *_mainCharacterMpBar;
 	Label *_mpViewlabel;
 	///ALLIED UNIT
-	vector<UnitInforNew> _allAlliedUnitData;
+	vector<UserUnitInfo> _allAlliedUnitData;
 	vector<Slider*> _allAlliedUnitHpBar;
 	vector<Sprite*> _allAlliedUnitSprite;
 	vector<int> _allAlliedUnitMaxHp;
@@ -166,8 +171,8 @@ private:
 	float _helpDefenceValue = 1.0f;
 	float _helpHpValue = 1.0f;
 
-	UnitInforNew _redTeamTowerData;
-	UnitInforNew _blueTeamTowerData;
+	UserUnitInfo _redTeamTowerData;
+	UserUnitInfo _blueTeamTowerData;
 
 	int _currentPlayerTeamFlg = TEAM_FLG_BLUE;
 	int _currentEnemyTeamFlg = TEAM_FLG_RED;
@@ -181,7 +186,7 @@ private:
 	int _enemyTeamTotalDead = 0;
 
 	/*For skill area moved logic*/
-	SkillInfoNew _onSelectSkillData;
+	UserSkillInfo _onSelectSkillData;
 	bool _showSkillTargetFlag = false;
 
 	/*For skill status show*/
@@ -195,9 +200,9 @@ private:
 	///FUNCTIONS///////////////////////////////////////////////////////////////////////
 
 	///DATABASE///
-	virtual UnitInforNew getUnitDataFromDataBase(int unitId);
-	virtual vector<SkillInfoNew> getUnitSkillFromDataBase(int unitId);
-	virtual vector<UnitInforNew> getEnemyUnitsData(vector<int> enemyIdList);
+	virtual UserUnitInfo getUnitDataFromDataBase(int unitId);
+	virtual vector<UserSkillInfo> getUnitSkillFromDataBase(UserUnitInfo unitData);
+	virtual vector<UserUnitInfo> getEnemyUnitsData(vector<int> enemyIdList);
 	///LAYOUT BASE///
 	virtual void onEnter();
 
@@ -280,30 +285,30 @@ private:
 
 	virtual void showCoolDown(Button *parentButton, int cooldownTime);
 
-	virtual void playSkill(SkillInfoNew skillData);
-	virtual vector<int> detectUnitInAoe(SkillInfoNew skill, int unitFlg, bool drawFlg = true);
+	virtual void playSkill(UserSkillInfo skillData);
+	virtual vector<int> detectUnitInAoe(UserSkillInfo skill, int unitFlg, bool drawFlg = true);
 
-	virtual void skillRestoreAction(SkillInfoNew skillInfo);
-	virtual void skillRestoreAll(SkillInfoNew skillInfo);
-	virtual void skillRestoreOne(SkillInfoNew skillInfo);
+	virtual void skillRestoreAction(UserSkillInfo skillInfo);
+	virtual void skillRestoreAll(UserSkillInfo skillInfo);
+	virtual void skillRestoreOne(UserSkillInfo skillInfo);
 
-	virtual void skillHelpAction(SkillInfoNew skillInfo);
-	virtual void skillHelpAll(SkillInfoNew skillInfo);
-	virtual void skillHelpOne(SkillInfoNew skillInfo);
+	virtual void skillBuffAction(UserSkillInfo skillInfo);
+	virtual void skillHelpAll(UserSkillInfo skillInfo);
+	virtual void skillHelpOne(UserSkillInfo skillInfo);
 
-	virtual void skillAttackAction(SkillInfoNew skillInfo);
-	virtual void skillAttackAll(SkillInfoNew skillInfo);
-	virtual void skillAttackOne(SkillInfoNew skillInfo);
+	virtual void skillAttackAction(UserSkillInfo skillInfo);
+	virtual void skillAttackAll(UserSkillInfo skillInfo);
+	virtual void skillAttackOne(UserSkillInfo skillInfo);
 
-	virtual void skillPoisonAction(SkillInfoNew skillInfo);
-	virtual void skillStunAction(SkillInfoNew skillInfo);
+	virtual void skillPoisonAction(UserSkillInfo skillInfo);
+	virtual void skillStunAction(UserSkillInfo skillInfo);
 
-	virtual void poisonEffectAction(SkillInfoNew skill, int index);
+	virtual void poisonEffectAction(UserSkillInfo skill, int index);
 
 	virtual void endBattle();
 	virtual float caculDameRate(int mainC, int enemy);
 
-	virtual void longPressAction(Button *pSender, SkillInfoNew skill);
+	virtual void longPressAction(Button *pSender, UserSkillInfo skill);
 
 
 	virtual void getBattleInformationFromSocketIO(int sID);
@@ -317,7 +322,7 @@ private:
 	virtual void saveDameInfo(int dame, int attackUnitId, int beAttackUnitId, int teamFlg);
 	virtual void saveKillDeadInfo(int killerId, int deadUnitId, int teamFlg);
 
-	virtual void displayUnitStatus(Sprite *parent, int statusType, SkillInfoNew skillInfo, int spIndex = 0);
+	virtual void displayUnitStatus(Sprite *parent, int statusType, UserSkillInfo skillInfo, int spIndex = 0);
 	virtual Animation*  createStatusAnimation(string imagePath);
 
 	virtual void enemyUnitAutoMoveTest();

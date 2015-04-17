@@ -120,7 +120,7 @@ void BatleResultScene::tabButtonClickCallback(Ref *pSender, Widget::TouchEventTy
 		break;
 	case cocos2d::ui::Widget::TouchEventType::ENDED:
 	{
-		if (!_blueTeamTabBackground->isVisible())
+		if (_blueTeamButton->isEnabled())
 		{
 			_allSlot[0]->setSelected(true);
 			_blueTeamTabBackground->setVisible(true);

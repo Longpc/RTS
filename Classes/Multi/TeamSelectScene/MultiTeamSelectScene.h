@@ -8,6 +8,7 @@
 #include "Multi/MemberFullDialogLayer.h"
 
 #include "Model/data/UserModel.h"
+#include "Server/API/StartPHPAPI.h"
 #include "Server/Server.h"
 
 ///Include library header here///

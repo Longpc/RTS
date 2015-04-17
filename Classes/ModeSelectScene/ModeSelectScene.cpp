@@ -30,7 +30,9 @@ bool ModeSelectScene::init()
 	{
 		downloadDatabase();
 	}
-
+	StartAPI::getInstance()->setStartAPICallback([&]() {
+		log("Start callback");
+	});
 	_item1->setEnabled(false);
 	_usernameBg->setVisible(false);
 

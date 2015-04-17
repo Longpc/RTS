@@ -8,6 +8,7 @@
 
 #include "Server/API/ListUserPHPAPI.h"
 #include "Server/API/UserLoginPHPAPI.h"
+#include "Server/API/StartPHPAPI.h"
 #include "Server/Server.h"
 
 #include "json/rapidjson.h"

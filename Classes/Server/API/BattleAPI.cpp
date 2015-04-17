@@ -64,13 +64,12 @@ void BattleAPI::sendRepawnEvent()
 	});
 }
 
-void BattleAPI::battleSyncEvent(UnitInforNew unitData)
+void BattleAPI::battleSyncEvent(UserUnitInfo unitData)
 {
 	auto c = NodeServer::getInstance()->getClient();
 	auto userData = UserModel::getInstance()->getUserInfo();
 	auto roomId = UserModel::getInstance()->getRoomId();
 	int unitId = UserModel::getInstance()->getSelectedUnitId();
-	//UnitInforNew unitData = UserModel::getInstance()->getUserUnitsInfo();
 
 	Document doc;
 	doc.SetObject();
@@ -84,20 +83,20 @@ void BattleAPI::battleSyncEvent(UnitInforNew unitData)
 
 	rapidjson::Value unitDataValue;
 	unitDataValue.SetObject();
-	unitDataValue.AddMember("mst_unit_id", unitData.id, allo);
+	unitDataValue.AddMember("mst_unit_id", unitData.mst_unit_id, allo);
 	unitDataValue.AddMember("name", unitData.name.c_str(), allo);
 	unitDataValue.AddMember("hp", unitData.hp, allo);
-	unitDataValue.AddMember("hp_heal", unitData.hp_restore, allo);
+	unitDataValue.AddMember("hp_heal", unitData.hp_heal, allo);
 	unitDataValue.AddMember("mp", unitData.mp, allo);
-	unitDataValue.AddMember("mp_heal", unitData.mp_restore, allo);
-	unitDataValue.AddMember("attack", unitData.attack_dame, allo);
+	unitDataValue.AddMember("mp_heal", unitData.mp_heal, allo);
+	unitDataValue.AddMember("attack", unitData.attack, allo);
 	unitDataValue.AddMember("attack_range", unitData.attack_range, allo);
-	unitDataValue.AddMember("attack_speed", unitData.attack_delay, allo);
+	unitDataValue.AddMember("attack_speed", unitData.attack_speed, allo);
 	unitDataValue.AddMember("defence", unitData.defence, allo);
 	unitDataValue.AddMember("move_speed", unitData.move_speed, allo);
-	unitDataValue.AddMember("element", unitData.type, allo);
-	unitDataValue.AddMember("mst_skill_id_1", unitData.id, allo);
-	unitDataValue.AddMember("mst_skill_id_2", unitData.id, allo);
+	unitDataValue.AddMember("element", unitData.element, allo);
+	unitDataValue.AddMember("mst_skill_id_1", unitData.skill1_id, allo);
+	unitDataValue.AddMember("mst_skill_id_2", unitData.skill2_id, allo);
 
 	doc.AddMember("user_unit", unitDataValue/*convertUnitDataToJsonObject(unitData,allo)*/, allo);
 	StringBuffer  buffer;

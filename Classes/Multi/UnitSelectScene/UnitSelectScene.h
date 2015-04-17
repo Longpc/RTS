@@ -11,6 +11,9 @@
 #include "base/baseButton/ClippingButtonBase.h"
 
 #include "Model/data/UserModel.h"
+
+#include "Model/data/UserUnit.h"
+
 #include "Server/Server.h"
 
 ///Include library header here///
@@ -55,8 +58,8 @@ private:
 	int _pageNum;
 
 	//vector<UnitInfo> _allUnitInfo;
-	vector<UnitInforNew> _allUnitInfoNew;
-
+	//vector<UnitInforNew> _allUnitInfoNew;
+	vector<UserUnitInfo> _allUnitInfoNew;
 	bool _onTouchDisable;
 	Vec2 _touchBeginPoint;
 

@@ -27,7 +27,7 @@ public:
 	void sendAttackEvent();
 	void sendSkillEvent();
 	void sendRepawnEvent();
-	void battleSyncEvent(UnitInforNew unitData);
+	void battleSyncEvent(UserUnitInfo unitData);
 
 	bool init();
 private:

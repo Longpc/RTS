@@ -68,6 +68,8 @@ struct UserBattleInfo
 };
 
 
+
+
 //////////////////////////////////////////////////////////////////////////
 // EFFECT PLIST FILE PATH
 //////////////////////////////////////////////////////////////////////////
@@ -94,17 +96,17 @@ struct UserBattleInfo
 // VALUE
 //////////////////////////////////////////////////////////////////////////
 #define ATTACK_AOE 100.0f
-#define TYPE_HELP 1
+#define TYPE_BUFF 1
 #define TYPE_RESTORE 2
 #define TYPE_ATTACK 3
 #define TYPE_POISON 4
 #define TYPE_STUN 5
 
-#define TARGET_ALL 0
-#define TARGET_ONE 1
+#define TARGET_ALL 1
+#define TARGET_ONE 0
 
-#define DAME_TYPE_PERCENT 1
-#define DAME_TYPE_PURE 2
+#define DAME_TYPE_PERCENT 2
+#define DAME_TYPE_PURE 1
 
 #define TEAM_FLG_RED 1
 #define TEAM_FLG_BLUE 2
@@ -118,6 +120,14 @@ enum SKILL_HELP_TYPE
 	DEFENCE = 6,
 	ATTACK_RANGE = 7,
 	MOVESPEED = 8
+};
+
+enum SKILL_RANGE_TYPE
+{
+	CIRCLE = 1,
+	RECTANGLE = 2,
+	TRIANGLE = 3,
+	STAR = 4
 };
 
 #define JAPANESE_FONT_1_HEAVY "fonts/AozoraMinchoHeavy.ttf"

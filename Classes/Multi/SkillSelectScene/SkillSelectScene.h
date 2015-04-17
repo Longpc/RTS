@@ -9,6 +9,7 @@
 
 #include "Server/Server.h"
 #include "Model/data/UserModel.h"
+#include "Model/data/UserSkill.h"
 
 class SkillSelectScene : public LayerBase
 {
@@ -35,7 +36,7 @@ private:
 	Button *rArrow;
 
 	int _selectedUnitId;
-	vector<SkillInfoNew> _allSkillInfo;
+	vector<UserSkillInfo> _allSkillInfo;
 
 	bool _onTouchDisable = false;
 	Vec2 _beginTouchPoint;

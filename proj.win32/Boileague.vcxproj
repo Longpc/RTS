@@ -73,7 +73,7 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
       <Optimization>Disabled</Optimization>
-      <AdditionalIncludeDirectories>$(EngineRoot)cocos\audio\include;$(EngineRoot)external;$(EngineRoot)external\chipmunk\include\chipmunk;$(EngineRoot)extensions;..\Classes;..;%(AdditionalIncludeDirectories);$(_COCOS_HEADER_WIN32_BEGIN);$(_COCOS_HEADER_WIN32_END);$(EngineRoot)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(EngineRoot)cocos\audio\include;$(EngineRoot)external;$(EngineRoot)external\chipmunk\include\chipmunk;$(EngineRoot)extensions;$(EngineRoot);..\Classes;..;%(AdditionalIncludeDirectories);$(_COCOS_HEADER_WIN32_BEGIN);$(_COCOS_HEADER_WIN32_END)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;_USE_MATH_DEFINES;GL_GLEXT_PROTOTYPES;CC_ENABLE_CHIPMUNK_INTEGRATION=1;COCOS2D_DEBUG=1;_CRT_SECURE_NO_WARNINGS;_SCL_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <MinimalRebuild>false</MinimalRebuild>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
@@ -137,6 +137,7 @@ xcopy /Y /Q "$(EngineRoot)external\websockets\prebuilt\win32\*.*" "$(OutDir)"</C
     </PreLinkEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="..\Classes\AAA\Character.cpp" />
     <ClCompile Include="..\Classes\AppDelegate.cpp" />
     <ClCompile Include="..\Classes\base\animationBase\AnimationFromImage.cpp" />
     <ClCompile Include="..\Classes\base\animationBase\AnimationSpriteFromPlist.cpp" />
@@ -153,6 +154,8 @@ xcopy /Y /Q "$(EngineRoot)external\websockets\prebuilt\win32\*.*" "$(OutDir)"</C
     <ClCompile Include="..\Classes\dataController\UnitData\UnitData.cpp" />
     <ClCompile Include="..\Classes\HelloWorldScene.cpp" />
     <ClCompile Include="..\Classes\Model\data\UserModel.cpp" />
+    <ClCompile Include="..\Classes\Model\data\UserSkill.cpp" />
+    <ClCompile Include="..\Classes\Model\data\UserUnit.cpp" />
     <ClCompile Include="..\Classes\ModeSelectScene\ModeSelectScene.cpp" />
     <ClCompile Include="..\Classes\Multi\BatleResultScene\BatleResultScene.cpp" />
     <ClCompile Include="..\Classes\Multi\BatleScene\BatleScene.cpp" />
@@ -168,12 +171,14 @@ xcopy /Y /Q "$(EngineRoot)external\websockets\prebuilt\win32\*.*" "$(OutDir)"</C
     <ClCompile Include="..\Classes\Server\API\HttpClientbase.cpp" />
     <ClCompile Include="..\Classes\Server\API\ListUnitPHPAPI.cpp" />
     <ClCompile Include="..\Classes\Server\API\ListUserPHPAPI.cpp" />
+    <ClCompile Include="..\Classes\Server\API\StartPHPAPI.cpp" />
     <ClCompile Include="..\Classes\Server\API\UserLoginPHPAPI.cpp" />
     <ClCompile Include="..\Classes\Server\Server.cpp" />
     <ClCompile Include="..\Classes\UserSelectScene\UserSelectScene.cpp" />
     <ClCompile Include="main.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\Classes\AAA\Character.h" />
     <ClInclude Include="..\Classes\AppDelegate.h" />
     <ClInclude Include="..\Classes\base\animationBase\AnimationFromImage.h" />
     <ClInclude Include="..\Classes\base\animationBase\AnimationSpriteFromPlist.h" />
@@ -191,6 +196,8 @@ xcopy /Y /Q "$(EngineRoot)external\websockets\prebuilt\win32\*.*" "$(OutDir)"</C
     <ClInclude Include="..\Classes\dataController\UnitData\UnitData.h" />
     <ClInclude Include="..\Classes\HelloWorldScene.h" />
     <ClInclude Include="..\Classes\Model\data\UserModel.h" />
+    <ClInclude Include="..\Classes\Model\data\UserSkill.h" />
+    <ClInclude Include="..\Classes\Model\data\UserUnit.h" />
     <ClInclude Include="..\Classes\ModeSelectScene\ModeSelectScene.h" />
     <ClInclude Include="..\Classes\Multi\BatleResultScene\BatleResultScene.h" />
     <ClInclude Include="..\Classes\Multi\BatleScene\BatleScene.h" />
@@ -203,6 +210,7 @@ xcopy /Y /Q "$(EngineRoot)external\websockets\prebuilt\win32\*.*" "$(OutDir)"</C
     <ClInclude Include="..\Classes\Multi\UnitSelectScene\UnitDetailDialog.h" />
     <ClInclude Include="..\Classes\Multi\UnitSelectScene\UnitSelectScene.h" />
     <ClInclude Include="..\Classes\Server\API\BattleAPI.h" />
+    <ClInclude Include="..\Classes\Server\API\StartPHPAPI.h" />
     <ClInclude Include="..\Classes\Server\API\UserLoginPHPAPI.h" />
     <ClInclude Include="..\Classes\Server\API\HttpClientBase.h" />
     <ClInclude Include="..\Classes\Server\API\ListUnitPHPAPI.h" />

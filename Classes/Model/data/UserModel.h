@@ -3,6 +3,8 @@
 
 #include "cocos2d.h"
 #include "base/Define.h"
+#include "Model/data/UserUnit.h"
+#include "Model/data/UserSkill.h"
 
 USING_NS_CC;
 using namespace std;
@@ -25,7 +27,7 @@ class MYCLASS_DECLSPEC UserModel : public Ref
 public:
 	static UserModel *getInstance();
 	CC_SYNTHESIZE(UserInfo, _userInfo, UserInfo);
-	CC_SYNTHESIZE(UnitInforNew, _listUnit, UserUnitsInfo);
+	CC_SYNTHESIZE(UserUnitInfo, _listUnit, UserUnitsInfo);
 	CC_SYNTHESIZE(int, _roomId, RoomId);
 	CC_SYNTHESIZE(int, _teamId, TeamId);
 	CC_SYNTHESIZE(int, _selectedUnitId, SelectedUnitId);

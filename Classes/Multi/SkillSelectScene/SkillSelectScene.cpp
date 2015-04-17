@@ -190,7 +190,7 @@ void SkillSelectScene::onTouchUnitSlot2(Ref *pSender, Widget::TouchEventType typ
 */
 void SkillSelectScene::displayUnit(Button *parent, Label *label, int unitId)
 {
-	parent->loadTextureNormal(_allSkillInfo[unitId].icon);
+	parent->loadTextureNormal(_allSkillInfo[unitId].skill_icon_path);
 	label->setString(_allSkillInfo[unitId].name);
 	//parent->setScale(0.3);
 	if (_onSelectedSlot < SLOT_NUMBER) {
@@ -210,7 +210,7 @@ void SkillSelectScene::nextButtonCallback(Ref *pSender, Widget::TouchEventType t
 		break;
 	case cocos2d::ui::Widget::TouchEventType::ENDED:
 	{
-		vector<SkillInfoNew> skills;
+		vector<UserSkillInfo> skills;
 		for (auto &var : _allSelectedSkilId)
 		{
 			if (var < 1)
@@ -224,9 +224,9 @@ void SkillSelectScene::nextButtonCallback(Ref *pSender, Widget::TouchEventType t
 		string data = "";
 		data.append("{\"room_id\":\"").append(DataUtils::numberToString(UserModel::getInstance()->getRoomId())).append("\",\"team_id\":\"").append(DataUtils::numberToString(UserModel::getInstance()->getTeamId())).append("\",\"user_id\":\"").append(DataUtils::numberToString(a._id)).append("\",\"unit_id\":\"").append(DataUtils::numberToString(_selectedUnitId)).append("\"");
 		data.append(",\"player_skill_list\": [");
-		data.append("{\"mst_skill_id\":\"").append(DataUtils::numberToString(skills[0].id)).append("\"}");
+		data.append("{\"mst_skill_id\":\"").append(DataUtils::numberToString(skills[0].mst_skill_id)).append("\"}");
 		data.append(",");
-		data.append("{\"mst_skill_id\":\"").append(DataUtils::numberToString(skills[1].id)).append("\"}");
+		data.append("{\"mst_skill_id\":\"").append(DataUtils::numberToString(skills[1].mst_skill_id)).append("\"}");
 		data.append("]");
 		data.append("}");
 		auto client = NodeServer::getInstance()->getClient();
@@ -317,13 +317,13 @@ void SkillSelectScene::onSelectUnit(int unitId)
 	case 1:
 	{
 		displayUnit(_skillSlot1->getClickableButton(),_skill1NameLabel, unitId);
-		_allSelectedSkilId[0] = _allSkillInfo[unitId].id;
+		_allSelectedSkilId[0] = _allSkillInfo[unitId].mst_skill_id;
 		break;
 	}
 	case 2:
 	{
 		displayUnit(_skillSlot2->getClickableButton(),_skill2NameLabel, unitId);
-		_allSelectedSkilId[1] = _allSkillInfo[unitId].id;
+		_allSelectedSkilId[1] = _allSkillInfo[unitId].mst_skill_id;
 		break;
 	}
 	/*case 3:
@@ -412,8 +412,8 @@ void SkillSelectScene::createAllUnitView()
 		{
 			if ((j + i * 4 - 1) < _allSkillInfo.size()) {
 				auto sprite = Button::create();
-				sprite->setTag(_allSkillInfo[j + i * 4 - 1].id);
-				sprite->loadTextureNormal(_allSkillInfo[j + i * 4 - 1].icon);
+				sprite->setTag(_allSkillInfo[j + i * 4 - 1].mst_skill_id);
+				sprite->loadTextureNormal(_allSkillInfo[j + i * 4 - 1].skill_icon_path);
 				sprite->setSwallowTouches(false);
 				sprite->addTouchEventListener(CC_CALLBACK_2(SkillSelectScene::onTouchUnit, this));
 				int yValue = lay->getContentSize().height / 2 + 20;
@@ -494,31 +494,8 @@ void SkillSelectScene::setSelectedSlot(int slotNum)
 
 void SkillSelectScene::getSkillDataFromDatabase()
 {
-	_allSkillInfo = SkillData::getAllPlayerSkillData();
+	_allSkillInfo = UserSkill::getInstance()->getUserSkillList();
 
-
-/*#define DATAFILE "database.db3"
-	sqlite3 *data = SqlUtil::openData(DATAFILE);
-	string sql = "select * from skill";
-	vector<vector<string>> a = SqlUtil::runQuery(data, sql.c_str());
-	for (auto &item : a)
-	{
-		SkillInfoNew temp;
-		temp.id = DataUtils::stringToFloat(item[0].c_str());
-		temp.name = item[1];
-		temp.aoe = DataUtils::stringToFloat(item[2].c_str());
-		temp.target_type = DataUtils::stringToFloat(item[3].c_str());
-		temp.mp_cost = DataUtils::stringToFloat(item[4].c_str());
-		temp.cooldown = DataUtils::stringToFloat(item[5].c_str());
-		temp.skill_type = DataUtils::stringToFloat(item[6].c_str());
-		temp.dame_type = DataUtils::stringToFloat(item[7].c_str());
-		temp.dame_value = DataUtils::stringToFloat(item[8].c_str());
-		temp.duration = DataUtils::stringToFloat(item[9].c_str());
-		temp.effect = (item[10].c_str());
-		temp.plistpath = (item[11].c_str());
-		temp.icon = item[12].c_str();
-		_allSkillInfo.push_back(temp);
-	}*/
 }
 
 void SkillSelectScene::leftArrowClickCallback(Ref *pSender, Widget::TouchEventType type)

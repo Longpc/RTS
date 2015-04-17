@@ -1,7 +1,7 @@
 ﻿#pragma execution_character_set("utf-8")
 #include "UnitDetailDialog.h"
 
-UnitDetailDialog* UnitDetailDialog::create(UnitInforNew unit, MyTouchEvent decideCallback, MyTouchEvent ccelCallback)
+UnitDetailDialog* UnitDetailDialog::create(UserUnitInfo unit, MyTouchEvent decideCallback, MyTouchEvent ccelCallback)
 {
 	UnitDetailDialog *p = new UnitDetailDialog();
 	if (p && p->init(unit, decideCallback, ccelCallback)) {
@@ -12,7 +12,7 @@ UnitDetailDialog* UnitDetailDialog::create(UnitInforNew unit, MyTouchEvent decid
 	return NULL;
 }
 
-bool UnitDetailDialog::init(UnitInforNew unit, MyTouchEvent decideCallback, MyTouchEvent ccelCallback)
+bool UnitDetailDialog::init(UserUnitInfo unit, MyTouchEvent decideCallback, MyTouchEvent ccelCallback)
 {
 	if (!LayerBase::init()) {
 		return false;
@@ -77,13 +77,13 @@ void UnitDetailDialog::displayUnitInfo(Sprite *parent)
 
 {
 
-	auto image = Sprite::create(_unitInfo.image);
+	auto image = Sprite::create(UserUnit::getInstance()->getUnitImageById(_unitInfo.mst_unit_id));
 	image->setPosition(Vec2(150, parent->getContentSize().height / 2));
 	parent->addChild(image, 10);
 	image->setScale(2);
 
 	string dameType = "無";
-	switch (_unitInfo.attr)
+	switch (_unitInfo.element)
 	{
 	case 1:
 		dameType = "火";
@@ -99,8 +99,8 @@ void UnitDetailDialog::displayUnitInfo(Sprite *parent)
 
 
 	std::stringstream info;
-	info << "名前:   " << _unitInfo.name << "\nHP:   " << _unitInfo.hp << "\nHP 回復:   " << _unitInfo.hp_restore << "\nMP:   " << _unitInfo.mp_restore << "\n攻撃力:   " << _unitInfo.attack_dame << "\n防御力:   " << _unitInfo.defence;
-	info << "\n攻撃範囲:   " << _unitInfo.attack_range << "\n移動スピード: " << _unitInfo.move_speed << "\n属性: " << dameType << "\nタイプ: " << _unitInfo.type;
+	info << "名前:   " << _unitInfo.name << "\nHP:   " << _unitInfo.hp << "\nHP 回復:   " << _unitInfo.hp_heal << "\nMP:   " << _unitInfo.mp  <<"\nMP回復: "<<_unitInfo.mp_heal<< "\n攻撃力:   " << _unitInfo.attack << "\n防御力:   " << _unitInfo.defence;
+	info << "\n攻撃範囲:   " << _unitInfo.attack_range << "\n移動スピード: " << _unitInfo.move_speed << "\n属性: " << dameType << "\nタイプ: " << _unitInfo.element;
 	statusLabel = Label::create(info.str().c_str(), JAPANESE_FONT_1_BOLD, 25);
 	statusLabel->setColor(Color3B::BLACK);
 	statusLabel->setHorizontalAlignment(TextHAlignment::LEFT);
@@ -112,12 +112,12 @@ void UnitDetailDialog::displayUnitInfo(Sprite *parent)
 
 	for (int i = 0; i < _allUnitSkill.size(); i++)
 	{
-		auto sp = Sprite::create(_allUnitSkill[i].icon);
+		auto sp = Sprite::create(_allUnitSkill[i].skill_icon_path);
 		sp->setScale(0.7);
 		Vec2 pos = Vec2(0, backGroundSize.height/2 - 100 * i - 250);
 		sp->setPosition(pos);
 		skillLabel->addChild(sp);
-		string content = _allUnitSkill[i].name.append("\n").append(_allUnitSkill[i].effect);
+		string content = _allUnitSkill[i].name.append("\n").append(_allUnitSkill[i].skill_des);
 		auto lb = Label::create(content.c_str(), JAPANESE_FONT_1_BOLD, 25,Size(400,100));
 		lb->setColor(Color3B::BLACK);
 		lb->setPosition(pos + Vec2(50, -10));
@@ -241,31 +241,6 @@ void UnitDetailDialog::skillButonCallback(Ref *pSEnder, Widget::TouchEventType t
 
 void UnitDetailDialog::getUnitSkillDataFromDatabase()
 {
-	/*string sql = "SELECT skill.* FROM unit_skill JOIN unit ON unit.id = unit_skill.unitId JOIN skill ON skill.id = unit_skill.skillId WHERE unit.id = ";
-	sql.append(DataUtils::numberToString(_unitInfo.id));
-
-#define DATAFILE "database.db3"
-	sqlite3 *data = SqlUtil::openData(DATAFILE);
-
-	vector<vector<string>> a = SqlUtil::runQuery(data, sql.c_str());
-	for (auto &item : a)
-	{
-		SkillInfoNew temp;
-		temp.id = DataUtils::stringToFloat(item[0].c_str());
-		temp.name = item[1];
-		temp.aoe = DataUtils::stringToFloat(item[2].c_str());
-		temp.target_type = DataUtils::stringToFloat(item[3].c_str());
-		temp.mp_cost = DataUtils::stringToFloat(item[4].c_str());
-		temp.cooldown = DataUtils::stringToFloat(item[5].c_str());
-		temp.skill_type = DataUtils::stringToFloat(item[6].c_str());
-		temp.dame_type = DataUtils::stringToFloat(item[7].c_str());
-		temp.dame_value = DataUtils::stringToFloat(item[8].c_str());
-		temp.duration = DataUtils::stringToFloat(item[9].c_str());
-		temp.effect = (item[10].c_str());
-		temp.plistpath = (item[11].c_str());
-		temp.icon = item[12].c_str();
-		_allUnitSkill.push_back(temp);
-	}
-	*/
-	_allUnitSkill =  SkillData::getUnitSkillsByUnitId(_unitInfo.id);
+	_allUnitSkill.push_back(UserSkill::getInstance()->getSkillInfoById(_unitInfo.skill1_id));
+	_allUnitSkill.push_back(UserSkill::getInstance()->getSkillInfoById(_unitInfo.skill2_id));
 }

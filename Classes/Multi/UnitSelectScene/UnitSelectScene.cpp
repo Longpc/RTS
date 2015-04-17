@@ -174,7 +174,7 @@ void MultiUnitSelectScene::onSelectUnit(int unitId)
 }
 void MultiUnitSelectScene::displayUnit(Button *parent,Label *textView, int unitId)
 {
-	parent->loadTextureNormal(_allUnitInfoNew[unitId].image);
+	parent->loadTextureNormal(UserUnit::getInstance()->getUnitImageById(_allUnitInfoNew[unitId].mst_unit_id).c_str());
 	textView->setString(_allUnitInfoNew[unitId].name);
 
 	if (_onSelectedSlot < 3) {
@@ -266,7 +266,7 @@ void MultiUnitSelectScene::createAllUnitView()
 			if ((j + i * 4-1) < _allUnitInfoNew.size()) {
 				auto sprite = Button::create();
 				sprite->setTag(j + i * 4 - 1);
-				sprite->loadTextureNormal(_allUnitInfoNew[j+i*4 - 1].image);
+				sprite->loadTextureNormal(UserUnit::getInstance()->getUnitImageById(_allUnitInfoNew[j+i*4 - 1].mst_unit_id).c_str());
 				sprite->setSwallowTouches(false);
 				sprite->setScale(1.5);
 				sprite->addTouchEventListener(CC_CALLBACK_2(MultiUnitSelectScene::onTouchUnit, this));
@@ -363,7 +363,7 @@ void MultiUnitSelectScene::decideCallBack(Ref *pSender, Widget::TouchEventType t
 	{
 	case cocos2d::ui::Widget::TouchEventType::BEGAN:
 	{
-		_decidedUnitId = _allUnitInfoNew[_onSelectedUnitTag].id;
+		_decidedUnitId = _allUnitInfoNew[_onSelectedUnitTag].mst_unit_id;
 		UserModel::getInstance()->setUserUnitsInfo(_allUnitInfoNew[_onSelectedUnitTag]);
 		onSelectUnit(_onSelectedUnitTag);
 		_onTouchDisable = false;
@@ -504,38 +504,9 @@ void MultiUnitSelectScene::setSelectedSlot(int slotNum)
 
 void MultiUnitSelectScene::getDataFromDataBase()
 {
-/*#define DATABASE_NAME "database.db3"
-#define TABLE_NAME "unit"
-	sqlite3 *data = SqlUtil::openData(DATABASE_NAME);
-	string sql = "select * from unit";
-	vector<vector<string>> a = SqlUtil::runQuery(data, sql.c_str());
-	for (auto &item : a)
-	{
-		UnitInforNew temp;
-		temp.id = DataUtils::stringToFloat(item[0].c_str());
-		temp.name = item[1];
-		temp.hp = DataUtils::stringToFloat(item[2].c_str());
-		temp.hp_restore = DataUtils::stringToFloat(item[3].c_str());
-		temp.mp = DataUtils::stringToFloat(item[4].c_str());
-		temp.mp_restore = DataUtils::stringToFloat(item[5].c_str());
-		temp.attack_dame = DataUtils::stringToFloat(item[6].c_str());
-		temp.defence = DataUtils::stringToFloat(item[7].c_str());
-		temp.attack_sight = DataUtils::stringToFloat(item[8].c_str());
-		temp.move_speed = DataUtils::stringToFloat(item[9].c_str());
-		temp.attr = DataUtils::stringToFloat(item[10].c_str());
-		temp.type = DataUtils::stringToFloat(item[11].c_str());
-		temp.image = item[12].c_str();
-		_allUnitInfoNew.push_back(temp);
-		for (int i = 0; i < item.size(); i ++)
-		{
-			log("%s", item[i].c_str());
 
-		}
-		log("________________________");
-	}
-
-	*/
-	_allUnitInfoNew = UnitData::getAllUnitData();
+	//_allUnitInfoNew = UnitData::getAllUnitData();
+	_allUnitInfoNew = UserUnit::getInstance()->getUserUnitList();
 }
 
 void MultiUnitSelectScene::leftArrowClickCallback(Ref *pSender, Widget::TouchEventType type)

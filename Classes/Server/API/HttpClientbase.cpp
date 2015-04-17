@@ -27,7 +27,8 @@ void HttpClientBase::postAPIAddressAndParam(string add, string dataParam , PostC
 	httpRequest->setRequestType(HttpRequest::Type::POST);
 	httpRequest->setResponseCallback([&](HttpClient *cl, HttpResponse* response) {
 		if (response->getResponseCode() != 200) {
-			log("connect failed");
+			log("HttpClientBase------>connect failed");
+			HttpClientBase::destroyInstance();
 			return;
 		}
 		std::vector<char>* data = response->getResponseData();

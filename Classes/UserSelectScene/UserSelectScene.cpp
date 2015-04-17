@@ -89,9 +89,12 @@ void UserSelect::unitSelectButtonClick(Ref *pSender, Widget::TouchEventType type
 		UserModel::getInstance()->setRoomId(random(1, 5));
 		UserLoginAPI::getInstance()->setLoginCompletedCallback([&](){
 			log("Login Completed");
+
 		});
-		
+// 		StartAPI::getInstance()->setStartAPICallback([&,bt]() {
+// 		});
 		Director::getInstance()->replaceScene(TransitionMoveInR::create(SCREEN_TRANSI_DELAY, MultiTeamSelectScene::createScene(_userList[bt->getTag()]._id)));
+
 		break;
 	}
 	case cocos2d::ui::Widget::TouchEventType::CANCELED:

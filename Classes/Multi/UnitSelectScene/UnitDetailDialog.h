@@ -4,12 +4,16 @@
 #include "base/Define.h"
 #include "dataController/SkillData/SkillData.h"
 
+#include "Model/data/UserModel.h"
+#include "Model/data/UserSkill.h"
+#include "Model/data/UserUnit.h"
+
 typedef std::function<void(Ref *pSender, Widget::TouchEventType type)> MyTouchEvent;
 class UnitDetailDialog :public LayerBase
 {
 public:
-	static UnitDetailDialog* create(UnitInforNew unit, MyTouchEvent decideCallback, MyTouchEvent ccelCallback);
-	bool init(UnitInforNew unit, MyTouchEvent decideCallback, MyTouchEvent ccelCallback);
+	static UnitDetailDialog* create(UserUnitInfo unit, MyTouchEvent decideCallback, MyTouchEvent ccelCallback);
+	bool init(UserUnitInfo unit, MyTouchEvent decideCallback, MyTouchEvent ccelCallback);
 
 private:
 	///VARIABLES///////////////////////////////////////////////////////////////////////
@@ -19,8 +23,8 @@ private:
 	Button *statusButton;
 	Button *skillButton;
 
-	UnitInforNew _unitInfo;
-	vector<SkillInfoNew> _allUnitSkill;
+	UserUnitInfo _unitInfo;
+	vector<UserSkillInfo> _allUnitSkill;
 
 	MyTouchEvent _decideCallback;
 	MyTouchEvent _ccCallback;

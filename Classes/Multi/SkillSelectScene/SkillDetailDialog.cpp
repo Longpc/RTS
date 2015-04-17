@@ -1,9 +1,9 @@
 ﻿#pragma execution_character_set("utf-8")
 #include "SkillDetailDialog.h"
-SkillDetailDialog* SkillDetailDialog::create(SkillInfoNew unit, MyTouchEvent decideCallback, MyTouchEvent ccelCallback)
+SkillDetailDialog* SkillDetailDialog::create(UserSkillInfo skill, MyTouchEvent decideCallback, MyTouchEvent ccelCallback)
 {
 	SkillDetailDialog *p = new SkillDetailDialog();
-	if (p && p->init(unit, decideCallback, ccelCallback)) {
+	if (p && p->init(skill, decideCallback, ccelCallback)) {
 		p->autorelease();
 		return p;
 	}
@@ -11,7 +11,7 @@ SkillDetailDialog* SkillDetailDialog::create(SkillInfoNew unit, MyTouchEvent dec
 	return NULL;
 }
 
-bool SkillDetailDialog::init(SkillInfoNew unit, MyTouchEvent decideCallback, MyTouchEvent ccelCallback)
+bool SkillDetailDialog::init(UserSkillInfo unit, MyTouchEvent decideCallback, MyTouchEvent ccelCallback)
 {
 	if (!LayerBase::init()) {
 		return false;
@@ -73,14 +73,14 @@ void SkillDetailDialog::closeDialog()
 
 void SkillDetailDialog::displayUnitInfo(Sprite *parent)
 {
-	auto image = Sprite::create(_skillInfo.icon);
+	auto image = Sprite::create(_skillInfo.skill_icon_path);
 	image->setScale(1.5);
 	image->setPosition(Vec2(image->getContentSize().width / 2 + 80, parent->getContentSize().height / 2));
 	parent->addChild(image, 10);
 
 
 	std::stringstream info;
-	info << "スキル名前: " << _skillInfo.name << "\n\n説明: " << _skillInfo.effect << "\n必要ＭＰ: " << _skillInfo.mp_cost;
+	info << "スキル名前: " << _skillInfo.name << "\n\n説明: " << _skillInfo.skill_des << "\n必要ＭＰ: " << _skillInfo.mp_cost;
 	auto label = Label::createWithSystemFont(info.str().c_str(), JAPANESE_FONT_1_BOLD, 25,Size(parent->getContentSize().width/2,300));
 	label->setColor(Color3B::BLACK);
 	label->setAnchorPoint(Vec2::ANCHOR_TOP_LEFT);

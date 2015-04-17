@@ -76,6 +76,9 @@
     <Filter Include="src\Server\API">
       <UniqueIdentifier>{cd44baf9-4692-416d-a45c-7398e5d96e8f}</UniqueIdentifier>
     </Filter>
+    <Filter Include="src\AAAA">
+      <UniqueIdentifier>{8022c215-242a-4aed-9e7e-d968c7655712}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -182,6 +185,18 @@
     </ClCompile>
     <ClCompile Include="..\Classes\Server\API\BattleAPI.cpp">
       <Filter>src\Server\API</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Classes\Server\API\StartPHPAPI.cpp">
+      <Filter>src\Server\API</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Classes\AAA\Character.cpp">
+      <Filter>src\AAAA</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Classes\Model\data\UserUnit.cpp">
+      <Filter>src\Model\data</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Classes\Model\data\UserSkill.cpp">
+      <Filter>src\Model\data</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -292,6 +307,18 @@
     </ClInclude>
     <ClInclude Include="..\Classes\Server\API\BattleAPI.h">
       <Filter>src\Server\API</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Classes\Server\API\StartPHPAPI.h">
+      <Filter>src\Server\API</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Classes\AAA\Character.h">
+      <Filter>src\AAAA</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Classes\Model\data\UserUnit.h">
+      <Filter>src\Model\data</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Classes\Model\data\UserSkill.h">
+      <Filter>src\Model\data</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

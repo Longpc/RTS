@@ -35,8 +35,30 @@ bool MultiTeamSelectScene::init()
 		log("connect end data: %s", data.c_str());
 		/*UserModel::getInstance()->setRoomId(roomId);*/
 	});
-
-
+	char data1[100];
+	sprintf(data1, "app_key=%s&user_id=%d", APP_KEY, UserModel::getInstance()->getUserInfo()._id);
+	//HttpClientBase::getInstance()->postAPIAddressAndParam("start.php", data1, [&](string a) {
+	//	log("Start--->Callback data: %s", a.c_str());
+		// 		rapidjson::Document doc;
+		// 		doc.Parse<0>(a.c_str());
+		// 		if (doc.HasParseError())
+		// 		{
+		// 			log("error in parse json");
+		// 		}
+		// 		if (doc.IsObject() && doc.HasMember("data")) {
+		// 			for (int i = 0; i < doc["data"].Size(); i++)
+		// 			{
+		// 				UserInfo temp;
+		// 				temp._id = DataUtils::stringToFloat(doc["data"][i]["user_id"].GetString());
+		// 				temp._name = doc["data"][i]["name"].GetString();
+		// 				_listUser.push_back(temp);
+		// 			}
+		// 		}
+		/*if (_callBack != nullptr)
+		{
+		_callBack();
+		}*/
+	//});
 	auto blueTeamBg = Sprite::create("image/screen/base.png");
 	blueTeamBg->setPosition(Vec2(_visibleSize.width / 2,10+(_visibleSize.height - 100) * 1 / 4));
 	addChild(blueTeamBg, 1);
@@ -261,8 +283,8 @@ void MultiTeamSelectScene::enterTeam(int teamId)
 		log("select team end data: %s", data.c_str());
 		UserModel::getInstance()->setTeamId(teamId);
 	});
-	
-	Director::getInstance()->replaceScene(TransitionMoveInR::create(SCREEN_TRANSI_DELAY, MultiUnitSelectScene::createScene(teamId,MULTI_MODE)));
+	Director::getInstance()->replaceScene(TransitionMoveInR::create(SCREEN_TRANSI_DELAY, MultiUnitSelectScene::createScene(teamId, MULTI_MODE)));
+
 }
 
 void MultiTeamSelectScene::testFullTeam(Ref *pSender, Widget::TouchEventType type)
