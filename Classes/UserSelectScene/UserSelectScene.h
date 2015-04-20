@@ -17,8 +17,10 @@
 class UserSelect :public LayerBase
 {
 public:
-	static Scene *createScene();
-	static UserSelect* create();
+	//static Scene *createScene();
+	UI_SCENE_CREATE_FUNC(UserSelect);
+	CREATE_FUNC(UserSelect);
+	//static UserSelect* create();
 	bool init();
 private:
 	vector<UserInfo> _userList;

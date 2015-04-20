@@ -23,11 +23,26 @@ bool BattleAPI::init()
 	return true;
 }
 
-void BattleAPI::sendMoveEvent()
+void BattleAPI::sendMoveEvent(UnitData_temp unitdata)
 {
 	auto a = NodeServer::getInstance()->getClient();
 
-	a->emit("move", "{\"data\": \"test Move\"}");
+	Document doc;
+	doc.SetObject();
+	Document::AllocatorType& allo = doc.GetAllocator();
+	doc.AddMember("user_id", unitdata.user_id, allo);
+	doc.AddMember("room_id", unitdata.room_id, allo);
+	doc.AddMember("mst_unit_id", unitdata.mst_unit_id, allo);
+	doc.AddMember("hp", unitdata.hp,allo);
+	doc.AddMember("mp", unitdata.mp,allo);
+	doc.AddMember("position_x", unitdata.position_x, allo);
+	doc.AddMember("position_y", unitdata.position_y, allo);
+
+	StringBuffer  buffer;
+	Writer<StringBuffer> writer(buffer);
+	doc.Accept(writer);
+
+	a->emit("move", buffer.GetString());
 	a->on("move_end", [&](SIOClient* client, const std::string& data)
 	{
 		log("move callback: %s", data.c_str());
@@ -37,8 +52,30 @@ void BattleAPI::sendMoveEvent()
 void BattleAPI::sendAttackEvent()
 {
 	auto c = NodeServer::getInstance()->getClient();
+	auto userData = UserModel::getInstance()->getUserInfo();
+	auto roomId = UserModel::getInstance()->getRoomId();
+	int unitId = UserModel::getInstance()->getSelectedUnitId();
 
-	c->emit("attack", "{\"data\": \"test Attack\"}");
+	Document doc;
+	doc.SetObject();
+	Document::AllocatorType& allo = doc.GetAllocator();
+
+	doc.AddMember("user_id", userData._id, allo);
+	doc.AddMember("room_id", roomId, allo);
+	doc.AddMember("unit_id", unitId, allo);
+	doc.AddMember("room_user", "{room_user}", allo);
+	doc.AddMember("user_unit", "{user_unit}", allo);
+	doc.AddMember("attack", "{attack}", allo);
+	doc.AddMember("attack.target", "{attack_target}", allo);
+	doc.AddMember("attack.target.object_type", "{attack target}", allo);
+	doc.AddMember("attack.target.object_id", 12, allo);
+	doc.AddMember("attack.back_attack", 0, allo);
+
+	StringBuffer  buffer;
+	Writer<StringBuffer> writer(buffer);
+	doc.Accept(writer);
+
+	c->emit("attack", buffer.GetString());
 	c->on("attack_end", [&](SIOClient* client, const std::string data){
 		log("attack_end data :%s",data.c_str());
 	});

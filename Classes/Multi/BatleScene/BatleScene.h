@@ -19,6 +19,7 @@
 #include <time.h>
 #include "Server/Server.h"
 #include <string.h>
+
 #include "Server/API/BattleAPI.h"
 
 #define MOVE_SPEED 250
@@ -80,6 +81,10 @@ class BatleScene : public LayerBase
 public:
 	BatleScene();
 	~BatleScene();
+	/*create battle scene with parameter:
+	@selectedUnitId: selected unit id in unit selected scene
+	@playerSkills: the vector store two player skill info
+	*/
 	static Scene* createScene(int selectedUnitId, vector<UserSkillInfo> playerSkills);
 	static BatleScene* create(int unitId, vector<UserSkillInfo> playerSkills);
 	bool init(int unitId, vector<UserSkillInfo> playerSkills);
@@ -207,13 +212,23 @@ private:
 	virtual void onEnter();
 
 	///CREATE UI CONTENT + PHYSIC WORLD///
+	/*Create the content of battle scene: battle background, physical object, tree, rock, character
+	 Initial data for battle logic
+	*/
 	virtual void createContent();
+
+	/*Show skill mp cost value in the skill button (@parent);
+	*/
 	virtual void displaySkillMpInButton(Button *parent, int mp);
+	/*create battle physic bolder*/
 	virtual void createPhysicBolder();
 	virtual Node* createHBolder();
 	virtual Node* createVBolder();
+	/*create rock and tree and put to battle background by random position*/
 	virtual void createRandomRock();
+	/*For physic contact event*/
 	virtual bool onPhysicContactBegin(const PhysicsContact &contact);
+	/*Pre-Solve of physic contact event*/
 	virtual bool onPhysicContactPreSolve(PhysicsContact& contact, PhysicsContactPreSolve& solve);
 	///BUTTON CALLBACK///
 	virtual void nextButtonCallback(Ref *pSender, Widget::TouchEventType type);
@@ -229,99 +244,138 @@ private:
 	virtual void onTouchEnded(Touch *touch, Event *unused_event);
 	
 	///CHARACTER MOVE LOGIC///
+	/* check the angle between the avg value  +- 22
+	*/
 	virtual bool caculAvgAngle(int avg, float angle);
+	/*this function calculate the direction offset base on angle from -90 to 270
+	@return: 
+	7--8--9
+	4-YOU-6
+	1--2--3
+	*/
 	virtual int detectDirectionBaseOnTouchAngle(float angle);
 	
 	///CHARACTER MOVE ACTION///
+	/*This function will let the @characterSprite run move animation base on @directionID*/
 	virtual void actionCharacter(int directionId, Sprite *characterSprite);
+	/* copy function for enemy AUTOMOVE TEST*/
 	virtual void actionCharacterCopy(int directionId, Sprite *sprite);
-	//virtual void selectAttackTarget();
-	//virtual void runAttackAnimation();
+
+	/* create move animation from list off image base on @imageId as move direction offset and @path as image folder path*/
 	virtual Animation* createMoveAnimationWithDefine(int imageId, string path);
+	
+	/* create attack animation from list off image base on @imageId as attack direction offset and @path as image folder path*/
 	virtual Animation* createAttackAnimationWithDefine(int imageId, string path);
+	
+	/*this function will let the @target sprite run action look as it rotate base on @direc*/
 	virtual void rotateCharacter(Sprite *target, int direc);
-
-	//virtual void removeMoveDisableFlg();
-	virtual void removeceAttackDelayFlg();
-
-	/*Remove enemy attack delay flag. Default attack delay time is 1s*/
-	virtual void removeEnemyAttackDelayFlg(Ref *pSender, int index);
 
 	/*This function will be call when main character attack animation finished ( 0.5s)*/
 	virtual void characterAttackCallback();
 	/*This function will be called when enemy (as pSender) attack animation was finished*/
 	virtual void enemyAttackCallback(Ref *pSEnder, int index);
 	
+	/*function to display the @dameValue as the image in the @position with color base on colorType ( 1: Yellow, 2: Blue */
 	virtual void showAttackDame(int dameValue, Vec2 pos, int colorType);
 
 	virtual void enemyDieAction(int id);
-
+	/* display dead time and save kill/dead info
+	*/
 	virtual void runRespawnAction(int killerId);
-	virtual void removeReSpawnFlg();
 
+	virtual void removeRespawnFlg();
 	///OPTION DIALOG CALLBACK///
 	virtual void optionDecideCallback(Ref *pSEnder, Widget::TouchEventType type);
 	virtual void optionCancelCallback(Ref *pSEnder, Widget::TouchEventType type);
 
 	///MINIMAP LOGIC///
+	/*this function was defined for update the position of unit mini icon in the mini-map*/
 	virtual void updateMiniMap();
+	/* Function to check the condition and run attack animation by automatic
+	*/
 	virtual void checkForAutoAttack();
+
 	void update(float delta);
 	///FAKE  Z Order///
 	void fakeZOrder();
 	///BATLE TIME///
+	/*calculate battle time and display*/
 	void updateTime();
+	/*create string with time format: hh:mm:ss base on @second. ex: 60s -> 00:01:00*/
 	string makeTimeString(int second);
 
+	/*function to save the physic world of the scene*/
 	virtual void savePhysicWorld(PhysicsWorld *world);
 
+	/*this function will change animation image path by unit id*/
 	virtual void changeAnimationImagePathByUnitId(int unitId);
+
+	/*this function will call every 5s to restore all unit hp and mp
+	*/
 	virtual void autoRestoreHpAndMp();
+	/* update hp, mp status bar of all unit*/
 	virtual void updateSlider();
 
+	/*update the number of main character HP and MP show Label
+	*/
 	virtual void updateHpAndMpViewLabel();
 
-	virtual void removeSkillDisableFlg(int skillnum);
-
-	virtual void showCoolDown(Button *parentButton, int cooldownTime);
+	virtual void showCoolDownTime(Button *parentButton, int cooldownTime);
 
 	virtual void playSkill(UserSkillInfo skillData);
+	/*this function will detect all unit in skill effect area base on @skill info (skill distance, skill area type, skill type...
+	return value is the vector store all unit id which contained by effect area
+	@drawFlg is flag to decide this function will show or not show the skill effect area
+	*/
 	virtual vector<int> detectUnitInAoe(UserSkillInfo skill, int unitFlg, bool drawFlg = true);
-
+	/* run logic and effect of heal skills
+	*/
 	virtual void skillRestoreAction(UserSkillInfo skillInfo);
+
 	virtual void skillRestoreAll(UserSkillInfo skillInfo);
 	virtual void skillRestoreOne(UserSkillInfo skillInfo);
 
+	/*Run logic and effect of buff skills*/
 	virtual void skillBuffAction(UserSkillInfo skillInfo);
 	virtual void skillHelpAll(UserSkillInfo skillInfo);
 	virtual void skillHelpOne(UserSkillInfo skillInfo);
 
+	/*Run logic and effect of attack skills*/
 	virtual void skillAttackAction(UserSkillInfo skillInfo);
 	virtual void skillAttackAll(UserSkillInfo skillInfo);
 	virtual void skillAttackOne(UserSkillInfo skillInfo);
 
+	/*Run logic and effect of poison skills */
 	virtual void skillPoisonAction(UserSkillInfo skillInfo);
+	/*Run logic and effect of Stun skills*/
 	virtual void skillStunAction(UserSkillInfo skillInfo);
 
+	/*Calculate logic and play effect for poison skill for defined unit base on @index as the index in _allEnemyUnitData*/
 	virtual void poisonEffectAction(UserSkillInfo skill, int index);
 
+	/*End of battle logic*/
 	virtual void endBattle();
+	/*Calculate dame rate base on attacker and target attribute
+	@Return: 1.5, 1, 0
+	*/
 	virtual float caculDameRate(int mainC, int enemy);
-
+	/*run logic when use touch hand hold finger in skill button. It will show the skill effect area
+	*/
 	virtual void longPressAction(Button *pSender, UserSkillInfo skill);
 
-
-	virtual void getBattleInformationFromSocketIO(int sID);
-	virtual void sendInformationToServer(int sID, string data);
-
-	virtual void demoCallbackNotUserInlineFunction(Ref *pSender, vector<int> a);
+	/* this function will calculate for detect a @point is contained in the triangle or not
+	@Return true if point inside the triangle and false for else*/
 	virtual bool detectPointInTriangle(Vec2 point, vector<Vec2> points);
 	virtual float makeDot(Vec2 v1, Vec2 v2);
 	virtual Vec2 makePoint(Vec2 v1, Vec2 v2);
 
+	/*save dame deal from @attackUnit to @beAttackUnit as the attack target*/
 	virtual void saveDameInfo(int dame, int attackUnitId, int beAttackUnitId, int teamFlg);
+	
+	/*save kill and dead info*/
 	virtual void saveKillDeadInfo(int killerId, int deadUnitId, int teamFlg);
 
+	/*function to show status of unit by animation. (status: buff, de-buff, poison, stun..*/
 	virtual void displayUnitStatus(Sprite *parent, int statusType, UserSkillInfo skillInfo, int spIndex = 0);
 	virtual Animation*  createStatusAnimation(string imagePath);
 
@@ -337,14 +391,20 @@ private:
 	virtual void removeSorceryEclipse(Ref* pSender);
 	virtual void removeEffect(Ref* pSender);
 
+	/*For calculate and display effect status*/
 	virtual void pushStatusImagePath(string imagepath, vector<string> &allImages);
 	virtual void removeStatusImagePath(string imagepath, vector<string> &allImages);
 	virtual void displayStatusInTime(Sprite* parent, vector<string> allImages);
 
+	/*function to return the index of string was element of he vector<string>*/
 	virtual int findIndexOfString(vector<string> v, string element);
 
+	/*get the tilecoord( title index in the titled map) by the title position*/
 	virtual Vec2 getTitlePosForPosition(Vec2 location);
+	
+	/*get the position of the title cell*/
 	virtual Vec2 getPositionForTitleCoord(Vec2 titleCoord);
+	/*Logic for A start path finding function*/
 	virtual vector<Vec2> AStarPathFindingAlgorithm(Vec2 curentPos, Vec2 destinationPos);
 	virtual bool isValidTileCoord(Vec2 &titleCoord);
 	virtual bool isWallAtTileCoord(Vec2 &titleCoord);

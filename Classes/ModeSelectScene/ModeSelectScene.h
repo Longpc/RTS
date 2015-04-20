@@ -12,6 +12,7 @@
 #include "Multi/BatleScene/BatleScene.h"
 
 #include "Server/API/StartPHPAPI.h"
+#include "Server/API/HttpClientBase.h"
 
 ///Include library header here///
 #include <string.h>
@@ -24,7 +25,8 @@
 class ModeSelectScene :public LayerBase
 {
 public:
-	static Scene *createScene();
+	//static Scene *createScene();
+	UI_SCENE_CREATE_FUNC(ModeSelectScene);
 	CREATE_FUNC(ModeSelectScene);
 	bool init();
 protected:

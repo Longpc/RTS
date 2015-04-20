@@ -12,6 +12,18 @@
 #include "json/writer.h"
 #include "json/stringbuffer.h"
 
+typedef struct UnitData_temp
+{
+	int user_id = 0;
+	int room_id = 0;
+	int mst_unit_id = 0;
+	int team_id = 0;
+	int hp = 0;
+	int mp = 0;
+	int position_x = 0;
+	int position_y = 0;
+	int status = 0;
+};
 using namespace std;
 USING_NS_CC;
 using namespace rapidjson;
@@ -23,7 +35,7 @@ public:
 
 	static void destroyInstance();
 
-	void sendMoveEvent();
+	void sendMoveEvent(UnitData_temp unitdata);
 	void sendAttackEvent();
 	void sendSkillEvent();
 	void sendRepawnEvent();

@@ -1,12 +1,16 @@
 ﻿#pragma execution_character_set("utf-8")
 #include "ModeSelectScene.h"
 
+#include "json/rapidjson.h"
+#include "json/document.h"
+#include "json/writer.h"
 const static int PLAYER_TEXT_X = 900;
 const static int OTHER_TEXT_X = 50;
 const static int TEXT_H = 60;
 
 using namespace cocos2d::network;
-Scene * ModeSelectScene::createScene()
+using namespace rapidjson;
+/*Scene * ModeSelectScene::createScene()
 {
 	auto scene = Scene::create();
 	auto layer = ModeSelectScene::create();
@@ -15,7 +19,7 @@ Scene * ModeSelectScene::createScene()
 
 	return scene;
 }
-
+*/
 bool ModeSelectScene::init()
 {
 	if (!LayerBase::init()) {
@@ -80,6 +84,7 @@ bool ModeSelectScene::init()
 
 	auto sv = NodeServer::getInstance();
 	sv->startConnectWithHandler("hello", CC_CALLBACK_2(ModeSelectScene::onReceiveEvent, this));
+
 	return true;
 }
 

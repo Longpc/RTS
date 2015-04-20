@@ -15,9 +15,9 @@ bool ListUserAPI::init()
 	_listUser = {};
 	char data[100];
 	sprintf(data, "app_key=%s&info=%s", APP_KEY, "2354232342KGJSD%'#$");
-	HttpClientBase::getInstance()->postAPIAddressAndParam("debug/list_user.php", data);
+	HttpClientBase::getInstance()->postAPIWithMethodNameAndParam("debug/list_user.php", data);
 	HttpClientBase::getInstance()->setAPICallback([&](string a) {
-		log("Callback data: %s", a.c_str());
+		log("List user Callback data: %s", a.c_str());
 		rapidjson::Document doc;
 		doc.Parse<0>(a.c_str());
 		if (doc.HasParseError())

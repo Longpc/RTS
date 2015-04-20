@@ -1,7 +1,7 @@
 ﻿#pragma execution_character_set("utf-8")
 #include "UserSelectScene.h"
 
-Scene * UserSelect::createScene()
+/*Scene * UserSelect::createScene()
 {
 	auto scene = Scene::create();
 	auto layer = UserSelect::create();
@@ -21,7 +21,7 @@ UserSelect* UserSelect::create()
 	CC_SAFE_DELETE(l);
 	return nullptr;
 }
-
+*/
 bool UserSelect::init()
 {
 	if (!LayerBase::init()) {

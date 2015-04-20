@@ -152,4 +152,26 @@ enum SKILL_RANGE_TYPE
 #define MOVE_KEY "MOVE_MODE"
 #define AUTO_MOVE_ACTION_TAG 9876
 
+#define UI_SCENE_CREATE_FUNC(UIScene) \
+public: \
+static Scene* createScene() \
+		{ \
+    Scene* pScene = Scene::create(); \
+    UIScene* uiLayer = new (std::nothrow) UIScene(); \
+    if (uiLayer && uiLayer->init()) \
+		    { \
+        uiLayer->autorelease(); \
+        pScene->addChild(uiLayer); \
+		    } \
+			    else \
+		    { \
+        CC_SAFE_DELETE(uiLayer); \
+		    } \
+    return pScene; \
+		}
+
+
+
+
+
 #endif

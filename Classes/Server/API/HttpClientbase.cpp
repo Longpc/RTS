@@ -15,7 +15,7 @@ void HttpClientBase::destroyInstance()
 	CC_SAFE_RELEASE_NULL(s_HttpClientBase);
 }
 
-void HttpClientBase::postAPIAddressAndParam(string add, string dataParam , PostCallback callBack)
+void HttpClientBase::postAPIWithMethodNameAndParam(string add, string dataParam , PostCallback callBack)
 {
 	if (callBack!= nullptr) {
 		_callback = callBack;

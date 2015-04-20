@@ -18,7 +18,7 @@ class HttpClientBase :public Ref
 public:
 	static HttpClientBase *getInstance();
 	static void destroyInstance();
-	void postAPIAddressAndParam(string address, string dataParam, PostCallback callback = nullptr);
+	void postAPIWithMethodNameAndParam(string address, string dataParam, PostCallback callback = nullptr);
 	void setAPICallback(PostCallback posBack);
 	string getJSONData();
 protected:

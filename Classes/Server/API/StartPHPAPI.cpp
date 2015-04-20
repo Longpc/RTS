@@ -19,7 +19,7 @@ bool StartAPI::init()
 {
 	char data[100];
 	sprintf(data, "app_key=%s&user_id=%d", APP_KEY, UserModel::getInstance()->getUserInfo()._id);
-	HttpClientBase::getInstance()->postAPIAddressAndParam("start.php", data, [&](string a) {
+	HttpClientBase::getInstance()->postAPIWithMethodNameAndParam("start.php", data, [&](string a) {
 		 		rapidjson::Document doc;
 		 		doc.Parse<0>(a.c_str());
 		 		if (doc.HasParseError())
