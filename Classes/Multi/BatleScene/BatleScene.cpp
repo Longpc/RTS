@@ -32,15 +32,6 @@ bool BatleScene::init(int unitId,vector<UserSkillInfo> skills)
 
 	NodeServer::getInstance()->sendMessageWithName("hello", "Message from battle");
 
-	if (UserDefault::getInstance()->getIntegerForKey(MOVE_KEY) == 0)
-	{
-		UserDefault::getInstance()->setIntegerForKey(MOVE_KEY, MOVE_AUTO);
-		_moveMode = MOVE_AUTO;
-	}
-	else {
-		_moveMode = UserDefault::getInstance()->getIntegerForKey(MOVE_KEY);
-	}
-
 	_menu->setVisible(false);
 	_pageTitleSprite->setVisible(false);
 	_usernameBg->setVisible(false);
@@ -102,6 +93,35 @@ bool BatleScene::init(int unitId,vector<UserSkillInfo> skills)
 	addChild(changeImage, 10);
 
 	createContent();
+
+	if (UserDefault::getInstance()->getIntegerForKey(MOVE_KEY) == 0) {
+		UserDefault::getInstance()->setIntegerForKey(MOVE_KEY, MOVE_AUTO);
+		_moveMode = MOVE_AUTO;
+	}
+	else {
+		_moveMode = UserDefault::getInstance()->getIntegerForKey(MOVE_KEY);
+
+		if (_moveMode == MOVE_CIRCLE) {
+			_circleType = UserDefault::getInstance()->getIntegerForKey(MOVE_CIRCLE_TYPE);
+			_circleProperty = UserDefault::getInstance()->getIntegerForKey(NOVE_CIRCLE_PROPERTY);
+			log("type: %d , property: %d", _circleType, _circleProperty);
+
+			log("haha");
+			if (_circleType != 0 && _circleProperty != 0) {
+				// Check tu lan thu 2 tro di
+				// Lan dau tien vao thi ham check se la false, nen no se cho khoi tao 1 controlunit
+				if (_checkMiniCircleFlg == true && _miniCircle != nullptr) {
+					_miniCircle->removeFromParentAndCleanup(true);
+					_miniUnit->removeFromParentAndCleanup(true);
+					_checkMiniCircleFlg = false;
+				}
+
+				createMiniControlUnit(_circleType);
+			}
+
+		}
+	}
+	testObject->setMoveMode(_moveMode);
 
 	if (_currentPlayerTeamFlg == TEAM_FLG_BLUE) {
 		UserBattleInfo info;
@@ -238,18 +258,18 @@ void BatleScene::createContent()
 	//_allStone.push_back(redTower);
 	//_allStone.push_back(blueTower);
 
-	string path = _moveImagePath;
-	path.append("unit_00_08_1.png");
-	testObject = Sprite::create(path.c_str());
-	testObject->setAnchorPoint(Vec2::ANCHOR_MIDDLE_BOTTOM);
+	testObject = Character::createCharacter(_selectedUnitId + 1);
+	testObject->setTag(10);
+	testObject->setPosition(_visibleSize);
 	_battleBackround->addChild(testObject, MID);
 	testObject->setPosition(Vec2(_visibleSize.width, 100));
 	testObject->setScale(IMAGE_SCALE);
-	testObject->setPhysicsBody(PhysicsBody::createCircle(30, PhysicsMaterial(1, 0, 1)/*,Vec2(0,-50)*/));
+	testObject->setPhysicsBody(PhysicsBody::createCircle(30, PhysicsMaterial(1, 0, 1)));
 	testObject->getPhysicsBody()->setRotationEnable(false);
 	testObject->getPhysicsBody()->setContactTestBitmask(0x1);
 	testObject->getPhysicsBody()->setCategoryBitmask(ALLIED_CONTACT_CATEGORY_BITMAP);
 	testObject->getPhysicsBody()->setCollisionBitmask(ALLIED_CONTACT_COLLISION_BITMAP);
+	testObject->setCharacterMoveSpeed(_mainCharacterData.move_speed);
 
 
 	_statusContainer = Node::create();
@@ -666,28 +686,23 @@ void BatleScene::checkForAutoAttack()
 	//Check for main character attack
 	for (int i = 0; i < _allEnemyUnitSprite.size(); i++)
 	{
-		//calculate distance vector to decide the direction of attack animation
 		auto posDistan = _allEnemyUnitSprite[i]->getPosition() - testObject->getPosition();
-		//calculate distance offset by distance vector angle
 		int direc = detectDirectionBaseOnTouchAngle(-posDistan.getAngle()*RAD_DEG + 90);
-		if (posDistan.length() - _allEnemyUnitSprite[i]->getBoundingBox().size.width/4 < ATTACK_AOE*_mainCharacterData.attack_range/100.0f && _allEnemyUnitSprite[i]->isVisible()) {
+		if (posDistan.length() - _allEnemyUnitSprite[i]->getBoundingBox().size.width / 4 < ATTACK_AOE*_mainCharacterData.attack_range / 100.0f && _allEnemyUnitSprite[i]->isVisible()) {
+
 			if (testObject->getActionByTag(_currentAttackActionTag) == nullptr && _onDelayAttackFlg == false) {
-				rotateCharacter(testObject,direc);
-				auto ani = createAttackAnimationWithDefine(direc, _attackImagePath);
-				//auto action = RepeatForever::create(Animate::create(ani)); //user repeat for change in future
+				_mainCharacterIconInMiniMap->setRotation(-(posDistan.getAngle() * RAD_DEG) + 90);
+
 				auto call1 = CallFuncN::create(CC_CALLBACK_0(BatleScene::characterAttackCallback, this));
-				auto action = Sequence::create(Animate::create(ani),call1,nullptr);
-				action->setTag(direc * 10);
-				_currentAttackActionTag = direc * 10;
-				testObject->runAction(action);
+				testObject->attackActionByUnitPosition(direc, _mainCharacterData.attack_speed, CC_CALLBACK_0(BatleScene::characterAttackCallback, this));
+
+				if (_moveMode == MOVE_CIRCLE)
+				{
+					_miniUnit->attackActionByUnitPosition(direc, _mainCharacterData.attack_speed);
+				}
+
 				_indexOfBeAttackEnemy = i;
 
-				_onDelayAttackFlg = true;
-				this->runAction(Sequence::create(DelayTime::create(_mainCharacterData.attack_speed), CallFuncN::create([&](Ref *p) {
-					_onDelayAttackFlg = false;
-					testObject->stopActionByTag(_currentAttackActionTag);
-					//_alltargetUnit[_indexOfBeAttackEnemy]->stopActionByTag(10 - (_currentAttackActionTag / 10));
-				}), nullptr));
 			}
 		}
 
@@ -948,59 +963,142 @@ string BatleScene::makeTimeString(int second) {
 
 bool BatleScene::onTouchBegan(Touch *touch, Event *unused_event)
 {
-	if (_onRespwanFlg) return false;
 	_touchStartPoint = touch->getLocation();
-	if (_moveDisableFlg == false){
-		_touchMoveBeginSprite->setPosition(_touchStartPoint);
-		_touchMoveBeginSprite->setVisible(true);
+	if (_moveDisableFlg == false) {
+
+		_touchMoveBeginSprite->setTexture("image/screen/battle/ui_move.png");
+		_touchMoveEndSprite->setTexture("image/screen/battle/ui_move_end.png");
+		if (_moveMode == MOVE_MANUAL)
+		{
+			_touchMoveBeginSprite->setPosition(_touchStartPoint);
+			_touchMoveBeginSprite->setVisible(true);
+		}
+
+		if (_moveMode == MOVE_CIRCLE)
+		{
+			if (_miniCircle->getBoundingBox().containsPoint(touch->getLocation())) {
+				_touchMoveBeginSprite->setPosition(_miniCircle->getPosition());
+				_touchMoveBeginSprite->setVisible(true);
+
+				_touchMoveEndSprite->setPosition(touch->getLocation());
+				_touchMoveEndSprite->setVisible(true);
+			}
+			else {
+				return false;
+			}
+
+			auto actionLongTap = Sequence::create(DelayTime::create(0.15f), CallFuncN::create([&, touch](Ref* pSender){
+				auto distanVector = touch->getLocation() - _miniCircle->getPosition();
+
+				testObject->setMoveMode(4);
+				testObject->moveActionByVector(touch->getLocation() - _miniCircle->getPosition());
+				_checkOneTapMoveFlg = true;
+				_checkLongTapMoveFlg = true;
+
+				_mainCharacterIconInMiniMap->setRotation(-(distanVector.getAngle() * RAD_DEG) + 90);
+				int direc = detectDirectionBaseOnTouchAngle(_mainCharacterIconInMiniMap->getRotation());
+				if (direc != 0)
+				{
+					_miniUnit->actionMoveCharacter(direc);
+				}
+
+				// Doi mau cho 2 vong tron di chuyen neu su dung longTap
+				_touchMoveBeginSprite->setTexture("image/screen/battle/ui_move_long.png");
+				_touchMoveEndSprite->setTexture("image/screen/battle/ui_move_end_long.png");
+
+			}), nullptr);
+			actionLongTap->setTag(STOP_LONG_MOVE);
+			testObject->runAction(actionLongTap);
+		}
 	}
 	else {
 		_selectTargetSprite->setPosition(testObject->getPosition());
 		_selectTargetSprite->setVisible(true);
 	}
-	
+
 	return true;
 }
 
 void BatleScene::onTouchMoved(Touch *touch, Event *unused_event)
 {
-	//fakeZOrder();
-	auto distanVector = touch->getLocation() - _touchStartPoint;
-	if (distanVector.length() < 200) {
-		_touchMoveEndSprite->setPosition(touch->getLocation());
+	// Xac dinh vector giua diem touchMove va touchBegin
+	Vec2 distanVector;
+	if (_moveMode == MOVE_MANUAL)
+	{
+		distanVector = touch->getLocation() - _touchStartPoint;
 	}
-	else {
-		_touchMoveEndSprite->setPosition(_touchStartPoint + Vec2(200 * cos(distanVector.getAngle()), 200 * sin(distanVector.getAngle())));
+
+	if (_moveMode == MOVE_CIRCLE)
+	{
+		distanVector = touch->getLocation() - _miniCircle->getPosition();
 	}
-	_touchMoveEndSprite->setVisible(true);
 
 
-	if (distanVector.length() < _touchMoveBeginSprite->getContentSize().width / 6) {
-		testObject->getPhysicsBody()->setVelocity(Vect(0, 0));
-		testObject->stopActionByTag(_currentMoveActionTag);
+
+	// Xu ly truong hop ngon tay khi cham,se chuyen touchBegin thanh touchMove
+	// Test tren Win32 thi se khong gap truong hop nay neu touchOne , nhung neu test tren tanmatsu thi se nhay vao day
+	// Nen can check do rong cua ngon tay touc
+	if ((touch->getLocation() - _touchStartPoint).length() < 20) {
+		_checkOneTapMoveFlg = false;
 		return;
 	}
 
-	testObject->stopActionByTag(_currentAttackActionTag);
-	if (_moveMode == MOVE_MANUAL) {
-		testObject->getPhysicsBody()->setVelocity(Vect(_mainCharacterData.move_speed*cos(distanVector.getAngle()), _mainCharacterData.move_speed*sin(distanVector.getAngle())));
-		_mainCharacterIconInMiniMap->setRotation(-(distanVector.getAngle() * RAD_DEG) + 90);
 
-		//log("%f", _mini_Icon->getRotation());
+	/////////////////////////////////////////////////////////////////////////
+	// Xu ly hien thi vong tron di chuyen cho cac truong hop touch and move
+	/////////////////////////////////////////////////////////////////////////
+	if (_moveMode == MOVE_MANUAL) {
+		_touchMoveEndSprite->setVisible(true);
+		if (distanVector.length() < 200) {
+			_touchMoveEndSprite->setPosition(touch->getLocation());
+		}
+		else {
+			_touchMoveEndSprite->setPosition(_touchStartPoint + Vec2(200 * cos(distanVector.getAngle()), 200 * sin(distanVector.getAngle())));
+		}
+	}
+
+	if (_moveMode == MOVE_CIRCLE) {
+		_touchMoveEndSprite->setVisible(true);
+
+		if (_miniCircle->getBoundingBox().containsPoint(touch->getLocation())) {
+			_touchMoveEndSprite->setPosition(touch->getLocation());
+		}
+		else {
+			_touchMoveEndSprite->setPosition(_miniCircle->getPosition() + Vec2(circleX / 2 * cos(distanVector.getAngle()), circleY / 2 * sin(distanVector.getAngle())));
+		}
+	}
+
+	/////////////////////////////////////////////////////////////////////////
+	// Xu ly logic di chuyen cho cac truong hop touch and move
+	/////////////////////////////////////////////////////////////////////////
+
+	// Di vao ben trong vong tron thi se ko di chuyen tiep,su dung cho ca move_manual && move_circle_manual
+	if (distanVector.length() < _touchMoveBeginSprite->getContentSize().width / 6 && _moveMode != MOVE_CIRCLE) {
+		testObject->stopMoveAction();
+		return;
+	}
+
+	/////////////////MOVE WITH TESTOBJECT
+	testObject->stopAllActionsByTag(STOP_LONG_MOVE);
+	if (_moveMode == MOVE_MANUAL || _moveMode == MOVE_CIRCLE) {
+		_checkOneTapMoveFlg = true;
+		testObject->setMoveMode(_moveMode);
+		testObject->moveActionByVector(distanVector);
+
+		_mainCharacterIconInMiniMap->setRotation(-(distanVector.getAngle() * RAD_DEG) + 90);
 		int direc = detectDirectionBaseOnTouchAngle(_mainCharacterIconInMiniMap->getRotation());
-		if (direc != 0) actionCharacter(direc, testObject);
 		sendMoveEvent();
+		if (direc != 0)
+		{
+			if (_moveMode == MOVE_CIRCLE)
+			{
+				_miniUnit->actionMoveCharacter(direc); // Xoay miniUnit
+			}
+		}
 	}
 	else {
-		
-	}
 
-	
-	
-	
-	//_touchStartPoint = touch->getLocation();
-	
-	
+	}
 }
 /*
 7--8--9
@@ -1032,21 +1130,20 @@ void BatleScene::actionCharacter(int directionId, Sprite *characterSprite)
 {
 	if (characterSprite->getNumberOfRunningActions() > 0) {
 		if (characterSprite->getActionByTag(directionId) != nullptr) {
-			//log("!!!");
 			return;
 		}
 	}
 	characterSprite->stopAllActionsByTag(_currentMoveActionTag);
+	if (characterSprite == _miniUnit) {
+		_miniUnit->stopAllActions();
+	}
 	auto action = Animate::create(createMoveAnimationWithDefine(directionId, _moveImagePath));
 	auto repeat = RepeatForever::create(action);
 	repeat->setTag(directionId);
-	_currentMoveActionTag = directionId;
+	if (characterSprite != _miniUnit) {
+		_currentMoveActionTag = directionId;
+	}
 	characterSprite->runAction(repeat);
-
-//  	char type[30] = { 0 };
-//  	sprintf(type, "walk_0%d", directionId);
-//  	testArmature->getAnimation()->stop();
-//  	testArmature->getAnimation()->play(type);
 
 }
 void BatleScene::updateMiniMap()
@@ -1066,43 +1163,71 @@ void BatleScene::updateMiniMap()
 
 void BatleScene::onTouchEnded(Touch *touch, Event *unused_event)
 {
-	//log("touch END");
-	/*if (_selectTargetSprite->isVisible()) {
-		_selectTargetSprite->setVisible(false);
-		runAttackAnimation();
-		//_moveDisableFlg = false;
-	}
-	else {*/
-	testObject->stopActionByTag(_currentAttackActionTag);
-	if (_moveMode == MOVE_MANUAL) {
-			testObject->getPhysicsBody()->setVelocity(Vect::ZERO);
-			testObject->stopActionByTag(_currentMoveActionTag);
-			_touchMoveBeginSprite->setVisible(false);
-			_touchMoveEndSprite->setVisible(false);
-	}
-	else {
-		//fakeZOrder();
-		_touchMoveBeginSprite->setVisible(false);
-		_touchMoveEndSprite->setVisible(false);
-		auto distanVector = touch->getLocation() - Vec2(_visibleSize / 2);
-		auto vec = AStarPathFindingAlgorithm(testObject->getPosition(), testObject->getPosition() + distanVector);
-		/*auto move = MoveBy::create(distanVector.length() / _mainCharacterData.move_speed, distanVector);
-		auto moveAction = Sequence::create(move, CallFuncN::create([&](Ref *p){
-			_touchMoveBeginSprite->setVisible(false);
-			_touchMoveEndSprite->setVisible(false);
-			testObject->stopActionByTag(_currentMoveActionTag);
-			testObject->stopActionByTag(88);
-		}), nullptr);
-		moveAction->setTag(88);
-		testObject->stopActionByTag(88);
-		testObject->runAction(moveAction);
-		_mainCharacterAvata->setRotation(-(distanVector.getAngle() * RAD_DEG) + 90);
+	_touchMoveBeginSprite->setTexture("image/screen/battle/ui_move.png");
+	_touchMoveEndSprite->setTexture("image/screen/battle/ui_move_end.png");
+	_touchMoveBeginSprite->setVisible(false);
+	_touchMoveEndSprite->setVisible(false);
 
-		//log("%f", _mini_Icon->getRotation());
-		int direc = detectDirectionBaseOnTouchAngle(_mainCharacterAvata->getRotation());
-		if (direc != 0) actionCharacter(direc, testObject);*/
+	/////////////////////////////////////////////////////////////////////////
+	// LOGIC
+	/////////////////////////////////////////////////////////////////////////
+	testObject->stopAllActionsByTag(STOP_LONG_MOVE);
+	if ((_moveMode == MOVE_MANUAL) || (_moveMode == MOVE_CIRCLE && _checkOneTapMoveFlg == true) || (_moveMode == MOVE_CIRCLE && _checkLongTapMoveFlg == true))
+	{
+		/* Day la truong hop MOVE_MANUAL || MOVE_CIRCLE_MANUAL || MOVE_CIRCLE_LONGTAP */
+		testObject->stopMoveAction();
+		if (_moveMode == MOVE_CIRCLE)
+		{
+			_miniUnit->stopMoveAction();
+		}
+		_checkOneTapMoveFlg = false;
+		_checkLongTapMoveFlg = false;
+
+		return;
 	}
-	/*}*/
+	else
+	{
+		if (_moveMode == MOVE_AUTO)
+		{
+			testObject->setMoveMode(1);
+			testObject->stopMoveAction();
+			auto distanVector = touch->getLocation() - Vec2(_visibleSize / 2);
+			auto vec = AStarPathFindingAlgorithm(testObject->getPosition(), testObject->getPosition() + distanVector);
+		}
+
+		if (_moveMode == MOVE_CIRCLE)
+		{
+			if (_miniCircle->getBoundingBox().containsPoint(touch->getLocation())) {
+
+				log("Day la oneTap circle");
+				testObject->setMoveMode(5);
+				_miniUnit->setMoveMode(5);
+
+				float moveTime;
+				if (_circleProperty == MOVE_CIRCLE_TIME)
+				{
+					moveTime = 1;
+				}
+				if (_circleProperty == MOVE_CIRCLE_DISTANCE)
+				{
+					moveTime = (float)(MOVE_DISTANCE / _mainCharacterData.move_speed);
+				}
+				testObject->setMoveOneTapTime(moveTime);
+				_miniUnit->setMoveOneTapTime(moveTime);
+				Vec2 space = (touch->getLocation() - _miniCircle->getPosition());
+
+				_mainCharacterIconInMiniMap->setRotation(-(space.getAngle() * RAD_DEG) + 90);
+
+				testObject->moveActionByVector(space);
+				_miniUnit->moveActionByVector(space);
+
+			}
+			else {
+				return;
+			}
+		}
+
+	}
 	
 }
 
@@ -1295,11 +1420,6 @@ void BatleScene::rotateCharacter(Sprite *target, int direc)
 	sprintf(szName, "unit_00_0%d_%d.png", direc, 1);
 	string p = _moveImagePath;
 	p.append(szName);
-	//log("%s", p.c_str());
-	//animation->addSpriteFrameWithFile(p.c_str());
-	//animation->setDelayPerUnit(ANIMETE_DELAY);
-	//animation->setRestoreOriginalFrame(true);
-	//target->runAction(Animate::create(animation));
 	Texture2D *texture = Director::getInstance()->getTextureCache()->addImage(p.c_str());
 	target->setTexture(texture);
 }
@@ -1315,6 +1435,30 @@ void BatleScene::optionDecideCallback(Ref *pSEnder, Widget::TouchEventType type)
 	case cocos2d::ui::Widget::TouchEventType::ENDED:
 	{
 		_moveMode = UserDefault::getInstance()->getIntegerForKey(MOVE_KEY);
+		if (_moveMode == MOVE_CIRCLE) {
+			_circleType = UserDefault::getInstance()->getIntegerForKey(MOVE_CIRCLE_TYPE);
+			_circleProperty = UserDefault::getInstance()->getIntegerForKey(NOVE_CIRCLE_PROPERTY);
+			if (_circleType != 0 || _circleProperty != 0) {
+				if (_checkMiniCircleFlg == true && _miniCircle != nullptr) {
+					_miniCircle->removeFromParentAndCleanup(true);
+					_miniUnit->removeFromParentAndCleanup(true);
+					_checkMiniCircleFlg = false;
+				}
+
+				createMiniControlUnit(_circleType);
+			}
+		}
+		else
+		{
+			if (_checkMiniCircleFlg == true && _miniCircle != nullptr) {
+				_miniCircle->removeFromParentAndCleanup(true);
+				_miniUnit->removeFromParentAndCleanup(true);
+				_checkMiniCircleFlg = false;
+			}
+		}
+
+		testObject->setMoveMode(_moveMode);
+
 		break;
 	}
 	case cocos2d::ui::Widget::TouchEventType::CANCELED:
@@ -2984,7 +3128,15 @@ void BatleScene::moveStepAction()
 
 	//log("%f", _mini_Icon->getRotation());
 	int direc = detectDirectionBaseOnTouchAngle(_mainCharacterIconInMiniMap->getRotation());
-	if (direc != 0) actionCharacter(direc, testObject);
+	if (direc != 0)
+	{
+		actionCharacter(direc, testObject);
+		if (_moveMode == MOVE_CIRCLE)
+		{
+			actionCharacter(direc, _miniUnit);
+		}
+
+	}
 
 	CallFunc *moveCallback = CallFunc::create(CC_CALLBACK_0(BatleScene::moveStepAction, this));
 
@@ -3052,4 +3204,67 @@ std::string BatleScene::ShortestPathStep::getDescription() const
 	return StringUtils::format("pos=[%.0f;%.0f]  g=%d  h=%d  f=%d",
 		this->getPosition().x, this->getPosition().y,
 		this->getGScore(), this->getHScore(), this->getFScore());
+}
+
+/////////////////////////////////////////////////////////////////////////////////////
+// CREATE MOVE IN CIRCLE
+/////////////////////////////////////////////////////////////////////////////////////
+
+Sprite* BatleScene::createMiniMoveCircle() {
+	auto miniCircle = Sprite::create("image/screen/battle/mini_circle.png");
+	// Ti le la 1/3 chieu cao cua man hinh
+	float diameter = Director::getInstance()->getOpenGLView()->getFrameSize().height * MINU_CIRCLE_SCALE;
+	float x = float(diameter / miniCircle->getContentSize().height);
+
+	// Do co kich thuoc cua thiet bi voi man hinh hien thi
+	float scaleRateX = Director::getInstance()->getOpenGLView()->getFrameSize().width / _visibleSize.width;
+	float scaleRateY = Director::getInstance()->getOpenGLView()->getFrameSize().height / _visibleSize.height;
+
+	miniCircle->setScale(x * (1 / scaleRateY));
+	miniCircle->setScaleX(x * (1 / scaleRateX));
+
+	return miniCircle;
+}
+
+void BatleScene::createMiniControlUnit(int circleType) {
+	_miniCircle = createMiniMoveCircle();
+	_checkMiniCircleFlg = true;
+	Size visibleSize = Director::getInstance()->getVisibleSize();
+	float diameter = Director::getInstance()->getOpenGLView()->getFrameSize().height * MINU_CIRCLE_SCALE;
+	float x = float(diameter / _miniCircle->getContentSize().height);
+	float scaleRateX = Director::getInstance()->getOpenGLView()->getFrameSize().width / _visibleSize.width;
+	float scaleRateY = Director::getInstance()->getOpenGLView()->getFrameSize().height / _visibleSize.height;
+
+	circleX = _miniCircle->getContentSize().width * x * (1 / scaleRateX),
+		circleY = _miniCircle->getContentSize().height * x * (1 / scaleRateY);
+
+	switch (circleType)
+	{
+	case MOVE_CIRCLE_LEFT:
+		_miniCircle->setPosition(Vec2(
+			visibleSize.width / 48 + circleX / 2, 
+			visibleSize.height / 32 + circleY / 2));
+
+		addChild(_miniCircle, 100);
+		break;
+	case MOVE_CIRCLE_RIGHT:
+		_miniCircle->setPosition(
+			Vec2(
+			visibleSize.width - visibleSize.width / 48 - circleX / 2,
+			visibleSize.height / 32 + circleY / 2));
+
+		addChild(_miniCircle, 100);
+		break;
+	default:
+		break;
+	}
+
+	// scale mini unit = 1/3 miniCircle
+	float scaleUnitX = circleX * 1 / 3;
+	float scaleUnitY = circleY * 1 / 3;
+
+	_miniUnit = Character::createCharacter(_selectedUnitId + 1);
+	_miniUnit->setScale(float(0.25));
+	addChild(_miniUnit, 100);
+	_miniUnit->setPosition(_miniCircle->getPosition());
 }

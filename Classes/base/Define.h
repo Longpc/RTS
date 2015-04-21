@@ -147,10 +147,33 @@ enum SKILL_RANGE_TYPE
 #define RAD_DEG (180 / PI)
 #define APP_KEY "12345678"
 
+////////////////////////////////////////////////////////////
+// MOVE KEY VALUE
+////////////////////////////////////////////////////////////
 #define MOVE_AUTO 1
 #define MOVE_MANUAL 2
-#define MOVE_KEY "MOVE_MODE"
+#define MOVE_CIRCLE 3
+
+#define MOVE_CIRCLE_LEFT 1
+#define MOVE_CIRCLE_RIGHT 2
+
+#define MOVE_CIRCLE_TIME 1
+#define MOVE_CIRCLE_DISTANCE 2
+
 #define AUTO_MOVE_ACTION_TAG 9876
+#define MOVE_DISTANCE 540
+
+#define MOVE_KEY "MOVE_MODE"
+#define MOVE_CIRCLE_TYPE "MOVE_CIRCLE_TYPE"
+#define NOVE_CIRCLE_PROPERTY "MOVE_CIRCLE_PROPERTY"
+
+#define MINU_CIRCLE_SCALE 2/5
+
+
+#define MOVE_SPEED 250
+#define IMAGE_SCALE 0.6f
+#define ANIMETE_DELAY 0.25f
+#define ATTACK_ANIMATION_DELAY 1
 
 #define UI_SCENE_CREATE_FUNC(UIScene) \
 public: \

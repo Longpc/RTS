@@ -13,16 +13,35 @@ private:
 	///VARIABLES///////////////////////////////////////////////////////////////////////
 	Sprite *backGround;
 	int selectMode;
+	int circleType;
+	int circleProperty;
+	// Auto
 	CheckBox *_mode1;
+	// Manual
 	CheckBox *_mode2;
+	// Cirlce
+	CheckBox *_mode3;
+	CheckBox *_mode3Left;
+	CheckBox *_mode3Right;
+	CheckBox *_mode3Time;
+	CheckBox *_mode3Distance;
+	Label* optionText3Left;
+	Label* optionText3Right;
+	Label* optionText3Time;
+	Label* optionText3Distance;
 
 	///FUNCTIONS///////////////////////////////////////////////////////////////////////
 	virtual void onExit();
 	void touchMode1Callback(Ref *pSender, CheckBox::EventType type);
 	void touchMove2Callback(Ref *pSender, CheckBox::EventType type);
+	void touchMove3Callback(Ref *pSender, CheckBox::EventType type);
+	void touchMove3LeftCallback(Ref *pSender, CheckBox::EventType type);
+	void touchMove3RightCallback(Ref *pSender, CheckBox::EventType type);
+	void touchMove3TimeCallback(Ref *pSender, CheckBox::EventType type);
+	void touchMove3DistanceCallback(Ref *pSender, CheckBox::EventType type);
+
 	virtual void decideButtonCallback(Ref *pSender, Widget::TouchEventType type);
 
-	
 };
 
 

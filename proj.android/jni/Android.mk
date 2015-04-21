@@ -27,6 +27,7 @@ LOCAL_SRC_FILES := hellocpp/main.cpp \
 				   ../../Classes/base/font/LabelShow.cpp \
 				   ../../Classes/base/dialogBase/DialogBase.cpp \
 				   ../../Classes/Multi/BatleScene/OptionDialog.cpp \
+				   ../../Classes/Multi/BatleScene/Character.cpp \
 				   ../../Classes/base/database/DataUtils.cpp \
 				   ../../Classes/base/database/sqlite3.c \
 				   ../../Classes/base/database/SqlUtils.cpp \
@@ -37,13 +38,13 @@ LOCAL_SRC_FILES := hellocpp/main.cpp \
 				   ../../Classes/Server/Server.cpp \
 				   ../../Classes/UserSelectScene/UserSelectScene.cpp \
 				   ../../Classes/Model/data/UserModel.cpp \
+				   ../../Classes/Model/data/UserUnit.cpp \
+				   ../../Classes/Model/data/UserSkill.cpp \
 				   ../../Classes/Server/API/HttpClientbase.cpp \
 				   ../../Classes/Server/API/ListUserPHPAPI.cpp \
 				   ../../Classes/Server/API/UserLoginPHPAPI.cpp \
-				   ../../Classes/Server/API/BattleAPI.cpp \
 				   ../../Classes/Server/API/StartPHPAPI.cpp \
-				   ../../Classes/Model/data/UserSkill.cpp \
-				   ../../Classes/Model/data/UserUnit.cpp
+				   ../../Classes/Server/API/BattleAPI.cpp
 
 LOCAL_C_INCLUDES := $(LOCAL_PATH)/../../Classes
 
