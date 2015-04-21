@@ -658,17 +658,6 @@ void BatleScene::update(float delta)
 
 	fakeZOrder();
 
-	UnitData_temp ud;
-	ud.user_id = UserModel::getInstance()->getUserInfo()._id;
-	ud.room_id = UserModel::getInstance()->getRoomId();
-	ud.mst_unit_id = UserModel::getInstance()->getSelectedUnitId();
-	ud.hp = _mainCharacterData.hp;
-	ud.mp = _mainCharacterData.mp;
-	ud.position_x = testObject->getPositionX();
-	ud.position_y = testObject->getPositionY();
-
-	BattleAPI::getInstance()->sendMoveEvent(ud);
-
 }
 void BatleScene::checkForAutoAttack()
 {
@@ -1000,6 +989,7 @@ void BatleScene::onTouchMoved(Touch *touch, Event *unused_event)
 		//log("%f", _mini_Icon->getRotation());
 		int direc = detectDirectionBaseOnTouchAngle(_mainCharacterIconInMiniMap->getRotation());
 		if (direc != 0) actionCharacter(direc, testObject);
+		sendMoveEvent();
 	}
 	else {
 		
@@ -1455,6 +1445,21 @@ vector<UserUnitInfo> BatleScene::getEnemyUnitsData(vector<int> enemyIdList)
 
 	return returnData;
 }
+
+void BatleScene::sendMoveEvent()
+{
+	UnitData_temp ud;
+	ud.user_id = UserModel::getInstance()->getUserInfo()._id;
+	ud.room_id = UserModel::getInstance()->getRoomId();
+	ud.mst_unit_id = UserModel::getInstance()->getSelectedUnitId();
+	ud.hp = _mainCharacterData.hp;
+	ud.mp = _mainCharacterData.mp;
+	ud.position_x = testObject->getPositionX();
+	ud.position_y = testObject->getPositionY();
+
+	BattleAPI::getInstance()->sendMoveEvent(ud);
+}
+
 
 void BatleScene::autoRestoreHpAndMp()
 { 
@@ -2198,6 +2203,25 @@ void BatleScene::updateHpAndMpViewLabel()
 
 void BatleScene::endBattle()
 {
+	auto sv = NodeServer::getInstance()->getClient();
+	auto userData = UserModel::getInstance()->getUserInfo();
+	auto roomId = UserModel::getInstance()->getRoomId();
+	int unitId = UserModel::getInstance()->getSelectedUnitId();
+
+	Document doc;
+	doc.SetObject();
+	Document::AllocatorType& allo = doc.GetAllocator();
+
+	doc.AddMember("user_id", userData._id, allo);
+	doc.AddMember("room_id", roomId, allo);
+	StringBuffer  buffer;
+	Writer<StringBuffer> writer(buffer);
+	doc.Accept(writer);
+	sv->emit("battle_end", buffer.GetString());
+	sv->on("battle_end_end", [&](SIOClient*, const std::string&) {
+		log("server callback");
+	});
+
 	Director::getInstance()->replaceScene(TransitionMoveInR::create(SCREEN_TRANSI_DELAY, BatleResultScene::createScene(_blueTeamInfo,_redTeamInfo)));
 }
 

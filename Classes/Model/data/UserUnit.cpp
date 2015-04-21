@@ -70,3 +70,30 @@ UserUnitInfo UserUnit::getUnitInfoById(int mst_unit_id)
 	}
 }
 
+string UserUnit::convertFromUserUnitInfoToJson(UserUnitInfo unitdata)
+{
+	Document doc;
+	doc.SetObject();
+	Document::AllocatorType& allo = doc.GetAllocator();
+	doc.AddMember("mst_unit_id", unitdata.mst_unit_id, allo);
+	doc.AddMember("hp_heal", unitdata.hp_heal, allo);
+	doc.AddMember("hp", unitdata.hp, allo);
+	doc.AddMember("mp", unitdata.mp, allo);
+	doc.AddMember("mp_heal", unitdata.mp_heal, allo);
+	doc.AddMember("attack", unitdata.attack,allo);
+	doc.AddMember("attack_range", unitdata.attack_range, allo);
+	doc.AddMember("attack_speed", unitdata.attack_speed, allo);
+	doc.AddMember("defence", unitdata.defence, allo);
+	doc.AddMember("move_speed", unitdata.move_speed, allo);
+	doc.AddMember("element", unitdata.element, allo);
+	doc.AddMember("position_x", 0, allo);
+	doc.AddMember("position_y", 0, allo);
+	doc.AddMember("mst_skill_id1", unitdata.skill1_id, allo);
+	doc.AddMember("mst_skill_id2", unitdata.skill2_id, allo);
+	StringBuffer  buffer;
+	Writer<StringBuffer> writer(buffer);
+	doc.Accept(writer);
+	
+	return buffer.GetString();
+}
+

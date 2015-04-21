@@ -142,15 +142,6 @@ void MultiUnitSelectScene::onTouchUnitSlot3(Ref *pSender, Widget::TouchEventType
 
 void MultiUnitSelectScene::onSelectUnit(int unitId)
 {
-	auto a = UserModel::getInstance()->getUserInfo();
-	string data = "";
-	data.append("{\"room_id\":\"").append(DataUtils::numberToString(UserModel::getInstance()->getRoomId())).append("\",\"team_id\":\"").append(DataUtils::numberToString(UserModel::getInstance()->getTeamId())).append("\",\"user_id\":\"").append(DataUtils::numberToString(a._id)).append("\",\"unit_id\":\"").append(DataUtils::numberToString(unitId)).append("\"}");
-	auto client = NodeServer::getInstance()->getClient();
-	client->emit("connect_select_unit", data.c_str());
-	client->on("connect_select_unit_end", [&](SIOClient* client, const std::string& data) {
-		log("select unit end data: %s", data.c_str());
-	});
-	
 	switch (_onSelectedSlot)
 	{
 	case 1:
@@ -410,7 +401,22 @@ void MultiUnitSelectScene::nextButtonCallback(Ref *pSender, Widget::TouchEventTy
 		if (_decidedUnitId == 0) break;
 
 		UserModel::getInstance()->setSelectedUnitId(_decidedUnitId);
-		Director::getInstance()->replaceScene(TransitionMoveInR::create(SCREEN_TRANSI_DELAY, SkillSelectScene::createScene(_decidedUnitId)));
+
+		auto a = UserModel::getInstance()->getUserInfo();
+		string data = "";
+		data.append("{\"room_id\":\"").append(DataUtils::numberToString(UserModel::getInstance()->getRoomId())).append("\",\"team_id\":\"").append(DataUtils::numberToString(UserModel::getInstance()->getTeamId())).append("\",\"user_id\":\"").append(DataUtils::numberToString(a._id)).append("\",\"unit_id\":\"").append(DataUtils::numberToString(_allUnitInfoNew[_decidedUnitId].mst_unit_id)).append("\"");
+		data.append(",\"mst_unit\":");
+		auto unitData = UserUnit::getInstance()->getUnitInfoById(_allUnitInfoNew[_decidedUnitId].mst_unit_id);
+		data.append(UserUnit::getInstance()->convertFromUserUnitInfoToJson(unitData).c_str());
+		data.append("}");
+		auto client = NodeServer::getInstance()->getClient();
+		client->emit("connect_select_unit", data.c_str());
+		client->on("connect_select_unit_end", [&](SIOClient* client, const std::string& data) {
+			log("select unit end data: %s", data.c_str());
+			Director::getInstance()->replaceScene(TransitionMoveInR::create(SCREEN_TRANSI_DELAY, SkillSelectScene::createScene(_decidedUnitId)));
+		});
+
+
 		break;
 	}
 	case cocos2d::ui::Widget::TouchEventType::CANCELED:

@@ -204,10 +204,13 @@ private:
 
 	///FUNCTIONS///////////////////////////////////////////////////////////////////////
 
-	///DATABASE///
+	///DATABASE API
 	virtual UserUnitInfo getUnitDataFromDataBase(int unitId);
 	virtual vector<UserSkillInfo> getUnitSkillFromDataBase(UserUnitInfo unitData);
 	virtual vector<UserUnitInfo> getEnemyUnitsData(vector<int> enemyIdList);
+	
+	virtual void sendMoveEvent();
+	
 	///LAYOUT BASE///
 	virtual void onEnter();
 

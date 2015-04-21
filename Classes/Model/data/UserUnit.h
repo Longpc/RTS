@@ -7,6 +7,8 @@
 
 #include "json/rapidjson.h"
 #include "json/document.h"
+#include "json/writer.h"
+
 struct UserUnitInfo
 {
 	int mst_unit_id = 0;
@@ -38,6 +40,7 @@ public:
 	CC_SYNTHESIZE(vector<UserUnitInfo>, _userUnits, UserUnitList);
 	UserUnitInfo getUnitInfoById(int mst_unit_id);
 	string getUnitImageById(int id);
+	string convertFromUserUnitInfoToJson(UserUnitInfo unitInfo);
 
 private:
 	static UserUnit *s_UserUnit;

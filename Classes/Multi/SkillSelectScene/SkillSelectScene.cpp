@@ -231,11 +231,12 @@ void SkillSelectScene::nextButtonCallback(Ref *pSender, Widget::TouchEventType t
 		data.append("}");
 		auto client = NodeServer::getInstance()->getClient();
 		client->emit("connect_select_skill", data.c_str());
-		client->on("connect_select_skill_end", [&](SIOClient* client, const std::string& data) {
+		client->on("connect_select_skill_end", [&,skills](SIOClient* client, const std::string& data) {
 			log("select unit end data: %s", data.c_str());
+			Director::getInstance()->replaceScene(TransitionMoveInR::create(SCREEN_TRANSI_DELAY, BatleScene::createScene(_selectedUnitId, skills)));
+
 		});
 
-		Director::getInstance()->replaceScene(TransitionMoveInR::create(SCREEN_TRANSI_DELAY, BatleScene::createScene(_selectedUnitId,skills)));
 		break;
 	}
 	case cocos2d::ui::Widget::TouchEventType::CANCELED:
