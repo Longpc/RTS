@@ -118,5 +118,10 @@
 			<type>2</type>
 			<locationURI>$%7BPARENT-1-PROJECT_LOC%7D/cocos2d</locationURI>
 		</link>
+		<link>
+			<name>src_cocos</name>
+			<type>2</type>
+			<location>C:/Users/chu/Downloads/cocos2dx_source/innolab_proto_client/cocos2d/cocos/platform/android/java/src</location>
+		</link>
 	</linkedResources>
 </projectDescription>

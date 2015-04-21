@@ -9,6 +9,7 @@
 #include "dataController/UnitData/UnitData.h"
 #include "dataController/SkillData/SkillData.h"
 #include "Effect.h"
+#include "Character.h"
 
 #include "Model/data/UserModel.h"
 #include "Model/data/UserSkill.h"
@@ -151,7 +152,7 @@ private:
 	UserUnitInfo _mainCharacterData;
 	UserUnitInfo _saveMainStatusData;
 	vector<UserSkillInfo> _mainCharacterSkillData;
-	Sprite *testObject;
+	Character* testObject;
 	Node *_statusContainer;
 
 	int _mainCharacerMaxMp;
@@ -442,6 +443,30 @@ private:
 
 	void countTime(float dt);
 	float calCulTime = 0.0f;
+
+	///////////////////////////////////////////////////////////
+	// CREATE MINI MOVE CONTROL
+	///////////////////////////////////////////////////////////
+	int _circleType;
+	int _circleProperty;
+
+	Sprite *_miniCircle;
+	float circleX = 0.0f;
+	float circleY = 0.0f;
+
+	//Sprite *_miniUnit = nullptr;
+	Character *_miniUnit = nullptr;
+
+	bool _checkMiniCircleFlg = false;
+	bool _checkOneTapMoveFlg = false;
+	bool _checkLongTapMoveFlg = false;
+
+	#define STOP_ACTION_ATTACK 11
+	#define STOP_AUTO_MOVE 22
+	#define STOP_LONG_MOVE 33
+
+	Sprite* createMiniMoveCircle();
+	void createMiniControlUnit(int circleType);
 };
 
 
