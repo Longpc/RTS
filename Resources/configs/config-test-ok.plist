@@ -15,7 +15,7 @@
 		<key>retry</key>
 		<string>3</string>
 		<key>APIServer</key>
-		<string>http://192.168.0.126/PhpProject1/</string>
+		<string>http://52.68.104.55/RTSAPI/</string>
 		<key>NodeJSServer</key>
 		<string>ws://192.168.0.126:8222/</string>
 	</dict>
