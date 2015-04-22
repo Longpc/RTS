@@ -413,10 +413,9 @@ void MultiUnitSelectScene::nextButtonCallback(Ref *pSender, Widget::TouchEventTy
 		client->emit("connect_select_unit", data.c_str());
 		client->on("connect_select_unit_end", [&](SIOClient* client, const std::string& data) {
 			log("select unit end data: %s", data.c_str());
-			Director::getInstance()->replaceScene(TransitionMoveInR::create(SCREEN_TRANSI_DELAY, SkillSelectScene::createScene(_decidedUnitId)));
 		});
 
-
+		Director::getInstance()->replaceScene(TransitionMoveInR::create(SCREEN_TRANSI_DELAY, SkillSelectScene::createScene(_decidedUnitId)));
 		break;
 	}
 	case cocos2d::ui::Widget::TouchEventType::CANCELED:
