@@ -35,7 +35,7 @@ struct UnitInforNew
 };
 
 struct SkillInfoNew {
-	int id;
+	int mst_skill_id;
 	string name;
 	int aoe;
 	int target_type;
@@ -180,7 +180,7 @@ public: \
 static Scene* createScene() \
 		{ \
     Scene* pScene = Scene::create(); \
-    UIScene* uiLayer = new (std::nothrow) UIScene(); \
+    UIScene* uiLayer = new UIScene(); \
     if (uiLayer && uiLayer->init()) \
 		    { \
         uiLayer->autorelease(); \

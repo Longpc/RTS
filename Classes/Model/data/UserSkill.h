@@ -42,6 +42,7 @@ public:
 	UserSkillInfo getSkillInfoById(int mst_skill_id);
 
 	CC_SYNTHESIZE(vector<UserSkillInfo>, _userSkills, UserSkillList);
+	CC_SYNTHESIZE(vector<UserSkillInfo>, _playerSkills, PlayerSkillsList);
 protected:
 private:
 	static UserSkill *s_UserSkill;

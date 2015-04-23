@@ -17,7 +17,7 @@ public:
 	static void destroyInstance();
 
 	bool init();
-	void setStartAPICallback(StartAPICallback callB);
+	bool setStartAPICallback(StartAPICallback callB);
 
 private:
 

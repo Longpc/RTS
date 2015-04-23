@@ -17,7 +17,6 @@ bool ListUserAPI::init()
 	sprintf(data, "app_key=%s&info=%s", APP_KEY, "2354232342KGJSD%'#$");
 	HttpClientBase::getInstance()->postAPIWithMethodNameAndParam("debug/list_user.php", data);
 	HttpClientBase::getInstance()->setAPICallback([&](string a) {
-		log("List user Callback data: %s", a.c_str());
 		rapidjson::Document doc;
 		doc.Parse<0>(a.c_str());
 		if (doc.HasParseError())
@@ -25,19 +24,23 @@ bool ListUserAPI::init()
 			log("error in parse json");
 		}
 		if (doc.IsObject() && doc.HasMember("data")) {
-			for (int i = 0; i < doc["data"].Size(); i++)
-			{
-				UserInfo temp;
-				temp._id = DataUtils::stringToFloat(doc["data"][i]["user_id"].GetString());
-				temp._name = doc["data"][i]["name"].GetString();
-				_listUser.push_back(temp);
+			if (strcmp(doc["event_name"].GetString(), "list_user") == 0) {
+				log("List user Callback data: %s", a.c_str());
+				for (int i = 0; i < doc["data"].Size(); i++)
+				{
+					UserInfo temp;
+					temp._id = DataUtils::stringToFloat(doc["data"][i]["user_id"].GetString());
+					temp._name = doc["data"][i]["name"].GetString();
+					_listUser.push_back(temp);
+					_isResponsed = true;
+					if (_callBack)
+					{
+						_callBack(_listUser);
+					}		
+				}
 			}
 		}
-		if (_callBack)
-		{
-			_callBack(_listUser);
-		}
-		_isResponsed = true;
+		
 	});
 	return true;
 }

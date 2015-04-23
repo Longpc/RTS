@@ -404,9 +404,9 @@ void MultiUnitSelectScene::nextButtonCallback(Ref *pSender, Widget::TouchEventTy
 
 		auto a = UserModel::getInstance()->getUserInfo();
 		string data = "";
-		data.append("{\"room_id\":\"").append(DataUtils::numberToString(UserModel::getInstance()->getRoomId())).append("\",\"team_id\":\"").append(DataUtils::numberToString(UserModel::getInstance()->getTeamId())).append("\",\"user_id\":\"").append(DataUtils::numberToString(a._id)).append("\",\"unit_id\":\"").append(DataUtils::numberToString(_allUnitInfoNew[_decidedUnitId].mst_unit_id)).append("\"");
+		data.append("{\"room_id\":\"").append(DataUtils::numberToString(UserModel::getInstance()->getRoomId())).append("\",\"team_id\":\"").append(DataUtils::numberToString(UserModel::getInstance()->getTeamId())).append("\",\"user_id\":\"").append(DataUtils::numberToString(a._id)).append("\",\"unit_id\":\"").append(DataUtils::numberToString(_decidedUnitId)).append("\"");
 		data.append(",\"mst_unit\":");
-		auto unitData = UserUnit::getInstance()->getUnitInfoById(_allUnitInfoNew[_decidedUnitId].mst_unit_id);
+		auto unitData = UserUnit::getInstance()->getUnitInfoById(_decidedUnitId);
 		data.append(UserUnit::getInstance()->convertFromUserUnitInfoToJson(unitData).c_str());
 		data.append("}");
 		auto client = NodeServer::getInstance()->getClient();

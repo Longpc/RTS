@@ -21,7 +21,7 @@ public:
 private:
 	///VARIABLES///////////////////////////////////////////////////////////////////////
 	int _onSelectedSlot = 1;
-	int _onSelectedUnitId = 0;
+	int _onSelectSkillTag = 0;
 	int _roomId;
 
 	ClipingButtonBase *_skillSlot1;

@@ -55,6 +55,7 @@ private:
 	bool _onAccess = true;
 	bool _onDisableTouch = false;
 	int _retryCount = 1;
+	bool _startAPICallback = false;
 
 	///FUNCTIONS///////////////////////////////////////////////////////////////////////
 	virtual void multiButtonCallback(Ref *pSender, Widget::TouchEventType type);

@@ -34,8 +34,10 @@ bool ModeSelectScene::init()
 	{
 		downloadDatabase();
 	}
-	StartAPI::getInstance()->setStartAPICallback([&]() {
+	_startAPICallback = StartAPI::getInstance()->setStartAPICallback([&]() {
 		log("Start callback");
+		_startAPICallback = true;
+		
 	});
 	_item1->setEnabled(false);
 	_usernameBg->setVisible(false);
@@ -101,14 +103,9 @@ void ModeSelectScene::multiButtonCallback(Ref *pSender, Widget::TouchEventType t
 		break;
 	case cocos2d::ui::Widget::TouchEventType::ENDED:
 	{
-		if (checkRoomMember() == true) {
+		if (checkRoomMember() == true && _startAPICallback) {
 			Director::getInstance()->replaceScene(TransitionMoveInR::create(SCREEN_TRANSI_DELAY, UserSelect::createScene()));
-		}
-		else {
-			//WARNING LAYER
-			auto dialog = MemberFullDialog::create();
-			getParent()->addChild(dialog);
-		}
+		} 
 		break;
 	}
 	case cocos2d::ui::Widget::TouchEventType::CANCELED:

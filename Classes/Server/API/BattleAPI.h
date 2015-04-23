@@ -12,18 +12,6 @@
 #include "json/writer.h"
 #include "json/stringbuffer.h"
 
-typedef struct UnitData_temp
-{
-	int user_id = 0;
-	int room_id = 0;
-	int mst_unit_id = 0;
-	int team_id = 0;
-	int hp = 0;
-	int mp = 0;
-	int position_x = 0;
-	int position_y = 0;
-	int status = 0;
-};
 using namespace std;
 USING_NS_CC;
 using namespace rapidjson;
@@ -35,18 +23,19 @@ public:
 
 	static void destroyInstance();
 
-	void sendMoveEvent(UnitData_temp unitdata);
+	void sendMoveEvent(UserUnitInfo unitdata, int moveDirection, Vec2 position, int statusId);
 	void sendAttackEvent();
-	void sendSkillEvent();
+	void sendUnitSkillEvent(UserSkillInfo skillData);
 	void sendRepawnEvent();
 	void battleSyncEvent(UserUnitInfo unitData);
+	void sendBattleEndEvent();
 
 	bool init();
 private:
 	static BattleAPI *s_BattleAPI;
-	
-	Document::GenericValue& convertUnitDataToJsonObject(UnitInforNew unitData, Document::AllocatorType& allo);
 
+	Document::GenericValue* convertUnitDataToJsonObject(UserUnitInfo unitData, Document::AllocatorType& allo);
+	Document::GenericValue* convertSkillDataToJsonObject(UserSkillInfo skillData, Document::AllocatorType& allo);
 };
 
 

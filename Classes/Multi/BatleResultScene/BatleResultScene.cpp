@@ -120,15 +120,16 @@ void BatleResultScene::tabButtonClickCallback(Ref *pSender, Widget::TouchEventTy
 		break;
 	case cocos2d::ui::Widget::TouchEventType::ENDED:
 	{
-		if (_blueTeamButton->isEnabled())
+		auto bt = (Button*)(pSender);
+		if (bt == _blueTeamButton)
 		{
 			_allSlot[0]->setSelected(true);
 			_blueTeamTabBackground->setVisible(true);
 			_redTeamTabBackground->setVisible(false);
 			_blueTeamButton->loadTextureNormal("image/tab/new/blue_team_tab.png");
 			_redTeamButton->loadTextureNormal("image/tab/new/red_tab_disable.png");
-			_blueTeamButton->setEnabled(false);
-			_redTeamButton->setEnabled(true);
+			_blueTeamButton->setTouchEnabled(false);
+			_redTeamButton->setTouchEnabled(true);
 			updateUnitSlot(_blueTeamInfo);
 		}
 		else {
@@ -137,8 +138,8 @@ void BatleResultScene::tabButtonClickCallback(Ref *pSender, Widget::TouchEventTy
 			_redTeamTabBackground->setVisible(true);
 			_blueTeamButton->loadTextureNormal("image/tab/new/blue_team_tab_disable.png");
 			_redTeamButton->loadTextureNormal("image/tab/new/red_team_tab.png");
-			_blueTeamButton->setEnabled(true);
-			_redTeamButton->setEnabled(false);
+			_blueTeamButton->setTouchEnabled(true);
+			_redTeamButton->setTouchEnabled(false);
 			updateUnitSlot(_readTeamInfo);
 		}
 		
@@ -196,7 +197,7 @@ void BatleResultScene::updateUnitSlot(vector<UserBattleInfo> info)
 	for (int i = 0; i < info.size(); i++)
 	{
 		_unitNameLabel[i]->setString(info[i].name);
-		_allSlot[i]->getClickableButton()->loadTextureNormal(info[i].imagePath);
+		_allSlot[i]->getClickableButton()->loadTextureNormal(UserUnit::getInstance()->getUnitImageById(info[i].unitId));
 		//update image
 	}
 }

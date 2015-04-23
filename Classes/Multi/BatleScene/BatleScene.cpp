@@ -30,13 +30,11 @@ bool BatleScene::init(int unitId,vector<UserSkillInfo> skills)
 		return false;
 	}
 
-	NodeServer::getInstance()->sendMessageWithName("hello", "Message from battle");
-
 	_menu->setVisible(false);
 	_pageTitleSprite->setVisible(false);
 	_usernameBg->setVisible(false);
 	_selectedUnitId = unitId;
-
+	setUnitStatus(0);
 	_playerSkills = skills;
 
 	///INIT DATA FOR ALL UNIT IN BATTLE
@@ -1087,7 +1085,7 @@ void BatleScene::onTouchMoved(Touch *touch, Event *unused_event)
 
 		_mainCharacterIconInMiniMap->setRotation(-(distanVector.getAngle() * RAD_DEG) + 90);
 		int direc = detectDirectionBaseOnTouchAngle(_mainCharacterIconInMiniMap->getRotation());
-		sendMoveEvent();
+		sendMoveEvent(direc);
 		if (direc != 0)
 		{
 			if (_moveMode == MOVE_CIRCLE)
@@ -1590,18 +1588,9 @@ vector<UserUnitInfo> BatleScene::getEnemyUnitsData(vector<int> enemyIdList)
 	return returnData;
 }
 
-void BatleScene::sendMoveEvent()
+void BatleScene::sendMoveEvent(int direction)
 {
-	UnitData_temp ud;
-	ud.user_id = UserModel::getInstance()->getUserInfo()._id;
-	ud.room_id = UserModel::getInstance()->getRoomId();
-	ud.mst_unit_id = UserModel::getInstance()->getSelectedUnitId();
-	ud.hp = _mainCharacterData.hp;
-	ud.mp = _mainCharacterData.mp;
-	ud.position_x = testObject->getPositionX();
-	ud.position_y = testObject->getPositionY();
-
-	BattleAPI::getInstance()->sendMoveEvent(ud);
+	BattleAPI::getInstance()->sendMoveEvent(_mainCharacterData,direction, testObject->getPosition(),getUnitStatus() );
 }
 
 
@@ -1675,6 +1664,7 @@ void BatleScene::skill1ButtonCallback(Ref *pSender, Widget::TouchEventType type)
 			bt->setColor(Color3B::GRAY);
 			bt->setTouchEnabled(false);
 			bt->setEnabled(true);
+			BattleAPI::getInstance()->sendUnitSkillEvent(skill);
 			playSkill(skill);
 			showCoolDownTime(bt, skill.cooldown_time);
 			bt->runAction(Sequence::create(DelayTime::create(skill.cooldown_time), CallFuncN::create([&, tag](Ref *p) {
@@ -2347,25 +2337,7 @@ void BatleScene::updateHpAndMpViewLabel()
 
 void BatleScene::endBattle()
 {
-	auto sv = NodeServer::getInstance()->getClient();
-	auto userData = UserModel::getInstance()->getUserInfo();
-	auto roomId = UserModel::getInstance()->getRoomId();
-	int unitId = UserModel::getInstance()->getSelectedUnitId();
-
-	Document doc;
-	doc.SetObject();
-	Document::AllocatorType& allo = doc.GetAllocator();
-
-	doc.AddMember("user_id", userData._id, allo);
-	doc.AddMember("room_id", roomId, allo);
-	StringBuffer  buffer;
-	Writer<StringBuffer> writer(buffer);
-	doc.Accept(writer);
-	sv->emit("battle_end", buffer.GetString());
-	sv->on("battle_end_end", [&](SIOClient*, const std::string&) {
-		log("server callback");
-	});
-
+	BattleAPI::getInstance()->sendBattleEndEvent();
 	Director::getInstance()->replaceScene(TransitionMoveInR::create(SCREEN_TRANSI_DELAY, BatleResultScene::createScene(_blueTeamInfo,_redTeamInfo)));
 }
 

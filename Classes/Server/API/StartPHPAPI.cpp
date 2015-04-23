@@ -30,19 +30,23 @@ bool StartAPI::init()
 					if (strcmp(doc["event_name"].GetString(),"start") == 0) {
 						UserUnit::getInstance()->createUserUnitDataFromJson(doc["data"]["unit_list"]);
 						UserSkill::getInstance()->createUserSkillDataFromJson(doc["data"]["skill_list"]);
+						_isResponsed = true;
+						if (_callBack != nullptr)
+						{
+							_callBack();
+						}
+						
 					}
 				}
-		if (_callBack != nullptr)
-		{
-			_callBack();
-		}
+		
 	});
 	return true;
 }
 
-void StartAPI::setStartAPICallback(StartAPICallback callback)
+bool StartAPI::setStartAPICallback(StartAPICallback callback)
 {
 	if (callback != nullptr) {
 		_callBack = callback;
 	}
+	return _isResponsed;
 }

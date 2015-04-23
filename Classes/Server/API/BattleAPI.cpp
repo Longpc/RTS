@@ -23,20 +23,22 @@ bool BattleAPI::init()
 	return true;
 }
 
-void BattleAPI::sendMoveEvent(UnitData_temp unitdata)
+void BattleAPI::sendMoveEvent(UserUnitInfo unitdata, int moveDirection, Vec2 position, int statusId)
 {
 	auto a = NodeServer::getInstance()->getClient();
 
 	Document doc;
 	doc.SetObject();
+	auto userData = UserModel::getInstance()->getUserInfo();
+	auto roomId = UserModel::getInstance()->getRoomId();
 	Document::AllocatorType& allo = doc.GetAllocator();
-	doc.AddMember("user_id", unitdata.user_id, allo);
-	doc.AddMember("room_id", unitdata.room_id, allo);
-	doc.AddMember("mst_unit_id", unitdata.mst_unit_id, allo);
-	doc.AddMember("hp", unitdata.hp,allo);
-	doc.AddMember("mp", unitdata.mp,allo);
-	doc.AddMember("position_x", unitdata.position_x, allo);
-	doc.AddMember("position_y", unitdata.position_y, allo);
+	doc.AddMember("user_id", userData._id, allo);
+	doc.AddMember("room_id", roomId, allo);
+	doc.AddMember("user_unit", *convertUnitDataToJsonObject(unitdata, allo), allo);
+	doc.AddMember("direction", moveDirection, allo);
+	doc.AddMember("position_x", position.x, allo);
+	doc.AddMember("position_y", position.y, allo);
+	doc.AddMember("status", statusId, allo);
 
 	StringBuffer  buffer;
 	Writer<StringBuffer> writer(buffer);
@@ -81,13 +83,38 @@ void BattleAPI::sendAttackEvent()
 	});
 }
 
-void BattleAPI::sendSkillEvent()
+void BattleAPI::sendUnitSkillEvent(UserSkillInfo skillData)
 {
 	auto c = NodeServer::getInstance()->getClient();
+	auto userData = UserModel::getInstance()->getUserInfo();
+	auto roomId = UserModel::getInstance()->getRoomId();
+	int unitId = UserModel::getInstance()->getSelectedUnitId();
+	Document doc;
+	doc.SetObject();
+	Document::AllocatorType& allo = doc.GetAllocator();
+	doc.AddMember("user_id", userData._id, allo);
+	doc.AddMember("room_id", roomId, allo);
+	doc.AddMember("unit_id", unitId, allo);
 
-	c->emit("skill", "{\"data\": \"test skill\"}");
+	auto s = convertSkillDataToJsonObject(skillData, allo);
+	doc.AddMember("mst_skill", *s, allo);
+
+	StringBuffer  buffer;
+	Writer<StringBuffer> writer(buffer);
+	doc.Accept(writer);
+
+	log("Emit data: %s", buffer.GetString());
+	string eventName = "skill_";
+	if (skillData.skill_type == 1) {
+		eventName.append("player");
+	}
+	else {
+		eventName.append("unit");
+	}
+
+	c->emit(eventName.c_str(), buffer.GetString());
 	c->on("skill_end", [&](SIOClient* client, const std::string data){
-		log("attack_end data :%s", data.c_str());
+		log("skill_end :%s", data.c_str());
 	});
 }
 
@@ -116,30 +143,12 @@ void BattleAPI::battleSyncEvent(UserUnitInfo unitData)
 	doc.AddMember("room_id", roomId, allo);
 	doc.AddMember("unit_id", unitId, allo);
 
-// 	rapidjson::Value unitDataArray(kArrayType);
+	auto b = convertUnitDataToJsonObject(unitData,allo);
+	doc.AddMember("user_unit", *b, allo);
 
-	rapidjson::Value unitDataValue;
-	unitDataValue.SetObject();
-	unitDataValue.AddMember("mst_unit_id", unitData.mst_unit_id, allo);
-	unitDataValue.AddMember("name", unitData.name.c_str(), allo);
-	unitDataValue.AddMember("hp", unitData.hp, allo);
-	unitDataValue.AddMember("hp_heal", unitData.hp_heal, allo);
-	unitDataValue.AddMember("mp", unitData.mp, allo);
-	unitDataValue.AddMember("mp_heal", unitData.mp_heal, allo);
-	unitDataValue.AddMember("attack", unitData.attack, allo);
-	unitDataValue.AddMember("attack_range", unitData.attack_range, allo);
-	unitDataValue.AddMember("attack_speed", unitData.attack_speed, allo);
-	unitDataValue.AddMember("defence", unitData.defence, allo);
-	unitDataValue.AddMember("move_speed", unitData.move_speed, allo);
-	unitDataValue.AddMember("element", unitData.element, allo);
-	unitDataValue.AddMember("mst_skill_id_1", unitData.skill1_id, allo);
-	unitDataValue.AddMember("mst_skill_id_2", unitData.skill2_id, allo);
-
-	doc.AddMember("user_unit", unitDataValue/*convertUnitDataToJsonObject(unitData,allo)*/, allo);
 	StringBuffer  buffer;
 	Writer<StringBuffer> writer(buffer);
 	doc.Accept(writer);
-
 	//
 	log("json: %s", buffer.GetString());
 	c->emit("sync", buffer.GetString());
@@ -151,23 +160,70 @@ void BattleAPI::battleSyncEvent(UserUnitInfo unitData)
 	
 }
 
-Document::GenericValue& BattleAPI::convertUnitDataToJsonObject(UnitInforNew unitData, Document::AllocatorType& allo)
+void BattleAPI::sendBattleEndEvent()
 {
-	rapidjson::Value unitDataValue/*(kObjectType)*/;
-	unitDataValue.SetObject();
-	unitDataValue.AddMember("mst_unit_id", unitData.id, allo);
-	unitDataValue.AddMember("name", unitData.name.c_str(), allo);
-	unitDataValue.AddMember("hp", unitData.hp, allo);
-	unitDataValue.AddMember("hp_heal", unitData.hp_restore, allo);
-	unitDataValue.AddMember("mp", unitData.mp, allo);
-	unitDataValue.AddMember("mp_heal", unitData.mp_restore, allo);
-	unitDataValue.AddMember("attack", unitData.attack_dame, allo);
-	unitDataValue.AddMember("attack_range", unitData.attack_range, allo);
-	unitDataValue.AddMember("attack_speed", unitData.attack_delay, allo);
-	unitDataValue.AddMember("defence", unitData.defence, allo);
-	unitDataValue.AddMember("move_speed", unitData.move_speed, allo);
-	unitDataValue.AddMember("element", unitData.type, allo);
-	unitDataValue.AddMember("mst_skill_id_1", unitData.id, allo);
-	unitDataValue.AddMember("mst_skill_id_2", unitData.id, allo);
+	auto sv = NodeServer::getInstance()->getClient();
+	auto userData = UserModel::getInstance()->getUserInfo();
+	auto roomId = UserModel::getInstance()->getRoomId();
+	int unitId = UserModel::getInstance()->getSelectedUnitId();
+
+	Document doc;
+	doc.SetObject();
+	Document::AllocatorType& allo = doc.GetAllocator();
+
+	doc.AddMember("user_id", userData._id, allo);
+	doc.AddMember("room_id", roomId, allo);
+	StringBuffer  buffer;
+	Writer<StringBuffer> writer(buffer);
+	doc.Accept(writer);
+	sv->emit("battle_end", buffer.GetString());
+	sv->on("battle_end_end", [&](SIOClient*, const std::string&) {
+		log("server callback");
+	});
+}
+Document::GenericValue* BattleAPI::convertUnitDataToJsonObject(UserUnitInfo unitData, Document::AllocatorType& allo)
+{
+	rapidjson::Value *unitDataValue = new rapidjson::Value()/*(kObjectType)*/;
+	unitDataValue->SetObject();
+	unitDataValue->AddMember("mst_unit_id", unitData.mst_unit_id, allo);
+	unitDataValue->AddMember("hp", unitData.hp, allo);
+	unitDataValue->AddMember("hp_heal", unitData.hp_heal, allo);
+	unitDataValue->AddMember("mp", unitData.mp, allo);
+	unitDataValue->AddMember("mp_heal", unitData.mp_heal, allo);
+	unitDataValue->AddMember("attack", unitData.attack, allo);
+	unitDataValue->AddMember("attack_range", unitData.attack_range, allo);
+	unitDataValue->AddMember("attack_speed", unitData.attack_speed, allo);
+	unitDataValue->AddMember("defence", unitData.defence, allo);
+	unitDataValue->AddMember("move_speed", unitData.move_speed, allo);
+	unitDataValue->AddMember("element", unitData.element, allo);
+	unitDataValue->AddMember("mst_skill_id_1", unitData.skill1_id, allo);
+	unitDataValue->AddMember("mst_skill_id_2", unitData.skill2_id, allo);
+
+	StringBuffer  buffer;
+	Writer<StringBuffer> writer(buffer);
+	unitDataValue->Accept(writer);
+	log("value: %s", buffer.GetString());
 	return unitDataValue;
 }
+Document::GenericValue* BattleAPI::convertSkillDataToJsonObject(UserSkillInfo skillData, Document::AllocatorType& allo)
+{
+
+	rapidjson::Value *skillDataValue = new rapidjson::Value();
+	skillDataValue->SetObject();
+	skillDataValue->AddMember("mst_unit_id", skillData.mst_skill_id, allo);
+	skillDataValue->AddMember("skill_type", skillData.skill_type, allo);
+	skillDataValue->AddMember("mp_cost", skillData.mp_cost, allo);
+	skillDataValue->AddMember("cooldown_time", skillData.cooldown_time, allo);
+	skillDataValue->AddMember("range_type", skillData.range_type, allo);
+	skillDataValue->AddMember("range_distance", skillData.range_distance, allo);
+	skillDataValue->AddMember("multi_effect", skillData.multi_effect, allo);
+	skillDataValue->AddMember("target_type", skillData.target_type, allo);
+	skillDataValue->AddMember("effect_type", skillData.effect_type, allo);
+	skillDataValue->AddMember("buff_effect_type", skillData.buff_effect_type, allo);
+	skillDataValue->AddMember("duration", skillData.duration, allo);
+	skillDataValue->AddMember("correct_type", skillData.correct_type, allo);
+	skillDataValue->AddMember("corrett_value", skillData.corrett_value, allo);
+
+	return skillDataValue;
+}
+

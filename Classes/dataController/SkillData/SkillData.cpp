@@ -57,7 +57,7 @@ SkillInfoNew SkillData::getPlayerSkillDataBySkillId(int skillId)
 SkillInfoNew SkillData::convertData(vector<string> item)
 {
 	SkillInfoNew temp;
-	temp.id = DataUtils::stringToFloat(item[0].c_str());
+	temp.mst_skill_id = DataUtils::stringToFloat(item[0].c_str());
 	temp.name = item[1];
 	temp.aoe = DataUtils::stringToFloat(item[2].c_str());
 	temp.target_type = DataUtils::stringToFloat(item[3].c_str());

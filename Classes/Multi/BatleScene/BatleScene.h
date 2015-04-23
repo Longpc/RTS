@@ -210,7 +210,9 @@ private:
 	virtual vector<UserSkillInfo> getUnitSkillFromDataBase(UserUnitInfo unitData);
 	virtual vector<UserUnitInfo> getEnemyUnitsData(vector<int> enemyIdList);
 	
-	virtual void sendMoveEvent();
+
+	CC_SYNTHESIZE(int, _unitStatus, UnitStatus);
+	virtual void sendMoveEvent(int direction);
 	
 	///LAYOUT BASE///
 	virtual void onEnter();

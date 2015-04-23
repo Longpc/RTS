@@ -57,63 +57,6 @@ bool SkillSelectScene::init(int unit)
 	_skill2NameLabel = createUniNameLabel(Vec2(baseX, baseY));
 	_slot2BackGroundButton->addChild(_skill2NameLabel);
 
-
-
-
-
-
-	/*_slot1BackGroundButton = createSlotBaseSprite();
-	addChild(_slot1BackGroundButton);
-	_slot1BackGroundButton->loadTextureNormal("image/screen/skillSelect/00_frame.png");
-	float baseX = _slot1BackGroundButton->getContentSize().width / 2;
-	float baseY = -20;
-	_slot1BackGroundButton->addChild(createUnitNameBg(Vec2(baseX, baseY)));
-	_skill1NameLabel = createUniNameLabel(Vec2(baseX, baseY));
-	_slot1BackGroundButton->addChild(_skill1NameLabel);
-
-
-	_slot2BackGroundButton = createSlotBaseSprite(Vec2(_visibleSize.width / 2+BUTON_MARGIN/2, _visibleSize.height - 150));
-	addChild(_slot2BackGroundButton);
-	_slot2BackGroundButton->addChild(createUnitNameBg(Vec2(baseX, baseY)));
-	_skill2NameLabel = createUniNameLabel(Vec2(baseX, baseY));
-	_slot2BackGroundButton->addChild(_skill2NameLabel);
-
-	_slot3BackGroundButton = createSlotBaseSprite(Vec2(_visibleSize.width / 2 + BUTON_MARGIN, _visibleSize.height - 150));
-	addChild(_slot3BackGroundButton);
-	_slot3BackGroundButton->addChild(createUnitNameBg(Vec2(baseX, baseY)));
-	_skill3nameLabel = createUniNameLabel(Vec2(baseX, baseY));
-	_slot3BackGroundButton->addChild(_skill3nameLabel);
-
-	_slot1 = createSlot(Vec2(_visibleSize.width / 2 - BUTON_MARGIN/2, _visibleSize.height - 150));
-	_slot2 = createSlot(Vec2(_visibleSize.width / 2 + BUTON_MARGIN/2, _visibleSize.height - 150));
-	//_slot3 = createSlot(Vec2(_visibleSize.width / 2 + BUTON_MARGIN, _visibleSize.height - 150));
-
-	addChild(_slot1);
-	addChild(_slot2);
-	//addChild(_slot3);
-
-
-	button1 = Button::create();
-	button1->loadTextureNormal("image/screen/skillSelect/face_button.png");
-	button1->setTouchEnabled(true);
-	button1->addTouchEventListener(CC_CALLBACK_2(SkillSelectScene::onTouchUnitSlot1, this));
-	button1->setPosition(Vec2(_visibleSize.width / 2 - BUTON_MARGIN/2, _visibleSize.height - 150));
-	_slot1->addChild(button1);
-
-	button2 = Button::create();
-	button2->loadTextureNormal("image/screen/skillSelect/face_button.png");
-	button2->setTouchEnabled(true);
-	button2->addTouchEventListener(CC_CALLBACK_2(SkillSelectScene::onTouchUnitSlot2, this));
-	button2->setPosition(Vec2(_visibleSize.width / 2+BUTON_MARGIN/2, _visibleSize.height - 150));
-	_slot2->addChild(button2);
-	*/
-	/*button3 = Button::create();
-	button3->loadTextureNormal("image/screen/skillSelect/face_button.png");
-	button3->setTouchEnabled(true);
-	button3->addTouchEventListener(CC_CALLBACK_2(SkillSelectScene::onTouchUnitSlot3, this));
-	button3->setPosition(Vec2(_visibleSize.width / 2 + BUTON_MARGIN, _visibleSize.height - 150));
-	_slot3->addChild(button3);*/
-
 	auto nextButton = Button::create();
 	nextButton->loadTextureNormal("image/button/new/button_decide.png");
 	nextButton->setPosition(Vec2(_visibleSize.width - 50, _visibleSize.height-100));
@@ -213,11 +156,11 @@ void SkillSelectScene::nextButtonCallback(Ref *pSender, Widget::TouchEventType t
 		vector<UserSkillInfo> skills;
 		for (auto &var : _allSelectedSkilId)
 		{
-			if (var < 1)
+			if (var < 0)
 			{
 				return;
 			}
-			skills.push_back(_allSkillInfo[var-1]);
+			skills.push_back(_allSkillInfo[var]);
 		}
 
 		auto a = UserModel::getInstance()->getUserInfo();
@@ -233,10 +176,9 @@ void SkillSelectScene::nextButtonCallback(Ref *pSender, Widget::TouchEventType t
 		client->emit("connect_select_skill", data.c_str());
 		client->on("connect_select_skill_end", [&,skills](SIOClient* client, const std::string& data) {
 			log("select unit end data: %s", data.c_str());
-			Director::getInstance()->replaceScene(TransitionMoveInR::create(SCREEN_TRANSI_DELAY, BatleScene::createScene(_selectedUnitId, skills)));
-
+			
 		});
-
+		Director::getInstance()->replaceScene(TransitionMoveInR::create(SCREEN_TRANSI_DELAY, BatleScene::createScene(_selectedUnitId, skills)));
 		break;
 	}
 	case cocos2d::ui::Widget::TouchEventType::CANCELED:
@@ -258,7 +200,7 @@ void SkillSelectScene::decideCallBack(Ref *pSender, Widget::TouchEventType type)
 	{
 	case cocos2d::ui::Widget::TouchEventType::BEGAN:
 	{
-		onSelectUnit(_onSelectedUnitId);
+		onSelectUnit(_onSelectSkillTag);
 		_onTouchDisable = false;
 		break;
 	}
@@ -294,12 +236,12 @@ void SkillSelectScene::onTouchUnit(Ref *pSender, Widget::TouchEventType type)
 		int tag = unit->getTag();
 		log("touch unit %d", tag);
 		int curPageIndex = _mainPageView->getCurPageIndex();
-		if (tag > (curPageIndex + 1) * 4) return;
-		if (tag  <= curPageIndex * 4) return;
+		if (tag +1 > (curPageIndex + 1) * 4) return;
+		if (tag + 1  <= curPageIndex * 4) return;
 
-		_onSelectedUnitId = tag-1;
+		_onSelectSkillTag = tag;
 		_onTouchDisable = true;
-		auto dialod = SkillDetailDialog::create(_allSkillInfo[tag-1], CC_CALLBACK_2(SkillSelectScene::decideCallBack, this), CC_CALLBACK_2(SkillSelectScene::cancelCallBack, this));
+		auto dialod = SkillDetailDialog::create(_allSkillInfo[tag], CC_CALLBACK_2(SkillSelectScene::decideCallBack, this), CC_CALLBACK_2(SkillSelectScene::cancelCallBack, this));
 		getParent()->addChild(dialod);
 		break;
 	}
@@ -318,13 +260,13 @@ void SkillSelectScene::onSelectUnit(int unitId)
 	case 1:
 	{
 		displayUnit(_skillSlot1->getClickableButton(),_skill1NameLabel, unitId);
-		_allSelectedSkilId[0] = _allSkillInfo[unitId].mst_skill_id;
+		_allSelectedSkilId[0] = unitId;
 		break;
 	}
 	case 2:
 	{
 		displayUnit(_skillSlot2->getClickableButton(),_skill2NameLabel, unitId);
-		_allSelectedSkilId[1] = _allSkillInfo[unitId].mst_skill_id;
+		_allSelectedSkilId[1] = unitId;
 		break;
 	}
 	/*case 3:
@@ -411,10 +353,11 @@ void SkillSelectScene::createAllUnitView()
 		mum->setSwallowsTouches(false);
 		for (int j = 1; j < 5; j++)
 		{
-			if ((j + i * 4 - 1) < _allSkillInfo.size()) {
+			int index = j + i * 4 - 1;
+			if ((index) < _allSkillInfo.size()) {
 				auto sprite = Button::create();
-				sprite->setTag(_allSkillInfo[j + i * 4 - 1].mst_skill_id);
-				sprite->loadTextureNormal(_allSkillInfo[j + i * 4 - 1].skill_icon_path);
+				sprite->setTag(index);
+				sprite->loadTextureNormal(_allSkillInfo[index].skill_icon_path);
 				sprite->setSwallowTouches(false);
 				sprite->addTouchEventListener(CC_CALLBACK_2(SkillSelectScene::onTouchUnit, this));
 				int yValue = lay->getContentSize().height / 2 + 20;
@@ -495,7 +438,7 @@ void SkillSelectScene::setSelectedSlot(int slotNum)
 
 void SkillSelectScene::getSkillDataFromDatabase()
 {
-	_allSkillInfo = UserSkill::getInstance()->getUserSkillList();
+	_allSkillInfo = UserSkill::getInstance()->getPlayerSkillsList();
 
 }
 

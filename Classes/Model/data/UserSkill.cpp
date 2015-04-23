@@ -7,6 +7,7 @@ UserSkill * UserSkill::getInstance()
 	if (!s_UserSkill) {
 		s_UserSkill = new (std::nothrow)UserSkill();
 		s_UserSkill->setUserSkillList({});
+		s_UserSkill->setPlayerSkillsList({});
 	}
 	return s_UserSkill;
 }
@@ -14,6 +15,7 @@ UserSkill * UserSkill::getInstance()
 vector<UserSkillInfo> UserSkill::createUserSkillDataFromJson(rapidjson::GenericValue<rapidjson::UTF8<char>, rapidjson::MemoryPoolAllocator<rapidjson::CrtAllocator>>& value)
 {
 	vector<UserSkillInfo> vInfo;
+	vector<UserSkillInfo> pInfo;
 	UserSkillInfo info;
 	for (int i = 0; i < value.Size(); i++)
 	{
@@ -36,9 +38,13 @@ vector<UserSkillInfo> UserSkill::createUserSkillDataFromJson(rapidjson::GenericV
 		info.skill_icon_path = value[i]["skill_icon_path"].GetString();
 
 		vInfo.push_back(info);
+		if (info.skill_type == 1) {
+			pInfo.push_back(info);
+		}
 		log("skill %d name: %s", i+1, value[i]["name"].GetString());
 	}
 	setUserSkillList(vInfo);
+	setPlayerSkillsList(pInfo);
 	return getUserSkillList();
 }
 
