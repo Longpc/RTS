@@ -83,7 +83,7 @@ void BattleAPI::sendAttackEvent()
 	});
 }
 
-void BattleAPI::sendUnitSkillEvent(UserSkillInfo skillData)
+void BattleAPI::sendSkillEvent(UserSkillInfo skillData, vector<int> targetsId)
 {
 	auto c = NodeServer::getInstance()->getClient();
 	auto userData = UserModel::getInstance()->getUserInfo();
@@ -98,6 +98,14 @@ void BattleAPI::sendUnitSkillEvent(UserSkillInfo skillData)
 
 	auto s = convertSkillDataToJsonObject(skillData, allo);
 	doc.AddMember("mst_skill", *s, allo);
+	rapidjson::Value targetList;
+	targetList.SetArray();
+	for (int i = 0; i < targetsId.size(); i++)
+	{
+		targetList.PushBack(targetsId[i], allo);
+		//targetList.AddMember("target_unique_id", targetsId[i], allo);
+	}
+	doc.AddMember("target_list", targetList, allo);
 
 	StringBuffer  buffer;
 	Writer<StringBuffer> writer(buffer);

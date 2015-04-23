@@ -558,6 +558,22 @@ void BatleScene::createContent()
 	{
 		_allEnemuUnitMaxHp.push_back(_allEnemyUnitData[i].hp);
 	}
+
+	//TODO HERE IS THE CODE TO TEST BATTLE MOVE SYNC FUNCTION
+	auto sv = NodeServer::getInstance()->getClient();
+
+	sv->on("room_publish_move", [&](SIOClient* client, const std::string& a) {
+		//Parser JSON data
+		log("public move data: %s", a.c_str());
+		rapidjson::Document doc;
+		doc.Parse<0>(a.c_str());
+		if (doc.HasParseError())
+		{
+			log("error in parse json");
+		}
+	});
+
+
 }
 
 void BatleScene::displaySkillMpInButton(Button *parent, int mp)
@@ -671,7 +687,7 @@ void BatleScene::update(float delta)
 	}
 	if (random(1,50) < 2)
 	{
-		enemyUnitAutoMoveTest();
+		//enemyUnitAutoMoveTest();
 	}
 
 	fakeZOrder();
@@ -1614,7 +1630,7 @@ void BatleScene::autoRestoreHpAndMp()
 		}
 	}
 	updateSlider();
-	BattleAPI::getInstance()->battleSyncEvent(_mainCharacterData);
+	//BattleAPI::getInstance()->battleSyncEvent(_mainCharacterData);
 }
 
 void BatleScene::updateSlider()
@@ -1664,7 +1680,7 @@ void BatleScene::skill1ButtonCallback(Ref *pSender, Widget::TouchEventType type)
 			bt->setColor(Color3B::GRAY);
 			bt->setTouchEnabled(false);
 			bt->setEnabled(true);
-			BattleAPI::getInstance()->sendUnitSkillEvent(skill);
+			//BattleAPI::getInstance()->sendSkillEvent(skill, {1,2,3,4,5,6,7,8,9});
 			playSkill(skill);
 			showCoolDownTime(bt, skill.cooldown_time);
 			bt->runAction(Sequence::create(DelayTime::create(skill.cooldown_time), CallFuncN::create([&, tag](Ref *p) {
@@ -1814,9 +1830,8 @@ void BatleScene::skillRestoreAll(UserSkillInfo skillInfo)
 		value = ceil(skillInfo.corrett_value);
 		break;
 	}
-
-	createSorceryEffect(testObject, SORCERY_GREEN);
-
+	//TODO
+	vector<int> effectUnitList = {};
 	if (skillInfo.range_distance > 0) 
 	{
 
@@ -1824,6 +1839,9 @@ void BatleScene::skillRestoreAll(UserSkillInfo skillInfo)
 
 		for (int &index : allUnitIndex)
 		{
+			//TODO change to unique unitID
+			effectUnitList.push_back(_allAlliedUnitData[index].mst_unit_id);
+
 			_allAlliedUnitData[index].hp += value;
 			if (_allAlliedUnitData[index].hp > _allAlliedUnitMaxHp[index]) {
 				_allAlliedUnitData[index].hp = _allAlliedUnitMaxHp[index];
@@ -1837,6 +1855,8 @@ void BatleScene::skillRestoreAll(UserSkillInfo skillInfo)
 		log("Restore All");
 		for (int i = 0; i < _allAlliedUnitData.size(); i++)
 		{
+			//TODO change to unique unit ID
+			effectUnitList.push_back(_allAlliedUnitData[i].mst_unit_id);
 			_allAlliedUnitData[i].hp += value;
 			if (_allAlliedUnitData[i].hp > _allAlliedUnitMaxHp[i]) {
 				_allAlliedUnitData[i].hp = _allEnemuUnitMaxHp[i];
@@ -1846,11 +1866,17 @@ void BatleScene::skillRestoreAll(UserSkillInfo skillInfo)
 
 		}
 	}
+	//TODO
+	BattleAPI::getInstance()->sendSkillEvent(skillInfo, effectUnitList);
 
+	createSorceryEffect(testObject, SORCERY_GREEN);
 }
 
 void BatleScene::skillRestoreOne(UserSkillInfo skillInfo)
 {
+	//TODO
+	//
+	BattleAPI::getInstance()->sendSkillEvent(skillInfo, { _mainCharacterData.mst_unit_id });
 	log("Restore One");
 
 	int value = 0;
@@ -1896,6 +1922,9 @@ void BatleScene::skillHelpAll(UserSkillInfo skillInfo)
 
 void BatleScene::skillHelpOne(UserSkillInfo skillInfo)
 {
+	//TODO
+	//Change this id by unique unit Id
+	BattleAPI::getInstance()->sendSkillEvent(skillInfo, { _mainCharacterData.mst_unit_id });
 	float value = 1.0f;
 	int pureValue = 0;
 	switch (skillInfo.correct_type)
@@ -2098,6 +2127,14 @@ void BatleScene::skillAttackAll(UserSkillInfo skillInfo)
 			unitIndex.push_back(i);
 		}
 	}
+	//TODO change to unique unitID
+	vector<int> effectdUnitId;
+	for (auto &in : unitIndex)
+	{
+		effectdUnitId.push_back(_allEnemyUnitData[in].mst_unit_id);
+	}
+	BattleAPI::getInstance()->sendSkillEvent(skillInfo, effectdUnitId);
+
 	for (int &index : unitIndex)
 	{
 		int dame = (value - _allEnemyUnitData[index].defence);
@@ -2145,6 +2182,9 @@ void BatleScene::skillAttackAll(UserSkillInfo skillInfo)
 void BatleScene::skillAttackOne(UserSkillInfo skillInfo)
 {
 	log("Attack One");
+
+	//TODO change to unique unitID
+	BattleAPI::getInstance()->sendSkillEvent(skillInfo, { _allEnemyUnitData[_indexOfBeAttackEnemy].mst_unit_id });
 
 	int value = 0;
 	switch (skillInfo.correct_type)
@@ -2547,6 +2587,14 @@ Animation* BatleScene::createStatusAnimation(string imagePath)
 void BatleScene::skillPoisonAction(UserSkillInfo skillInfo)
 {
 	vector<int> units = detectUnitInAoe(skillInfo, ENEMY_FLAG);
+	//TODO change to unit unitque ID
+	vector<int> effectedUnits;
+	for (auto &i : units)
+	{
+		effectedUnits.push_back(_allEnemyUnitData[i].mst_unit_id);
+	}
+	BattleAPI::getInstance()->sendSkillEvent(skillInfo, effectedUnits);
+
 	for (auto & index :units)
 	{
 		displayUnitStatus(_allEnemyUnitSprite[index], POISON, skillInfo,index);
@@ -2557,6 +2605,14 @@ void BatleScene::skillPoisonAction(UserSkillInfo skillInfo)
 void BatleScene::skillStunAction(UserSkillInfo skillInfo)
 {
 	vector<int> units = detectUnitInAoe(skillInfo,ENEMY_FLAG);
+	//TODO change to unique unitID
+	vector<int> effectedUnits;
+	for (int &index : units)
+	{
+		effectedUnits.push_back(_allEnemyUnitData[index].mst_unit_id);
+	}
+	BattleAPI::getInstance()->sendSkillEvent(skillInfo, effectedUnits);
+
 	for (auto& i : units)
 	{
 		displayUnitStatus(_allEnemyUnitSprite[i], STUN, skillInfo,i);

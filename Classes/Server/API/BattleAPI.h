@@ -25,7 +25,7 @@ public:
 
 	void sendMoveEvent(UserUnitInfo unitdata, int moveDirection, Vec2 position, int statusId);
 	void sendAttackEvent();
-	void sendUnitSkillEvent(UserSkillInfo skillData);
+	void sendSkillEvent(UserSkillInfo skillData, vector<int> targetsId = {});
 	void sendRepawnEvent();
 	void battleSyncEvent(UserUnitInfo unitData);
 	void sendBattleEndEvent();
