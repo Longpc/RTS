@@ -401,16 +401,23 @@ void MultiUnitSelectScene::nextButtonCallback(Ref *pSender, Widget::TouchEventTy
 		if (_decidedUnitId == 0) break;
 
 		UserModel::getInstance()->setSelectedUnitId(_decidedUnitId);
-
-		auto a = UserModel::getInstance()->getUserInfo();
-		string data = "";
-		data.append("{\"room_id\":\"").append(DataUtils::numberToString(UserModel::getInstance()->getRoomId())).append("\",\"team_id\":\"").append(DataUtils::numberToString(UserModel::getInstance()->getTeamId())).append("\",\"user_id\":\"").append(DataUtils::numberToString(a._id)).append("\",\"unit_id\":\"").append(DataUtils::numberToString(_decidedUnitId)).append("\"");
-		data.append(",\"mst_unit\":");
 		auto unitData = UserUnit::getInstance()->getUnitInfoById(_decidedUnitId);
-		data.append(UserUnit::getInstance()->convertFromUserUnitInfoToJson(unitData).c_str());
-		data.append("}");
+		Document doc;
+		doc.SetObject();
+		Document::AllocatorType& allo = doc.GetAllocator();
+
+		doc.AddMember("room_id", UserModel::getInstance()->getRoomId(), allo);
+		doc.AddMember("user_id", UserModel::getInstance()->getUserInfo()._id, allo);
+		doc.AddMember("team_id", UserModel::getInstance()->getTeamId(), allo);
+		doc.AddMember("unit_id", _decidedUnitId, allo);
+		doc.AddMember("mst_unit", *UserUnit::getInstance()->convertFromUserUnitInfoToJson(unitData, allo),allo);
+		doc.AddMember("uuid", UserModel::getInstance()->getUuId().c_str(), allo);
+		StringBuffer buff;
+		Writer<StringBuffer> writer(buff);
+		doc.Accept(writer);
+
 		auto client = NodeServer::getInstance()->getClient();
-		client->emit("connect_select_unit", data.c_str());
+		client->emit("connect_select_unit", buff.GetString());
 		client->on("connect_select_unit_end", [&](SIOClient* client, const std::string& data) {
 			log("select unit end data: %s", data.c_str());
 		});

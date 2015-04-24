@@ -4,6 +4,7 @@
 #include "json/rapidjson.h"
 #include "json/document.h"
 #include "json/writer.h"
+
 const static int PLAYER_TEXT_X = 900;
 const static int OTHER_TEXT_X = 50;
 const static int TEXT_H = 60;
@@ -25,6 +26,7 @@ bool ModeSelectScene::init()
 	if (!LayerBase::init()) {
 		return false;
 	}
+
 	auto config = Configuration::getInstance();
 	if (config->getValue("ServerAddress").isNull())
 	{
@@ -34,11 +36,16 @@ bool ModeSelectScene::init()
 	{
 		downloadDatabase();
 	}
-	_startAPICallback = StartAPI::getInstance()->setStartAPICallback([&]() {
-		log("Start callback");
-		_startAPICallback = true;
-		
+
+	HttpClientBase::getInstance()->postAPIWithMethodNameAndParam("uuid.php", "uuid", [&](string a){
+		log("UUID: %s", a.c_str());
+		UserModel::getInstance()->setUuId(a.c_str());
+		StartAPI::getInstance()->setStartAPICallback([&]() {
+			log("Start callback");
+		});
 	});
+
+	
 	_item1->setEnabled(false);
 	_usernameBg->setVisible(false);
 
@@ -103,7 +110,7 @@ void ModeSelectScene::multiButtonCallback(Ref *pSender, Widget::TouchEventType t
 		break;
 	case cocos2d::ui::Widget::TouchEventType::ENDED:
 	{
-		if (checkRoomMember() == true && _startAPICallback) {
+		if (checkRoomMember() == true && StartAPI::getInstance()->getServerCallbackFlg()) {
 			Director::getInstance()->replaceScene(TransitionMoveInR::create(SCREEN_TRANSI_DELAY, UserSelect::createScene()));
 		} 
 		break;

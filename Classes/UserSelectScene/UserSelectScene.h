@@ -13,6 +13,9 @@
 
 #include "json/rapidjson.h"
 #include "json/document.h"
+#include "json/writer.h"
+
+#include "Model/data/RoomModel.h"
 
 class UserSelect :public LayerBase
 {

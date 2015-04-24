@@ -31,6 +31,7 @@ public:
 	CC_SYNTHESIZE(int, _roomId, RoomId);
 	CC_SYNTHESIZE(int, _teamId, TeamId);
 	CC_SYNTHESIZE(int, _selectedUnitId, SelectedUnitId);
+	CC_SYNTHESIZE(string, _uuid, UuId);
 private:
 	static UserModel *s_UserModel;
 };

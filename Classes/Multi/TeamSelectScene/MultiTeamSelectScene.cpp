@@ -25,16 +25,6 @@ bool MultiTeamSelectScene::init()
 	}
 	//getUserInfor
 	_userNameLabel->setString(a._name.c_str());
-
-	string data = "";
-	int roomId = UserModel::getInstance()->getRoomId();
-	data.append("{\"room_id\": \"").append(DataUtils::numberToString(roomId)).append("\",\"user_id\":\"").append(DataUtils::numberToString(a._id)).append("\"}");
-	auto client = NodeServer::getInstance()->getClient();
-	client->emit("connect_begin", data.c_str());
-	client->on("connect_begin_end", [&,roomId](SIOClient* client, const std::string& data) {
-		log("connect end data: %s", data.c_str());
-		/*UserModel::getInstance()->setRoomId(roomId);*/
-	});
 	char data1[100];
 	sprintf(data1, "app_key=%s&user_id=%d", APP_KEY, UserModel::getInstance()->getUserInfo()._id);
 	//HttpClientBase::getInstance()->postAPIAddressAndParam("start.php", data1, [&](string a) {
@@ -275,15 +265,30 @@ void MultiTeamSelectScene::enterTeam(int teamId)
 {
 	//send event to NodeServer
 	auto a = UserModel::getInstance()->getUserInfo();
-	string data = "";
-	data.append("{\"room_id\": \"").append(DataUtils::numberToString(UserModel::getInstance()->getRoomId())).append("\",\"user_id\":\"").append(DataUtils::numberToString(a._id)).append("\",\"team_id\":\"").append(DataUtils::numberToString(teamId)).append("\"}");
+	Document doc;
+	doc.SetObject();
+	int uId = UserModel::getInstance()->getUserInfo()._id;
+	int rId = UserModel::getInstance()->getRoomId();
+	Document::AllocatorType& allo = doc.GetAllocator();
+	doc.AddMember("user_id",uId, allo);
+	doc.AddMember("room_id", rId, allo);
+	doc.AddMember("team_id", teamId, allo);
+	doc.AddMember("uuid", UserModel::getInstance()->getUuId().c_str(), allo);
+	//set team
+	RoomModel::getInstance()->setTeamForUserByUserId(rId, uId, teamId);
+
+
+	StringBuffer buff;
+	Writer<StringBuffer> wt(buff);
+	doc.Accept(wt);
+
 	auto client = NodeServer::getInstance()->getClient();
-	client->emit("connect_select_team", data.c_str());
+	client->emit("connect_select_team", buff.GetString());
 	client->on("connect_select_team_end", [&,teamId](SIOClient* client, const std::string& data) {
 		log("select team end data: %s", data.c_str());
 		UserModel::getInstance()->setTeamId(teamId);
+		Director::getInstance()->replaceScene(TransitionMoveInR::create(SCREEN_TRANSI_DELAY, MultiUnitSelectScene::createScene(teamId, MULTI_MODE)));
 	});
-	Director::getInstance()->replaceScene(TransitionMoveInR::create(SCREEN_TRANSI_DELAY, MultiUnitSelectScene::createScene(teamId, MULTI_MODE)));
 
 }
 

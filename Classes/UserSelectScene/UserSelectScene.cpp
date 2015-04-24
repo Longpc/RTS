@@ -89,6 +89,38 @@ void UserSelect::unitSelectButtonClick(Ref *pSender, Widget::TouchEventType type
 		UserModel::getInstance()->setRoomId(random(1, 5));
 		UserLoginAPI::getInstance()->setLoginCompletedCallback([&](){
 			log("Login Completed");
+			int roomId = UserModel::getInstance()->getRoomId();
+
+			Document doc;
+			doc.SetObject();
+			Document::AllocatorType& allo = doc.GetAllocator();
+
+			doc.AddMember("user_id", UserModel::getInstance()->getUserInfo()._id,allo);
+			doc.AddMember("room_id", roomId, allo);
+			doc.AddMember("uuid", UserModel::getInstance()->getUuId().c_str(), allo);
+
+			StringBuffer buff;
+			Writer<StringBuffer> wt(buff);
+			doc.Accept(wt);
+
+
+			auto client = NodeServer::getInstance()->getClient();
+			log("buff string: %s", buff.GetString());
+			client->emit("connect_begin", buff.GetString());
+			client->on("connect_begin_end", [&, roomId](SIOClient* client, const std::string& data) {
+				log("connect end data: %s", data.c_str());
+				RoomModel::getInstance();
+				/*UserModel::getInstance()->setRoomId(roomId);*/
+				//add self info to room user list
+				RoomUser temp;
+				temp._uuid = UserModel::getInstance()->getUuId();
+				temp.room_id = roomId;
+				temp.user_id = UserModel::getInstance()->getUserInfo()._id;
+				temp.team_id = 0;
+				temp._ready = 0;
+				temp.state = 0;
+				RoomModel::getInstance()->addUserInfoToUserList(temp);
+			});
 
 		});
 // 		StartAPI::getInstance()->setStartAPICallback([&,bt]() {

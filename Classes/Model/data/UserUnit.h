@@ -40,7 +40,7 @@ public:
 	CC_SYNTHESIZE(vector<UserUnitInfo>, _userUnits, UserUnitList);
 	UserUnitInfo getUnitInfoById(int mst_unit_id);
 	string getUnitImageById(int id);
-	string convertFromUserUnitInfoToJson(UserUnitInfo unitInfo);
+	Document::GenericValue* convertFromUserUnitInfoToJson(UserUnitInfo unitInfo, Document::AllocatorType& allo);
 
 private:
 	static UserUnit *s_UserUnit;

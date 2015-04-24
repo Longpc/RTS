@@ -39,6 +39,7 @@ void BattleAPI::sendMoveEvent(UserUnitInfo unitdata, int moveDirection, Vec2 pos
 	doc.AddMember("position_x", position.x, allo);
 	doc.AddMember("position_y", position.y, allo);
 	doc.AddMember("status", statusId, allo);
+	doc.AddMember("uuid", UserModel::getInstance()->getUuId().c_str(),allo);
 
 	StringBuffer  buffer;
 	Writer<StringBuffer> writer(buffer);
@@ -72,6 +73,7 @@ void BattleAPI::sendAttackEvent()
 	doc.AddMember("attack.target.object_type", "{attack target}", allo);
 	doc.AddMember("attack.target.object_id", 12, allo);
 	doc.AddMember("attack.back_attack", 0, allo);
+	doc.AddMember("uuid", UserModel::getInstance()->getUuId().c_str(), allo);
 
 	StringBuffer  buffer;
 	Writer<StringBuffer> writer(buffer);
@@ -95,6 +97,7 @@ void BattleAPI::sendSkillEvent(UserSkillInfo skillData, vector<int> targetsId)
 	doc.AddMember("user_id", userData._id, allo);
 	doc.AddMember("room_id", roomId, allo);
 	doc.AddMember("unit_id", unitId, allo);
+	doc.AddMember("uuid", UserModel::getInstance()->getUuId().c_str(), allo);
 
 	auto s = convertSkillDataToJsonObject(skillData, allo);
 	doc.AddMember("mst_skill", *s, allo);
@@ -126,6 +129,36 @@ void BattleAPI::sendSkillEvent(UserSkillInfo skillData, vector<int> targetsId)
 	});
 }
 
+void BattleAPI::sendDeadEvent(UserUnitInfo unitData)
+{
+	auto userData = UserModel::getInstance()->getUserInfo();
+	auto roomId = UserModel::getInstance()->getRoomId();
+	int unit_id = UserModel::getInstance()->getSelectedUnitId();
+
+	Document doc;
+	doc.SetObject();
+	Document::AllocatorType& allo = doc.GetAllocator();
+
+	doc.AddMember("user_id", userData._id, allo);
+	doc.AddMember("room_id", roomId, allo);
+	doc.AddMember("unit_id", unit_id, allo);
+	doc.AddMember("user_unit", *convertUnitDataToJsonObject(unitData, allo), allo);
+	doc.AddMember("dead_time", 5, allo);
+	doc.AddMember("uuid", UserModel::getInstance()->getUuId().c_str(), allo);
+
+	StringBuffer buffer;
+	Writer<StringBuffer> writer(buffer);
+	doc.Accept(writer);
+
+	log("dead json: %s", buffer.GetString());
+
+	auto sv = NodeServer::getInstance()->getClient();
+	sv->emit("dead", buffer.GetString());
+	sv->on("dead_end", [&](SIOClient* client, const std::string data) {
+		log("Dead callback data: %s", data.c_str());
+	});
+}
+
 void BattleAPI::sendRepawnEvent()
 {
 	auto c = NodeServer::getInstance()->getClient();
@@ -150,6 +183,7 @@ void BattleAPI::battleSyncEvent(UserUnitInfo unitData)
 	doc.AddMember("user_id", userData._id, allo);
 	doc.AddMember("room_id", roomId, allo);
 	doc.AddMember("unit_id", unitId, allo);
+	doc.AddMember("uuid", UserModel::getInstance()->getUuId().c_str(), allo);
 
 	auto b = convertUnitDataToJsonObject(unitData,allo);
 	doc.AddMember("user_unit", *b, allo);
@@ -181,6 +215,7 @@ void BattleAPI::sendBattleEndEvent()
 
 	doc.AddMember("user_id", userData._id, allo);
 	doc.AddMember("room_id", roomId, allo);
+	doc.AddMember("uuid", UserModel::getInstance()->getUuId().c_str(), allo);
 	StringBuffer  buffer;
 	Writer<StringBuffer> writer(buffer);
 	doc.Accept(writer);
@@ -207,10 +242,6 @@ Document::GenericValue* BattleAPI::convertUnitDataToJsonObject(UserUnitInfo unit
 	unitDataValue->AddMember("mst_skill_id_1", unitData.skill1_id, allo);
 	unitDataValue->AddMember("mst_skill_id_2", unitData.skill2_id, allo);
 
-	StringBuffer  buffer;
-	Writer<StringBuffer> writer(buffer);
-	unitDataValue->Accept(writer);
-	log("value: %s", buffer.GetString());
 	return unitDataValue;
 }
 Document::GenericValue* BattleAPI::convertSkillDataToJsonObject(UserSkillInfo skillData, Document::AllocatorType& allo)
@@ -234,4 +265,5 @@ Document::GenericValue* BattleAPI::convertSkillDataToJsonObject(UserSkillInfo sk
 
 	return skillDataValue;
 }
+
 

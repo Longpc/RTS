@@ -164,16 +164,30 @@ void SkillSelectScene::nextButtonCallback(Ref *pSender, Widget::TouchEventType t
 		}
 
 		auto a = UserModel::getInstance()->getUserInfo();
-		string data = "";
-		data.append("{\"room_id\":\"").append(DataUtils::numberToString(UserModel::getInstance()->getRoomId())).append("\",\"team_id\":\"").append(DataUtils::numberToString(UserModel::getInstance()->getTeamId())).append("\",\"user_id\":\"").append(DataUtils::numberToString(a._id)).append("\",\"unit_id\":\"").append(DataUtils::numberToString(_selectedUnitId)).append("\"");
-		data.append(",\"player_skill_list\": [");
-		data.append("{\"mst_skill_id\":\"").append(DataUtils::numberToString(skills[0].mst_skill_id)).append("\"}");
-		data.append(",");
-		data.append("{\"mst_skill_id\":\"").append(DataUtils::numberToString(skills[1].mst_skill_id)).append("\"}");
-		data.append("]");
-		data.append("}");
+		Document doc;
+		doc.SetObject();
+		Document::AllocatorType& allo = doc.GetAllocator();
+
+		doc.AddMember("room_id", UserModel::getInstance()->getRoomId(), allo);
+		doc.AddMember("team_id", UserModel::getInstance()->getTeamId(), allo);
+		doc.AddMember("user_id", a._id, allo);
+		doc.AddMember("unit_id", _selectedUnitId, allo);
+		rapidjson::Value listSkill;
+		listSkill.SetArray();
+		for (int i = 0; i < skills.size(); i++)
+		{
+			listSkill.PushBack(skills[i].mst_skill_id, allo);
+			//targetList.AddMember("target_unique_id", targetsId[i], allo);
+		}
+		doc.AddMember("mst_skill_id", listSkill, allo);
+		doc.AddMember("uuid", UserModel::getInstance()->getUuId().c_str(), allo);
+
+		StringBuffer buff;
+		Writer<StringBuffer> wt(buff);
+		doc.Accept(wt);
+
 		auto client = NodeServer::getInstance()->getClient();
-		client->emit("connect_select_skill", data.c_str());
+		client->emit("connect_select_skill", buff.GetString());
 		client->on("connect_select_skill_end", [&,skills](SIOClient* client, const std::string& data) {
 			log("select unit end data: %s", data.c_str());
 			
