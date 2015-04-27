@@ -26,12 +26,14 @@ class MYCLASS_DECLSPEC UserModel : public Ref
 {
 public:
 	static UserModel *getInstance();
-	CC_SYNTHESIZE(UserInfo, _userInfo, UserInfo);
+	CC_SYNTHESIZE(RoomUser, _userInfo, UserInfo);
 	CC_SYNTHESIZE(UserUnitInfo, _listUnit, UserUnitsInfo);
-	CC_SYNTHESIZE(int, _roomId, RoomId);
-	CC_SYNTHESIZE(int, _teamId, TeamId);
+	//CC_SYNTHESIZE(int, _roomId, RoomId);
+	//CC_SYNTHESIZE(int, _teamId, TeamId);
 	CC_SYNTHESIZE(int, _selectedUnitId, SelectedUnitId);
 	CC_SYNTHESIZE(string, _uuid, UuId);
+	void setTeamId(int teamid);
+	void setRoomId(int roomId);
 private:
 	static UserModel *s_UserModel;
 };

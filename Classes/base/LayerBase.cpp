@@ -38,9 +38,9 @@ bool LayerBase::init()
 	_usernameBg->setPosition(Vec2(_visibleSize.width - _usernameBg->getContentSize().width*0.5f / 2, _visibleSize.height - _usernameBg->getContentSize().height*0.8f / 2));
 	addChild(_usernameBg);
 
-	_curUserInfo._name = "Long";
+	_curUserInfo.name = "Long";
 
-	_userNameLabel = Label::createWithSystemFont(_curUserInfo._name, JAPANESE_FONT_1_BOLD, 30);
+	_userNameLabel = Label::createWithSystemFont(_curUserInfo.name, JAPANESE_FONT_1_BOLD, 30);
 	_userNameLabel->setPosition(Vec2(50,_usernameBg->getContentSize().height/2));
 	_userNameLabel->setColor(Color3B::BLACK);
 	_usernameBg->addChild(_userNameLabel,1);

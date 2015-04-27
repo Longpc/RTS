@@ -10,11 +10,13 @@
 #include "Model/data/UserModel.h"
 #include "Server/API/StartPHPAPI.h"
 #include "Server/Server.h"
+#include "Model/data/RoomModel.h"
+
 
 ///Include library header here///
 #include <string.h>
 #include "extensions/cocos-ext.h"
-
+#define REMOVE_CHILD 1111
 USING_NS_CC_EXT;
 class MultiTeamSelectScene :public LayerBase
 {
@@ -27,22 +29,22 @@ private:
 	///VARIABLES///////////////////////////////////////////////////////////////////////
 	Sprite *_usernameBg;
 
-	vector<UserInfo> _roomUserInfo;
-	vector<UserInfo> _blueTeamUserInfo;
-	vector<UserInfo> _redTeamUserInfo;
+	vector<RoomUser> _roomUserInfo;
+	vector<RoomUser> _blueTeamUserInfo;
+	vector<RoomUser> _redTeamUserInfo;
 
 	int _curRoomId = 1;
 	int _curUserId = 1;
 
-	UserInfo _currentUserInfo;
-	int _blueTeamId = 1;
-	int _redTeamId = 2;
+	RoomUser _currentUserInfo;
 
 	bool _onAccess = true;
 
 	string _userName;
 
 	///FUNCTIONS///////////////////////////////////////////////////////////////////////
+	void update(float delta);
+	
 	virtual void onBackButtonClick(Ref *pSender);
 
 	virtual void redTeamButtonCallback(Ref *pSender, Widget::TouchEventType type);

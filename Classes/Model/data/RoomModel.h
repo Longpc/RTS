@@ -18,17 +18,6 @@ USING_NS_CC;
 using namespace rapidjson;
 using namespace std;
 
-struct RoomUser
-{
-	string _uuid;
-	int room_id = 0;
-	int user_id = 0;
-	int team_id = 0;
-	int _ready = 0; 
-	int state = 0;
-	int npc = 0;
-};
-
 #if CC_TARGET_PLATFORM == CC_PLATFORM_WIN32
 #define BUILDING_MYDLL 12
 #ifdef BUILDING_MYDLL
@@ -50,11 +39,17 @@ public:
 
 	CC_SYNTHESIZE(int, _roomId, RoomId);
 	CC_SYNTHESIZE(vector<RoomUser>, _roomUserList,RoomUserList);
-	CC_SYNTHESIZE(vector<int>, _redTeamUserList, RedTeamUserList);
-	CC_SYNTHESIZE(vector<int>, _blueTeamUserList, BlueTeamUserList);
+	CC_SYNTHESIZE(vector<RoomUser>, _redTeamUserList, RedTeamUserList);
+	CC_SYNTHESIZE(vector<RoomUser>, _blueTeamUserList, BlueTeamUserList);
+	/*this function will parse data received when select user was done. Parsed data will use to
+	create room 's user list*/
+	void initDataWhenJoinRoom(string jsonData);
+
+	RoomUser parseJsonToRoomUserData(string data);
 
 	void addUserInfoToUserList(RoomUser data);
 	void setTeamForUserByUserId(int room_id, int user_id, int team_id);
+
 private:
 	static RoomModel * s_RoomModel;
 };

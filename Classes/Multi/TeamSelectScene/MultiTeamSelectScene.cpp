@@ -19,14 +19,14 @@ bool MultiTeamSelectScene::init()
 	if (!LayerBase::init()) {
 		return false;
 	}
-	UserInfo a = UserModel::getInstance()->getUserInfo();
+	RoomUser a = UserModel::getInstance()->getUserInfo();
 	if (_defaultLabel != nullptr) {
 		_defaultLabel->setString("チームを選択してください");
 	}
 	//getUserInfor
-	_userNameLabel->setString(a._name.c_str());
+	_userNameLabel->setString(a.name.c_str());
 	char data1[100];
-	sprintf(data1, "app_key=%s&user_id=%d", APP_KEY, UserModel::getInstance()->getUserInfo()._id);
+	sprintf(data1, "app_key=%s&user_id=%d", APP_KEY, UserModel::getInstance()->getUserInfo().user_id);
 	//HttpClientBase::getInstance()->postAPIAddressAndParam("start.php", data1, [&](string a) {
 	//	log("Start--->Callback data: %s", a.c_str());
 		// 		rapidjson::Document doc;
@@ -79,9 +79,12 @@ bool MultiTeamSelectScene::init()
 	addChild(nextButton, 10);*/
 
 	getRoomInfo(_curRoomId);
-	getAndShowTeamInfo(_blueTeamId,blueTeamBg);
-	getAndShowTeamInfo(_redTeamId, redTeamBg);
+	getAndShowTeamInfo(TEAM_FLG_BLUE, blueTeamBg);
+	getAndShowTeamInfo(TEAM_FLG_RED, redTeamBg);
 
+
+
+	scheduleUpdate();
 	return true;
 }
 
@@ -100,8 +103,8 @@ void MultiTeamSelectScene::redTeamButtonCallback(Ref *pSender, Widget::TouchEven
 		break;
 	case cocos2d::ui::Widget::TouchEventType::ENDED:
 	{
-		if (checkTeamFull(_redTeamId) == true) {
-			enterTeam(_redTeamId);
+		if (checkTeamFull(TEAM_FLG_RED) == true) {
+			enterTeam(TEAM_FLG_RED);
 		}
 		else {
 			//SHOW DIALOG
@@ -127,8 +130,8 @@ void MultiTeamSelectScene::blueTeamButtonCallback(Ref *pSender, Widget::TouchEve
 		break;
 	case cocos2d::ui::Widget::TouchEventType::ENDED:
 	{
-		if (checkTeamFull(_blueTeamId) == true) {
-			enterTeam(_blueTeamId);
+		if (checkTeamFull(TEAM_FLG_BLUE) == true) {
+			enterTeam(TEAM_FLG_BLUE);
 		}
 		else {
 			//SHOW DIALOg
@@ -191,21 +194,40 @@ void MultiTeamSelectScene::getRoomInfo(int roomId)
 		layer->addChild(userName);
 	}
 	*/
+	auto roomUserList = RoomModel::getInstance()->getRoomUserList();
+	vector<RoomUser> tempList1;
+	vector<RoomUser> tempList2;
+	for (int i = 0; i < roomUserList.size(); i++)
+	{
+		if (roomUserList[i].team_id == TEAM_FLG_BLUE)
+		{
+			roomUserList[i].name = ListUserAPI::getInstance()->getUserNameByUserId(roomUserList[i].user_id);
+			tempList1.push_back(roomUserList[i]);
+			continue;
+		}
+		if (roomUserList[i].team_id == TEAM_FLG_RED) {
+			roomUserList[i].name = ListUserAPI::getInstance()->getUserNameByUserId(roomUserList[i].user_id);
+			tempList2.push_back(roomUserList[i]);
+			continue;
+		}
+	}
+	RoomModel::getInstance()->setBlueTeamUserList(tempList1);
+	RoomModel::getInstance()->setRedTeamUserList(tempList2);
 
 }
 void MultiTeamSelectScene::getAndShowTeamInfo(int teamId,Sprite *parent)
 {
 	//get data form server
-	vector<UserInfo> teamInfo;
-	for (int i = 0; i < 2; i++)
-	{
-		std::stringstream name;
-		name << "Blue " << i+1;
 
-		UserInfo temp;
-		temp._name = name.str().c_str();
-		temp._onTeam = _blueTeamId;
-		teamInfo.push_back(temp);
+	vector<RoomUser> teamInfo = {};
+	switch (teamId)
+	{
+	case TEAM_FLG_BLUE:
+		teamInfo = RoomModel::getInstance()->getBlueTeamUserList();
+		break;
+	case TEAM_FLG_RED:
+		teamInfo = RoomModel::getInstance()->getRedTeamUserList();
+		break;
 	}
 	std::stringstream memNum;
 	memNum << "メンバー数: "<< teamInfo.size();
@@ -213,22 +235,26 @@ void MultiTeamSelectScene::getAndShowTeamInfo(int teamId,Sprite *parent)
 	teamLabel->setPosition(Vec2(50, parent->getContentSize().height - 20));
 	teamLabel->setAnchorPoint(Vec2::ANCHOR_TOP_LEFT);
 	teamLabel->setColor(Color3B::BLACK);
+	teamLabel->setTag(REMOVE_CHILD);
 	parent->addChild(teamLabel);
 
 	float baseX = parent->getContentSize().width*1/3 - 45;
 	float baseY = parent->getContentSize().height * 2 / 3 - 10;
+	
+	int maxSize = 3;
+	int listSize = (maxSize < teamInfo.size()) ? maxSize : teamInfo.size();
+	vector<Sprite*> listback;
+	for (int i = 0; i < maxSize; i++)
+	{
+		listback.push_back(createUsernameBackground(Vec2(baseX, baseY *(maxSize - i) / maxSize - (i * 5))));
+		listback.back()->setTag(REMOVE_CHILD);
+		parent->addChild(listback.back());
+	}
 
-	auto username1Bg = createUsernameBackground(Vec2(baseX, baseY));
-	username1Bg->addChild(createLabelWithStringandPosition(teamInfo[0]._name, Vec2(10, username1Bg->getContentSize().height / 2)));
-	parent->addChild(username1Bg);
-
-	auto userName2Bg = createUsernameBackground(Vec2(baseX, baseY * 2 / 3 -5));
-	userName2Bg->addChild(createLabelWithStringandPosition(teamInfo[1]._name, Vec2(10, username1Bg->getContentSize().height / 2)));
-	parent->addChild(userName2Bg);
-
-	auto username3Bg = createUsernameBackground(Vec2(baseX, baseY * 1 / 3 - 10));
-	//username3Bg->addChild(createLabelWithStringandPosition(_blueTeamUserInfo[2]._name, Vec2(10, username3Bg->getContentSize().height / 2)));
-	parent->addChild(username3Bg);
+	for (int i = 0; i < listSize; i++)
+	{
+		listback[i]->addChild(createLabelWithStringandPosition(teamInfo[i].name, Vec2(10, listback[i]->getContentSize().height / 2)));
+	}
 
 	/*auto scroll = extension::ScrollView::create();
 	scroll->setViewSize(Size(teamLabel->getContentSize().width, 150));
@@ -264,18 +290,16 @@ bool MultiTeamSelectScene::checkTeamFull(int teamId)
 void MultiTeamSelectScene::enterTeam(int teamId)
 {
 	//send event to NodeServer
-	auto a = UserModel::getInstance()->getUserInfo();
 	Document doc;
 	doc.SetObject();
-	int uId = UserModel::getInstance()->getUserInfo()._id;
-	int rId = UserModel::getInstance()->getRoomId();
+	auto a = UserModel::getInstance()->getUserInfo();
 	Document::AllocatorType& allo = doc.GetAllocator();
-	doc.AddMember("user_id",uId, allo);
-	doc.AddMember("room_id", rId, allo);
+	doc.AddMember("user_id", a.user_id, allo);
+	doc.AddMember("room_id", a.room_id, allo);
 	doc.AddMember("team_id", teamId, allo);
 	doc.AddMember("uuid", UserModel::getInstance()->getUuId().c_str(), allo);
 	//set team
-	RoomModel::getInstance()->setTeamForUserByUserId(rId, uId, teamId);
+	RoomModel::getInstance()->setTeamForUserByUserId(a.room_id, a.user_id, teamId);
 
 
 	StringBuffer buff;
@@ -332,6 +356,11 @@ Label* MultiTeamSelectScene::createLabelWithStringandPosition(string text, Vec2 
 	lb->setColor(Color3B::BLACK);
 	lb->setPosition(pos);
 	return lb;
+}
+
+void MultiTeamSelectScene::update(float delta)
+{
+	//update team user list
 }
 
 

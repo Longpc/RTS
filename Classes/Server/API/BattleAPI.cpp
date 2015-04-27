@@ -30,10 +30,9 @@ void BattleAPI::sendMoveEvent(UserUnitInfo unitdata, int moveDirection, Vec2 pos
 	Document doc;
 	doc.SetObject();
 	auto userData = UserModel::getInstance()->getUserInfo();
-	auto roomId = UserModel::getInstance()->getRoomId();
 	Document::AllocatorType& allo = doc.GetAllocator();
-	doc.AddMember("user_id", userData._id, allo);
-	doc.AddMember("room_id", roomId, allo);
+	doc.AddMember("user_id", userData.user_id, allo);
+	doc.AddMember("room_id", userData.room_id, allo);
 	doc.AddMember("user_unit", *convertUnitDataToJsonObject(unitdata, allo), allo);
 	doc.AddMember("direction", moveDirection, allo);
 	doc.AddMember("position_x", position.x, allo);
@@ -56,15 +55,14 @@ void BattleAPI::sendAttackEvent()
 {
 	auto c = NodeServer::getInstance()->getClient();
 	auto userData = UserModel::getInstance()->getUserInfo();
-	auto roomId = UserModel::getInstance()->getRoomId();
 	int unitId = UserModel::getInstance()->getSelectedUnitId();
 
 	Document doc;
 	doc.SetObject();
 	Document::AllocatorType& allo = doc.GetAllocator();
 
-	doc.AddMember("user_id", userData._id, allo);
-	doc.AddMember("room_id", roomId, allo);
+	doc.AddMember("user_id", userData.user_id, allo);
+	doc.AddMember("room_id", userData.room_id, allo);
 	doc.AddMember("unit_id", unitId, allo);
 	doc.AddMember("room_user", "{room_user}", allo);
 	doc.AddMember("user_unit", "{user_unit}", allo);
@@ -89,13 +87,12 @@ void BattleAPI::sendSkillEvent(UserSkillInfo skillData, vector<int> targetsId)
 {
 	auto c = NodeServer::getInstance()->getClient();
 	auto userData = UserModel::getInstance()->getUserInfo();
-	auto roomId = UserModel::getInstance()->getRoomId();
 	int unitId = UserModel::getInstance()->getSelectedUnitId();
 	Document doc;
 	doc.SetObject();
 	Document::AllocatorType& allo = doc.GetAllocator();
-	doc.AddMember("user_id", userData._id, allo);
-	doc.AddMember("room_id", roomId, allo);
+	doc.AddMember("user_id", userData.user_id, allo);
+	doc.AddMember("room_id", userData.room_id, allo);
 	doc.AddMember("unit_id", unitId, allo);
 	doc.AddMember("uuid", UserModel::getInstance()->getUuId().c_str(), allo);
 
@@ -132,15 +129,14 @@ void BattleAPI::sendSkillEvent(UserSkillInfo skillData, vector<int> targetsId)
 void BattleAPI::sendDeadEvent(UserUnitInfo unitData)
 {
 	auto userData = UserModel::getInstance()->getUserInfo();
-	auto roomId = UserModel::getInstance()->getRoomId();
 	int unit_id = UserModel::getInstance()->getSelectedUnitId();
 
 	Document doc;
 	doc.SetObject();
 	Document::AllocatorType& allo = doc.GetAllocator();
 
-	doc.AddMember("user_id", userData._id, allo);
-	doc.AddMember("room_id", roomId, allo);
+	doc.AddMember("user_id", userData.user_id, allo);
+	doc.AddMember("room_id", userData.room_id, allo);
 	doc.AddMember("unit_id", unit_id, allo);
 	doc.AddMember("user_unit", *convertUnitDataToJsonObject(unitData, allo), allo);
 	doc.AddMember("dead_time", 5, allo);
@@ -173,15 +169,14 @@ void BattleAPI::battleSyncEvent(UserUnitInfo unitData)
 {
 	auto c = NodeServer::getInstance()->getClient();
 	auto userData = UserModel::getInstance()->getUserInfo();
-	auto roomId = UserModel::getInstance()->getRoomId();
 	int unitId = UserModel::getInstance()->getSelectedUnitId();
 
 	Document doc;
 	doc.SetObject();
 	Document::AllocatorType& allo = doc.GetAllocator();
 
-	doc.AddMember("user_id", userData._id, allo);
-	doc.AddMember("room_id", roomId, allo);
+	doc.AddMember("user_id", userData.user_id, allo);
+	doc.AddMember("room_id", userData.room_id, allo);
 	doc.AddMember("unit_id", unitId, allo);
 	doc.AddMember("uuid", UserModel::getInstance()->getUuId().c_str(), allo);
 
@@ -206,15 +201,14 @@ void BattleAPI::sendBattleEndEvent()
 {
 	auto sv = NodeServer::getInstance()->getClient();
 	auto userData = UserModel::getInstance()->getUserInfo();
-	auto roomId = UserModel::getInstance()->getRoomId();
 	int unitId = UserModel::getInstance()->getSelectedUnitId();
 
 	Document doc;
 	doc.SetObject();
 	Document::AllocatorType& allo = doc.GetAllocator();
 
-	doc.AddMember("user_id", userData._id, allo);
-	doc.AddMember("room_id", roomId, allo);
+	doc.AddMember("user_id", userData.user_id, allo);
+	doc.AddMember("room_id", userData.room_id, allo);
 	doc.AddMember("uuid", UserModel::getInstance()->getUuId().c_str(), allo);
 	StringBuffer  buffer;
 	Writer<StringBuffer> writer(buffer);

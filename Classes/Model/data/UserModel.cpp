@@ -11,4 +11,18 @@ UserModel * UserModel::getInstance()
 	return s_UserModel;
 }
 
+void UserModel::setTeamId(int teamid)
+{
+	auto a = getUserInfo();
+	a.team_id = teamid;
+	setUserInfo(a);
+}
+
+void UserModel::setRoomId(int roomId)
+{
+	auto a = getUserInfo();
+	a.room_id = roomId;
+	setUserInfo(a);
+}
+
 

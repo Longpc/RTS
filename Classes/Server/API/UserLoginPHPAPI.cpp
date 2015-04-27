@@ -19,7 +19,7 @@ void UserLoginAPI::destroyInstance()
 bool UserLoginAPI::init()
 {
 	char data[100];
-	sprintf(data, "app_key=%s&user_id=%d", APP_KEY, UserModel::getInstance()->getUserInfo()._id);
+	sprintf(data, "app_key=%s&user_id=%d", APP_KEY, UserModel::getInstance()->getUserInfo().user_id);
 	HttpClientBase::getInstance()->postAPIWithMethodNameAndParam("debug/select_test_user.php", data, [&](string a) {
 		log("LOGIN--->Callback data: %s", a.c_str());
 		// 		rapidjson::Document doc;

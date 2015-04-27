@@ -42,7 +42,7 @@ public:
 	Menu *_menu;
 	MenuItemImage * _item1;
 
-	UserInfo _curUserInfo;
+	RoomUser _curUserInfo;
 	Sprite *_usernameBg;
 	Label *_userNameLabel;
 	bool _disableFlag;

@@ -28,7 +28,7 @@ bool UserSelect::init()
 		return false;
 	}
 	/*For test*/
-	bool flg = ListUserAPI::getInstance()->setLoadDataCompledCallback([&](vector<UserInfo> callbackData) {
+	bool flg = ListUserAPI::getInstance()->setLoadDataCompledCallback([&](vector<RoomUser> callbackData) {
 		_userList = callbackData;
 		createContent();
 	});
@@ -55,7 +55,7 @@ void UserSelect::createContent()
 		backGround->setTitleFontName(JAPANESE_FONT_1_HEAVY);
 		backGround->setTitleColor(Color3B::BLACK);
 		backGround->setTitleFontSize(30);
-		backGround->setTitleText(_userList[i]._name.c_str());
+		backGround->setTitleText(_userList[i].name.c_str());
 		backGround->addTouchEventListener(CC_CALLBACK_2(UserSelect::unitSelectButtonClick, this));
 		backGround->setTag(i);
 		int xValue = i % 2;
@@ -86,46 +86,35 @@ void UserSelect::unitSelectButtonClick(Ref *pSender, Widget::TouchEventType type
 	{
 		auto bt = (Button*)pSender;
 		UserModel::getInstance()->setUserInfo(_userList[bt->getTag()]);
-		UserModel::getInstance()->setRoomId(random(1, 5));
+		UserModel::getInstance()->setRoomId(1);
 		UserLoginAPI::getInstance()->setLoginCompletedCallback([&](){
 			log("Login Completed");
-			int roomId = UserModel::getInstance()->getRoomId();
-
 			Document doc;
 			doc.SetObject();
 			Document::AllocatorType& allo = doc.GetAllocator();
-
-			doc.AddMember("user_id", UserModel::getInstance()->getUserInfo()._id,allo);
-			doc.AddMember("room_id", roomId, allo);
+			auto uif = UserModel::getInstance()->getUserInfo();
+			doc.AddMember("user_id", uif.user_id,allo);
+			doc.AddMember("room_id", uif.room_id, allo);
 			doc.AddMember("uuid", UserModel::getInstance()->getUuId().c_str(), allo);
-
 			StringBuffer buff;
 			Writer<StringBuffer> wt(buff);
 			doc.Accept(wt);
 
 
 			auto client = NodeServer::getInstance()->getClient();
+			log("UUID: %s", UserModel::getInstance()->getUuId().c_str());
 			log("buff string: %s", buff.GetString());
 			client->emit("connect_begin", buff.GetString());
-			client->on("connect_begin_end", [&, roomId](SIOClient* client, const std::string& data) {
+			int roomId = uif.room_id;
+			client->on("connect_begin_end", [&, roomId ](SIOClient* client, const std::string& data) {
 				log("connect end data: %s", data.c_str());
-				RoomModel::getInstance();
-				/*UserModel::getInstance()->setRoomId(roomId);*/
-				//add self info to room user list
-				RoomUser temp;
-				temp._uuid = UserModel::getInstance()->getUuId();
-				temp.room_id = roomId;
-				temp.user_id = UserModel::getInstance()->getUserInfo()._id;
-				temp.team_id = 0;
-				temp._ready = 0;
-				temp.state = 0;
-				RoomModel::getInstance()->addUserInfoToUserList(temp);
+				RoomModel::getInstance()->initDataWhenJoinRoom(data);
+				Director::getInstance()->replaceScene(TransitionMoveInR::create(SCREEN_TRANSI_DELAY, MultiTeamSelectScene::createScene(UserModel::getInstance()->getUserInfo().user_id)));
 			});
 
 		});
 // 		StartAPI::getInstance()->setStartAPICallback([&,bt]() {
 // 		});
-		Director::getInstance()->replaceScene(TransitionMoveInR::create(SCREEN_TRANSI_DELAY, MultiTeamSelectScene::createScene(_userList[bt->getTag()]._id)));
 
 		break;
 	}

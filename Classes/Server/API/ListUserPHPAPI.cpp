@@ -28,9 +28,9 @@ bool ListUserAPI::init()
 				log("List user Callback data: %s", a.c_str());
 				for (int i = 0; i < doc["data"].Size(); i++)
 				{
-					UserInfo temp;
-					temp._id = DataUtils::stringToFloat(doc["data"][i]["user_id"].GetString());
-					temp._name = doc["data"][i]["name"].GetString();
+					RoomUser temp;
+					temp.user_id = DataUtils::stringToFloat(doc["data"][i]["user_id"].GetString());
+					temp.name = doc["data"][i]["name"].GetString();
 					_listUser.push_back(temp);
 					_isResponsed = true;
 					if (_callBack)
@@ -50,7 +50,7 @@ void ListUserAPI::destroyInstance()
 	CC_SAFE_RELEASE_NULL(s_ListUserAPI);
 }
 
-vector<UserInfo> ListUserAPI::getListUserData()
+vector<RoomUser> ListUserAPI::getListUserData()
 {
 	if (_listUser.size() > 0) {
 		return _listUser;
@@ -64,6 +64,18 @@ bool ListUserAPI::setLoadDataCompledCallback(ListUserCallback callB)
 		_callBack = callB;
 	}
 	return _isResponsed;
+}
+
+std::string ListUserAPI::getUserNameByUserId(int user_id)
+{
+	auto listUser = getListUserData();
+	for (auto &temp : listUser)
+	{
+		if (temp.user_id == user_id) {
+			return temp.name.c_str();
+		}
+	}
+	return "no name";
 }
 
 

@@ -26,7 +26,7 @@ public:
 	//static UserSelect* create();
 	bool init();
 private:
-	vector<UserInfo> _userList;
+	vector<RoomUser> _userList;
 
 	virtual void onBackButtonClick(Ref *pSender);
 	virtual void createContent();

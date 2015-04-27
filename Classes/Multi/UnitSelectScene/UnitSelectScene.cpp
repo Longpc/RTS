@@ -401,14 +401,15 @@ void MultiUnitSelectScene::nextButtonCallback(Ref *pSender, Widget::TouchEventTy
 		if (_decidedUnitId == 0) break;
 
 		UserModel::getInstance()->setSelectedUnitId(_decidedUnitId);
+		auto userData = UserModel::getInstance()->getUserInfo();
 		auto unitData = UserUnit::getInstance()->getUnitInfoById(_decidedUnitId);
 		Document doc;
 		doc.SetObject();
 		Document::AllocatorType& allo = doc.GetAllocator();
 
-		doc.AddMember("room_id", UserModel::getInstance()->getRoomId(), allo);
-		doc.AddMember("user_id", UserModel::getInstance()->getUserInfo()._id, allo);
-		doc.AddMember("team_id", UserModel::getInstance()->getTeamId(), allo);
+		doc.AddMember("room_id", userData.room_id, allo);
+		doc.AddMember("user_id", userData.user_id, allo);
+		doc.AddMember("team_id", userData.team_id, allo);
 		doc.AddMember("unit_id", _decidedUnitId, allo);
 		doc.AddMember("mst_unit", *UserUnit::getInstance()->convertFromUserUnitInfoToJson(unitData, allo),allo);
 		doc.AddMember("uuid", UserModel::getInstance()->getUuId().c_str(), allo);

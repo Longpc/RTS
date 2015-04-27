@@ -19,7 +19,7 @@ bool StartAPI::init()
 {
 
 		char data[100];
-		sprintf(data, "app_key=%s&user_id=%d", APP_KEY, UserModel::getInstance()->getUserInfo()._id);
+		sprintf(data, "app_key=%s&user_id=%d", APP_KEY, UserModel::getInstance()->getUserInfo().user_id);
 		HttpClientBase::getInstance()->postAPIWithMethodNameAndParam("start.php", data, [&](string a) {
 			log("CALL BACK data: %s",a.c_str());
 			rapidjson::Document doc;

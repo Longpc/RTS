@@ -168,9 +168,9 @@ void SkillSelectScene::nextButtonCallback(Ref *pSender, Widget::TouchEventType t
 		doc.SetObject();
 		Document::AllocatorType& allo = doc.GetAllocator();
 
-		doc.AddMember("room_id", UserModel::getInstance()->getRoomId(), allo);
-		doc.AddMember("team_id", UserModel::getInstance()->getTeamId(), allo);
-		doc.AddMember("user_id", a._id, allo);
+		doc.AddMember("room_id", a.room_id, allo);
+		doc.AddMember("team_id", a.team_id, allo);
+		doc.AddMember("user_id", a.user_id, allo);
 		doc.AddMember("unit_id", _selectedUnitId, allo);
 		rapidjson::Value listSkill;
 		listSkill.SetArray();
@@ -179,7 +179,7 @@ void SkillSelectScene::nextButtonCallback(Ref *pSender, Widget::TouchEventType t
 			listSkill.PushBack(skills[i].mst_skill_id, allo);
 			//targetList.AddMember("target_unique_id", targetsId[i], allo);
 		}
-		doc.AddMember("mst_skill_id", listSkill, allo);
+		doc.AddMember("player_skill_list", listSkill, allo);
 		doc.AddMember("uuid", UserModel::getInstance()->getUuId().c_str(), allo);
 
 		StringBuffer buff;

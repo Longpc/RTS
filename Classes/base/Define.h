@@ -8,11 +8,16 @@ User default information
 _name: User name
 _onRoom: Current room where user is playing. Default 0 is idle user
 */
-struct UserInfo
+struct RoomUser
 {
-	string _name;
-	int _onTeam = 0;
-	int _id;
+	string _uuid;
+	int room_id = 0;
+	int user_id = 0;
+	int team_id = 0;
+	int _ready = 0;
+	int state = 0;
+	int npc = 0;
+	string name;
 };
 
 struct UnitInforNew 
@@ -110,6 +115,7 @@ struct UserBattleInfo
 
 #define TEAM_FLG_RED 1
 #define TEAM_FLG_BLUE 2
+
 enum SKILL_HELP_TYPE
 {
 	HP = 1,
