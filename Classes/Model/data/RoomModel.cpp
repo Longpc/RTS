@@ -23,6 +23,12 @@ bool RoomModel::init()
 	sv->on("room_public_connect", [&](SIOClient* client, const std::string& data) {
 		initDataWhenJoinRoom(data);
 	});
+	//handler for another player disconnect event
+	sv->on("room_public_disconnect", [&](SIOClient* client, const std::string& data) {
+		log("room_public_disconnect with data: %s", data.c_str());
+		initDataWhenJoinRoom(data);
+	});
+
 	//handler for another player select team event
 	sv->on("room_public_select_team_end", [&](SIOClient * client, const string& data) {
 		log("team select public data: %s", data.c_str());
@@ -39,6 +45,7 @@ bool RoomModel::init()
 			int user_id = val[rapidjson::SizeType(0)]["user_id"].GetInt();
 
 			setTeamForUserByUserId(room_id, user_id, team_id);
+			log("data updated");
 		}
 
 
@@ -119,5 +126,6 @@ void RoomModel::initDataWhenJoinRoom(string jsonData)
 			tempList.push_back(temp);
 		}
 		setRoomUserList(tempList);
+		log("init data when connected completed");
 	}
 }

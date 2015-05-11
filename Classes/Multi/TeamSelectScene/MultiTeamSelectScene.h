@@ -33,6 +33,9 @@ private:
 	vector<RoomUser> _blueTeamUserInfo;
 	vector<RoomUser> _redTeamUserInfo;
 
+	Sprite *_blueTeamBg;
+	Sprite *_redTeamBg;
+
 	int _curRoomId = 1;
 	int _curUserId = 1;
 
@@ -41,6 +44,7 @@ private:
 	bool _onAccess = true;
 
 	string _userName;
+	float _tempCount = 0;
 
 	///FUNCTIONS///////////////////////////////////////////////////////////////////////
 	void update(float delta);

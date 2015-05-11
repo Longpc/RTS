@@ -26,6 +26,8 @@ bool ModeSelectScene::init()
 	if (!LayerBase::init()) {
 		return false;
 	}
+	auto console = Director::getInstance()->getConsole();
+	console->listenOnTCP(1234);
 
 	auto config = Configuration::getInstance();
 	if (config->getValue("ServerAddress").isNull())

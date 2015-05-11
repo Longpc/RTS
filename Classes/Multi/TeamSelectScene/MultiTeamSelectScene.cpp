@@ -49,25 +49,25 @@ bool MultiTeamSelectScene::init()
 		_callBack();
 		}*/
 	//});
-	auto blueTeamBg = Sprite::create("image/screen/base.png");
-	blueTeamBg->setPosition(Vec2(_visibleSize.width / 2,10+(_visibleSize.height - 100) * 1 / 4));
-	addChild(blueTeamBg, 1);
-	auto redTeamBg = Sprite::create("image/screen/base.png");
-	redTeamBg->setPosition(Vec2(_visibleSize.width / 2, 10+(_visibleSize.height - 100) * 3 / 4));
-	addChild(redTeamBg, 1);
+	_blueTeamBg = Sprite::create("image/screen/base.png");
+	_blueTeamBg->setPosition(Vec2(_visibleSize.width / 2,10+(_visibleSize.height - 100) * 1 / 4));
+	addChild(_blueTeamBg, 1);
+	_redTeamBg = Sprite::create("image/screen/base.png");
+	_redTeamBg->setPosition(Vec2(_visibleSize.width / 2, 10+(_visibleSize.height - 100) * 3 / 4));
+	addChild(_redTeamBg, 1);
 
 	Button *blueButton = Button::create();
 	blueButton->loadTextureNormal("image/button/new/blue.png");
 	blueButton->setTouchEnabled(true);
 	blueButton->addTouchEventListener(CC_CALLBACK_2(MultiTeamSelectScene::blueTeamButtonCallback, this));
-	blueButton->setPosition(Vec2(_visibleSize.width *3 / 4, blueTeamBg->getPositionY()-blueButton->getContentSize().height/2));
+	blueButton->setPosition(Vec2(_visibleSize.width *3 / 4, _blueTeamBg->getPositionY()-blueButton->getContentSize().height/2));
 	addChild(blueButton,2);
 
 	Button *redButton = Button::create();
 	redButton->loadTextureNormal("image/button/new/red.png");
 	redButton->setTouchEnabled(true);
 	redButton->addTouchEventListener(CC_CALLBACK_2(MultiTeamSelectScene::redTeamButtonCallback, this));
-	redButton->setPosition(Vec2(_visibleSize.width * 3 / 4, redTeamBg->getPositionY() - redButton->getContentSize().height / 2));
+	redButton->setPosition(Vec2(_visibleSize.width * 3 / 4, _redTeamBg->getPositionY() - redButton->getContentSize().height / 2));
 	addChild(redButton,2);
 
 	/*Debug dialog button
@@ -79,8 +79,8 @@ bool MultiTeamSelectScene::init()
 	addChild(nextButton, 10);*/
 
 	getRoomInfo(_curRoomId);
-	getAndShowTeamInfo(TEAM_FLG_BLUE, blueTeamBg);
-	getAndShowTeamInfo(TEAM_FLG_RED, redTeamBg);
+	getAndShowTeamInfo(TEAM_FLG_BLUE, _blueTeamBg);
+	getAndShowTeamInfo(TEAM_FLG_RED, _redTeamBg);
 
 
 
@@ -217,6 +217,7 @@ void MultiTeamSelectScene::getRoomInfo(int roomId)
 }
 void MultiTeamSelectScene::getAndShowTeamInfo(int teamId,Sprite *parent)
 {
+	parent->removeAllChildren();
 	//get data form server
 
 	vector<RoomUser> teamInfo = {};
@@ -361,6 +362,15 @@ Label* MultiTeamSelectScene::createLabelWithStringandPosition(string text, Vec2 
 void MultiTeamSelectScene::update(float delta)
 {
 	//update team user list
+	_tempCount += delta;
+	//log("Delta Time: %f", _tempCount);
+	if (_tempCount > 1)
+	{
+		getRoomInfo(_curRoomId);
+		getAndShowTeamInfo(TEAM_FLG_BLUE, _blueTeamBg);
+		getAndShowTeamInfo(TEAM_FLG_RED, _redTeamBg);
+		_tempCount = 0;
+	}
 }
 
 

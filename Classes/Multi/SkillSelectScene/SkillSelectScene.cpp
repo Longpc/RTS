@@ -188,9 +188,14 @@ void SkillSelectScene::nextButtonCallback(Ref *pSender, Widget::TouchEventType t
 
 		auto client = NodeServer::getInstance()->getClient();
 		client->emit("connect_select_skill", buff.GetString());
-		client->on("connect_select_skill_end", [&,skills](SIOClient* client, const std::string& data) {
-			log("select unit end data: %s", data.c_str());
-			
+		string temp = buff.GetString();
+		client->on("connect_select_skill_end", [&,temp](SIOClient* client, const std::string& data) {
+			log("select skill end data: %s", data.c_str());
+			client->emit("connect_ready", temp.c_str());
+			client->on("connect_ready_end", [&](SIOClient* client, const std::string& data) {
+				log("Connect Ready End event received");
+				//TODO Start Battle
+			});
 		});
 		Director::getInstance()->replaceScene(TransitionMoveInR::create(SCREEN_TRANSI_DELAY, BatleScene::createScene(_selectedUnitId, skills)));
 		break;
