@@ -38,7 +38,8 @@ void BattleAPI::sendMoveEvent(UserUnitInfo unitdata, int moveDirection, Vec2 pos
 	doc.AddMember("position_x", position.x, allo);
 	doc.AddMember("position_y", position.y, allo);
 	doc.AddMember("status", statusId, allo);
-	doc.AddMember("uuid", UserModel::getInstance()->getUuId().c_str(),allo);
+	string uu = UserModel::getInstance()->getUuId().c_str();
+	doc.AddMember("uuid",uu.c_str(),allo);
 
 	StringBuffer  buffer;
 	Writer<StringBuffer> writer(buffer);
@@ -71,7 +72,8 @@ void BattleAPI::sendAttackEvent()
 	doc.AddMember("attack.target.object_type", "{attack target}", allo);
 	doc.AddMember("attack.target.object_id", 12, allo);
 	doc.AddMember("attack.back_attack", 0, allo);
-	doc.AddMember("uuid", UserModel::getInstance()->getUuId().c_str(), allo);
+	string uu = UserModel::getInstance()->getUuId().c_str();
+	doc.AddMember("uuid", uu.c_str(), allo);
 
 	StringBuffer  buffer;
 	Writer<StringBuffer> writer(buffer);
@@ -94,7 +96,8 @@ void BattleAPI::sendSkillEvent(UserSkillInfo skillData, vector<int> targetsId)
 	doc.AddMember("user_id", userData.user_id, allo);
 	doc.AddMember("room_id", userData.room_id, allo);
 	doc.AddMember("unit_id", unitId, allo);
-	doc.AddMember("uuid", UserModel::getInstance()->getUuId().c_str(), allo);
+	string uu = UserModel::getInstance()->getUuId().c_str();
+	doc.AddMember("uuid", uu.c_str(), allo);
 
 	auto s = convertSkillDataToJsonObject(skillData, allo);
 	doc.AddMember("mst_skill", *s, allo);
@@ -140,7 +143,8 @@ void BattleAPI::sendDeadEvent(UserUnitInfo unitData)
 	doc.AddMember("unit_id", unit_id, allo);
 	doc.AddMember("user_unit", *convertUnitDataToJsonObject(unitData, allo), allo);
 	doc.AddMember("dead_time", 5, allo);
-	doc.AddMember("uuid", UserModel::getInstance()->getUuId().c_str(), allo);
+	string uu = UserModel::getInstance()->getUuId().c_str();
+	doc.AddMember("uuid", uu.c_str(), allo);
 
 	StringBuffer buffer;
 	Writer<StringBuffer> writer(buffer);
@@ -178,7 +182,8 @@ void BattleAPI::battleSyncEvent(UserUnitInfo unitData)
 	doc.AddMember("user_id", userData.user_id, allo);
 	doc.AddMember("room_id", userData.room_id, allo);
 	doc.AddMember("unit_id", unitId, allo);
-	doc.AddMember("uuid", UserModel::getInstance()->getUuId().c_str(), allo);
+	string uu = UserModel::getInstance()->getUuId().c_str();
+	doc.AddMember("uuid", uu.c_str(), allo);
 
 	auto b = convertUnitDataToJsonObject(unitData,allo);
 	doc.AddMember("user_unit", *b, allo);
@@ -209,7 +214,8 @@ void BattleAPI::sendBattleEndEvent()
 
 	doc.AddMember("user_id", userData.user_id, allo);
 	doc.AddMember("room_id", userData.room_id, allo);
-	doc.AddMember("uuid", UserModel::getInstance()->getUuId().c_str(), allo);
+	string uu = UserModel::getInstance()->getUuId().c_str();
+	doc.AddMember("uuid", uu.c_str(), allo);
 	StringBuffer  buffer;
 	Writer<StringBuffer> writer(buffer);
 	doc.Accept(writer);

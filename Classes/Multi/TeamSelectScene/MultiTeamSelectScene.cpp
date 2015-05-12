@@ -298,7 +298,8 @@ void MultiTeamSelectScene::enterTeam(int teamId)
 	doc.AddMember("user_id", a.user_id, allo);
 	doc.AddMember("room_id", a.room_id, allo);
 	doc.AddMember("team_id", teamId, allo);
-	doc.AddMember("uuid", UserModel::getInstance()->getUuId().c_str(), allo);
+	string uu = UserModel::getInstance()->getUuId().c_str();
+	doc.AddMember("uuid",uu.c_str() , allo);
 	//set team
 	RoomModel::getInstance()->setTeamForUserByUserId(a.room_id, a.user_id, teamId);
 

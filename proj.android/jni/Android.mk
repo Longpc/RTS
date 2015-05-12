@@ -45,7 +45,8 @@ LOCAL_SRC_FILES := hellocpp/main.cpp \
 				   ../../Classes/Server/API/UserLoginPHPAPI.cpp \
 				   ../../Classes/Server/API/StartPHPAPI.cpp \
 				   ../../Classes/Server/API/BattleAPI.cpp \
-				   ../../Classes/Model/data/RoomModel.cpp
+				   ../../Classes/Model/data/RoomModel.cpp \
+				   ../../Classes/Model/data/BattleModel.cpp
 
 LOCAL_C_INCLUDES := $(LOCAL_PATH)/../../Classes
 

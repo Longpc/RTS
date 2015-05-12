@@ -10,13 +10,14 @@
 #include "Server/Server.h"
 #include "Model/data/UserModel.h"
 #include "Model/data/UserSkill.h"
+#include "Model/data/BattleModel.h"
 
 class SkillSelectScene : public LayerBase
 {
 public:
-	static Scene *createScene(int unit);
-	static SkillSelectScene* create(int unit);
-	bool init(int unit);
+	static Scene *createScene();
+	static SkillSelectScene* create();
+	bool init();
 
 private:
 	///VARIABLES///////////////////////////////////////////////////////////////////////
@@ -80,6 +81,8 @@ private:
 
 	virtual void leftArrowClickCallback(Ref *pSender, Widget::TouchEventType type);
 	virtual void rightArrowClickCallback(Ref *pSender, Widget::TouchEventType type);
+
+	virtual void startBattleCallback(SIOClient* client, const std::string& data);
 
 };
 

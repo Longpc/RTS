@@ -86,9 +86,9 @@ public:
 	@selectedUnitId: selected unit id in unit selected scene
 	@playerSkills: the vector store two player skill info
 	*/
-	static Scene* createScene(int selectedUnitId, vector<UserSkillInfo> playerSkills);
-	static BatleScene* create(int unitId, vector<UserSkillInfo> playerSkills);
-	bool init(int unitId, vector<UserSkillInfo> playerSkills);
+	static Scene* createScene();
+	static BatleScene* create();
+	bool init();
 private:
 	///VARIABLES///////////////////////////////////////////////////////////////////////
 	struct tm day;

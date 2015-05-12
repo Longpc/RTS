@@ -42,6 +42,7 @@ public:
 	string getUnitImageById(int id);
 	Document::GenericValue* convertFromUserUnitInfoToJson(UserUnitInfo unitInfo, Document::AllocatorType& allo);
 
+
 private:
 	static UserUnit *s_UserUnit;
 

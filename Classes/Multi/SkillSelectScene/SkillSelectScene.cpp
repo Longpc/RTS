@@ -1,19 +1,19 @@
 ﻿#pragma execution_character_set("utf-8")
 #include "SkillSelectScene.h"
 #define SLOT_NUMBER 2
-Scene * SkillSelectScene::createScene(int unitId)
+Scene * SkillSelectScene::createScene()
 {
 	auto scene = Scene::create();
-	auto lay = SkillSelectScene::create(unitId);
+	auto lay = SkillSelectScene::create();
 	scene->addChild(lay);
 
 	return scene;
 }
 
-SkillSelectScene* SkillSelectScene::create(int unit)
+SkillSelectScene* SkillSelectScene::create()
 {
 	SkillSelectScene *layer = new SkillSelectScene();
-	if (layer->init(unit))
+	if (layer->init())
 	{
 		layer->autorelease();
 		return layer;
@@ -22,16 +22,16 @@ SkillSelectScene* SkillSelectScene::create(int unit)
 	return NULL;
 }
 
-bool SkillSelectScene::init(int unit)
+bool SkillSelectScene::init()
 {
 	if (!LayerBase::init()) {
 		return false;
 	}
 
 	getSkillDataFromDatabase();
-	_selectedUnitId = unit;
-	_allSelectedSkilId.push_back(0);
-	_allSelectedSkilId.push_back(0);
+	_selectedUnitId = UserModel::getInstance()->getSelectedUnitId();
+	_allSelectedSkilId.push_back(-1);
+	_allSelectedSkilId.push_back(-1);
 	_defaultLabel->setString("スキルを選択して下さい");
 
 	_skillSlot1 = ClipingButtonBase::create("image/screen/skillSelect/slot_rect.png", "image/screen/skillSelect/00_frame_inactive.png", "image/screen/skillSelect/00_frame.png");
@@ -173,14 +173,18 @@ void SkillSelectScene::nextButtonCallback(Ref *pSender, Widget::TouchEventType t
 		doc.AddMember("user_id", a.user_id, allo);
 		doc.AddMember("unit_id", _selectedUnitId, allo);
 		rapidjson::Value listSkill;
+		vector<int> listSkillId;
 		listSkill.SetArray();
 		for (int i = 0; i < skills.size(); i++)
 		{
 			listSkill.PushBack(skills[i].mst_skill_id, allo);
+			listSkillId.push_back(skills[i].mst_skill_id);
+			
 			//targetList.AddMember("target_unique_id", targetsId[i], allo);
 		}
 		doc.AddMember("player_skill_list", listSkill, allo);
-		doc.AddMember("uuid", UserModel::getInstance()->getUuId().c_str(), allo);
+		string uu = UserModel::getInstance()->getUuId().c_str();
+		doc.AddMember("uuid",uu.c_str() , allo);
 
 		StringBuffer buff;
 		Writer<StringBuffer> wt(buff);
@@ -189,15 +193,15 @@ void SkillSelectScene::nextButtonCallback(Ref *pSender, Widget::TouchEventType t
 		auto client = NodeServer::getInstance()->getClient();
 		client->emit("connect_select_skill", buff.GetString());
 		string temp = buff.GetString();
+		BattleModel::getInstance()->setPlayerSkills(listSkillId);
 		client->on("connect_select_skill_end", [&,temp](SIOClient* client, const std::string& data) {
 			log("select skill end data: %s", data.c_str());
 			client->emit("connect_ready", temp.c_str());
 			client->on("connect_ready_end", [&](SIOClient* client, const std::string& data) {
 				log("Connect Ready End event received");
-				//TODO Start Battle
 			});
+			client->on("room_public_battle_start", CC_CALLBACK_2(SkillSelectScene::startBattleCallback, this));
 		});
-		Director::getInstance()->replaceScene(TransitionMoveInR::create(SCREEN_TRANSI_DELAY, BatleScene::createScene(_selectedUnitId, skills)));
 		break;
 	}
 	case cocos2d::ui::Widget::TouchEventType::CANCELED:
@@ -253,7 +257,7 @@ void SkillSelectScene::onTouchUnit(Ref *pSender, Widget::TouchEventType type)
 	{
 		Button* unit = dynamic_cast<Button*>(pSender);
 		int tag = unit->getTag();
-		log("touch unit %d", tag);
+		log("touch skill %d", tag);
 		int curPageIndex = _mainPageView->getCurPageIndex();
 		if (tag +1 > (curPageIndex + 1) * 4) return;
 		if (tag + 1  <= curPageIndex * 4) return;
@@ -499,4 +503,11 @@ void SkillSelectScene::rightArrowClickCallback(Ref *pSender, Widget::TouchEventT
 	default:
 		break;
 	}
+}
+
+void SkillSelectScene::startBattleCallback(SIOClient* client, const std::string& data)
+{
+	BattleModel::getInstance()->parserJsonToInitData(data.c_str());
+	Director::getInstance()->replaceScene(TransitionMoveInR::create(SCREEN_TRANSI_DELAY, BatleScene::createScene()));
+
 }

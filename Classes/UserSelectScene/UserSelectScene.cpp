@@ -95,15 +95,14 @@ void UserSelect::unitSelectButtonClick(Ref *pSender, Widget::TouchEventType type
 			auto uif = UserModel::getInstance()->getUserInfo();
 			doc.AddMember("user_id", uif.user_id,allo);
 			doc.AddMember("room_id", uif.room_id, allo);
-			doc.AddMember("uuid", UserModel::getInstance()->getUuId().c_str(), allo);
+			string uu = UserModel::getInstance()->getUuId().c_str();
+			doc.AddMember("uuid",uu.c_str() , allo);
 			StringBuffer buff;
 			Writer<StringBuffer> wt(buff);
 			doc.Accept(wt);
 
 
 			auto client = NodeServer::getInstance()->getClient();
-			log("UUID: %s", UserModel::getInstance()->getUuId().c_str());
-			log("buff string: %s", buff.GetString());
 			client->emit("connect_begin", buff.GetString());
 			int roomId = uif.room_id;
 			client->on("connect_begin_end", [&, roomId ](SIOClient* client, const std::string& data) {

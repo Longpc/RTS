@@ -412,7 +412,8 @@ void MultiUnitSelectScene::nextButtonCallback(Ref *pSender, Widget::TouchEventTy
 		doc.AddMember("team_id", userData.team_id, allo);
 		doc.AddMember("unit_id", _decidedUnitId, allo);
 		doc.AddMember("mst_unit", *UserUnit::getInstance()->convertFromUserUnitInfoToJson(unitData, allo),allo);
-		doc.AddMember("uuid", UserModel::getInstance()->getUuId().c_str(), allo);
+		string uu = UserModel::getInstance()->getUuId().c_str();
+		doc.AddMember("uuid",uu.c_str() , allo);
 		StringBuffer buff;
 		Writer<StringBuffer> writer(buff);
 		doc.Accept(writer);
@@ -424,7 +425,7 @@ void MultiUnitSelectScene::nextButtonCallback(Ref *pSender, Widget::TouchEventTy
 			log("select unit end data: %s", data.c_str());
 		});
 
-		Director::getInstance()->replaceScene(TransitionMoveInR::create(SCREEN_TRANSI_DELAY, SkillSelectScene::createScene(_decidedUnitId)));
+		Director::getInstance()->replaceScene(TransitionMoveInR::create(SCREEN_TRANSI_DELAY, SkillSelectScene::createScene()));
 		break;
 	}
 	case cocos2d::ui::Widget::TouchEventType::CANCELED:

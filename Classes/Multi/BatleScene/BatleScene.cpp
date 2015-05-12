@@ -1,21 +1,21 @@
 ﻿#include "BatleScene.h"
 
 
-Scene* BatleScene::createScene(int selectedUnitId, vector<UserSkillInfo> playerSkills)
+Scene* BatleScene::createScene()
 {
 	auto scene = Scene::createWithPhysics();
 	scene->getPhysicsWorld()->setDebugDrawMask(PhysicsWorld::DEBUGDRAW_NONE);
 	scene->getPhysicsWorld()->setGravity(Vect::ZERO);
-	auto lay = BatleScene::create(selectedUnitId, playerSkills);
+	auto lay = BatleScene::create();
 	lay->savePhysicWorld(scene->getPhysicsWorld());
 	scene->addChild(lay);
 	return scene;
 }
 
-BatleScene* BatleScene::create(int unitId,vector<UserSkillInfo> skills)
+BatleScene* BatleScene::create()
 {
 	BatleScene *layer = new BatleScene();
-	if (layer && layer->init(unitId,skills)) {
+	if (layer && layer->init()) {
 		layer->autorelease();
 		return layer;
 	}
@@ -24,7 +24,7 @@ BatleScene* BatleScene::create(int unitId,vector<UserSkillInfo> skills)
 	return NULL;
 }
 
-bool BatleScene::init(int unitId,vector<UserSkillInfo> skills)
+bool BatleScene::init()
 {
 	if (!LayerBase::init()) {
 		return false;
@@ -33,17 +33,16 @@ bool BatleScene::init(int unitId,vector<UserSkillInfo> skills)
 	_menu->setVisible(false);
 	_pageTitleSprite->setVisible(false);
 	_usernameBg->setVisible(false);
-	_selectedUnitId = unitId;
+	_selectedUnitId = UserModel::getInstance()->getSelectedUnitId();
 	setUnitStatus(0);
-	_playerSkills = skills;
-
+	for (auto &a : BattleModel::getInstance()->getPlayerSkills())
+	{
+		_playerSkills.push_back(UserSkill::getInstance()->getSkillInfoById(a));
+	}
 	///INIT DATA FOR ALL UNIT IN BATTLE
 	_mainCharacterData = getUnitDataFromDataBase(_selectedUnitId);
 
 	_mainCharacterSkillData = getUnitSkillFromDataBase(_mainCharacterData);
-
-
-
 
 	_allAlliedUnitData.push_back(_mainCharacterData);
 	_saveMainStatusData = _mainCharacterData;
@@ -67,7 +66,7 @@ bool BatleScene::init(int unitId,vector<UserSkillInfo> skills)
 	//////////
 	//_moveImagePath = "image/unit_new/move/red/";
 	//_attackImagePath = "image/unit_new/attack/red/";
-	changeAnimationImagePathByUnitId(unitId);
+	changeAnimationImagePathByUnitId(_selectedUnitId);
 
 	auto nextButton = Button::create();
 	nextButton->loadTextureNormal("CloseNormal.png");
@@ -560,16 +559,24 @@ void BatleScene::createContent()
 	}
 
 	//TODO HERE IS THE CODE TO TEST BATTLE MOVE SYNC FUNCTION
+
 	auto sv = NodeServer::getInstance()->getClient();
 
-	sv->on("room_publish_move", [&](SIOClient* client, const std::string& a) {
+	auto testSprite = Sprite::create("ball.png");
+	_battleBackround->addChild(testSprite, 100);
+
+	sv->on("battle_public_move", [&, testSprite](SIOClient* client, const std::string& a) {
 		//Parser JSON data
 		log("public move data: %s", a.c_str());
+
 		rapidjson::Document doc;
 		doc.Parse<0>(a.c_str());
 		if (doc.HasParseError())
 		{
 			log("error in parse json");
+		}
+		if (doc.HasMember("args")) {
+			testSprite->setPosition(Vec2(doc["args"][rapidjson::SizeType(0)]["position_x"].GetDouble(), doc["args"][rapidjson::SizeType(0)]["position_y"].GetDouble()));
 		}
 	});
 

@@ -152,6 +152,7 @@ xcopy /Y /Q "$(EngineRoot)external\websockets\prebuilt\win32\*.*" "$(OutDir)"</C
     <ClCompile Include="..\Classes\dataController\SkillData\SkillData.cpp" />
     <ClCompile Include="..\Classes\dataController\UnitData\UnitData.cpp" />
     <ClCompile Include="..\Classes\HelloWorldScene.cpp" />
+    <ClCompile Include="..\Classes\Model\data\BattleModel.cpp" />
     <ClCompile Include="..\Classes\Model\data\RoomModel.cpp" />
     <ClCompile Include="..\Classes\Model\data\UserModel.cpp" />
     <ClCompile Include="..\Classes\Model\data\UserSkill.cpp" />
@@ -194,6 +195,7 @@ xcopy /Y /Q "$(EngineRoot)external\websockets\prebuilt\win32\*.*" "$(OutDir)"</C
     <ClInclude Include="..\Classes\dataController\SkillData\SkillData.h" />
     <ClInclude Include="..\Classes\dataController\UnitData\UnitData.h" />
     <ClInclude Include="..\Classes\HelloWorldScene.h" />
+    <ClInclude Include="..\Classes\Model\data\BattleModel.h" />
     <ClInclude Include="..\Classes\Model\data\RoomModel.h" />
     <ClInclude Include="..\Classes\Model\data\UserModel.h" />
     <ClInclude Include="..\Classes\Model\data\UserSkill.h" />

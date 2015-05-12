@@ -195,6 +195,9 @@
     <ClCompile Include="..\Classes\Model\data\RoomModel.cpp">
       <Filter>src\Model\data</Filter>
     </ClCompile>
+    <ClCompile Include="..\Classes\Model\data\BattleModel.cpp">
+      <Filter>src\Model\data</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="main.h">
@@ -315,6 +318,9 @@
       <Filter>src\Multi\BatleScene</Filter>
     </ClInclude>
     <ClInclude Include="..\Classes\Model\data\RoomModel.h">
+      <Filter>src\Model\data</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Classes\Model\data\BattleModel.h">
       <Filter>src\Model\data</Filter>
     </ClInclude>
   </ItemGroup>
