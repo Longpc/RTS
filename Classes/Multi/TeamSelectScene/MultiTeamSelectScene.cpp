@@ -88,10 +88,6 @@ bool MultiTeamSelectScene::init()
 	return true;
 }
 
-void MultiTeamSelectScene::onBackButtonClick(Ref *pSender)
-{
-	Director::getInstance()->replaceScene(TransitionMoveInL::create(SCREEN_TRANSI_DELAY,UserSelect::createScene()));
-}
 
 void MultiTeamSelectScene::redTeamButtonCallback(Ref *pSender, Widget::TouchEventType type)
 {
@@ -316,6 +312,22 @@ void MultiTeamSelectScene::enterTeam(int teamId)
 		Director::getInstance()->replaceScene(TransitionMoveInR::create(SCREEN_TRANSI_DELAY, MultiUnitSelectScene::createScene(teamId, MULTI_MODE)));
 	});
 
+}
+void MultiTeamSelectScene::onBackButtonClick(Ref *pSender)
+{
+	auto a = UserModel::getInstance()->getUserInfo();
+	string uu = UserModel::getInstance()->getUuId().c_str();
+	Document doc;
+	doc.SetObject();
+	Document::AllocatorType& allo = doc.GetAllocator();
+
+	doc.AddMember("user_id", a.user_id, allo);
+	doc.AddMember("room_id", a.room_id, allo);
+
+
+
+
+	Director::getInstance()->replaceScene(TransitionMoveInL::create(SCREEN_TRANSI_DELAY, UserSelect::createScene()));
 }
 
 void MultiTeamSelectScene::testFullTeam(Ref *pSender, Widget::TouchEventType type)

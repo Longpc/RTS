@@ -38,14 +38,16 @@ bool RoomModel::init()
 			log("error parser Json in room_public_connect");
 			return;
 		}
-		if (doc.IsObject() && doc.HasMember("args")) {
-			rapidjson::Value &val = doc["args"];
-			int team_id = val[rapidjson::SizeType(0)]["team_id"].GetInt();
-			int room_id = val[rapidjson::SizeType(0)]["room_id"].GetInt();
-			int user_id = val[rapidjson::SizeType(0)]["user_id"].GetInt();
+		if (doc.IsObject()) {
+			int team_id = doc["team_id"].GetInt();
+			int room_id = doc["room_id"].GetInt();
+			int user_id = doc["user_id"].GetInt();
 
 			setTeamForUserByUserId(room_id, user_id, team_id);
 			log("data updated");
+		}
+		else {
+			log("something wrong: %d", doc.GetType());
 		}
 
 
@@ -94,11 +96,13 @@ RoomUser RoomModel::parseJsonToRoomUserData(string data)
 		log("error parser Json");
 		 return temp;
 	}
-	if (doc.IsObject() && doc.HasMember("args")) {
-		rapidjson::Value &val = doc["args"];
-		temp.room_id = val[rapidjson::SizeType(0)]["room_id"].GetInt();
-		temp.user_id = val[rapidjson::SizeType(0)]["user_id"].GetInt();
-		temp._uuid = val[rapidjson::SizeType(0)]["uuid"].GetString();
+	if (doc.IsObject()) {
+		temp.room_id = doc["room_id"].GetInt();
+		temp.user_id = doc["user_id"].GetInt();
+		temp._uuid = doc["uuid"].GetString();
+	}
+	else {
+		log("RoomModel parse JSON type %d", doc.GetType());
 	}
 	return temp;
 }
@@ -111,21 +115,23 @@ void RoomModel::initDataWhenJoinRoom(string jsonData)
 		log("error parser Json");
 		return;
 	}
-	if (doc.IsObject() && doc.HasMember("args")) {
-		rapidjson::Value &val = doc["args"];
+	if (doc.IsArray()) {
 		vector<RoomUser> tempList = {};
-		log("Data size: %d", val[rapidjson::SizeType(0)].Size());
-		for (int i = 0; i < val[rapidjson::SizeType(0)].Size(); i++)
+		log("Data size: %d", doc.Size());
+		for (int i = 0; i < doc.Size(); i++)
 		{
 			RoomUser temp; 
-			temp.room_id = val[rapidjson::SizeType(0)][i]["room_id"].GetInt();
-			temp.state = val[rapidjson::SizeType(0)][i]["state"].GetInt();
-			temp.team_id = val[rapidjson::SizeType(0)][i]["team_id"].GetInt();
-			temp.user_id = val[rapidjson::SizeType(0)][i]["user_id"].GetInt();
-			temp._uuid = val[rapidjson::SizeType(0)][i]["room_user_id"].GetString();
+			temp.room_id = doc[i]["room_id"].GetInt();
+			temp.state = doc[i]["state"].GetInt();
+			temp.team_id = doc[i]["team_id"].GetInt();
+			temp.user_id = doc[i]["user_id"].GetInt();
+			temp._uuid = doc[i]["room_user_id"].GetString();
 			tempList.push_back(temp);
 		}
 		setRoomUserList(tempList);
 		log("init data when connected completed");
+	}
+	else {
+		log("Data type: %d", doc.GetType());
 	}
 }

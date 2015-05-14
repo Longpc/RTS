@@ -56,7 +56,7 @@ void UserSelect::createContent()
 		backGround->setTitleColor(Color3B::BLACK);
 		backGround->setTitleFontSize(30);
 		backGround->setTitleText(_userList[i].name.c_str());
-		backGround->addTouchEventListener(CC_CALLBACK_2(UserSelect::unitSelectButtonClick, this));
+		backGround->addTouchEventListener(CC_CALLBACK_2(UserSelect::userSelectCallback, this));
 		backGround->setTag(i);
 		int xValue = i % 2;
 		int yvalue = i*0.5;
@@ -74,7 +74,7 @@ void UserSelect::createContent()
 	}
 }
 
-void UserSelect::unitSelectButtonClick(Ref *pSender, Widget::TouchEventType type)
+void UserSelect::userSelectCallback(Ref *pSender, Widget::TouchEventType type)
 {
 	switch (type)
 	{
@@ -106,7 +106,7 @@ void UserSelect::unitSelectButtonClick(Ref *pSender, Widget::TouchEventType type
 			client->emit("connect_begin", buff.GetString());
 			int roomId = uif.room_id;
 			client->on("connect_begin_end", [&, roomId ](SIOClient* client, const std::string& data) {
-				log("connect end data: %s", data.c_str());
+				log("connect begin end data: %s", data.c_str());
 				RoomModel::getInstance()->initDataWhenJoinRoom(data);
 				Director::getInstance()->replaceScene(TransitionMoveInR::create(SCREEN_TRANSI_DELAY, MultiTeamSelectScene::createScene(UserModel::getInstance()->getUserInfo().user_id)));
 			});

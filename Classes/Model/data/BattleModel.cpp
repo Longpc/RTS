@@ -19,6 +19,7 @@ bool BattleModel::init()
 //received data from server and parser for initial battle information (selected units, skills, player information....)
 void BattleModel::parserJsonToInitData(string jsonData)
 {
+	log("battle start data %s", jsonData.c_str());
 	vector<int> skillIds = {};
 	rapidjson::Document doc;
 	doc.Parse<0>(jsonData.c_str());
@@ -26,18 +27,17 @@ void BattleModel::parserJsonToInitData(string jsonData)
 		log("Battle Model: error in parser Json data");
 		return;
 	}
-	if (doc.IsObject() && doc.HasMember("args")) {
+	if (doc.IsArray()/*doc.IsObject() && doc.HasMember("args")*/) {
 		log("HERE");
 		auto a = UserModel::getInstance()->getUuId();
-		log("Args Size: %d", doc["args"].Size());
-		log("Size 2: %d",doc["args"][rapidjson::SizeType(0)].Size());
-		for (int i = 0; i  < doc["args"][rapidjson::SizeType(0)].Size(); i++)
+		log("Args Size: %d", doc/*["args"]*/.Size());
+		for (int i = 0; i  < doc/*["args"][rapidjson::SizeType(0)]*/.Size(); i++)
 		{
-			log("%s",doc["args"][rapidjson::SizeType(0)][i]["room_user_id"].GetString());
+			log("%s",doc/*["args"][rapidjson::SizeType(0)]*/[i]["room_user_id"].GetString());
 		}
 	}
 	else {
-		log("Battle Model: wrong data");
+		log("Battle Model: wrong data %d", doc.GetType());
 		return;
 	}
 }

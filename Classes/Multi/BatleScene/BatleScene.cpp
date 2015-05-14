@@ -1616,7 +1616,6 @@ void BatleScene::sendMoveEvent(int direction)
 	BattleAPI::getInstance()->sendMoveEvent(_mainCharacterData,direction, testObject->getPosition(),getUnitStatus() );
 }
 
-
 void BatleScene::autoRestoreHpAndMp()
 { 
 	_mainCharacterData.hp += _mainCharacterData.hp_heal / RESTORE_MULTI;
@@ -1670,7 +1669,9 @@ void BatleScene::skill1ButtonCallback(Ref *pSender, Widget::TouchEventType type)
 	switch (type)
 	{
 	case cocos2d::ui::Widget::TouchEventType::BEGAN:
-		if(skill.range_distance > 0 && skill.mp_cost <= _mainCharacterData.mp ) longPressAction(bt,skill);
+		if (skill.range_distance > 0 && skill.mp_cost <= _mainCharacterData.mp)  {
+			longPressAction(bt, skill);
+		}
 		_showSkillTargetFlag = true;
 		break;
 	case cocos2d::ui::Widget::TouchEventType::MOVED:
@@ -2313,6 +2314,11 @@ vector<int> BatleScene::detectUnitInAoe(UserSkillInfo skill, int unitFlg, bool d
 		draw->setPosition(pos);
 		draw->setTag(DRAW_UNIT);
 		break;
+	}
+// 	bool drawFlg = true;
+	if (skill.multi_effect != 1)
+	{
+		drawFlg = false;
 	}
 	if (drawFlg) {
 		_battleBackround->addChild(draw);
