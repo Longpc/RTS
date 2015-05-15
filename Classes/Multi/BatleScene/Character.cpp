@@ -37,6 +37,7 @@ bool Character::init(int characterId)
 	}
 
 	_characterId = characterId;
+	setAttackDelayFlag(false);
 	changeAnimationImagePathByUnitId(_characterId);
 
 	this->setAnchorPoint(Vec2::ANCHOR_MIDDLE_BOTTOM);
@@ -108,12 +109,12 @@ void Character::moveActionByVector(Vec2 destination)
 
 void Character::attackActionByUnitPosition(int direction , int attackTime ,AttackCallback attackCallback)
 {
-	if (_attackDelayFlg == false) {
-		_attackDelayFlg = true;
+	if (getAttackDelayFlag() == false) {
+		setAttackDelayFlag(true);
 		rotateCharacter(direction);
 		auto ani = Animate::create(createAttackAnimationWithDefine(direction));
 		auto call1 = CallFuncN::create([& , attackCallback](Ref* pSender){
-			_attackDelayFlg = false;
+			setAttackDelayFlag(false);
 			
 		});
 		this->runAction(Spawn::create(Sequence::create(DelayTime::create(attackTime), call1, nullptr), Sequence::create(ani, CallFuncN::create([&, attackCallback](Ref* pSender){

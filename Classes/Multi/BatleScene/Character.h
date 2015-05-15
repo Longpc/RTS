@@ -29,7 +29,7 @@ public :
 	CC_SYNTHESIZE(float, _moveOneTapTime, MoveOneTapTime);
 	CC_SYNTHESIZE(Vec2, _destinationalOneTap, DestinationalOneTap);
 	CC_SYNTHESIZE(AttackCallback, _attackCallback , AttackCallbackFunction);
-	
+	CC_SYNTHESIZE(bool, _attackDelayFlg, AttackDelayFlag);
 
 	void moveActionByVector(Vec2 destination);
 	void attackActionByUnitPosition(int direction, int attackTime, AttackCallback attackCallback = nullptr);
@@ -43,7 +43,6 @@ public :
 private :
 	Sprite *testObject;
 	int _characterId;
-	bool _attackDelayFlg = false;
 	float _direc;
 	float _characterSpeed;
 

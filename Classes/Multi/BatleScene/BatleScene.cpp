@@ -565,6 +565,30 @@ void BatleScene::createContent()
 	auto testSprite = Sprite::create("ball.png");
 	_battleBackround->addChild(testSprite, 100);
 
+	sv->on("sync_end", [&, testSprite](SIOClient* client, const std::string data){
+		log("SYNC end data :%s", data.c_str());
+		auto info = UserModel::getInstance()->getUserInfo();
+		Document doc;
+		doc.Parse<0>(data.c_str());
+		if (doc.HasParseError()) {
+			log("Parse JSOn error");
+			return;
+		}
+		if (doc.IsObject()) {
+			for (int i = 0; i < doc["user_unit"].Size(); i++)
+			{
+				log("position: %f %f", doc["user_unit"][rapidjson::SizeType(i)]["position_x"].GetDouble(), doc["user_unit"][rapidjson::SizeType(i)]["position_y"].GetDouble());
+				if (doc["user_unit"][rapidjson::SizeType(i)]["user_id"].GetInt() == info.user_id) {
+					log("this is my unit");
+				}
+				else {
+					testSprite->setPosition(Vec2(doc["user_unit"][rapidjson::SizeType(i)]["position_x"].GetDouble(), doc["user_unit"][rapidjson::SizeType(i)]["position_y"].GetDouble()));
+				}
+			}
+		}
+
+	});
+
 	sv->on("battle_public_move", [&, testSprite](SIOClient* client, const std::string& a) {
 		//Parser JSON data
 		log("public move data: %s", a.c_str());
@@ -574,9 +598,10 @@ void BatleScene::createContent()
 		if (doc.HasParseError())
 		{
 			log("error in parse json");
+			return;
 		}
-		if (doc.HasMember("args")) {
-			testSprite->setPosition(Vec2(doc["args"][rapidjson::SizeType(0)]["position_x"].GetDouble(), doc["args"][rapidjson::SizeType(0)]["position_y"].GetDouble()));
+		if (doc.IsObject()) {
+			testSprite->setPosition(Vec2(doc/*["args"][rapidjson::SizeType(0)]*/["position_x"].GetDouble(), doc/*["args"][rapidjson::SizeType(0)]*/["position_y"].GetDouble()));
 		}
 	});
 
@@ -716,7 +741,9 @@ void BatleScene::checkForAutoAttack()
 
 				auto call1 = CallFuncN::create(CC_CALLBACK_0(BatleScene::characterAttackCallback, this));
 				testObject->attackActionByUnitPosition(direc, _mainCharacterData.attack_speed, CC_CALLBACK_0(BatleScene::characterAttackCallback, this));
-
+				if (!testObject->getAttackDelayFlag()) {
+					BattleAPI::getInstance()->sendAttackEvent();
+				}
 				if (_moveMode == MOVE_CIRCLE)
 				{
 					_miniUnit->attackActionByUnitPosition(direc, _mainCharacterData.attack_speed);
@@ -1671,8 +1698,9 @@ void BatleScene::skill1ButtonCallback(Ref *pSender, Widget::TouchEventType type)
 	case cocos2d::ui::Widget::TouchEventType::BEGAN:
 		if (skill.range_distance > 0 && skill.mp_cost <= _mainCharacterData.mp)  {
 			longPressAction(bt, skill);
+			_showSkillTargetFlag = true;
 		}
-		_showSkillTargetFlag = true;
+		
 		break;
 	case cocos2d::ui::Widget::TouchEventType::MOVED:
 		break;

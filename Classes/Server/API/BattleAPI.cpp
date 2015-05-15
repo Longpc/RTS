@@ -18,7 +18,7 @@ void BattleAPI::destroyInstance()
 
 bool BattleAPI::init()
 {
-
+	auto a = NodeServer::getInstance()->getClient();
 
 	return true;
 }
@@ -83,6 +83,7 @@ void BattleAPI::sendAttackEvent()
 	c->on("attack_end", [&](SIOClient* client, const std::string data){
 		log("attack_end data :%s",data.c_str());
 	});
+	return;
 }
 
 void BattleAPI::sendSkillEvent(UserSkillInfo skillData, vector<int> targetsId)
@@ -194,9 +195,7 @@ void BattleAPI::battleSyncEvent(UserUnitInfo unitData)
 	//
 	log("json: %s", buffer.GetString());
 	c->emit("sync", buffer.GetString());
-	c->on("sync_end", [&](SIOClient* client, const std::string data){
-		log("SYNC end data :%s", data.c_str());
-	});
+	
 
 	//TEST
 	

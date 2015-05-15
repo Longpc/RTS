@@ -93,6 +93,7 @@ void NodeServer::onMessage(SIOClient* client, const std::string& data)
 void NodeServer::onClose(SIOClient* client)
 {
 	log("----->onClose");
+	this->destroyInstance();
 }
 
 void NodeServer::onError(SIOClient* client, const std::string& data)
