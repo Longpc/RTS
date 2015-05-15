@@ -1,0 +1,9 @@
+/proj.win32/Debug.win32
+/proj.android/obj
+/proj.android/assets
+/proj.android/bin
+/proj.android/gen
+/proj.android/libs
+/cocos2d/cocos/2d/Debug.win32
+/cocos2d/cocos/2d/Debug.win32/libcocos2d.log
+/cocos2d/cocos/2d/Debug.win32/libcocos2d.Build.CppClean.log
