@@ -23,10 +23,10 @@ bool BattleAPI::init()
 	return true;
 }
 
-void BattleAPI::sendMoveEvent(UserUnitInfo unitdata, int moveDirection, Vec2 position, int statusId)
+void BattleAPI::sendMoveEvent(UserUnitInfo unitdata, int moveDirection,float angle, Vec2 position, int statusId)
 {
 	auto a = NodeServer::getInstance()->getClient();
-
+	if (a == nullptr) return;
 	Document doc;
 	doc.SetObject();
 	auto userData = UserModel::getInstance()->getUserInfo();
@@ -35,6 +35,7 @@ void BattleAPI::sendMoveEvent(UserUnitInfo unitdata, int moveDirection, Vec2 pos
 	doc.AddMember("room_id", userData.room_id, allo);
 	doc.AddMember("user_unit", *convertUnitDataToJsonObject(unitdata, allo), allo);
 	doc.AddMember("direction", moveDirection, allo);
+	doc.AddMember("angle", angle, allo);
 	doc.AddMember("position_x", position.x, allo);
 	doc.AddMember("position_y", position.y, allo);
 	doc.AddMember("status", statusId, allo);
@@ -51,10 +52,36 @@ void BattleAPI::sendMoveEvent(UserUnitInfo unitdata, int moveDirection, Vec2 pos
 		log("move callback: %s", data.c_str());
 	});
 }
+void BattleAPI::sendMoveEndEvent(UserUnitInfo unitdata)
+{
+	auto a = NodeServer::getInstance()->getClient();
+	if (a == nullptr) return;
+	Document doc;
+	doc.SetObject();
+	auto userData = UserModel::getInstance()->getUserInfo();
+	Document::AllocatorType& allo = doc.GetAllocator();
+	doc.AddMember("user_id", userData.user_id, allo);
+	doc.AddMember("room_id", userData.room_id, allo);
+	doc.AddMember("user_unit", *convertUnitDataToJsonObject(unitdata, allo), allo);
+	string uu = UserModel::getInstance()->getUuId().c_str();
+	doc.AddMember("uuid", uu.c_str(), allo);
+
+	StringBuffer  buffer;
+	Writer<StringBuffer> writer(buffer);
+	doc.Accept(writer);
+
+	a->emit("move_end", buffer.GetString());
+	log("Move End data: %s", buffer.GetString());
+	a->on("move_end_end", [&](SIOClient* client, const std::string& data)
+	{
+		log("move end callback: %s", data.c_str());
+	});
+}
 
 void BattleAPI::sendAttackEvent()
 {
 	auto c = NodeServer::getInstance()->getClient();
+	if (c == nullptr) return;
 	auto userData = UserModel::getInstance()->getUserInfo();
 	int unitId = UserModel::getInstance()->getSelectedUnitId();
 
@@ -89,6 +116,7 @@ void BattleAPI::sendAttackEvent()
 void BattleAPI::sendSkillEvent(UserSkillInfo skillData, vector<int> targetsId)
 {
 	auto c = NodeServer::getInstance()->getClient();
+	if (c == nullptr) return;
 	auto userData = UserModel::getInstance()->getUserInfo();
 	int unitId = UserModel::getInstance()->getSelectedUnitId();
 	Document doc;
@@ -132,6 +160,8 @@ void BattleAPI::sendSkillEvent(UserSkillInfo skillData, vector<int> targetsId)
 
 void BattleAPI::sendDeadEvent(UserUnitInfo unitData)
 {
+	auto sv = NodeServer::getInstance()->getClient();
+	if (sv == nullptr) return;
 	auto userData = UserModel::getInstance()->getUserInfo();
 	int unit_id = UserModel::getInstance()->getSelectedUnitId();
 
@@ -153,7 +183,7 @@ void BattleAPI::sendDeadEvent(UserUnitInfo unitData)
 
 	log("dead json: %s", buffer.GetString());
 
-	auto sv = NodeServer::getInstance()->getClient();
+	
 	sv->emit("dead", buffer.GetString());
 	sv->on("dead_end", [&](SIOClient* client, const std::string data) {
 		log("Dead callback data: %s", data.c_str());
@@ -163,7 +193,7 @@ void BattleAPI::sendDeadEvent(UserUnitInfo unitData)
 void BattleAPI::sendRepawnEvent()
 {
 	auto c = NodeServer::getInstance()->getClient();
-
+	if (c == nullptr) return;
 	c->emit("respawn", "{\"data\": \"test respwan\"}");
 	c->on("respawn_end", [&](SIOClient* client, const std::string data){
 		log("attack_end data :%s", data.c_str());
@@ -173,6 +203,7 @@ void BattleAPI::sendRepawnEvent()
 void BattleAPI::battleSyncEvent(UserUnitInfo unitData)
 {
 	auto c = NodeServer::getInstance()->getClient();
+	if (c == nullptr) return;
 	auto userData = UserModel::getInstance()->getUserInfo();
 	int unitId = UserModel::getInstance()->getSelectedUnitId();
 
@@ -204,6 +235,7 @@ void BattleAPI::battleSyncEvent(UserUnitInfo unitData)
 void BattleAPI::sendBattleEndEvent()
 {
 	auto sv = NodeServer::getInstance()->getClient();
+	if (sv == nullptr) return;
 	auto userData = UserModel::getInstance()->getUserInfo();
 	int unitId = UserModel::getInstance()->getSelectedUnitId();
 
@@ -264,5 +296,6 @@ Document::GenericValue* BattleAPI::convertSkillDataToJsonObject(UserSkillInfo sk
 
 	return skillDataValue;
 }
+
 
 

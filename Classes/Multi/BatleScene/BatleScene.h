@@ -212,7 +212,8 @@ private:
 	
 
 	CC_SYNTHESIZE(int, _unitStatus, UnitStatus);
-	virtual void sendMoveEvent(int direction);
+	virtual void sendMoveEvent(int direction, float angle);
+	virtual void sendMoveEndEvent();
 	
 	///LAYOUT BASE///
 	virtual void onEnter();
@@ -302,6 +303,8 @@ private:
 	virtual void checkForAutoAttack();
 
 	void update(float delta);
+	float _checkTime = 0; //for test Battle sync
+	//TODO
 	///FAKE  Z Order///
 	void fakeZOrder();
 	///BATLE TIME///

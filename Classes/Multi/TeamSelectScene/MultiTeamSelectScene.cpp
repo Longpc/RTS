@@ -315,17 +315,19 @@ void MultiTeamSelectScene::enterTeam(int teamId)
 }
 void MultiTeamSelectScene::onBackButtonClick(Ref *pSender)
 {
-	auto a = UserModel::getInstance()->getUserInfo();
-	string uu = UserModel::getInstance()->getUuId().c_str();
 	Document doc;
 	doc.SetObject();
 	Document::AllocatorType& allo = doc.GetAllocator();
-
-	doc.AddMember("user_id", a.user_id, allo);
-	doc.AddMember("room_id", a.room_id, allo);
-
-
-
+	auto uif = UserModel::getInstance()->getUserInfo();
+	doc.AddMember("user_id", uif.user_id, allo);
+	doc.AddMember("room_id", uif.room_id, allo);
+	string uu = UserModel::getInstance()->getUuId().c_str();
+	doc.AddMember("uuid", uu.c_str(), allo);
+	StringBuffer buff;
+	Writer<StringBuffer> wt(buff);
+	doc.Accept(wt);
+	auto client = NodeServer::getInstance()->getClient();
+	client->emit("reconnect", buff.GetString());
 
 	Director::getInstance()->replaceScene(TransitionMoveInL::create(SCREEN_TRANSI_DELAY, UserSelect::createScene()));
 }

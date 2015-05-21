@@ -27,7 +27,13 @@ NodeServer* NodeServer::getInstance()
 
 void NodeServer::destroyInstance()
 {
-	CC_SAFE_RELEASE_NULL(s_sharedTestServer);
+	s_sharedTestServer->freeClient();
+	CC_SAFE_DELETE(s_sharedTestServer);
+}
+
+void NodeServer::freeClient()
+{
+	CC_SAFE_DELETE(_valueDict);
 }
 
 bool NodeServer::init()
@@ -35,6 +41,12 @@ bool NodeServer::init()
 	_valueDict = SocketIO::connect(Configuration::getInstance()->getValue("NodeJSServer").asString().c_str(), *this);
 	CCASSERT(_valueDict, "Error cannot create Socket IO");
 	log("Connect to NodeJs server: %s", Configuration::getInstance()->getValue("NodeJSServer").asString().c_str());
+	_valueDict->on("disconnect", [&](SIOClient*, const std::string&) {
+		log("try reconnect");
+		this->destroyInstance();
+		_valueDict = this->getInstance()->getClient();
+	});
+	
 	return true;
 }
 
@@ -93,7 +105,6 @@ void NodeServer::onMessage(SIOClient* client, const std::string& data)
 void NodeServer::onClose(SIOClient* client)
 {
 	log("----->onClose");
-	this->destroyInstance();
 }
 
 void NodeServer::onError(SIOClient* client, const std::string& data)
@@ -106,4 +117,5 @@ std::string NodeServer::getString()
 {
 	return _name;
 }
+
 

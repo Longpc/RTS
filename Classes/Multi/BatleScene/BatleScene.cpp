@@ -389,7 +389,7 @@ void BatleScene::createContent()
 	_skill1Button->addTouchEventListener(CC_CALLBACK_2(BatleScene::skill1ButtonCallback, this));
 	Size baseSize = _skill1Button->getContentSize();
 	_skill1Button->setTag(TAG_SKILL_1);
-	_skill1Button->setSwallowTouches(true);
+	_skill1Button->setSwallowTouches(false);
 	_skill1Button->setPosition(Vec2(_visibleSize.width / 2 - 1.5 * baseSize.width - 20, baseSize.height / 2 + baseMargin));
 	addChild(_skill1Button);
 	displaySkillMpInButton(_skill1Button, _mainCharacterSkillData[0].mp_cost);
@@ -398,7 +398,7 @@ void BatleScene::createContent()
 	_skill2Button->loadTextureNormal(skill2ImagePath.c_str());
 	_skill2Button->addTouchEventListener(CC_CALLBACK_2(BatleScene::skill1ButtonCallback, this));
 	_skill2Button->setTag(TAG_SKILL_2);
-	_skill2Button->setSwallowTouches(true);
+	_skill2Button->setSwallowTouches(false);
 	_skill2Button->setPosition(Vec2(_visibleSize.width / 2 - 0.5 *baseSize.width - 10, baseSize.height / 2 + baseMargin));
 	addChild(_skill2Button);
 	displaySkillMpInButton(_skill2Button, _mainCharacterSkillData[1].mp_cost);
@@ -407,7 +407,7 @@ void BatleScene::createContent()
 	_skill3Button->loadTextureNormal(skill3ImagePath.c_str());
 	_skill3Button->addTouchEventListener(CC_CALLBACK_2(BatleScene::skill1ButtonCallback, this));
 	_skill3Button->setTag(TAG_SKILL_3);
-	_skill3Button->setSwallowTouches(true);
+	_skill3Button->setSwallowTouches(false);
 	_skill3Button->setPosition(Vec2(_visibleSize.width / 2 + 0.5*baseSize.width + 10, baseSize.height / 2 + baseMargin));
 	addChild(_skill3Button);
 	displaySkillMpInButton(_skill3Button, _playerSkills[0].mp_cost);
@@ -416,7 +416,7 @@ void BatleScene::createContent()
 	_skill4Button->loadTextureNormal(skill4ImagePath.c_str());
 	_skill4Button->addTouchEventListener(CC_CALLBACK_2(BatleScene::skill1ButtonCallback, this));
 	_skill4Button->setTag(TAG_SKILL_4);
-	_skill4Button->setSwallowTouches(true);
+	_skill4Button->setSwallowTouches(false);
 	_skill4Button->setPosition(Vec2(_visibleSize.width / 2 + 1.5 * baseSize.width + 20, baseSize.height / 2 + baseMargin));
 	addChild(_skill4Button);
 	displaySkillMpInButton(_skill4Button, _playerSkills[1].mp_cost);
@@ -564,8 +564,9 @@ void BatleScene::createContent()
 
 	auto testSprite = Sprite::create("ball.png");
 	_battleBackround->addChild(testSprite, 100);
+	testSprite->setPhysicsBody(PhysicsBody::createCircle(20, PhysicsMaterial(1, 1, 1)));
 
-	sv->on("sync_end", [&, testSprite](SIOClient* client, const std::string data){
+	sv->on("move_sync_end", [&, testSprite](SIOClient* client, const std::string data){
 		log("SYNC end data :%s", data.c_str());
 		auto info = UserModel::getInstance()->getUserInfo();
 		Document doc;
@@ -575,21 +576,32 @@ void BatleScene::createContent()
 			return;
 		}
 		if (doc.IsObject()) {
+			//need same data when battle start for save player and unit data for future logic( attack, move, stop move, skill, dead, respawn)
 			for (int i = 0; i < doc["user_unit"].Size(); i++)
 			{
-				log("position: %f %f", doc["user_unit"][rapidjson::SizeType(i)]["position_x"].GetDouble(), doc["user_unit"][rapidjson::SizeType(i)]["position_y"].GetDouble());
+				//log("position: %f %f", doc["user_unit"][rapidjson::SizeType(i)]["position_x"].GetDouble(), doc["user_unit"][rapidjson::SizeType(i)]["position_y"].GetDouble());
 				if (doc["user_unit"][rapidjson::SizeType(i)]["user_id"].GetInt() == info.user_id) {
 					log("this is my unit");
+					continue;
 				}
 				else {
+					log("Angle: %f", doc["angle"].GetDouble());
+					if (doc["user_unit"][rapidjson::SizeType(i)]["user_id"].GetInt() == 10) continue;
 					testSprite->setPosition(Vec2(doc["user_unit"][rapidjson::SizeType(i)]["position_x"].GetDouble(), doc["user_unit"][rapidjson::SizeType(i)]["position_y"].GetDouble()));
+					testSprite->setRotation(doc["angle"].GetDouble());
+					auto uinfo = UserUnit::getInstance()->getUnitInfoById(doc["user_unit"][rapidjson::SizeType(i)]["mst_unit_id"].GetInt());
+					testSprite->getPhysicsBody()->setVelocity(Vec2::ZERO);
+					float angle = doc["angle"].GetDouble();
+					//testSprite->setRotation(angle);
+					testSprite->getPhysicsBody()->applyImpulse(Vec2(uinfo.move_speed * cos(angle), uinfo.move_speed * sin(angle)));
+					return;
 				}
 			}
 		}
 
 	});
 
-	sv->on("battle_public_move", [&, testSprite](SIOClient* client, const std::string& a) {
+	/*sv->on("battle_public_move", [&, testSprite](SIOClient* client, const std::string& a) {
 		//Parser JSON data
 		log("public move data: %s", a.c_str());
 
@@ -601,10 +613,15 @@ void BatleScene::createContent()
 			return;
 		}
 		if (doc.IsObject()) {
-			testSprite->setPosition(Vec2(doc/*["args"][rapidjson::SizeType(0)]*/["position_x"].GetDouble(), doc/*["args"][rapidjson::SizeType(0)]*/["position_y"].GetDouble()));
+			testSprite->setPosition(Vec2(doc["position_x"].GetDouble(), doc["position_y"].GetDouble()));
 		}
-	});
+	});*/
 
+	sv->on("unit_move_end", [&, testSprite](SIOClient* client, const string& data) {
+		log("Unit_move_end data: %s", data.c_str());
+		//testSprite->getPhysicsBody()->setVelocity(Vec2::ZERO);
+
+	});
 
 }
 
@@ -685,6 +702,13 @@ void BatleScene::onEnter()
 void BatleScene::update(float delta)
 {
 	//log("Current Hp: %d", _characterCurentHp);
+	_checkTime += delta;
+	if (_checkTime >= 0.5f) {
+		float angle = _mainCharacterIconInMiniMap->getRotation();
+		int direc = detectDirectionBaseOnTouchAngle(angle);
+		sendMoveEvent(direc, angle);
+		_checkTime = 0;
+	}
 	updateMiniMap();
 	updateTime();
 	updateHpAndMpViewLabel();
@@ -1135,7 +1159,6 @@ void BatleScene::onTouchMoved(Touch *touch, Event *unused_event)
 
 		_mainCharacterIconInMiniMap->setRotation(-(distanVector.getAngle() * RAD_DEG) + 90);
 		int direc = detectDirectionBaseOnTouchAngle(_mainCharacterIconInMiniMap->getRotation());
-		sendMoveEvent(direc);
 		if (direc != 0)
 		{
 			if (_moveMode == MOVE_CIRCLE)
@@ -1206,6 +1229,8 @@ void BatleScene::updateMiniMap()
 	{
 		_allEnemyIconInMinimap[i]->setPosition(Vec2(_allEnemyUnitSprite[i]->getPositionX()*positionXScaleRate, _allEnemyUnitSprite[i]->getPositionY()*positionYScaleRate));
 	}
+
+	
 }
 
 
@@ -1227,7 +1252,9 @@ void BatleScene::onTouchEnded(Touch *touch, Event *unused_event)
 		if (_moveMode == MOVE_CIRCLE)
 		{
 			_miniUnit->stopMoveAction();
+			
 		}
+		sendMoveEndEvent();
 		_checkOneTapMoveFlg = false;
 		_checkLongTapMoveFlg = false;
 
@@ -1581,7 +1608,6 @@ void BatleScene::changeImageButtonCallback(Ref *pSender, Widget::TouchEventType 
 		else {
 			Director::getInstance()->pause();
 			//TODO FIX PARAM DATA
-			BattleAPI::getInstance()->battleSyncEvent(_mainCharacterData);
 		}
 		break;
 	}
@@ -1638,10 +1664,16 @@ vector<UserUnitInfo> BatleScene::getEnemyUnitsData(vector<int> enemyIdList)
 	return returnData;
 }
 
-void BatleScene::sendMoveEvent(int direction)
+void BatleScene::sendMoveEvent(int direction, float angle)
 {
-	BattleAPI::getInstance()->sendMoveEvent(_mainCharacterData,direction, testObject->getPosition(),getUnitStatus() );
+	BattleAPI::getInstance()->sendMoveEvent(_mainCharacterData,direction,angle, testObject->getPosition(),getUnitStatus() );
 }
+
+void BatleScene::sendMoveEndEvent()
+{
+	BattleAPI::getInstance()->sendMoveEndEvent(_mainCharacterData);
+}
+
 
 void BatleScene::autoRestoreHpAndMp()
 { 
@@ -3337,3 +3369,4 @@ void BatleScene::createMiniControlUnit(int circleType) {
 	addChild(_miniUnit, 100);
 	_miniUnit->setPosition(_miniCircle->getPosition());
 }
+

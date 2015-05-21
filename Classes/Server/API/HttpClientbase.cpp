@@ -39,7 +39,7 @@ void HttpClientBase::postAPIWithMethodNameAndParam(string add, string dataParam 
 		}
 	});
 	httpRequest->setTag("clientBase");
-	log("POST DATA: %s", dataParam.c_str());
+	log("POSTING DATA: %s", dataParam.c_str());
 	const char* buffer = dataParam.c_str();
 	httpRequest->setRequestData(buffer, strlen(buffer));
 

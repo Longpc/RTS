@@ -20,6 +20,7 @@ bool BattleModel::init()
 void BattleModel::parserJsonToInitData(string jsonData)
 {
 	log("battle start data %s", jsonData.c_str());
+
 	vector<int> skillIds = {};
 	rapidjson::Document doc;
 	doc.Parse<0>(jsonData.c_str());
@@ -27,14 +28,46 @@ void BattleModel::parserJsonToInitData(string jsonData)
 		log("Battle Model: error in parser Json data");
 		return;
 	}
-	if (doc.IsArray()/*doc.IsObject() && doc.HasMember("args")*/) {
+	if (doc.IsObject()/*doc.IsObject() && doc.HasMember("args")*/) {
 		log("HERE");
 		auto a = UserModel::getInstance()->getUuId();
-		log("Args Size: %d", doc/*["args"]*/.Size());
-		for (int i = 0; i  < doc/*["args"][rapidjson::SizeType(0)]*/.Size(); i++)
+		log("Args Size: %d", doc/*["args"]*/["room_user"].Size());
+		vector<Room_User_Model> userList;
+		vector<Room_User_Unit_Model> unitList;
+		for (int i = 0; i < doc/*["args"][rapidjson::SizeType(0)]*/["room_user"].Size(); i++)
 		{
-			log("%s",doc/*["args"][rapidjson::SizeType(0)]*/[i]["room_user_id"].GetString());
+			Room_User_Model temp;
+			temp._id = doc["room_user"][i]["_id"].GetString();
+			temp.npc = doc["room_user"][i]["npc"].GetInt();
+			temp.state = doc["room_user"][i]["state"].GetInt();
+			temp.ready = doc["room_user"][i]["ready"].GetInt();
+			temp.team_id = doc["room_user"][i]["team_id"].GetInt();
+			temp.user_id = doc["room_user"][i]["user_id"].GetInt();
+			temp.room_id = doc["room_user"][i]["room_id"].GetInt(); 
+			//uuid
+			log("%s",doc/*["args"][rapidjson::SizeType(0)]*/["room_user"][i]["room_user_id"].GetString());
+			userList.push_back(temp);
 		}
+		setRoomUserList(userList);
+
+		log("Room use unit array length: %d", doc["room_user_unit"].Size());
+		for (int i = 0; i < doc["room_user_unit"].Size(); i++)
+		{
+			Room_User_Unit_Model temp1;
+			temp1._id = doc["room_user_unit"][i]["_id"].GetString();
+			temp1.status = doc["room_user_unit"][i]["status"].GetInt();
+			temp1.mp = doc["room_user_unit"][i]["mp"].GetInt();
+			temp1.hp = doc["room_user_unit"][i]["hp"].GetInt();
+			temp1.position_x = doc["room_user_unit"][i]["position_x"].GetDouble();
+			temp1.position_y = doc["room_user_unit"][i]["position_y"].GetDouble();
+			temp1.direction = doc["room_user_unit"][i]["direction"].GetInt();
+			temp1.team_id = doc["room_user_unit"][i]["team_id"].GetInt();
+			temp1.user_id = doc["room_user_unit"][i]["user_id"].GetInt();
+			temp1.room_id = doc["room_user_unit"][i]["room_id"].GetInt();
+			temp1.mst_unit_id = doc["room_user_unit"][i]["mst_unit_id"].GetInt();
+			unitList.push_back(temp1);
+		}
+		setRoomUserUnitList(unitList);
 	}
 	else {
 		log("Battle Model: wrong data %d", doc.GetType());

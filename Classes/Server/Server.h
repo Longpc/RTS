@@ -39,7 +39,7 @@ public:
 	bool init();
 
 	SIOClient* getClient();
-
+	void freeClient();
 	void loadConfigFile(const std::string& filename);
 	void startConnectWithHandler(string name, SIOEvent event);
 	void sendMessageWithName(string name, string message);
