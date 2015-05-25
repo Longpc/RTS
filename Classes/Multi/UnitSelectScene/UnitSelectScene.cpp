@@ -165,7 +165,7 @@ void MultiUnitSelectScene::onSelectUnit(int unitId)
 }
 void MultiUnitSelectScene::displayUnit(Button *parent,Label *textView, int unitId)
 {
-	parent->loadTextureNormal(UserUnit::getInstance()->getUnitImageById(_allUnitInfoNew[unitId].mst_unit_id).c_str());
+	parent->loadTextureNormal(UserUnitModel::getInstance()->getUnitImageById(_allUnitInfoNew[unitId].mst_unit_id).c_str());
 	textView->setString(_allUnitInfoNew[unitId].name);
 
 	if (_onSelectedSlot < 3) {
@@ -257,7 +257,7 @@ void MultiUnitSelectScene::createAllUnitView()
 			if ((j + i * 4-1) < _allUnitInfoNew.size()) {
 				auto sprite = Button::create();
 				sprite->setTag(j + i * 4 - 1);
-				sprite->loadTextureNormal(UserUnit::getInstance()->getUnitImageById(_allUnitInfoNew[j+i*4 - 1].mst_unit_id).c_str());
+				sprite->loadTextureNormal(UserUnitModel::getInstance()->getUnitImageById(_allUnitInfoNew[j+i*4 - 1].mst_unit_id).c_str());
 				sprite->setSwallowTouches(false);
 				sprite->setScale(1.5);
 				sprite->addTouchEventListener(CC_CALLBACK_2(MultiUnitSelectScene::onTouchUnit, this));
@@ -402,7 +402,7 @@ void MultiUnitSelectScene::nextButtonCallback(Ref *pSender, Widget::TouchEventTy
 
 		UserModel::getInstance()->setSelectedUnitId(_decidedUnitId);
 		auto userData = UserModel::getInstance()->getUserInfo();
-		auto unitData = UserUnit::getInstance()->getUnitInfoById(_decidedUnitId);
+		auto unitData = UserUnitModel::getInstance()->getUnitInfoById(_decidedUnitId);
 		Document doc;
 		doc.SetObject();
 		Document::AllocatorType& allo = doc.GetAllocator();
@@ -411,7 +411,7 @@ void MultiUnitSelectScene::nextButtonCallback(Ref *pSender, Widget::TouchEventTy
 		doc.AddMember("user_id", userData.user_id, allo);
 		doc.AddMember("team_id", userData.team_id, allo);
 		doc.AddMember("unit_id", _decidedUnitId, allo);
-		doc.AddMember("mst_unit", *UserUnit::getInstance()->convertFromUserUnitInfoToJson(unitData, allo),allo);
+		doc.AddMember("mst_unit", *UserUnitModel::getInstance()->convertFromUserUnitInfoToJson(unitData, allo),allo);
 		string uu = UserModel::getInstance()->getUuId().c_str();
 		doc.AddMember("uuid",uu.c_str() , allo);
 		StringBuffer buff;
@@ -521,7 +521,7 @@ void MultiUnitSelectScene::getDataFromDataBase()
 {
 
 	//_allUnitInfoNew = UnitData::getAllUnitData();
-	_allUnitInfoNew = UserUnit::getInstance()->getUserUnitList();
+	_allUnitInfoNew = UserUnitModel::getInstance()->getUserUnitList();
 }
 
 void MultiUnitSelectScene::leftArrowClickCallback(Ref *pSender, Widget::TouchEventType type)

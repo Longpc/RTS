@@ -23,7 +23,7 @@ public:
 
 	static void destroyInstance();
 
-	void sendMoveEvent(UserUnitInfo unitdata, int moveDirection,float angle, Vec2 position, int statusId);
+	void sendMoveEvent(UserUnitInfo unitdata, int moveDirection,float angle, Vec2 position, int statusId, bool onMovingFlg);
 	void sendMoveEndEvent(UserUnitInfo unitdata);
 	void sendAttackEvent();
 	void sendSkillEvent(UserSkillInfo skillData, vector<int> targetsId = {});

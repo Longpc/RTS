@@ -3,8 +3,8 @@
 
 #include "cocos2d.h"
 #include "base/Define.h"
-#include "Model/data/UserSkill.h"
-#include "Model/data/UserUnit.h"
+#include "Model/data/UserSkillModel.h"
+#include "Model/data/UserUnitModel.h"
 #include "Model/data/UserModel.h"
 
 #include "Server/Server.h"
@@ -31,10 +31,10 @@ using namespace std;
 # define MYCLASS_DECLSPEC CC_DLL
 #endif
 
-class MYCLASS_DECLSPEC RoomModel :public Ref
+class MYCLASS_DECLSPEC RoomUserModel :public Ref
 {
 public:
-	static RoomModel * getInstance();
+	static RoomUserModel * getInstance();
 	bool init();
 
 	CC_SYNTHESIZE(int, _roomId, RoomId);
@@ -51,7 +51,7 @@ public:
 	void setTeamForUserByUserId(int room_id, int user_id, int team_id);
 
 private:
-	static RoomModel * s_RoomModel;
+	static RoomUserModel * s_RoomModel;
 };
 
 #endif

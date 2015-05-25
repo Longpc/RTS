@@ -23,7 +23,7 @@ bool BattleAPI::init()
 	return true;
 }
 
-void BattleAPI::sendMoveEvent(UserUnitInfo unitdata, int moveDirection,float angle, Vec2 position, int statusId)
+void BattleAPI::sendMoveEvent(UserUnitInfo unitdata, int moveDirection,float angle, Vec2 position, int statusId, bool onMovingFlg)
 {
 	auto a = NodeServer::getInstance()->getClient();
 	if (a == nullptr) return;
@@ -39,6 +39,7 @@ void BattleAPI::sendMoveEvent(UserUnitInfo unitdata, int moveDirection,float ang
 	doc.AddMember("position_x", position.x, allo);
 	doc.AddMember("position_y", position.y, allo);
 	doc.AddMember("status", statusId, allo);
+	doc.AddMember("moving", onMovingFlg, allo);
 	string uu = UserModel::getInstance()->getUuId().c_str();
 	doc.AddMember("uuid",uu.c_str(),allo);
 
@@ -46,6 +47,7 @@ void BattleAPI::sendMoveEvent(UserUnitInfo unitdata, int moveDirection,float ang
 	Writer<StringBuffer> writer(buffer);
 	doc.Accept(writer);
 
+	log("send move data: %s", buffer.GetString());
 	a->emit("move", buffer.GetString());
 	a->on("move_end", [&](SIOClient* client, const std::string& data)
 	{

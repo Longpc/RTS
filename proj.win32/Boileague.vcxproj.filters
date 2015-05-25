@@ -111,9 +111,6 @@
     <ClCompile Include="..\Classes\Multi\SkillSelectScene\SkillDetailDialog.cpp">
       <Filter>src\Multi\SkillSelectScene</Filter>
     </ClCompile>
-    <ClCompile Include="..\Classes\Multi\BatleScene\BatleScene.cpp">
-      <Filter>src\Multi\BatleScene</Filter>
-    </ClCompile>
     <ClCompile Include="..\Classes\Multi\BatleResultScene\BatleResultScene.cpp">
       <Filter>src\Multi\BalteResultScene</Filter>
     </ClCompile>
@@ -183,20 +180,23 @@
     <ClCompile Include="..\Classes\Server\API\StartPHPAPI.cpp">
       <Filter>src\Server\API</Filter>
     </ClCompile>
-    <ClCompile Include="..\Classes\Model\data\UserUnit.cpp">
-      <Filter>src\Model\data</Filter>
-    </ClCompile>
-    <ClCompile Include="..\Classes\Model\data\UserSkill.cpp">
-      <Filter>src\Model\data</Filter>
-    </ClCompile>
     <ClCompile Include="..\Classes\Multi\BatleScene\Character.cpp">
       <Filter>src\Multi\BatleScene</Filter>
     </ClCompile>
-    <ClCompile Include="..\Classes\Model\data\RoomModel.cpp">
-      <Filter>src\Model\data</Filter>
-    </ClCompile>
     <ClCompile Include="..\Classes\Model\data\BattleModel.cpp">
       <Filter>src\Model\data</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Classes\Model\data\RoomUserModel.cpp">
+      <Filter>src\Model\data</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Classes\Model\data\UserSkillModel.cpp">
+      <Filter>src\Model\data</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Classes\Model\data\UserUnitModel.cpp">
+      <Filter>src\Model\data</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Classes\Multi\BatleScene\BattleScene.cpp">
+      <Filter>src\Multi\BatleScene</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -235,9 +235,6 @@
     </ClInclude>
     <ClInclude Include="..\Classes\Multi\SkillSelectScene\SkillDetailDialog.h">
       <Filter>src\Multi\SkillSelectScene</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Classes\Multi\BatleScene\BatleScene.h">
-      <Filter>src\Multi\BatleScene</Filter>
     </ClInclude>
     <ClInclude Include="..\Classes\Multi\BatleResultScene\BatleResultScene.h">
       <Filter>src\Multi\BalteResultScene</Filter>
@@ -308,20 +305,23 @@
     <ClInclude Include="..\Classes\Server\API\StartPHPAPI.h">
       <Filter>src\Server\API</Filter>
     </ClInclude>
-    <ClInclude Include="..\Classes\Model\data\UserUnit.h">
-      <Filter>src\Model\data</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Classes\Model\data\UserSkill.h">
-      <Filter>src\Model\data</Filter>
-    </ClInclude>
     <ClInclude Include="..\Classes\Multi\BatleScene\Character.h">
       <Filter>src\Multi\BatleScene</Filter>
     </ClInclude>
-    <ClInclude Include="..\Classes\Model\data\RoomModel.h">
-      <Filter>src\Model\data</Filter>
-    </ClInclude>
     <ClInclude Include="..\Classes\Model\data\BattleModel.h">
       <Filter>src\Model\data</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Classes\Model\data\RoomUserModel.h">
+      <Filter>src\Model\data</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Classes\Model\data\UserSkillModel.h">
+      <Filter>src\Model\data</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Classes\Model\data\UserUnitModel.h">
+      <Filter>src\Model\data</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Classes\Multi\BatleScene\BattleScene.h">
+      <Filter>src\Multi\BatleScene</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

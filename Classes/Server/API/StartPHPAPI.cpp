@@ -31,8 +31,8 @@ bool StartAPI::init()
 			}
 			if (doc.IsObject() && doc.HasMember("data")) {
 				if (strcmp(doc["event_name"].GetString(), "start") == 0) {
-					UserUnit::getInstance()->createUserUnitDataFromJson(doc["data"]["unit_list"]);
-					UserSkill::getInstance()->createUserSkillDataFromJson(doc["data"]["skill_list"]);
+					UserUnitModel::getInstance()->createUserUnitDataFromJson(doc["data"]["unit_list"]);
+					UserSkillModel::getInstance()->createUserSkillDataFromJson(doc["data"]["skill_list"]);
 					_isResponsed = true;
 					if (_callBack != nullptr)
 					{

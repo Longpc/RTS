@@ -190,7 +190,7 @@ void MultiTeamSelectScene::getRoomInfo(int roomId)
 		layer->addChild(userName);
 	}
 	*/
-	auto roomUserList = RoomModel::getInstance()->getRoomUserList();
+	auto roomUserList = RoomUserModel::getInstance()->getRoomUserList();
 	vector<RoomUser> tempList1;
 	vector<RoomUser> tempList2;
 	for (int i = 0; i < roomUserList.size(); i++)
@@ -207,8 +207,8 @@ void MultiTeamSelectScene::getRoomInfo(int roomId)
 			continue;
 		}
 	}
-	RoomModel::getInstance()->setBlueTeamUserList(tempList1);
-	RoomModel::getInstance()->setRedTeamUserList(tempList2);
+	RoomUserModel::getInstance()->setBlueTeamUserList(tempList1);
+	RoomUserModel::getInstance()->setRedTeamUserList(tempList2);
 
 }
 void MultiTeamSelectScene::getAndShowTeamInfo(int teamId,Sprite *parent)
@@ -220,10 +220,10 @@ void MultiTeamSelectScene::getAndShowTeamInfo(int teamId,Sprite *parent)
 	switch (teamId)
 	{
 	case TEAM_FLG_BLUE:
-		teamInfo = RoomModel::getInstance()->getBlueTeamUserList();
+		teamInfo = RoomUserModel::getInstance()->getBlueTeamUserList();
 		break;
 	case TEAM_FLG_RED:
-		teamInfo = RoomModel::getInstance()->getRedTeamUserList();
+		teamInfo = RoomUserModel::getInstance()->getRedTeamUserList();
 		break;
 	}
 	std::stringstream memNum;
@@ -297,7 +297,7 @@ void MultiTeamSelectScene::enterTeam(int teamId)
 	string uu = UserModel::getInstance()->getUuId().c_str();
 	doc.AddMember("uuid",uu.c_str() , allo);
 	//set team
-	RoomModel::getInstance()->setTeamForUserByUserId(a.room_id, a.user_id, teamId);
+	RoomUserModel::getInstance()->setTeamForUserByUserId(a.room_id, a.user_id, teamId);
 
 
 	StringBuffer buff;

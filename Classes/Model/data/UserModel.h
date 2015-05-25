@@ -3,8 +3,8 @@
 
 #include "cocos2d.h"
 #include "base/Define.h"
-#include "Model/data/UserUnit.h"
-#include "Model/data/UserSkill.h"
+#include "Model/data/UserUnitModel.h"
+#include "Model/data/UserSkillModel.h"
 
 USING_NS_CC;
 using namespace std;

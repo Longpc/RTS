@@ -16,7 +16,7 @@ LOCAL_SRC_FILES := hellocpp/main.cpp \
 				   ../../Classes/base/LayerBase.cpp \
 				   ../../Classes/ModeSelectScene/ModeSelectScene.cpp \
 				   ../../Classes/Multi/BatleResultScene/BatleResultScene.cpp \
-				   ../../Classes/Multi/BatleScene/BatleScene.cpp \
+				   ../../Classes/Multi/BatleScene/BattleScene.cpp \
 				   ../../Classes/Multi/SkillSelectScene/SkillDetailDialog.cpp \
 				   ../../Classes/Multi/SkillSelectScene/SkillSelectScene.cpp \
 				   ../../Classes/Multi/TeamSelectScene/MultiTeamSelectScene.cpp \
@@ -38,14 +38,14 @@ LOCAL_SRC_FILES := hellocpp/main.cpp \
 				   ../../Classes/Server/Server.cpp \
 				   ../../Classes/UserSelectScene/UserSelectScene.cpp \
 				   ../../Classes/Model/data/UserModel.cpp \
-				   ../../Classes/Model/data/UserUnit.cpp \
-				   ../../Classes/Model/data/UserSkill.cpp \
+				   ../../Classes/Model/data/UserUnitModel.cpp \
+				   ../../Classes/Model/data/UserSkillModel.cpp \
 				   ../../Classes/Server/API/HttpClientbase.cpp \
 				   ../../Classes/Server/API/ListUserPHPAPI.cpp \
 				   ../../Classes/Server/API/UserLoginPHPAPI.cpp \
 				   ../../Classes/Server/API/StartPHPAPI.cpp \
 				   ../../Classes/Server/API/BattleAPI.cpp \
-				   ../../Classes/Model/data/RoomModel.cpp \
+				   ../../Classes/Model/data/RoomUserModel.cpp \
 				   ../../Classes/Model/data/BattleModel.cpp
 
 LOCAL_C_INCLUDES := $(LOCAL_PATH)/../../Classes

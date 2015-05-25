@@ -38,6 +38,7 @@ bool Character::init(int characterId)
 
 	_characterId = characterId;
 	setAttackDelayFlag(false);
+	setOnMovingFlg(false);
 	changeAnimationImagePathByUnitId(_characterId);
 
 	this->setAnchorPoint(Vec2::ANCHOR_MIDDLE_BOTTOM);
@@ -135,6 +136,7 @@ void Character::respawAction()
 void Character::stopMoveAction()
 {
 	this->stopAllActionsByTag(this->getCurrentMoveActionTag());
+	setOnMovingFlg(false);
 	if (this->getPhysicsBody() == nullptr)
 	{
 		return;
@@ -185,6 +187,7 @@ Animation* Character::createAttackAnimationWithDefine(int imageId)
 }
 
 void Character::actionMoveCharacter(int directionId) {
+	setOnMovingFlg(true);
 	if (this->getNumberOfRunningActions() > 0) {
 		if (this->getActionByTag(directionId) != nullptr) {
 			return;
@@ -198,6 +201,7 @@ void Character::actionMoveCharacter(int directionId) {
 	//_currentMoveActionTag = directionId;
 	this->setCurrentMoveActionTag(directionId);
 	this->runAction(repeat);
+
 }
 
 void Character::rotateCharacter(int direc) {

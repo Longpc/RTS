@@ -1,17 +1,17 @@
-#include "UserUnit.h"
+#include "UserUnitModel.h"
 
-UserUnit* UserUnit::s_UserUnit = nullptr;
-UserUnit * UserUnit::getInstance()
+UserUnitModel* UserUnitModel::s_UserUnit = nullptr;
+UserUnitModel * UserUnitModel::getInstance()
 {
 	if (!s_UserUnit)
 	{
-		s_UserUnit = new (std::nothrow) UserUnit();
+		s_UserUnit = new (std::nothrow) UserUnitModel();
 		s_UserUnit->setUserUnitList({});
 	}
 	return s_UserUnit;
 }
 
-vector<UserUnitInfo> UserUnit::createUserUnitDataFromJson(rapidjson::GenericValue<rapidjson::UTF8<char>, rapidjson::MemoryPoolAllocator<rapidjson::CrtAllocator>>& value)
+vector<UserUnitInfo> UserUnitModel::createUserUnitDataFromJson(rapidjson::GenericValue<rapidjson::UTF8<char>, rapidjson::MemoryPoolAllocator<rapidjson::CrtAllocator>>& value)
 {
 	vector<UserUnitInfo> vInfo;
 	UserUnitInfo info;
@@ -40,7 +40,7 @@ vector<UserUnitInfo> UserUnit::createUserUnitDataFromJson(rapidjson::GenericValu
 	return getUserUnitList();
 }
 
-std::string UserUnit::getUnitImageById(int id)
+std::string UserUnitModel::getUnitImageById(int id)
 {
 	switch (id)
 	{
@@ -59,7 +59,7 @@ std::string UserUnit::getUnitImageById(int id)
 	}
 }
 
-UserUnitInfo UserUnit::getUnitInfoById(int mst_unit_id)
+UserUnitInfo UserUnitModel::getUnitInfoById(int mst_unit_id)
 {
 	for (auto &unit : getUserUnitList())
 	{
@@ -70,7 +70,7 @@ UserUnitInfo UserUnit::getUnitInfoById(int mst_unit_id)
 	}
 }
 
-Document::GenericValue* UserUnit::convertFromUserUnitInfoToJson(UserUnitInfo unitdata, Document::AllocatorType& allo)
+Document::GenericValue* UserUnitModel::convertFromUserUnitInfoToJson(UserUnitInfo unitdata, Document::AllocatorType& allo)
 {
 	rapidjson::Value *doc = new rapidjson::Value();
 	doc->SetObject();

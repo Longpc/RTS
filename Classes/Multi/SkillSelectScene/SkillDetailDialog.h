@@ -3,7 +3,7 @@
 #include "base/LayerBase.h"
 #include "base/Define.h"
 
-#include "Model/data/UserSkill.h"
+#include "Model/data/UserSkillModel.h"
 
 typedef std::function<void(Ref *pSender, Widget::TouchEventType type)> MyTouchEvent;
 

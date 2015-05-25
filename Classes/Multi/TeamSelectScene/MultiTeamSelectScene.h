@@ -10,7 +10,7 @@
 #include "Model/data/UserModel.h"
 #include "Server/API/StartPHPAPI.h"
 #include "Server/Server.h"
-#include "Model/data/RoomModel.h"
+#include "Model/data/RoomUserModel.h"
 
 
 ///Include library header here///

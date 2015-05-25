@@ -461,7 +461,7 @@ void SkillSelectScene::setSelectedSlot(int slotNum)
 
 void SkillSelectScene::getSkillDataFromDatabase()
 {
-	_allSkillInfo = UserSkill::getInstance()->getPlayerSkillsList();
+	_allSkillInfo = UserSkillModel::getInstance()->getPlayerSkillsList();
 
 }
 
@@ -508,6 +508,6 @@ void SkillSelectScene::rightArrowClickCallback(Ref *pSender, Widget::TouchEventT
 void SkillSelectScene::startBattleCallback(SIOClient* client, const std::string& data)
 {
 	BattleModel::getInstance()->parserJsonToInitData(data.c_str());
-	Director::getInstance()->replaceScene(TransitionMoveInR::create(SCREEN_TRANSI_DELAY, BatleScene::createScene()));
+	Director::getInstance()->replaceScene(TransitionMoveInR::create(SCREEN_TRANSI_DELAY, BattleScene::createScene()));
 
 }

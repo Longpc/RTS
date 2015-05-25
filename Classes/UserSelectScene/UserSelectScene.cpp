@@ -107,7 +107,7 @@ void UserSelect::userSelectCallback(Ref *pSender, Widget::TouchEventType type)
 			int roomId = uif.room_id;
 			client->on("connect_begin_end", [&, roomId ](SIOClient* client, const std::string& data) {
 				log("connect begin end data: %s", data.c_str());
-				RoomModel::getInstance()->initDataWhenJoinRoom(data);
+				RoomUserModel::getInstance()->initDataWhenJoinRoom(data);
 				Director::getInstance()->replaceScene(TransitionMoveInR::create(SCREEN_TRANSI_DELAY, MultiTeamSelectScene::createScene(UserModel::getInstance()->getUserInfo().user_id)));
 			});
 

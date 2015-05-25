@@ -12,8 +12,8 @@
 #include "Character.h"
 
 #include "Model/data/UserModel.h"
-#include "Model/data/UserSkill.h"
-#include "Model/data/UserUnit.h"
+#include "Model/data/UserSkillModel.h"
+#include "Model/data/UserUnitModel.h"
 
 
 #include "cocostudio/CocoStudio.h"
@@ -76,18 +76,18 @@
 #define ALLIED_CONTACT_COLLISION_BITMAP 0x00000001
 
 using namespace cocostudio;
-class BatleScene : public LayerBase
+class BattleScene : public LayerBase
 {
 
 public:
-	BatleScene();
-	~BatleScene();
+	BattleScene();
+	~BattleScene();
 	/*create battle scene with parameter:
 	@selectedUnitId: selected unit id in unit selected scene
 	@playerSkills: the vector store two player skill info
 	*/
 	static Scene* createScene();
-	static BatleScene* create();
+	static BattleScene* create();
 	bool init();
 private:
 	///VARIABLES///////////////////////////////////////////////////////////////////////
@@ -213,7 +213,7 @@ private:
 
 	CC_SYNTHESIZE(int, _unitStatus, UnitStatus);
 	virtual void sendMoveBeginEvent(float angle);
-	virtual void sendMoveEvent(int direction, float angle);
+	virtual void sendMoveEvent(int direction, float angle, bool onMovingFlg = false);
 	virtual void sendMoveEndEvent();
 	
 	///LAYOUT BASE///

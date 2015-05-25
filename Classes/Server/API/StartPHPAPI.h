@@ -4,8 +4,8 @@
 #include "base/database/DataUtils.h"
 
 #include "Model/data/UserModel.h"
-#include "Model/data/UserUnit.h"
-#include "Model/data/UserSkill.h"
+#include "Model/data/UserUnitModel.h"
+#include "Model/data/UserSkillModel.h"
 
 #include <string>
 

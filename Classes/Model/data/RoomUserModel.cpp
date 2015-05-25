@@ -1,17 +1,17 @@
 #pragma execution_character_set("utf-8")
-#include "RoomModel.h"
+#include "RoomUserModel.h"
 
-RoomModel* RoomModel::s_RoomModel = nullptr;
+RoomUserModel* RoomUserModel::s_RoomModel = nullptr;
 
-RoomModel* RoomModel::getInstance() {
+RoomUserModel* RoomUserModel::getInstance() {
 	if (!s_RoomModel) {
-		s_RoomModel = new (std::nothrow)RoomModel();
+		s_RoomModel = new (std::nothrow)RoomUserModel();
 		s_RoomModel->init();
 	}
 	return s_RoomModel;
 }
 
-bool RoomModel::init()
+bool RoomUserModel::init()
 {
 	setRoomUserList({});
 	setRedTeamUserList({});
@@ -67,14 +67,14 @@ bool RoomModel::init()
 	return true;
 }
 
-void RoomModel::addUserInfoToUserList(RoomUser data)
+void RoomUserModel::addUserInfoToUserList(RoomUser data)
 {
 	auto a = getRoomUserList();
 	a.push_back(data);
 	setRoomUserList(a);
 }
 
-void RoomModel::setTeamForUserByUserId(int room_id, int user_id, int team_id)
+void RoomUserModel::setTeamForUserByUserId(int room_id, int user_id, int team_id)
 {
 	auto userList = getRoomUserList();
 	for (auto &user : userList)
@@ -87,7 +87,7 @@ void RoomModel::setTeamForUserByUserId(int room_id, int user_id, int team_id)
 	setRoomUserList(userList);
 }
 
-RoomUser RoomModel::parseJsonToRoomUserData(string data)
+RoomUser RoomUserModel::parseJsonToRoomUserData(string data)
 {
 	RoomUser temp;
 	rapidjson::Document doc;
@@ -107,7 +107,7 @@ RoomUser RoomModel::parseJsonToRoomUserData(string data)
 	return temp;
 }
 
-void RoomModel::initDataWhenJoinRoom(string jsonData)
+void RoomUserModel::initDataWhenJoinRoom(string jsonData)
 {
 	rapidjson::Document doc;
 	doc.Parse<0>(jsonData.c_str());

@@ -1,20 +1,20 @@
-﻿#include "BatleScene.h"
+﻿#include "BattleScene.h"
 
 
-Scene* BatleScene::createScene()
+Scene* BattleScene::createScene()
 {
 	auto scene = Scene::createWithPhysics();
 	scene->getPhysicsWorld()->setDebugDrawMask(PhysicsWorld::DEBUGDRAW_NONE);
 	scene->getPhysicsWorld()->setGravity(Vect::ZERO);
-	auto lay = BatleScene::create();
+	auto lay = BattleScene::create();
 	lay->savePhysicWorld(scene->getPhysicsWorld());
 	scene->addChild(lay);
 	return scene;
 }
 
-BatleScene* BatleScene::create()
+BattleScene* BattleScene::create()
 {
-	BatleScene *layer = new BatleScene();
+	BattleScene *layer = new BattleScene();
 	if (layer && layer->init()) {
 		layer->autorelease();
 		return layer;
@@ -24,7 +24,7 @@ BatleScene* BatleScene::create()
 	return NULL;
 }
 
-bool BatleScene::init()
+bool BattleScene::init()
 {
 	if (!LayerBase::init()) {
 		return false;
@@ -37,7 +37,7 @@ bool BatleScene::init()
 	setUnitStatus(0);
 	for (auto &a : BattleModel::getInstance()->getPlayerSkills())
 	{
-		_playerSkills.push_back(UserSkill::getInstance()->getSkillInfoById(a));
+		_playerSkills.push_back(UserSkillModel::getInstance()->getSkillInfoById(a));
 	}
 	///INIT DATA FOR ALL UNIT IN BATTLE
 	_mainCharacterData = getUnitDataFromDataBase(_selectedUnitId);
@@ -53,11 +53,11 @@ bool BatleScene::init()
 	_allEnemyUnitData = getEnemyUnitsData(a);
 
 	//For test
-	_redTeamTowerData = UserUnit::getInstance()->getUnitInfoById(1);
+	_redTeamTowerData = UserUnitModel::getInstance()->getUnitInfoById(1);
 	_redTeamTowerData.hp = 5000;
 	_redTeamTowerData.attack_range = 200;
 	_redTeamTowerData.attack_speed = 5;
-	_blueTeamTowerData = UserUnit::getInstance()->getUnitInfoById(2);
+	_blueTeamTowerData = UserUnitModel::getInstance()->getUnitInfoById(2);
 
 	_blueTeamTowerData.hp = 5000;
 	_blueTeamTowerData.attack_range = 200;
@@ -72,21 +72,21 @@ bool BatleScene::init()
 	nextButton->loadTextureNormal("CloseNormal.png");
 	nextButton->setPosition(Vec2(_visibleSize.width - 50, 70));
 	nextButton->setTouchEnabled(true);
-	nextButton->addTouchEventListener(CC_CALLBACK_2(BatleScene::nextButtonCallback, this));
+	nextButton->addTouchEventListener(CC_CALLBACK_2(BattleScene::nextButtonCallback, this));
 	addChild(nextButton, 10);
 
 	auto physicDebug = Button::create();
 	physicDebug->loadTextureNormal("CloseNormal.png");
 	physicDebug->setPosition(Vec2(_visibleSize.width - 100, 70));
 	physicDebug->setTouchEnabled(true);
-	physicDebug->addTouchEventListener(CC_CALLBACK_2(BatleScene::debugPhysicButtonCallback, this));
+	physicDebug->addTouchEventListener(CC_CALLBACK_2(BattleScene::debugPhysicButtonCallback, this));
 	addChild(physicDebug, 10);
 
 	auto changeImage = Button::create();
 	changeImage->loadTextureNormal("CloseNormal.png");
 	changeImage->setPosition(Vec2(_visibleSize.width - 150, 70));
 	changeImage->setTouchEnabled(true);
-	changeImage->addTouchEventListener(CC_CALLBACK_2(BatleScene::changeImageButtonCallback, this));
+	changeImage->addTouchEventListener(CC_CALLBACK_2(BattleScene::changeImageButtonCallback, this));
 	addChild(changeImage, 10);
 
 	createContent();
@@ -124,7 +124,7 @@ bool BatleScene::init()
 		UserBattleInfo info;
 		info.name = _mainCharacterData.name;
 		info.unitId = _mainCharacterData.mst_unit_id;
-		info.imagePath = UserUnit::getInstance()->getUnitImageById(_mainCharacterData.mst_unit_id);
+		info.imagePath = UserUnitModel::getInstance()->getUnitImageById(_mainCharacterData.mst_unit_id);
 		_blueTeamInfo.push_back(info);
 		for (int i = 0; i < ENEMY_NUM; i++)
 		{
@@ -151,7 +151,7 @@ bool BatleScene::init()
 
 	return true;
 }
-void BatleScene::createContent()
+void BattleScene::createContent()
 {
 	_battleBackround = Node::create();
 	_battleBackround->setPosition(Vec2::ZERO);
@@ -336,7 +336,7 @@ void BatleScene::createContent()
 	mask->setPosition(slotPos);
 	_characterImageViewNode->setStencil(mask);
 
-	auto icon = Sprite::create(UserUnit::getInstance()->getUnitImageById(_mainCharacterData.mst_unit_id));
+	auto icon = Sprite::create(UserUnitModel::getInstance()->getUnitImageById(_mainCharacterData.mst_unit_id));
 	icon->setPosition(slotPos + Vec2(0,0));
 	icon->setScale(1.4f);
 	icon->setTag(ICON);
@@ -345,7 +345,7 @@ void BatleScene::createContent()
 
 	_menuButton = Button::create();
 	_menuButton->loadTextureNormal("image/screen/battle/menu_btn.png");
-	_menuButton->addTouchEventListener(CC_CALLBACK_2(BatleScene::menuButtonCallback, this));
+	_menuButton->addTouchEventListener(CC_CALLBACK_2(BattleScene::menuButtonCallback, this));
 	_menuButton->setPosition(Vec2(_menuButton->getContentSize().width / 2 + 10, _visibleSize.height - topMenu->getContentSize().height));
 	_menuButton->setAnchorPoint(Vec2::ANCHOR_MIDDLE_TOP);
 	addChild(_menuButton);
@@ -386,7 +386,7 @@ void BatleScene::createContent()
 
 	_skill1Button = Button::create();
 	_skill1Button->loadTextureNormal(skill1ImagePath.c_str());
-	_skill1Button->addTouchEventListener(CC_CALLBACK_2(BatleScene::skill1ButtonCallback, this));
+	_skill1Button->addTouchEventListener(CC_CALLBACK_2(BattleScene::skill1ButtonCallback, this));
 	Size baseSize = _skill1Button->getContentSize();
 	_skill1Button->setTag(TAG_SKILL_1);
 	_skill1Button->setSwallowTouches(false);
@@ -396,7 +396,7 @@ void BatleScene::createContent()
 
 	_skill2Button = Button::create();
 	_skill2Button->loadTextureNormal(skill2ImagePath.c_str());
-	_skill2Button->addTouchEventListener(CC_CALLBACK_2(BatleScene::skill1ButtonCallback, this));
+	_skill2Button->addTouchEventListener(CC_CALLBACK_2(BattleScene::skill1ButtonCallback, this));
 	_skill2Button->setTag(TAG_SKILL_2);
 	_skill2Button->setSwallowTouches(false);
 	_skill2Button->setPosition(Vec2(_visibleSize.width / 2 - 0.5 *baseSize.width - 10, baseSize.height / 2 + baseMargin));
@@ -405,7 +405,7 @@ void BatleScene::createContent()
 
 	_skill3Button = Button::create();
 	_skill3Button->loadTextureNormal(skill3ImagePath.c_str());
-	_skill3Button->addTouchEventListener(CC_CALLBACK_2(BatleScene::skill1ButtonCallback, this));
+	_skill3Button->addTouchEventListener(CC_CALLBACK_2(BattleScene::skill1ButtonCallback, this));
 	_skill3Button->setTag(TAG_SKILL_3);
 	_skill3Button->setSwallowTouches(false);
 	_skill3Button->setPosition(Vec2(_visibleSize.width / 2 + 0.5*baseSize.width + 10, baseSize.height / 2 + baseMargin));
@@ -414,7 +414,7 @@ void BatleScene::createContent()
 
 	_skill4Button = Button::create();
 	_skill4Button->loadTextureNormal(skill4ImagePath.c_str());
-	_skill4Button->addTouchEventListener(CC_CALLBACK_2(BatleScene::skill1ButtonCallback, this));
+	_skill4Button->addTouchEventListener(CC_CALLBACK_2(BattleScene::skill1ButtonCallback, this));
 	_skill4Button->setTag(TAG_SKILL_4);
 	_skill4Button->setSwallowTouches(false);
 	_skill4Button->setPosition(Vec2(_visibleSize.width / 2 + 1.5 * baseSize.width + 20, baseSize.height / 2 + baseMargin));
@@ -603,11 +603,13 @@ void BatleScene::createContent()
 					//TODO need to check this unit is moving or not --> Need event call from client
 					//testCharacter->rotateCharacter(direc);
 					//
-					testCharacter->actionMoveCharacter(direc);
-
+					if (doc["moving"].GetBool())
+					{
+						testCharacter->actionMoveCharacter(direc);
+					}
 					//testSprite->setPosition(Vec2(doc["user_unit"][rapidjson::SizeType(i)]["position_x"].GetDouble(), doc["user_unit"][rapidjson::SizeType(i)]["position_y"].GetDouble()));
 					//testSprite->setRotation(doc["angle"].GetDouble());
-					auto uinfo = UserUnit::getInstance()->getUnitInfoById(doc["user_unit"][rapidjson::SizeType(i)]["mst_unit_id"].GetInt());
+					auto uinfo = UserUnitModel::getInstance()->getUnitInfoById(doc["user_unit"][rapidjson::SizeType(i)]["mst_unit_id"].GetInt());
 					testCharacter->getPhysicsBody()->setVelocity(Vec2::ZERO);
 					
 					//testSprite->setRotation(angle);
@@ -643,7 +645,7 @@ void BatleScene::createContent()
 
 }
 
-void BatleScene::displaySkillMpInButton(Button *parent, int mp)
+void BattleScene::displaySkillMpInButton(Button *parent, int mp)
 {
 	auto lb = Label::createWithSystemFont(DataUtils::numberToString(mp), "", 25);
 	lb->setColor(Color3B(0,0,243));
@@ -652,7 +654,7 @@ void BatleScene::displaySkillMpInButton(Button *parent, int mp)
 	parent->addChild(lb);
 }
 
-void BatleScene::createPhysicBolder()
+void BattleScene::createPhysicBolder()
 {
 	auto bottomB = createHBolder();
 	bottomB->setPosition(Vec2(_visibleSize.width, -50));
@@ -673,7 +675,7 @@ void BatleScene::createPhysicBolder()
 	createRandomRock();
 }
 
-Node* BatleScene::createHBolder()
+Node* BattleScene::createHBolder()
 {
 	auto wallBd = PhysicsBody::createBox(Size(_visibleSize.width * 2, 100), PhysicsMaterial(1, 0, 0));
 	wallBd->setGravityEnable(false);
@@ -686,7 +688,7 @@ Node* BatleScene::createHBolder()
 	return node;
 }
 
-Node* BatleScene::createVBolder()
+Node* BattleScene::createVBolder()
 {
 	auto wallBd = PhysicsBody::createBox(Size(100, _visibleSize.height * 2), PhysicsMaterial(1, 0, 0));
 	wallBd->setGravityEnable(false);
@@ -701,7 +703,7 @@ Node* BatleScene::createVBolder()
 }
 
 
-void BatleScene::onEnter()
+void BattleScene::onEnter()
 {
 	LayerBase::onEnter();
 // 	srand(time(NULL));
@@ -710,21 +712,22 @@ void BatleScene::onEnter()
 
 	auto dispath = Director::getInstance()->getEventDispatcher();
 	auto contactListener = EventListenerPhysicsContact::create();
-	contactListener->onContactBegin = CC_CALLBACK_1(BatleScene::onPhysicContactBegin, this);
-	contactListener->onContactPreSolve = CC_CALLBACK_2(BatleScene::onPhysicContactPreSolve, this);
+	contactListener->onContactBegin = CC_CALLBACK_1(BattleScene::onPhysicContactBegin, this);
+	contactListener->onContactPreSolve = CC_CALLBACK_2(BattleScene::onPhysicContactPreSolve, this);
 	dispath->addEventListenerWithSceneGraphPriority(contactListener, this);
 	scheduleUpdate();
 
 }
 
-void BatleScene::update(float delta)
+void BattleScene::update(float delta)
 {
 	//log("Current Hp: %d", _characterCurentHp);
 	_checkTime += delta;
-	if (_checkTime >= 0.035f) {
+	if (_checkTime >= 0.07) {
 		float angle = _mainCharacterIconInMiniMap->getRotation();
 		int direc = detectDirectionBaseOnTouchAngle(angle);
-		sendMoveEvent(direc, angle);
+
+		sendMoveEvent(direc, angle, testObject->getOnMovingFlg());
 		_checkTime = 0;
 	}
 	updateMiniMap();
@@ -767,7 +770,7 @@ void BatleScene::update(float delta)
 	fakeZOrder();
 
 }
-void BatleScene::checkForAutoAttack()
+void BattleScene::checkForAutoAttack()
 {
 	if (_onRespwanFlg) return;
 	//float area = IMAGE_SCALE*_autoAttackArea->getContentSize().width / 2 + 25;
@@ -781,8 +784,8 @@ void BatleScene::checkForAutoAttack()
 			if (testObject->getActionByTag(_currentAttackActionTag) == nullptr && _onDelayAttackFlg == false) {
 				_mainCharacterIconInMiniMap->setRotation(-(posDistan.getAngle() * RAD_DEG) + 90);
 
-				auto call1 = CallFuncN::create(CC_CALLBACK_0(BatleScene::characterAttackCallback, this));
-				testObject->attackActionByUnitPosition(direc, _mainCharacterData.attack_speed, CC_CALLBACK_0(BatleScene::characterAttackCallback, this));
+				auto call1 = CallFuncN::create(CC_CALLBACK_0(BattleScene::characterAttackCallback, this));
+				testObject->attackActionByUnitPosition(direc, _mainCharacterData.attack_speed, CC_CALLBACK_0(BattleScene::characterAttackCallback, this));
 				if (!testObject->getAttackDelayFlag()) {
 					BattleAPI::getInstance()->sendAttackEvent();
 				}
@@ -803,7 +806,7 @@ void BatleScene::checkForAutoAttack()
 				_allEnemyUnitSprite[i]->stopAllActionsByTag(_allEnemyUnitSprite[i]->getTag());
 				string path = "image/unit_new/attack/red/";
 				auto target_ani = createAttackAnimationWithDefine(10 - direc, path);
-				auto call2 = CallFuncN::create(CC_CALLBACK_1(BatleScene::enemyAttackCallback, this,i));
+				auto call2 = CallFuncN::create(CC_CALLBACK_1(BattleScene::enemyAttackCallback, this,i));
 				auto action2 = Sequence::create(Animate::create(target_ani), call2, nullptr);
 				_allEnemyAttachDelay[i] = true;
 				auto forCallback = Sequence::create(DelayTime::create(_allEnemyUnitData[i].attack_speed), CallFuncN::create([&, i](Ref *p) {
@@ -828,7 +831,7 @@ void BatleScene::checkForAutoAttack()
 		testObject->stopActionByTag(FOUNTAIN_ACTION);
 	}
 }
-void BatleScene::characterAttackCallback()
+void BattleScene::characterAttackCallback()
 {
 	//if main character die before atack event end.
 	if (_onRespwanFlg) return;
@@ -868,7 +871,7 @@ void BatleScene::characterAttackCallback()
 	}
 }
 
-void BatleScene::enemyDieAction(int id)
+void BattleScene::enemyDieAction(int id)
 {
 	
 	_allEnemyUnitSprite[id]->stopAllActions();
@@ -893,7 +896,7 @@ void BatleScene::enemyDieAction(int id)
 		endBattle();
 	}
 }
-void BatleScene::enemyAttackCallback(Ref *pSEnder, int i)
+void BattleScene::enemyAttackCallback(Ref *pSEnder, int i)
 {
 	if (_onRespwanFlg) return;
 	Sprite *_sprite = (Sprite*)pSEnder;
@@ -935,7 +938,7 @@ void BatleScene::enemyAttackCallback(Ref *pSEnder, int i)
 
 }
 
-void BatleScene::showAttackDame(int dameValue, Vec2 pos,int type)
+void BattleScene::showAttackDame(int dameValue, Vec2 pos,int type)
 {
 	if (dameValue < 0)
 	{
@@ -950,7 +953,7 @@ void BatleScene::showAttackDame(int dameValue, Vec2 pos,int type)
 	s->runAction(action);
 }
 
-void BatleScene::runRespawnAction(int killerId)
+void BattleScene::runRespawnAction(int killerId)
 {
 	if (_onRespwanFlg) return;
 	_onRespwanFlg = true;
@@ -991,20 +994,20 @@ void BatleScene::runRespawnAction(int killerId)
 		lb->removeFromParent();
 		testObject->setPosition(Vec2(_visibleSize.width, 100));
 		testObject->setVisible(true);
-		auto action3 = Spawn::create(Blink::create(0.6f, 6), Sequence::create(DelayTime::create(RESPAWN_DELAY), CallFuncN::create(CC_CALLBACK_0(BatleScene::removeRespawnFlg,this)), nullptr), nullptr);
+		auto action3 = Spawn::create(Blink::create(0.6f, 6), Sequence::create(DelayTime::create(RESPAWN_DELAY), CallFuncN::create(CC_CALLBACK_0(BattleScene::removeRespawnFlg,this)), nullptr), nullptr);
 		testObject->runAction(action3);
 		//BattleAPI::getInstance()->battleSyncEvent(_mainCharacterData);
 		//SEND RESPAWN ACTIOn
 	});
 	timeLb->runAction(Sequence::create(action, action2, nullptr));
 }
-void BatleScene::removeRespawnFlg()
+void BattleScene::removeRespawnFlg()
 {
 	testObject->setVisible(true);
 	_onRespwanFlg = false;
 }
 
-void BatleScene::updateTime()
+void BattleScene::updateTime()
 {
 	time_t currTimer;
 	time(&currTimer);
@@ -1020,7 +1023,7 @@ void BatleScene::updateTime()
 
 
 }
-string BatleScene::makeTimeString(int second) {
+string BattleScene::makeTimeString(int second) {
 	stringstream timeString;
 	int remainSecond = second % 60;
 	int minus = (second / 60);
@@ -1051,7 +1054,7 @@ string BatleScene::makeTimeString(int second) {
 }
 
 
-bool BatleScene::onTouchBegan(Touch *touch, Event *unused_event)
+bool BattleScene::onTouchBegan(Touch *touch, Event *unused_event)
 {
 	_touchStartPoint = touch->getLocation();
 	if (_moveDisableFlg == false) {
@@ -1109,7 +1112,7 @@ bool BatleScene::onTouchBegan(Touch *touch, Event *unused_event)
 	return true;
 }
 
-void BatleScene::onTouchMoved(Touch *touch, Event *unused_event)
+void BattleScene::onTouchMoved(Touch *touch, Event *unused_event)
 {
 	// Xac dinh vector giua diem touchMove va touchBegin
 	Vec2 distanVector;
@@ -1195,7 +1198,7 @@ void BatleScene::onTouchMoved(Touch *touch, Event *unused_event)
 1--2--3
 */
 
-int BatleScene::detectDirectionBaseOnTouchAngle(float angle)
+int BattleScene::detectDirectionBaseOnTouchAngle(float angle)
 {
 	if(caculAvgAngle(0,angle)) return 8;
 	if (caculAvgAngle(45,angle)) return 9;
@@ -1210,12 +1213,12 @@ int BatleScene::detectDirectionBaseOnTouchAngle(float angle)
 	}
 	return 8;
 }
-bool BatleScene::caculAvgAngle(int avg, float angle)
+bool BattleScene::caculAvgAngle(int avg, float angle)
 {
 	if (angle > avg - 22 && angle < avg + 22) return true;
 	return false;
 }
-void BatleScene::actionCharacter(int directionId, Sprite *characterSprite)
+void BattleScene::actionCharacter(int directionId, Sprite *characterSprite)
 {
 	if (characterSprite->getNumberOfRunningActions() > 0) {
 		if (characterSprite->getActionByTag(directionId) != nullptr) {
@@ -1235,7 +1238,7 @@ void BatleScene::actionCharacter(int directionId, Sprite *characterSprite)
 	characterSprite->runAction(repeat);
 
 }
-void BatleScene::updateMiniMap()
+void BattleScene::updateMiniMap()
 {
 	if (testObject == nullptr) return;
 	auto objectPos = testObject->getPosition();
@@ -1252,7 +1255,7 @@ void BatleScene::updateMiniMap()
 }
 
 
-void BatleScene::onTouchEnded(Touch *touch, Event *unused_event)
+void BattleScene::onTouchEnded(Touch *touch, Event *unused_event)
 {
 	_touchMoveBeginSprite->setTexture("image/screen/battle/ui_move.png");
 	_touchMoveEndSprite->setTexture("image/screen/battle/ui_move_end.png");
@@ -1324,7 +1327,7 @@ void BatleScene::onTouchEnded(Touch *touch, Event *unused_event)
 	
 }
 
-void BatleScene::menuButtonCallback(Ref *pSender, Widget::TouchEventType type)
+void BattleScene::menuButtonCallback(Ref *pSender, Widget::TouchEventType type)
 {
 	switch (type)
 	{
@@ -1334,7 +1337,7 @@ void BatleScene::menuButtonCallback(Ref *pSender, Widget::TouchEventType type)
 		break;
 	case cocos2d::ui::Widget::TouchEventType::ENDED:
 	{
-		auto dialog = OptionDialog::create(CC_CALLBACK_2(BatleScene::optionDecideCallback, this), CC_CALLBACK_2(BatleScene::optionCancelCallback, this));
+		auto dialog = OptionDialog::create(CC_CALLBACK_2(BattleScene::optionDecideCallback, this), CC_CALLBACK_2(BattleScene::optionCancelCallback, this));
 		getParent()->addChild(dialog);
 		break; 
 	}
@@ -1348,12 +1351,12 @@ void BatleScene::menuButtonCallback(Ref *pSender, Widget::TouchEventType type)
 
 
 
-void BatleScene::savePhysicWorld(PhysicsWorld *world)
+void BattleScene::savePhysicWorld(PhysicsWorld *world)
 {
 	_myWorld = world;
 }
 
-Animation* BatleScene::createMoveAnimationWithDefine(int imageId, string path)
+Animation* BattleScene::createMoveAnimationWithDefine(int imageId, string path)
 {
 	auto animation = Animation::create();
 	for (int i = 1; i < 3; i++)
@@ -1371,7 +1374,7 @@ Animation* BatleScene::createMoveAnimationWithDefine(int imageId, string path)
 	animation->setLoops(true);
 	return animation;
 }
-Animation* BatleScene::createAttackAnimationWithDefine(int imageId, string path)
+Animation* BattleScene::createAttackAnimationWithDefine(int imageId, string path)
 {
 	auto animation = Animation::create();
 	for (int i = 1; i < 3; i++)
@@ -1393,7 +1396,7 @@ Animation* BatleScene::createAttackAnimationWithDefine(int imageId, string path)
 /*This function will be change in future with GAF animation file or another unit image
 In my opinion, animation image path must be store in database or something have sane struct
 */
-void BatleScene::changeAnimationImagePathByUnitId(int unitId)
+void BattleScene::changeAnimationImagePathByUnitId(int unitId)
 {
 
 	switch (unitId)
@@ -1425,7 +1428,7 @@ void BatleScene::changeAnimationImagePathByUnitId(int unitId)
 	}
 }
 
-void BatleScene::createRandomRock()
+void BattleScene::createRandomRock()
 {
 	Texture2D *textureStone = Director::getInstance()->getTextureCache()->addImage("stone.png");
 	Texture2D *textureTree = Director::getInstance()->getTextureCache()->addImage("tree.png");
@@ -1463,7 +1466,7 @@ void BatleScene::createRandomRock()
 	}
 }
 
-void BatleScene::fakeZOrder()
+void BattleScene::fakeZOrder()
 {
 	for (auto &stone : _allStone)
 	{
@@ -1491,12 +1494,12 @@ void BatleScene::fakeZOrder()
 	}
 }
 
-bool BatleScene::onPhysicContactBegin(const PhysicsContact &contact)
+bool BattleScene::onPhysicContactBegin(const PhysicsContact &contact)
 {
 	return true;
 }
 
-bool BatleScene::onPhysicContactPreSolve(PhysicsContact& contact, PhysicsContactPreSolve& solve)
+bool BattleScene::onPhysicContactPreSolve(PhysicsContact& contact, PhysicsContactPreSolve& solve)
 {
 // 	log("contact pre solve");
 	auto spriteA = contact.getShapeA()->getBody()->getNode();
@@ -1505,7 +1508,7 @@ bool BatleScene::onPhysicContactPreSolve(PhysicsContact& contact, PhysicsContact
 	return true;
 }
 
-void BatleScene::rotateCharacter(Sprite *target, int direc)
+void BattleScene::rotateCharacter(Sprite *target, int direc)
 {
 	//log("Rotate direc %d", direc);
 	//auto animation = Animation::create();
@@ -1517,7 +1520,7 @@ void BatleScene::rotateCharacter(Sprite *target, int direc)
 	target->setTexture(texture);
 }
 
-void BatleScene::optionDecideCallback(Ref *pSEnder, Widget::TouchEventType type)
+void BattleScene::optionDecideCallback(Ref *pSEnder, Widget::TouchEventType type)
 {
 	switch (type)
 	{
@@ -1561,7 +1564,7 @@ void BatleScene::optionDecideCallback(Ref *pSEnder, Widget::TouchEventType type)
 	}
 }
 
-void BatleScene::optionCancelCallback(Ref *pSEnder, Widget::TouchEventType type)
+void BattleScene::optionCancelCallback(Ref *pSEnder, Widget::TouchEventType type)
 {
 	switch (type)
 	{
@@ -1581,7 +1584,7 @@ void BatleScene::optionCancelCallback(Ref *pSEnder, Widget::TouchEventType type)
 	}
 }
 
-void BatleScene::debugPhysicButtonCallback(Ref *pSEnder, Widget::TouchEventType type)
+void BattleScene::debugPhysicButtonCallback(Ref *pSEnder, Widget::TouchEventType type)
 {
 	switch (type)
 	{
@@ -1608,7 +1611,7 @@ void BatleScene::debugPhysicButtonCallback(Ref *pSEnder, Widget::TouchEventType 
 	}
 }
 
-void BatleScene::changeImageButtonCallback(Ref *pSender, Widget::TouchEventType type)
+void BattleScene::changeImageButtonCallback(Ref *pSender, Widget::TouchEventType type)
 {
 	switch (type)
 	{
@@ -1635,7 +1638,7 @@ void BatleScene::changeImageButtonCallback(Ref *pSender, Widget::TouchEventType 
 		break;
 	}
 }
-void BatleScene::nextButtonCallback(Ref *pSender, Widget::TouchEventType type)
+void BattleScene::nextButtonCallback(Ref *pSender, Widget::TouchEventType type)
 {
 	switch (type)
 	{
@@ -1655,49 +1658,49 @@ void BatleScene::nextButtonCallback(Ref *pSender, Widget::TouchEventType type)
 		break;
 	}
 }
-UserUnitInfo BatleScene::getUnitDataFromDataBase(int unitId)
+UserUnitInfo BattleScene::getUnitDataFromDataBase(int unitId)
 {
 
-	return UserUnit::getInstance()->getUnitInfoById(unitId);
+	return UserUnitModel::getInstance()->getUnitInfoById(unitId);
 
 }
 
-vector<UserSkillInfo> BatleScene::getUnitSkillFromDataBase(UserUnitInfo unitData)
+vector<UserSkillInfo> BattleScene::getUnitSkillFromDataBase(UserUnitInfo unitData)
 {
 	vector<UserSkillInfo> result;
-	result.push_back(UserSkill::getInstance()->getSkillInfoById(unitData.skill1_id));
-	result.push_back(UserSkill::getInstance()->getSkillInfoById(unitData.skill2_id));
+	result.push_back(UserSkillModel::getInstance()->getSkillInfoById(unitData.skill1_id));
+	result.push_back(UserSkillModel::getInstance()->getSkillInfoById(unitData.skill2_id));
 	return result;
 }
 
-vector<UserUnitInfo> BatleScene::getEnemyUnitsData(vector<int> enemyIdList)
+vector<UserUnitInfo> BattleScene::getEnemyUnitsData(vector<int> enemyIdList)
 {
 	vector<UserUnitInfo> returnData;
 	for (int i = 0; i < ENEMY_NUM; i++)
 	{
-		returnData.push_back(UserUnit::getInstance()->getUnitInfoById(random(1,6)));
+		returnData.push_back(UserUnitModel::getInstance()->getUnitInfoById(random(1,6)));
 	}
 	
 
 	return returnData;
 }
-void BatleScene::sendMoveBeginEvent(float angle)
+void BattleScene::sendMoveBeginEvent(float angle)
 {
 	//BattleAPI::getInstance()->sendMoveBeginEvent(_mainCharacterData, detectDirectionBaseOnTouchAngle(angle));
 }
 
-void BatleScene::sendMoveEvent(int direction, float angle)
+void BattleScene::sendMoveEvent(int direction, float angle, bool onMovingFlg)
 {
-	BattleAPI::getInstance()->sendMoveEvent(_mainCharacterData,direction,angle, testObject->getPosition(),getUnitStatus() );
+	BattleAPI::getInstance()->sendMoveEvent(_mainCharacterData,direction,angle, testObject->getPosition(),getUnitStatus(), onMovingFlg );
 }
 
-void BatleScene::sendMoveEndEvent()
+void BattleScene::sendMoveEndEvent()
 {
 	BattleAPI::getInstance()->sendMoveEndEvent(_mainCharacterData);
 }
 
 
-void BatleScene::autoRestoreHpAndMp()
+void BattleScene::autoRestoreHpAndMp()
 { 
 	_mainCharacterData.hp += _mainCharacterData.hp_heal / RESTORE_MULTI;
 	if (_mainCharacterData.hp > _allAlliedUnitMaxHp[0]) {
@@ -1720,7 +1723,7 @@ void BatleScene::autoRestoreHpAndMp()
 	//BattleAPI::getInstance()->battleSyncEvent(_mainCharacterData);
 }
 
-void BatleScene::updateSlider()
+void BattleScene::updateSlider()
 {
 	_mainCharacterMiniHpBar->setPercent(ceil((100.0f *_mainCharacterData.hp / _allAlliedUnitMaxHp[0])));
 	_mainCharacterHpBar->setPercent(_mainCharacterMiniHpBar->getPercent());
@@ -1732,7 +1735,7 @@ void BatleScene::updateSlider()
 		_allEnemyHpBar[i]->setPercent(ceil(( 100.0f * _allEnemyUnitData[i].hp / _allEnemuUnitMaxHp[i])));
 	}
 }
-void BatleScene::skill1ButtonCallback(Ref *pSender, Widget::TouchEventType type)
+void BattleScene::skill1ButtonCallback(Ref *pSender, Widget::TouchEventType type)
 {
 	if (_onRespwanFlg) return;
 	Button* bt = dynamic_cast<Button*>(pSender);
@@ -1810,7 +1813,7 @@ void BatleScene::skill1ButtonCallback(Ref *pSender, Widget::TouchEventType type)
 	}
 }
 
-void BatleScene::showCoolDownTime(Button *parentButton, int time)
+void BattleScene::showCoolDownTime(Button *parentButton, int time)
 {
 	auto secondLabel = Label::createWithSystemFont(DataUtils::numberToString(time), "", 40);
 	secondLabel->setColor(Color3B::RED);
@@ -1828,7 +1831,7 @@ void BatleScene::showCoolDownTime(Button *parentButton, int time)
 	secondLabel->runAction(Spawn::create(action, action2, nullptr));
 }
 
-void BatleScene::playSkill(UserSkillInfo skillData)
+void BattleScene::playSkill(UserSkillInfo skillData)
 {
 	for (auto& e :_allEnemyUnitSprite)
 	{
@@ -1862,7 +1865,7 @@ void BatleScene::playSkill(UserSkillInfo skillData)
 }
 
 
-void BatleScene::skillRestoreAction(UserSkillInfo skillInfo)
+void BattleScene::skillRestoreAction(UserSkillInfo skillInfo)
 {
 	switch (skillInfo.multi_effect)
 	{
@@ -1879,7 +1882,7 @@ void BatleScene::skillRestoreAction(UserSkillInfo skillInfo)
 
 }
 
-void BatleScene::skillBuffAction(UserSkillInfo skillInfo)
+void BattleScene::skillBuffAction(UserSkillInfo skillInfo)
 {
 	switch (skillInfo.multi_effect)
 	{
@@ -1894,7 +1897,7 @@ void BatleScene::skillBuffAction(UserSkillInfo skillInfo)
 	}
 }
 
-void BatleScene::skillAttackAction(UserSkillInfo skillInfo)
+void BattleScene::skillAttackAction(UserSkillInfo skillInfo)
 {
 	switch (skillInfo.multi_effect)
 	{
@@ -1908,7 +1911,7 @@ void BatleScene::skillAttackAction(UserSkillInfo skillInfo)
 	}
 }
 
-void BatleScene::skillRestoreAll(UserSkillInfo skillInfo)
+void BattleScene::skillRestoreAll(UserSkillInfo skillInfo)
 {
 	int value = 0;
 	switch (skillInfo.corrett_value)
@@ -1962,7 +1965,7 @@ void BatleScene::skillRestoreAll(UserSkillInfo skillInfo)
 	createSorceryEffect(testObject, SORCERY_GREEN);
 }
 
-void BatleScene::skillRestoreOne(UserSkillInfo skillInfo)
+void BattleScene::skillRestoreOne(UserSkillInfo skillInfo)
 {
 	//TODO
 	//
@@ -1999,18 +2002,18 @@ void BatleScene::skillRestoreOne(UserSkillInfo skillInfo)
 
 	auto healSequence = Sequence::create(
 		DelayTime::create(DELAY_RESTORE)
-		, CallFuncN::create(CC_CALLBACK_1(BatleScene::removeEffect, this))
+		, CallFuncN::create(CC_CALLBACK_1(BattleScene::removeEffect, this))
 		, nullptr);
 	effectHeal->runAction(healSequence);
 
 }
 
-void BatleScene::skillHelpAll(UserSkillInfo skillInfo)
+void BattleScene::skillHelpAll(UserSkillInfo skillInfo)
 {
 	int value = 0;
 }
 
-void BatleScene::skillHelpOne(UserSkillInfo skillInfo)
+void BattleScene::skillHelpOne(UserSkillInfo skillInfo)
 {
 	//TODO
 	//Change this id by unique unit Id
@@ -2055,7 +2058,7 @@ void BatleScene::skillHelpOne(UserSkillInfo skillInfo)
 
 		auto hpSequence = Sequence::create(
 			DelayTime::create(DELAY_HELP)
-			, CallFuncN::create(CC_CALLBACK_1(BatleScene::removeEffect, this))
+			, CallFuncN::create(CC_CALLBACK_1(BattleScene::removeEffect, this))
 			, nullptr);
 		hp->runAction(hpSequence);
 
@@ -2080,7 +2083,7 @@ void BatleScene::skillHelpOne(UserSkillInfo skillInfo)
 
 		auto hpRestoreSequence = Sequence::create(
 			DelayTime::create(DELAY_HELP)
-			, CallFuncN::create(CC_CALLBACK_1(BatleScene::removeEffect, this))
+			, CallFuncN::create(CC_CALLBACK_1(BattleScene::removeEffect, this))
 			, nullptr);
 		hpRestore->runAction(hpRestoreSequence);
 
@@ -2141,7 +2144,7 @@ void BatleScene::skillHelpOne(UserSkillInfo skillInfo)
 
 		auto helpDefenceSequence = Sequence::create(
 			DelayTime::create(DELAY_HELP)
-			, CallFuncN::create(CC_CALLBACK_1(BatleScene::removeEffect, this))
+			, CallFuncN::create(CC_CALLBACK_1(BattleScene::removeEffect, this))
 			, nullptr);
 		effectHelpDefence->runAction(helpDefenceSequence);
 
@@ -2177,7 +2180,7 @@ void BatleScene::skillHelpOne(UserSkillInfo skillInfo)
 
 		auto helpmMoveSpeedSequence = Sequence::create(
 			DelayTime::create(DELAY_HELP)
-			, CallFuncN::create(CC_CALLBACK_1(BatleScene::removeEffect, this))
+			, CallFuncN::create(CC_CALLBACK_1(BattleScene::removeEffect, this))
 			, nullptr);
 		effectHelpMoveSpeed->runAction(helpmMoveSpeedSequence);
 
@@ -2190,7 +2193,7 @@ void BatleScene::skillHelpOne(UserSkillInfo skillInfo)
 
 }
 
-void BatleScene::skillAttackAll(UserSkillInfo skillInfo)
+void BattleScene::skillAttackAll(UserSkillInfo skillInfo)
 {
 	int value = 0;
 	switch (skillInfo.correct_type)
@@ -2258,7 +2261,7 @@ void BatleScene::skillAttackAll(UserSkillInfo skillInfo)
 
 				auto attackFireSequence = Sequence::create(
 					DelayTime::create(DELAY_HELP)
-					, CallFuncN::create(CC_CALLBACK_1(BatleScene::removeEffect, this))
+					, CallFuncN::create(CC_CALLBACK_1(BattleScene::removeEffect, this))
 					, nullptr);
 				attackFire->runAction(attackFireSequence);
 
@@ -2269,7 +2272,7 @@ void BatleScene::skillAttackAll(UserSkillInfo skillInfo)
 	}
 }
 
-void BatleScene::skillAttackOne(UserSkillInfo skillInfo)
+void BattleScene::skillAttackOne(UserSkillInfo skillInfo)
 {
 	log("Attack One");
 
@@ -2331,7 +2334,7 @@ void BatleScene::skillAttackOne(UserSkillInfo skillInfo)
 	// Effect life in 1s , remove Effect
 	auto attackFireSequence = Sequence::create(
 		DelayTime::create(DELAY_ATTACK_FIRE_LIFE)
-		, CallFuncN::create(CC_CALLBACK_1(BatleScene::removeEffect, this))
+		, CallFuncN::create(CC_CALLBACK_1(BattleScene::removeEffect, this))
 		, nullptr);
 	attackFire->runAction(attackFireSequence);
 
@@ -2342,7 +2345,7 @@ void BatleScene::skillAttackOne(UserSkillInfo skillInfo)
 }
 
 
-vector<int> BatleScene::detectUnitInAoe(UserSkillInfo skill, int unitFlg, bool drawFlg /*= true*/)
+vector<int> BattleScene::detectUnitInAoe(UserSkillInfo skill, int unitFlg, bool drawFlg /*= true*/)
 
 {
 	vector<int> resultUnitId;
@@ -2462,7 +2465,7 @@ vector<int> BatleScene::detectUnitInAoe(UserSkillInfo skill, int unitFlg, bool d
 	return resultUnitId;
 }
 
-void BatleScene::updateHpAndMpViewLabel()
+void BattleScene::updateHpAndMpViewLabel()
 {
 	string hp = DataUtils::numberToString(_mainCharacterData.hp).append("/").append(DataUtils::numberToString(_allAlliedUnitMaxHp[0]));
 	_hpViewLabel->setString(hp.c_str());
@@ -2470,13 +2473,13 @@ void BatleScene::updateHpAndMpViewLabel()
 	_mpViewlabel->setString(mp.c_str());
 }
 
-void BatleScene::endBattle()
+void BattleScene::endBattle()
 {
 	BattleAPI::getInstance()->sendBattleEndEvent();
 	Director::getInstance()->replaceScene(TransitionMoveInR::create(SCREEN_TRANSI_DELAY, BatleResultScene::createScene(_blueTeamInfo,_redTeamInfo)));
 }
 
-float BatleScene::caculDameRate(int mainC, int enemy)
+float BattleScene::caculDameRate(int mainC, int enemy)
 {
 	if (enemy == 4 || mainC == enemy)
 	{
@@ -2488,7 +2491,7 @@ float BatleScene::caculDameRate(int mainC, int enemy)
 	return 0.5f;
 }
 
-void BatleScene::longPressAction(Button *pSender,UserSkillInfo skill)
+void BattleScene::longPressAction(Button *pSender,UserSkillInfo skill)
 {
 	auto a = detectUnitInAoe(skill, ENEMY_FLAG);
 	_onSelectSkillData = skill;
@@ -2499,7 +2502,7 @@ void BatleScene::longPressAction(Button *pSender,UserSkillInfo skill)
 }
 
 
-bool BatleScene::detectPointInTriangle(Vec2 point, vector<Vec2> points)
+bool BattleScene::detectPointInTriangle(Vec2 point, vector<Vec2> points)
 {
 	Vec2 v0 = makePoint(points[1]+testObject->getPosition(), points[0]+testObject->getPosition());
 	Vec2 v1 = makePoint(points[2]+testObject->getPosition(), points[0]+testObject->getPosition());
@@ -2520,17 +2523,17 @@ bool BatleScene::detectPointInTriangle(Vec2 point, vector<Vec2> points)
 
 }
 
-float BatleScene::makeDot(Vec2 v1, Vec2 v2)
+float BattleScene::makeDot(Vec2 v1, Vec2 v2)
 {
 	return v1.x*v2.x + v1.y * v2.y;
 }
 
-Vec2 BatleScene::makePoint(Vec2 v1, Vec2 v2)
+Vec2 BattleScene::makePoint(Vec2 v1, Vec2 v2)
 {
 	return Vec2(v1.x - v2.x, v1.y - v2.y);
 }
 
-BatleScene::BatleScene() :
+BattleScene::BattleScene() :
 	_oldSecond(0),
 	_indexOfBeAttackEnemy(-1),
 	_allAlliedUnitData({}),
@@ -2540,12 +2543,12 @@ BatleScene::BatleScene() :
 
 }
 
-BatleScene::~BatleScene()
+BattleScene::~BattleScene()
 {
-	Director::getInstance()->getScheduler()->unschedule(schedule_selector(BatleScene::update), this);
+	Director::getInstance()->getScheduler()->unschedule(schedule_selector(BattleScene::update), this);
 }
 
-void BatleScene::saveDameInfo(int dame, int attackUnitId, int beAttackUnitId, int teamFlg)
+void BattleScene::saveDameInfo(int dame, int attackUnitId, int beAttackUnitId, int teamFlg)
 {
 	switch (teamFlg)
 	{
@@ -2569,7 +2572,7 @@ void BatleScene::saveDameInfo(int dame, int attackUnitId, int beAttackUnitId, in
 	}
 }
 
-void BatleScene::saveKillDeadInfo(int killerId, int deadUnitId, int teamFlg)
+void BattleScene::saveKillDeadInfo(int killerId, int deadUnitId, int teamFlg)
 {
 	if (teamFlg == _currentPlayerTeamFlg) {
 		switch (_currentPlayerTeamFlg)
@@ -2607,7 +2610,7 @@ void BatleScene::saveKillDeadInfo(int killerId, int deadUnitId, int teamFlg)
 	}
 }
 /*status type: POISON, STUN, BUFF_ATTACK, BUFF_DEFENCE, DEBUFF_ATTACK*/
-void BatleScene::displayUnitStatus(Sprite *parent, int statusType, UserSkillInfo skillInfo, int spIndex /*= 0*/)
+void BattleScene::displayUnitStatus(Sprite *parent, int statusType, UserSkillInfo skillInfo, int spIndex /*= 0*/)
 {
 	string imagePath;
 	switch (statusType)
@@ -2659,7 +2662,7 @@ void BatleScene::displayUnitStatus(Sprite *parent, int statusType, UserSkillInfo
 
 }
 
-Animation* BatleScene::createStatusAnimation(string imagePath)
+Animation* BattleScene::createStatusAnimation(string imagePath)
 {
 	auto animation = Animation::create();
 	for (int i = 1; i < 3; i++)
@@ -2679,7 +2682,7 @@ Animation* BatleScene::createStatusAnimation(string imagePath)
 	return animation;
 }
 
-void BatleScene::skillPoisonAction(UserSkillInfo skillInfo)
+void BattleScene::skillPoisonAction(UserSkillInfo skillInfo)
 {
 	vector<int> units = detectUnitInAoe(skillInfo, ENEMY_FLAG);
 	//TODO change to unit unitque ID
@@ -2697,7 +2700,7 @@ void BatleScene::skillPoisonAction(UserSkillInfo skillInfo)
 	}
 }
 
-void BatleScene::skillStunAction(UserSkillInfo skillInfo)
+void BattleScene::skillStunAction(UserSkillInfo skillInfo)
 {
 	vector<int> units = detectUnitInAoe(skillInfo,ENEMY_FLAG);
 	//TODO change to unique unitID
@@ -2718,7 +2721,7 @@ void BatleScene::skillStunAction(UserSkillInfo skillInfo)
 	}
 }
 
-void BatleScene::poisonEffectAction(UserSkillInfo skill, int index)
+void BattleScene::poisonEffectAction(UserSkillInfo skill, int index)
 {
 	int dame =ceil(1.0f*_allEnemyUnitData[index].hp * 0.05f);
 	auto action = Sequence::create( CallFuncN::create([&, index, dame](Ref *p){
@@ -2734,7 +2737,7 @@ void BatleScene::poisonEffectAction(UserSkillInfo skill, int index)
 	_allEnemyUnitSprite[index]->runAction(Repeat::create(action, ceil(skill.duration / POISON_STEP_TIME)));
 }
 
-void BatleScene::enemyUnitAutoMoveTest()
+void BattleScene::enemyUnitAutoMoveTest()
 {
 	for (int i = 0; i < ENEMY_NUM; i++)
 	{
@@ -2756,7 +2759,7 @@ void BatleScene::enemyUnitAutoMoveTest()
 	}
 }
 
-void BatleScene::actionCharacterCopy(int directionId, Sprite *sprite)
+void BattleScene::actionCharacterCopy(int directionId, Sprite *sprite)
 {
 	if (sprite->getNumberOfRunningActions() > 0) {
 		if (sprite->getActionByTag(directionId) != nullptr) {
@@ -2772,7 +2775,7 @@ void BatleScene::actionCharacterCopy(int directionId, Sprite *sprite)
 	sprite->runAction(repeat);
 }
 
-void BatleScene::fountainRestoreEffect()
+void BattleScene::fountainRestoreEffect()
 {
 	if (testObject->getActionByTag(FOUNTAIN_ACTION) != nullptr)
 	{
@@ -2798,7 +2801,7 @@ void BatleScene::fountainRestoreEffect()
 	testObject->runAction(action);
 }
 
-void BatleScene::enemyRespawAction(int index)
+void BattleScene::enemyRespawAction(int index)
 {
 	auto action = (Sequence::create(DelayTime::create(5), CallFuncN::create([&, index](Ref *pSEnder){
 		_allEnemyUnitSprite[index]->setPosition(Vec2(_visibleSize.width + (index - 1) * 70, _visibleSize.height * 2 - 100));
@@ -2815,7 +2818,7 @@ void BatleScene::enemyRespawAction(int index)
 // SORCERY EFFECT AND REMOVE EFFECT OBJECT AFTER RUN
 // Created by Vien
 //////////////////////////////////////////////////////////////////////////////////////
-void BatleScene::createSorceryEffect(Sprite* spriteUnit, std::string eclipseFilePath)
+void BattleScene::createSorceryEffect(Sprite* spriteUnit, std::string eclipseFilePath)
 {
 	auto nodeFather = Sprite::create();
 
@@ -2842,14 +2845,14 @@ void BatleScene::createSorceryEffect(Sprite* spriteUnit, std::string eclipseFile
 	//removeSorceryEclipse
 	auto sequence = Sequence::create(
 		DelayTime::create(DELAY_REMOVE_ECLIPSE),
-		CallFuncN::create(CC_CALLBACK_1(BatleScene::removeSorceryEclipse, this)),
+		CallFuncN::create(CC_CALLBACK_1(BattleScene::removeSorceryEclipse, this)),
 		NULL
 		);
 
 	nodeFather->runAction(sequence);
 }
 
-void BatleScene::removeSorceryEclipse(Ref* pSender)
+void BattleScene::removeSorceryEclipse(Ref* pSender)
 {
 	Sprite* sorcery = dynamic_cast<Sprite*>(pSender);
 
@@ -2866,7 +2869,7 @@ void BatleScene::removeSorceryEclipse(Ref* pSender)
 }
 
 
-void BatleScene::removeEffect(Ref* pSender)
+void BattleScene::removeEffect(Ref* pSender)
 {
 
 	auto effect = dynamic_cast<Sprite*>(pSender);
@@ -2883,7 +2886,7 @@ void BatleScene::removeEffect(Ref* pSender)
 	}
 }
 
-void BatleScene::pushStatusImagePath(string imagepath, vector<string> &allImages)
+void BattleScene::pushStatusImagePath(string imagepath, vector<string> &allImages)
 {
 	for (int i = 1; i < 3; i++)
 	{
@@ -2897,7 +2900,7 @@ void BatleScene::pushStatusImagePath(string imagepath, vector<string> &allImages
 
 }
 
-void BatleScene::removeStatusImagePath(string imagepath, vector<string> &allImages)
+void BattleScene::removeStatusImagePath(string imagepath, vector<string> &allImages)
 {
 	for (int i = 1; i < 3; i++)
 	{
@@ -2912,7 +2915,7 @@ void BatleScene::removeStatusImagePath(string imagepath, vector<string> &allImag
 
 }
 
-void BatleScene::displayStatusInTime(Sprite* parent, vector<string> allImages)
+void BattleScene::displayStatusInTime(Sprite* parent, vector<string> allImages)
 {
 	
 	if (parent->getChildByTag(BUFF_STATUS_TAG)) {
@@ -2938,7 +2941,7 @@ void BatleScene::displayStatusInTime(Sprite* parent, vector<string> allImages)
 	parent->addChild(sprite, -1);
 }
 
-int BatleScene::findIndexOfString(vector<string> v, string element)
+int BattleScene::findIndexOfString(vector<string> v, string element)
 {
 	for (int i = 0; i < v.size(); i++)
 	{
@@ -2949,13 +2952,13 @@ int BatleScene::findIndexOfString(vector<string> v, string element)
 	return 0;
 }
 
-cocos2d::Vec2 BatleScene::getTitlePosForPosition(Vec2 location)
+cocos2d::Vec2 BattleScene::getTitlePosForPosition(Vec2 location)
 {
 	int x = location.x / _myMap->getTileSize().width;
 	int y = ((_myMap->getMapSize().height*_myMap->getTileSize().height - location.y) / _myMap->getTileSize().height);
 	return Vec2(x, y);
 }
-cocos2d::Vec2 BatleScene::getPositionForTitleCoord(Vec2 tileCoord)
+cocos2d::Vec2 BattleScene::getPositionForTitleCoord(Vec2 tileCoord)
 {
 	int x = (tileCoord.x * _myMap->getTileSize().width) + _myMap->getTileSize().width / 2;
 	int y = (_myMap->getMapSize().height * _myMap->getTileSize().height) -
@@ -2963,7 +2966,7 @@ cocos2d::Vec2 BatleScene::getPositionForTitleCoord(Vec2 tileCoord)
 	return Vec2(x, y);
 }
 
-vector<Vec2> BatleScene::AStarPathFindingAlgorithm(Vec2 curentPos, Vec2 destinationPos)
+vector<Vec2> BattleScene::AStarPathFindingAlgorithm(Vec2 curentPos, Vec2 destinationPos)
 {
 	vector<Vec2> result = {};
 	
@@ -2997,7 +3000,7 @@ vector<Vec2> BatleScene::AStarPathFindingAlgorithm(Vec2 curentPos, Vec2 destinat
 	_spClosedSteps.clear();
 	_spOpenSteps.clear();
 	_shortestPath.clear();
-	schedule(schedule_selector(BatleScene::countTime));
+	schedule(schedule_selector(BattleScene::countTime));
 	insertInOpenSteps(ShortestPathStep::createWithPosition(fromTitleCoord));
 
 	do 
@@ -3009,7 +3012,7 @@ vector<Vec2> BatleScene::AStarPathFindingAlgorithm(Vec2 curentPos, Vec2 destinat
 		_spOpenSteps.erase(0);
 
 		if (curStep->getPosition() == desTitleCoord) {
-			unschedule(schedule_selector(BatleScene::countTime));
+			unschedule(schedule_selector(BattleScene::countTime));
 			log("Cost Time: %f", calCulTime);
 			calCulTime = 0.0f;
 			log("Here the path");
@@ -3059,7 +3062,7 @@ vector<Vec2> BatleScene::AStarPathFindingAlgorithm(Vec2 curentPos, Vec2 destinat
 	return result;
 }
 
-void BatleScene::insertInOpenSteps(ShortestPathStep *step)
+void BattleScene::insertInOpenSteps(ShortestPathStep *step)
 {
 	int stepFScore = step->getFScore();
 	ssize_t count = _spOpenSteps.size();
@@ -3074,17 +3077,17 @@ void BatleScene::insertInOpenSteps(ShortestPathStep *step)
 	_spOpenSteps.insert(i, step);
 }
 
-int BatleScene::computeHScoreFromCoordToCoord(const Vec2 &fromCoord, const Vec2 &toCoord)
+int BattleScene::computeHScoreFromCoordToCoord(const Vec2 &fromCoord, const Vec2 &toCoord)
 {
 	return abs(toCoord.x - fromCoord.x) + abs(toCoord.y - fromCoord.y);
 }
 
-int BatleScene::costToMoveFromStepToAdjacentStep(const ShortestPathStep *fromStep, const ShortestPathStep *toStep)
+int BattleScene::costToMoveFromStepToAdjacentStep(const ShortestPathStep *fromStep, const ShortestPathStep *toStep)
 {
 	return ((fromStep->getPosition().x != toStep->getPosition().x)&& (fromStep->getPosition().y != toStep->getPosition().y)) ? 14 : 10;
 }
 
-ssize_t BatleScene::getStepIndex(const Vector<ShortestPathStep*> &steps, const ShortestPathStep *step)
+ssize_t BattleScene::getStepIndex(const Vector<ShortestPathStep*> &steps, const ShortestPathStep *step)
 {
 	for (ssize_t i = 0; i < steps.size(); ++i)
 	{
@@ -3096,7 +3099,7 @@ ssize_t BatleScene::getStepIndex(const Vector<ShortestPathStep*> &steps, const S
 	return -1;
 }
 
-bool BatleScene::isValidTileCoord(Vec2 &tileCoord)
+bool BattleScene::isValidTileCoord(Vec2 &tileCoord)
 {
 	if (tileCoord.x < 0 || tileCoord.y < 0 ||
 		tileCoord.x >= _myMap->getMapSize().width ||
@@ -3109,7 +3112,7 @@ bool BatleScene::isValidTileCoord(Vec2 &tileCoord)
 		return true;
 	}
 }
-bool BatleScene::isWallAtTileCoord(Vec2 &titleCoord)
+bool BattleScene::isWallAtTileCoord(Vec2 &titleCoord)
 {
 	//if this title can not walk thought return true. Else return false
 	auto point = getPositionForTitleCoord(titleCoord);
@@ -3142,7 +3145,7 @@ bool BatleScene::isWallAtTileCoord(Vec2 &titleCoord)
 	return false;
 }
 
-PointArray * BatleScene::allWalkableTitlesCoordForTitleCoord(Vec2 tileCoord)
+PointArray * BattleScene::allWalkableTitlesCoordForTitleCoord(Vec2 tileCoord)
 {
 	PointArray *tmp = PointArray::create(8);
 
@@ -3205,7 +3208,7 @@ PointArray * BatleScene::allWalkableTitlesCoordForTitleCoord(Vec2 tileCoord)
 	return tmp;
 }
 
-void BatleScene::constructPathAndStartAnimationFromStep(ShortestPathStep *step)
+void BattleScene::constructPathAndStartAnimationFromStep(ShortestPathStep *step)
 {
 	_shortestPath.clear();
 	do
@@ -3227,7 +3230,7 @@ void BatleScene::constructPathAndStartAnimationFromStep(ShortestPathStep *step)
 	moveStepAction();
 }
 
-void BatleScene::moveStepAction()
+void BattleScene::moveStepAction()
 {
 	//fakeZOrder();
 	Vec2 curPos = getTitlePosForPosition(testObject->getPosition());
@@ -3261,7 +3264,7 @@ void BatleScene::moveStepAction()
 
 	}
 
-	CallFunc *moveCallback = CallFunc::create(CC_CALLBACK_0(BatleScene::moveStepAction, this));
+	CallFunc *moveCallback = CallFunc::create(CC_CALLBACK_0(BattleScene::moveStepAction, this));
 
 	_shortestPath.erase(0);
 
@@ -3270,14 +3273,14 @@ void BatleScene::moveStepAction()
 	testObject->runAction(moveSequence);
 }
 
-void BatleScene::countTime(float dt)
+void BattleScene::countTime(float dt)
 {
 	log("%f", dt);
 	calCulTime += dt;
 }
 
 
-BatleScene::ShortestPathStep::ShortestPathStep():
+BattleScene::ShortestPathStep::ShortestPathStep():
 _position(Vec2::ZERO),
 _gScore(0),
 _hScore(0),
@@ -3286,12 +3289,12 @@ _parent(nullptr)
 
 }
 
-BatleScene::ShortestPathStep::~ShortestPathStep()
+BattleScene::ShortestPathStep::~ShortestPathStep()
 {
 
 }
 
-BatleScene::ShortestPathStep *BatleScene::ShortestPathStep::createWithPosition(const Vec2 pos)
+BattleScene::ShortestPathStep *BattleScene::ShortestPathStep::createWithPosition(const Vec2 pos)
 {
 	ShortestPathStep *pRet = new ShortestPathStep();
 	if (pRet && pRet->initWithPosition(pos))
@@ -3306,23 +3309,23 @@ BatleScene::ShortestPathStep *BatleScene::ShortestPathStep::createWithPosition(c
 	}
 }
 
-bool BatleScene::ShortestPathStep::initWithPosition(const Vec2 pos)
+bool BattleScene::ShortestPathStep::initWithPosition(const Vec2 pos)
 {
 	setPosition(pos);
 	return true;
 }
 
-int BatleScene::ShortestPathStep::getFScore() const
+int BattleScene::ShortestPathStep::getFScore() const
 {
 	return this->getGScore() + this->getHScore();
 }
 
-bool BatleScene::ShortestPathStep::isEqual(const ShortestPathStep *other) const
+bool BattleScene::ShortestPathStep::isEqual(const ShortestPathStep *other) const
 {
 	return this->getPosition() == other->getPosition();
 }
 
-std::string BatleScene::ShortestPathStep::getDescription() const
+std::string BattleScene::ShortestPathStep::getDescription() const
 {
 	return StringUtils::format("pos=[%.0f;%.0f]  g=%d  h=%d  f=%d",
 		this->getPosition().x, this->getPosition().y,
@@ -3333,7 +3336,7 @@ std::string BatleScene::ShortestPathStep::getDescription() const
 // CREATE MOVE IN CIRCLE
 /////////////////////////////////////////////////////////////////////////////////////
 
-Sprite* BatleScene::createMiniMoveCircle() {
+Sprite* BattleScene::createMiniMoveCircle() {
 	auto miniCircle = Sprite::create("image/screen/battle/mini_circle.png");
 	// Ti le la 1/3 chieu cao cua man hinh
 	float diameter = Director::getInstance()->getOpenGLView()->getFrameSize().height * MINU_CIRCLE_SCALE;
@@ -3349,7 +3352,7 @@ Sprite* BatleScene::createMiniMoveCircle() {
 	return miniCircle;
 }
 
-void BatleScene::createMiniControlUnit(int circleType) {
+void BattleScene::createMiniControlUnit(int circleType) {
 	_miniCircle = createMiniMoveCircle();
 	_checkMiniCircleFlg = true;
 	Size visibleSize = Director::getInstance()->getVisibleSize();

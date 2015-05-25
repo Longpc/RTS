@@ -5,8 +5,8 @@
 #include "dataController/SkillData/SkillData.h"
 
 #include "Model/data/UserModel.h"
-#include "Model/data/UserSkill.h"
-#include "Model/data/UserUnit.h"
+#include "Model/data/UserSkillModel.h"
+#include "Model/data/UserUnitModel.h"
 
 typedef std::function<void(Ref *pSender, Widget::TouchEventType type)> MyTouchEvent;
 class UnitDetailDialog :public LayerBase

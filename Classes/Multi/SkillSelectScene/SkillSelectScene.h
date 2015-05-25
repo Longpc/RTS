@@ -4,12 +4,12 @@
 #include "base/Define.h"
 #include "Multi/UnitSelectScene/UnitSelectScene.h"
 #include "Multi/SkillSelectScene/SkillDetailDialog.h"
-#include "Multi/BatleScene/BatleScene.h"
+#include "Multi/BatleScene/BattleScene.h"
 #include "base/baseButton/ClippingButtonBase.h"
 
 #include "Server/Server.h"
 #include "Model/data/UserModel.h"
-#include "Model/data/UserSkill.h"
+#include "Model/data/UserSkillModel.h"
 #include "Model/data/BattleModel.h"
 
 class SkillSelectScene : public LayerBase

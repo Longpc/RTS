@@ -32,10 +32,10 @@ struct UserSkillInfo
 USING_NS_CC;
 using namespace std;
 using namespace rapidjson;
-class UserSkill :public Ref
+class UserSkillModel :public Ref
 {
 public:
-	static UserSkill *getInstance();
+	static UserSkillModel *getInstance();
 
 	vector<UserSkillInfo> createUserSkillDataFromJson(rapidjson::GenericValue<rapidjson::UTF8<char>, rapidjson::MemoryPoolAllocator<rapidjson::CrtAllocator>>& value);
 
@@ -45,6 +45,6 @@ public:
 	CC_SYNTHESIZE(vector<UserSkillInfo>, _playerSkills, PlayerSkillsList);
 protected:
 private:
-	static UserSkill *s_UserSkill;
+	static UserSkillModel *s_UserSkill;
 };
 #endif

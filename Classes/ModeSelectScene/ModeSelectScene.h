@@ -9,7 +9,7 @@
 #include "UserSelectScene/UserSelectScene.h"
 
 //for test
-#include "Multi/BatleScene/BatleScene.h"
+#include "Multi/BatleScene/BattleScene.h"
 
 #include "Server/API/StartPHPAPI.h"
 #include "Server/API/HttpClientBase.h"

@@ -77,7 +77,7 @@ void UnitDetailDialog::displayUnitInfo(Sprite *parent)
 
 {
 
-	auto image = Sprite::create(UserUnit::getInstance()->getUnitImageById(_unitInfo.mst_unit_id));
+	auto image = Sprite::create(UserUnitModel::getInstance()->getUnitImageById(_unitInfo.mst_unit_id));
 	image->setPosition(Vec2(150, parent->getContentSize().height / 2));
 	parent->addChild(image, 10);
 	image->setScale(2);
@@ -241,6 +241,6 @@ void UnitDetailDialog::skillButonCallback(Ref *pSEnder, Widget::TouchEventType t
 
 void UnitDetailDialog::getUnitSkillDataFromDatabase()
 {
-	_allUnitSkill.push_back(UserSkill::getInstance()->getSkillInfoById(_unitInfo.skill1_id));
-	_allUnitSkill.push_back(UserSkill::getInstance()->getSkillInfoById(_unitInfo.skill2_id));
+	_allUnitSkill.push_back(UserSkillModel::getInstance()->getSkillInfoById(_unitInfo.skill1_id));
+	_allUnitSkill.push_back(UserSkillModel::getInstance()->getSkillInfoById(_unitInfo.skill2_id));
 }

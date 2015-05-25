@@ -30,6 +30,7 @@ public :
 	CC_SYNTHESIZE(Vec2, _destinationalOneTap, DestinationalOneTap);
 	CC_SYNTHESIZE(AttackCallback, _attackCallback , AttackCallbackFunction);
 	CC_SYNTHESIZE(bool, _attackDelayFlg, AttackDelayFlag);
+	CC_SYNTHESIZE(bool, _onMoving, OnMovingFlg);
 
 	void moveActionByVector(Vec2 destination);
 	void attackActionByUnitPosition(int direction, int attackTime, AttackCallback attackCallback = nullptr);

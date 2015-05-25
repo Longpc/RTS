@@ -197,7 +197,7 @@ void BatleResultScene::updateUnitSlot(vector<UserBattleInfo> info)
 	for (int i = 0; i < info.size(); i++)
 	{
 		_unitNameLabel[i]->setString(info[i].name);
-		_allSlot[i]->getClickableButton()->loadTextureNormal(UserUnit::getInstance()->getUnitImageById(info[i].unitId));
+		_allSlot[i]->getClickableButton()->loadTextureNormal(UserUnitModel::getInstance()->getUnitImageById(info[i].unitId));
 		//update image
 	}
 }

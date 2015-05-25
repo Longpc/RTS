@@ -1,18 +1,18 @@
-#include "UserSkill.h"
+#include "UserSkillModel.h"
 
-UserSkill* UserSkill::s_UserSkill = nullptr;
+UserSkillModel* UserSkillModel::s_UserSkill = nullptr;
 
-UserSkill * UserSkill::getInstance()
+UserSkillModel * UserSkillModel::getInstance()
 {
 	if (!s_UserSkill) {
-		s_UserSkill = new (std::nothrow)UserSkill();
+		s_UserSkill = new (std::nothrow)UserSkillModel();
 		s_UserSkill->setUserSkillList({});
 		s_UserSkill->setPlayerSkillsList({});
 	}
 	return s_UserSkill;
 }
 
-vector<UserSkillInfo> UserSkill::createUserSkillDataFromJson(rapidjson::GenericValue<rapidjson::UTF8<char>, rapidjson::MemoryPoolAllocator<rapidjson::CrtAllocator>>& value)
+vector<UserSkillInfo> UserSkillModel::createUserSkillDataFromJson(rapidjson::GenericValue<rapidjson::UTF8<char>, rapidjson::MemoryPoolAllocator<rapidjson::CrtAllocator>>& value)
 {
 	vector<UserSkillInfo> vInfo;
 	vector<UserSkillInfo> pInfo;
@@ -48,7 +48,7 @@ vector<UserSkillInfo> UserSkill::createUserSkillDataFromJson(rapidjson::GenericV
 	return getUserSkillList();
 }
 
-UserSkillInfo UserSkill::getSkillInfoById(int mst_skill_id)
+UserSkillInfo UserSkillModel::getSkillInfoById(int mst_skill_id)
 {
 	for (auto & skill : getUserSkillList())
 	{

@@ -31,10 +31,10 @@ USING_NS_CC;
 using namespace std;
 using namespace rapidjson;
 
-class UserUnit : public Ref
+class UserUnitModel : public Ref
 {
 public:
-	static UserUnit *getInstance();
+	static UserUnitModel *getInstance();
 
 	vector<UserUnitInfo> createUserUnitDataFromJson(rapidjson::GenericValue<rapidjson::UTF8<char>, rapidjson::MemoryPoolAllocator<rapidjson::CrtAllocator>>& value);
 	CC_SYNTHESIZE(vector<UserUnitInfo>, _userUnits, UserUnitList);
@@ -44,7 +44,7 @@ public:
 
 
 private:
-	static UserUnit *s_UserUnit;
+	static UserUnitModel *s_UserUnit;
 
 };
 

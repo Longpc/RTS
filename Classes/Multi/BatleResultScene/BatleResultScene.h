@@ -5,7 +5,7 @@
 #include "ModeSelectScene/ModeSelectScene.h"
 #include "base/baseButton/ClippingButtonBase.h"
 
-#include "Model/data/UserUnit.h"
+#include "Model/data/UserUnitModel.h"
 class BatleResultScene : public LayerBase
 {
 

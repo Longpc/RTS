@@ -15,7 +15,7 @@
 #include "json/document.h"
 #include "json/writer.h"
 
-#include "Model/data/RoomModel.h"
+#include "Model/data/RoomUserModel.h"
 
 class UserSelect :public LayerBase
 {
