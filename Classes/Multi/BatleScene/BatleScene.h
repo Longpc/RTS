@@ -212,6 +212,7 @@ private:
 	
 
 	CC_SYNTHESIZE(int, _unitStatus, UnitStatus);
+	virtual void sendMoveBeginEvent(float angle);
 	virtual void sendMoveEvent(int direction, float angle);
 	virtual void sendMoveEndEvent();
 	

@@ -1,55 +1,39 @@
-﻿  Animation.c
-  AnimationState.c
-  AnimationStateData.c
-  Atlas.c
-  AtlasAttachmentLoader.c
-  Attachment.c
-  AttachmentLoader.c
-  Bone.c
-  BoneData.c
-  BoundingBoxAttachment.c
-  Event.c
-  EventData.c
-  extension.c
-  IkConstraint.c
-  IkConstraintData.c
-  Json.c
-  MeshAttachment.c
-  RegionAttachment.c
-  Skeleton.c
-  SkeletonBounds.c
-  SkeletonData.c
-  SkeletonJson.c
-  Skin.c
-  SkinnedMeshAttachment.c
-  Slot.c
-  SlotData.c
-  PolygonBatch.cpp
-  SkeletonAnimation.cpp
-  SkeletonRenderer.cpp
-  spine-cocos2dx.cpp
-c:\users\chu\downloads\cocos2dx_source\innolab_proto_client\cocos2d\cocos\base\ccutf8.h : warning C4819: The file contains a character that cannot be represented in the current code page (932). Save the file in Unicode format to prevent data loss (..\SkeletonRenderer.cpp)
-c:\users\chu\downloads\cocos2dx_source\innolab_proto_client\cocos2d\cocos\base\ccutf8.h : warning C4819: The file contains a character that cannot be represented in the current code page (932). Save the file in Unicode format to prevent data loss (..\SkeletonAnimation.cpp)
-c:\users\chu\downloads\cocos2dx_source\innolab_proto_client\cocos2d\cocos\base\ccutf8.h : warning C4819: The file contains a character that cannot be represented in the current code page (932). Save the file in Unicode format to prevent data loss (..\PolygonBatch.cpp)
-c:\users\chu\downloads\cocos2dx_source\innolab_proto_client\cocos2d\cocos\base\ccutf8.h : warning C4819: The file contains a character that cannot be represented in the current code page (932). Save the file in Unicode format to prevent data loss (..\spine-cocos2dx.cpp)
-c:\users\chu\downloads\cocos2dx_source\innolab_proto_client\cocos2d\cocos\platform\ccsaxparser.h : warning C4819: The file contains a character that cannot be represented in the current code page (932). Save the file in Unicode format to prevent data loss (..\SkeletonAnimation.cpp)
-c:\users\chu\downloads\cocos2dx_source\innolab_proto_client\cocos2d\cocos\platform\ccsaxparser.h : warning C4819: The file contains a character that cannot be represented in the current code page (932). Save the file in Unicode format to prevent data loss (..\PolygonBatch.cpp)
-c:\users\chu\downloads\cocos2dx_source\innolab_proto_client\cocos2d\cocos\platform\ccsaxparser.h : warning C4819: The file contains a character that cannot be represented in the current code page (932). Save the file in Unicode format to prevent data loss (..\SkeletonRenderer.cpp)
-c:\users\chu\downloads\cocos2dx_source\innolab_proto_client\cocos2d\cocos\platform\ccsaxparser.h : warning C4819: The file contains a character that cannot be represented in the current code page (932). Save the file in Unicode format to prevent data loss (..\spine-cocos2dx.cpp)
-c:\users\chu\downloads\cocos2dx_source\innolab_proto_client\cocos2d\cocos\editor-support\spine\skeletonrenderer.cpp(229): warning C4996: 'cocos2d::DrawPrimitives::setDrawColor4B': was declared deprecated
-          c:\users\chu\downloads\cocos2dx_source\innolab_proto_client\cocos2d\cocos\2d\ccdrawingprimitives.h(150) : see declaration of 'cocos2d::DrawPrimitives::setDrawColor4B'
-c:\users\chu\downloads\cocos2dx_source\innolab_proto_client\cocos2d\cocos\editor-support\spine\skeletonrenderer.cpp(242): warning C4996: 'cocos2d::DrawPrimitives::drawPoly': was declared deprecated
-          c:\users\chu\downloads\cocos2dx_source\innolab_proto_client\cocos2d\cocos\2d\ccdrawingprimitives.h(109) : see declaration of 'cocos2d::DrawPrimitives::drawPoly'
-c:\users\chu\downloads\cocos2dx_source\innolab_proto_client\cocos2d\cocos\editor-support\spine\skeletonrenderer.cpp(248): warning C4996: 'cocos2d::DrawPrimitives::setDrawColor4B': was declared deprecated
-          c:\users\chu\downloads\cocos2dx_source\innolab_proto_client\cocos2d\cocos\2d\ccdrawingprimitives.h(150) : see declaration of 'cocos2d::DrawPrimitives::setDrawColor4B'
-c:\users\chu\downloads\cocos2dx_source\innolab_proto_client\cocos2d\cocos\editor-support\spine\skeletonrenderer.cpp(253): warning C4996: 'cocos2d::DrawPrimitives::drawLine': was declared deprecated
-          c:\users\chu\downloads\cocos2dx_source\innolab_proto_client\cocos2d\cocos\2d\ccdrawingprimitives.h(96) : see declaration of 'cocos2d::DrawPrimitives::drawLine'
-c:\users\chu\downloads\cocos2dx_source\innolab_proto_client\cocos2d\cocos\editor-support\spine\skeletonrenderer.cpp(256): warning C4996: 'cocos2d::DrawPrimitives::setPointSize': was declared deprecated
-          c:\users\chu\downloads\cocos2dx_source\innolab_proto_client\cocos2d\cocos\2d\ccdrawingprimitives.h(160) : see declaration of 'cocos2d::DrawPrimitives::setPointSize'
-c:\users\chu\downloads\cocos2dx_source\innolab_proto_client\cocos2d\cocos\editor-support\spine\skeletonrenderer.cpp(257): warning C4996: 'cocos2d::DrawPrimitives::setDrawColor4B': was declared deprecated
-          c:\users\chu\downloads\cocos2dx_source\innolab_proto_client\cocos2d\cocos\2d\ccdrawingprimitives.h(150) : see declaration of 'cocos2d::DrawPrimitives::setDrawColor4B'
-c:\users\chu\downloads\cocos2dx_source\innolab_proto_client\cocos2d\cocos\editor-support\spine\skeletonrenderer.cpp(260): warning C4996: 'cocos2d::DrawPrimitives::drawPoint': was declared deprecated
-          c:\users\chu\downloads\cocos2dx_source\innolab_proto_client\cocos2d\cocos\2d\ccdrawingprimitives.h(88) : see declaration of 'cocos2d::DrawPrimitives::drawPoint'
-c:\users\chu\downloads\cocos2dx_source\innolab_proto_client\cocos2d\cocos\editor-support\spine\skeletonrenderer.cpp(261): warning C4996: 'cocos2d::DrawPrimitives::setDrawColor4B': was declared deprecated
-          c:\users\chu\downloads\cocos2dx_source\innolab_proto_client\cocos2d\cocos\2d\ccdrawingprimitives.h(150) : see declaration of 'cocos2d::DrawPrimitives::setDrawColor4B'
-  libSpine.vcxproj -> C:\Users\chu\Downloads\cocos2dx_source\innolab_proto_client\proj.win32\Debug.win32\libSpine.lib
+﻿Build started 2015/05/25 16:15:13.
+     1>Project "C:\CocosPro\Boileague\cocos2d\cocos\editor-support\spine\proj.win32\libSpine.vcxproj" on node 3 (Build target(s)).
+     1>Lib:
+         C:\Program Files (x86)\Microsoft Visual Studio 12.0\VC\bin\Lib.exe /OUT:"C:\CocosPro\Boileague\proj.win32\Debug.win32\libSpine.lib" /NOLOGO Debug.win32\Animation.obj
+         Debug.win32\AnimationState.obj
+         Debug.win32\AnimationStateData.obj
+         Debug.win32\Atlas.obj
+         Debug.win32\AtlasAttachmentLoader.obj
+         Debug.win32\Attachment.obj
+         Debug.win32\AttachmentLoader.obj
+         Debug.win32\Bone.obj
+         Debug.win32\BoneData.obj
+         Debug.win32\BoundingBoxAttachment.obj
+         Debug.win32\Event.obj
+         Debug.win32\EventData.obj
+         Debug.win32\extension.obj
+         Debug.win32\IkConstraint.obj
+         Debug.win32\IkConstraintData.obj
+         Debug.win32\Json.obj
+         Debug.win32\MeshAttachment.obj
+         Debug.win32\PolygonBatch.obj
+         Debug.win32\RegionAttachment.obj
+         Debug.win32\Skeleton.obj
+         Debug.win32\SkeletonAnimation.obj
+         Debug.win32\SkeletonBounds.obj
+         Debug.win32\SkeletonData.obj
+         Debug.win32\SkeletonJson.obj
+         Debug.win32\SkeletonRenderer.obj
+         Debug.win32\Skin.obj
+         Debug.win32\SkinnedMeshAttachment.obj
+         Debug.win32\Slot.obj
+         Debug.win32\SlotData.obj
+         "Debug.win32\spine-cocos2dx.obj"
+         libSpine.vcxproj -> C:\CocosPro\Boileague\proj.win32\Debug.win32\libSpine.lib
+     1>Done Building Project "C:\CocosPro\Boileague\cocos2d\cocos\editor-support\spine\proj.win32\libSpine.vcxproj" (Build target(s)).
+
+Build succeeded.
+
+Time Elapsed 00:00:03.37

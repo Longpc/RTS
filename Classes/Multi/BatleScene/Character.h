@@ -39,6 +39,7 @@ public :
 
 	virtual void actionMoveCharacter(int directionId);
 	virtual void rotateCharacter(int direc);
+	virtual void changeAnimationImagePathByUnitId(int unitId);
 
 private :
 	Sprite *testObject;
@@ -47,7 +48,7 @@ private :
 	float _characterSpeed;
 
 
-	virtual void changeAnimationImagePathByUnitId(int unitId);
+	
 	///CHARACTER MOVE LOGIC///
 	virtual bool caculAvgAngle(int avg, float angle);
 	virtual int detectDirectionBaseOnTouchAngle(float angle);

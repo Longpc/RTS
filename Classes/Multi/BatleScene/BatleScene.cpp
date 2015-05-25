@@ -165,11 +165,11 @@ void BatleScene::createContent()
 	{
 		_battleBackround->addChild(_myMap);
 		Size CC_UNUSED s = _myMap->getContentSize();
-		log("ContentSize: %f, %f", s.width, s.height);
+		//log("ContentSize: %f, %f", s.width, s.height);
 		Vec2 ts = _myMap->getTileSize();
-		log("Title Size: %f, %f", ts.x, ts.y);
+		//log("Title Size: %f, %f", ts.x, ts.y);
 		Vec2 ts2 = _myMap->getMapSize();
-		log("map Size: %f, %f", ts2.x, ts2.y);
+		//log("map Size: %f, %f", ts2.x, ts2.y);
 		auto& children = _myMap->getChildren();
 		SpriteBatchNode* child = nullptr;
 
@@ -566,7 +566,15 @@ void BatleScene::createContent()
 	_battleBackround->addChild(testSprite, 100);
 	testSprite->setPhysicsBody(PhysicsBody::createCircle(20, PhysicsMaterial(1, 1, 1)));
 
-	sv->on("move_sync_end", [&, testSprite](SIOClient* client, const std::string data){
+	auto testCharacter = Character::createCharacter(2);
+	_battleBackround->addChild(testCharacter, 100);
+	testCharacter->setPhysicsBody(PhysicsBody::createCircle(20, PhysicsMaterial(1, 1, 1)));
+	testCharacter->setScale(IMAGE_SCALE);
+	testCharacter->getPhysicsBody()->setRotationEnable(false);
+	testCharacter->getPhysicsBody()->setContactTestBitmask(0x1);
+	testCharacter->getPhysicsBody()->setCategoryBitmask(ALLIED_CONTACT_CATEGORY_BITMAP);
+	testCharacter->getPhysicsBody()->setCollisionBitmask(ALLIED_CONTACT_COLLISION_BITMAP);
+	sv->on("move_sync_end", [&, testSprite, testCharacter](SIOClient* client, const std::string data){
 		log("SYNC end data :%s", data.c_str());
 		auto info = UserModel::getInstance()->getUserInfo();
 		Document doc;
@@ -587,13 +595,23 @@ void BatleScene::createContent()
 				else {
 					log("Angle: %f", doc["angle"].GetDouble());
 					if (doc["user_unit"][rapidjson::SizeType(i)]["user_id"].GetInt() == 10) continue;
-					testSprite->setPosition(Vec2(doc["user_unit"][rapidjson::SizeType(i)]["position_x"].GetDouble(), doc["user_unit"][rapidjson::SizeType(i)]["position_y"].GetDouble()));
-					testSprite->setRotation(doc["angle"].GetDouble());
-					auto uinfo = UserUnit::getInstance()->getUnitInfoById(doc["user_unit"][rapidjson::SizeType(i)]["mst_unit_id"].GetInt());
-					testSprite->getPhysicsBody()->setVelocity(Vec2::ZERO);
+					testCharacter->changeAnimationImagePathByUnitId(doc["user_unit"][rapidjson::SizeType(i)]["mst_unit_id"].GetInt() + 1);
 					float angle = doc["angle"].GetDouble();
+					int direc = detectDirectionBaseOnTouchAngle(angle);
+
+					testCharacter->setPosition(Vec2(doc["user_unit"][rapidjson::SizeType(i)]["position_x"].GetDouble(), doc["user_unit"][rapidjson::SizeType(i)]["position_y"].GetDouble()));
+					//TODO need to check this unit is moving or not --> Need event call from client
+					//testCharacter->rotateCharacter(direc);
+					//
+					testCharacter->actionMoveCharacter(direc);
+
+					//testSprite->setPosition(Vec2(doc["user_unit"][rapidjson::SizeType(i)]["position_x"].GetDouble(), doc["user_unit"][rapidjson::SizeType(i)]["position_y"].GetDouble()));
+					//testSprite->setRotation(doc["angle"].GetDouble());
+					auto uinfo = UserUnit::getInstance()->getUnitInfoById(doc["user_unit"][rapidjson::SizeType(i)]["mst_unit_id"].GetInt());
+					testCharacter->getPhysicsBody()->setVelocity(Vec2::ZERO);
+					
 					//testSprite->setRotation(angle);
-					testSprite->getPhysicsBody()->applyImpulse(Vec2(uinfo.move_speed * cos(angle), uinfo.move_speed * sin(angle)));
+					testCharacter->getPhysicsBody()->applyImpulse(Vec2(uinfo.move_speed * cos(angle), uinfo.move_speed * sin(angle)));
 					return;
 				}
 			}
@@ -703,7 +721,7 @@ void BatleScene::update(float delta)
 {
 	//log("Current Hp: %d", _characterCurentHp);
 	_checkTime += delta;
-	if (_checkTime >= 0.5f) {
+	if (_checkTime >= 0.035f) {
 		float angle = _mainCharacterIconInMiniMap->getRotation();
 		int direc = detectDirectionBaseOnTouchAngle(angle);
 		sendMoveEvent(direc, angle);
@@ -1662,6 +1680,10 @@ vector<UserUnitInfo> BatleScene::getEnemyUnitsData(vector<int> enemyIdList)
 	
 
 	return returnData;
+}
+void BatleScene::sendMoveBeginEvent(float angle)
+{
+	//BattleAPI::getInstance()->sendMoveBeginEvent(_mainCharacterData, detectDirectionBaseOnTouchAngle(angle));
 }
 
 void BatleScene::sendMoveEvent(int direction, float angle)
@@ -3369,4 +3391,5 @@ void BatleScene::createMiniControlUnit(int circleType) {
 	addChild(_miniUnit, 100);
 	_miniUnit->setPosition(_miniCircle->getPosition());
 }
+
 
