@@ -85,8 +85,8 @@ Document::GenericValue* UserUnitModel::convertFromUserUnitInfoToJson(UserUnitInf
 	doc->AddMember("defence", unitdata.defence, allo);
 	doc->AddMember("move_speed", unitdata.move_speed, allo);
 	doc->AddMember("element", unitdata.element, allo);
-	doc->AddMember("position_x", 0, allo);
-	doc->AddMember("position_y", 0, allo);
+// 	doc->AddMember("position_x", 0, allo);
+// 	doc->AddMember("position_y", 0, allo);
 	doc->AddMember("mst_skill_id1", unitdata.skill1_id, allo);
 	doc->AddMember("mst_skill_id2", unitdata.skill2_id, allo);
 	

@@ -1,4 +1,4 @@
-#ifndef BATLE_SCENE
+﻿#ifndef BATLE_SCENE
 #define BATLE_SCENE
 #include "base/LayerBase.h"
 #include "base/Define.h"
@@ -15,6 +15,7 @@
 #include "Model/data/UserSkillModel.h"
 #include "Model/data/UserUnitModel.h"
 
+#include "Model/data/BattleModel.h"
 
 #include "cocostudio/CocoStudio.h"
 #include <time.h>
@@ -70,10 +71,12 @@
 #define ENEMY_RESPAW_ACTION_TAG 101
 #define BUFF_STATUS_TAG 102
 
-#define ENEMY_CONTACT_CATEGORY_BITMAP 0x00000101
-#define ENEMY_CONTACT_COLLISION_BITMAP 0x00000010
-#define ALLIED_CONTACT_CATEGORY_BITMAP 0x00000110
-#define ALLIED_CONTACT_COLLISION_BITMAP 0x00000001
+#define REDTEAM_CONTACT_CATEGORY_BITMAP 0x00000101
+#define REDTEAM_CONTACT_COLLISION_BITMAP 0x00000010
+#define BLUETEAM_CONTACT_CATEGORY_BITMAP 0x00000110
+#define BLUETEAM_CONTACT_COLLISION_BITMAP 0x00000001
+
+#define TOWER_TAG 222
 
 using namespace cocostudio;
 class BattleScene : public LayerBase
@@ -127,6 +130,7 @@ private:
 	string _attackImagePath;
 	Sprite *_selectTargetSprite;
 
+
 	///ATTACK LOGIC///
 	Sprite *_autoAttackArea;
 	Sprite *_skillAOEShowSprite;
@@ -135,6 +139,7 @@ private:
 	vector<Sprite*> _allEnemyIconInMinimap;
 	vector<Slider*> _allEnemyHpBar;
 	vector<UserUnitInfo> _allEnemyUnitData;
+
 	vector<int> _allEnemuUnitMaxHp;
 
 	vector<bool> _allEnemyAttachDelay;
@@ -172,6 +177,7 @@ private:
 	vector<Slider*> _allAlliedUnitHpBar;
 	vector<Sprite*> _allAlliedUnitSprite;
 	vector<int> _allAlliedUnitMaxHp;
+	vector<Sprite*> _allAlliedUnitIconInMiniMap;
 
 	float _helpAttackValue = 1.0f;
 	float _helpDefenceValue = 1.0f;
@@ -199,6 +205,7 @@ private:
 	vector<string> _skillStatusImageList;
 	
 	vector<vector<string>> _enemyStatusImagePath;
+	vector<vector<string>> _alliedStatusImagePath;
 
 	/*Titled Map for Path finding and simple background*/
 	TMXTiledMap* _myMap;
@@ -208,9 +215,9 @@ private:
 	///DATABASE API
 	virtual UserUnitInfo getUnitDataFromDataBase(int unitId);
 	virtual vector<UserSkillInfo> getUnitSkillFromDataBase(UserUnitInfo unitData);
-	virtual vector<UserUnitInfo> getEnemyUnitsData(vector<int> enemyIdList);
+	virtual vector<UserUnitInfo> getUnitsDataListByUnitIdIdList(vector<Room_User_Unit_Model> enemyIdList);
 	
-
+	//Set Unit Status with value: 1:通常　2:死亡中　3:帰陣中　
 	CC_SYNTHESIZE(int, _unitStatus, UnitStatus);
 	virtual void sendMoveBeginEvent(float angle);
 	virtual void sendMoveEvent(int direction, float angle, bool onMovingFlg = false);
@@ -279,7 +286,9 @@ private:
 	virtual void rotateCharacter(Sprite *target, int direc);
 
 	/*This function will be call when main character attack animation finished ( 0.5s)*/
-	virtual void characterAttackCallback();
+	virtual void characterAttackCallback(int i, int dame);
+	/*This function will ve called when attack delay 1s ended*/
+	virtual void oneSecondAttackCallback();
 	/*This function will be called when enemy (as pSender) attack animation was finished*/
 	virtual void enemyAttackCallback(Ref *pSEnder, int index);
 	

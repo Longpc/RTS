@@ -33,7 +33,7 @@ public :
 	CC_SYNTHESIZE(bool, _onMoving, OnMovingFlg);
 
 	void moveActionByVector(Vec2 destination);
-	void attackActionByUnitPosition(int direction, int attackTime, AttackCallback attackCallback = nullptr);
+	void attackActionByUnitPosition(int direction, int attackTime, AttackCallback oneSecondCallback = nullptr,  AttackCallback attackCallback = nullptr);
 	void respawAction();
 	void stopMoveAction();
 	void stopAttackAction();

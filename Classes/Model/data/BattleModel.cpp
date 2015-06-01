@@ -44,8 +44,8 @@ void BattleModel::parserJsonToInitData(string jsonData)
 			temp.team_id = doc["room_user"][i]["team_id"].GetInt();
 			temp.user_id = doc["room_user"][i]["user_id"].GetInt();
 			temp.room_id = doc["room_user"][i]["room_id"].GetInt(); 
+			temp.uuid = doc["room_user"][i]["room_user_id"].GetString();
 			//uuid
-			log("%s",doc/*["args"][rapidjson::SizeType(0)]*/["room_user"][i]["room_user_id"].GetString());
 			userList.push_back(temp);
 		}
 		setRoomUserList(userList);
@@ -65,6 +65,9 @@ void BattleModel::parserJsonToInitData(string jsonData)
 			temp1.user_id = doc["room_user_unit"][i]["user_id"].GetInt();
 			temp1.room_id = doc["room_user_unit"][i]["room_id"].GetInt();
 			temp1.mst_unit_id = doc["room_user_unit"][i]["mst_unit_id"].GetInt();
+			temp1.uuid = doc["room_user_unit"][i]["uuid"].GetString();
+			temp1.angle = doc["room_user_unit"][i]["angle"].GetInt();
+			temp1.moving = doc["room_user_unit"][i]["moving"].GetBool();
 			unitList.push_back(temp1);
 		}
 		setRoomUserUnitList(unitList);
@@ -74,3 +77,46 @@ void BattleModel::parserJsonToInitData(string jsonData)
 		return;
 	}
 }
+
+Room_User_Unit_Model BattleModel::getUnitInforByUuid(string uuid)
+{
+	auto unitList = getRoomUserUnitList();
+	for (auto &unit : unitList)
+	{
+		if (strcmp(unit.uuid.c_str(), uuid.c_str()) == 0)
+		{
+			return unit;
+		}
+	}
+	log("find error!");
+}
+
+vector<Room_User_Unit_Model> BattleModel::getTeamUserUnitList(int teamId)
+{
+	auto unitList = getRoomUserUnitList();
+	vector<Room_User_Unit_Model> teamUnitList = {};
+	for (auto &unit : unitList)
+	{
+		if (unit.team_id == teamId)
+		{
+			teamUnitList.push_back(unit);
+		}
+	}
+	return teamUnitList;
+}
+
+void BattleModel::updateUserUnit(Room_User_Unit_Model unitData)
+{
+	auto tempList = getRoomUserUnitList();
+	for (auto &a : tempList)
+	{
+		if (strcmp(a.uuid.c_str(), unitData.uuid.c_str()) == 0) {
+
+			break;
+		}
+	}
+	setRoomUserUnitList(tempList);
+	log("updated unit with uuid: %s", unitData.uuid.c_str());
+	return;
+}
+

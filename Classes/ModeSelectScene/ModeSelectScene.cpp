@@ -42,6 +42,10 @@ bool ModeSelectScene::init()
 	HttpClientBase::getInstance()->postAPIWithMethodNameAndParam("uuid.php", "uuid", [&](string a){
 		log("UUID: %s", a.c_str());
 		UserModel::getInstance()->setUuId(a.c_str());
+		auto ifo = UserModel::getInstance()->getUserInfo();
+		ifo._uuid = a.c_str();
+		UserModel::getInstance()->setUserInfo(ifo);
+
 		StartAPI::getInstance()->setStartAPICallback([&]() {
 			log("Start callback");
 		});

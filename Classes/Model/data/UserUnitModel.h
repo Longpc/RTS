@@ -26,6 +26,7 @@ struct UserUnitInfo
 	int skill1_id = 0;
 	int skill2_id = 0;
 	bool isStun = false;
+	string uuid = "";
 };
 USING_NS_CC;
 using namespace std;

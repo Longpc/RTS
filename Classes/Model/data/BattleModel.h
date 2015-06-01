@@ -7,6 +7,7 @@
 #include "Model/data/UserUnitModel.h"
 #include "Model/data/UserModel.h"
 
+#include "Multi/BatleScene/BattleScene.h"
 #include "base/database/DataUtils.h"
 
 #include "json/rapidjson.h"
@@ -25,31 +26,6 @@ using namespace std;
 #endif
 #endif
 
-struct Room_User_Unit_Model
-{
-	string _id = "";
-	int status = 0;
-	int mp = 0;
-	int hp = 0;
-	float position_x = 0;
-	float position_y = 0;
-	int direction = 0;
-	int team_id = 0;
-	int room_id = 0;
-	int user_id = 0;
-	int mst_unit_id = 0;
-};
-struct Room_User_Model
-{
-	string _id = "";
-	int npc = 0;
-	int state = 0;
-	int ready = 0;
-	int team_id = 0;
-	int user_id = 0;
-	int room_id = 0;
-	string room_user_id = "";
-};
 #if CC_TARGET_PLATFORM == CC_PLATFORM_ANDROID
 # define MYCLASS_DECLSPEC CC_DLL
 #endif
@@ -64,6 +40,9 @@ public:
 	CC_SYNTHESIZE(vector<int>, _playerSkills, PlayerSkills);
 	CC_SYNTHESIZE(vector < Room_User_Model>, _roomUserList, RoomUserList);
 	CC_SYNTHESIZE(vector<Room_User_Unit_Model>, _roomUserUnitList, RoomUserUnitList);
+	Room_User_Unit_Model getUnitInforByUuid(string uuid);
+	vector<Room_User_Unit_Model> getTeamUserUnitList(int teamId);
+	void updateUserUnit(Room_User_Unit_Model unitData);
 
 private:
 	static BattleModel * s_BattleModel;

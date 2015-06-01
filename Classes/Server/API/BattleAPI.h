@@ -12,6 +12,8 @@
 #include "json/writer.h"
 #include "json/stringbuffer.h"
 
+typedef std::function<void(SIOClient* client, const std::string data)> SocketIOCallback;
+
 using namespace std;
 USING_NS_CC;
 using namespace rapidjson;
@@ -25,12 +27,12 @@ public:
 
 	void sendMoveEvent(UserUnitInfo unitdata, int moveDirection,float angle, Vec2 position, int statusId, bool onMovingFlg);
 	void sendMoveEndEvent(UserUnitInfo unitdata);
-	void sendAttackEvent();
+	void sendAttackEvent(int direction,UserUnitInfo attackerUnit, UserUnitInfo targetData, SocketIOCallback callback);
 	void sendSkillEvent(UserSkillInfo skillData, vector<int> targetsId = {});
-	void sendDeadEvent(UserUnitInfo unitData);
-	void sendRepawnEvent();
+	void sendDeadEvent(UserUnitInfo unitData, SocketIOCallback callback);
+	void sendRepawnEvent(SocketIOCallback callback);
 	void battleSyncEvent(UserUnitInfo unitData);
-	void sendBattleEndEvent();
+	void sendBattleEndEvent(SocketIOCallback callback);
 
 	bool init();
 private:

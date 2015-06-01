@@ -34,34 +34,78 @@ bool BattleScene::init()
 	_pageTitleSprite->setVisible(false);
 	_usernameBg->setVisible(false);
 	_selectedUnitId = UserModel::getInstance()->getSelectedUnitId();
-	setUnitStatus(0);
-	for (auto &a : BattleModel::getInstance()->getPlayerSkills())
+	setUnitStatus(1);
+	for (auto &sk : BattleModel::getInstance()->getPlayerSkills())
 	{
-		_playerSkills.push_back(UserSkillModel::getInstance()->getSkillInfoById(a));
+		_playerSkills.push_back(UserSkillModel::getInstance()->getSkillInfoById(sk));
 	}
 	///INIT DATA FOR ALL UNIT IN BATTLE
 	_mainCharacterData = getUnitDataFromDataBase(_selectedUnitId);
+	_mainCharacterData.uuid = UserModel::getInstance()->getUuId();
 
 	_mainCharacterSkillData = getUnitSkillFromDataBase(_mainCharacterData);
 
-	_allAlliedUnitData.push_back(_mainCharacterData);
 	_saveMainStatusData = _mainCharacterData;
 	_mainCharacerMaxMp = _mainCharacterData.mp;
 
-	//Bellow vector is store  list of enemy unit id.
-	vector<int> a;
-	_allEnemyUnitData = getEnemyUnitsData(a);
+	//Bellow vector is store  list of enemy unit
+	vector<Room_User_Unit_Model> a;
+	//Bellow vector is store list of allied unit
+	vector<Room_User_Unit_Model> b;
+
+	auto listUser = BattleModel::getInstance()->getRoomUserList();
+	//list of all unit that join in the battle
+	auto listUserUnit = BattleModel::getInstance()->getRoomUserUnitList();
+	int currentTeamId = UserModel::getInstance()->getUserInfo().team_id;
+	if (currentTeamId == TEAM_FLG_BLUE) {
+		_currentPlayerTeamFlg = TEAM_FLG_BLUE;
+		_currentEnemyTeamFlg = TEAM_FLG_RED;
+	}
+	else {
+		_currentPlayerTeamFlg = TEAM_FLG_RED;
+		_currentEnemyTeamFlg = TEAM_FLG_BLUE;
+	}
+
+	for (auto &userUnit : listUserUnit)
+	{
+		if (userUnit.team_id != currentTeamId)
+		{
+			a.push_back(userUnit);
+
+		}
+		else {
+			if (strcmp(userUnit.uuid.c_str(), UserModel::getInstance()->getUuId().c_str()) != 0)
+			{
+				b.push_back(userUnit);
+			}
+		}
+	}
+
+	log("Enemy Unit vector Size: %d", a.size());
+
+	_allEnemyUnitData = getUnitsDataListByUnitIdIdList(a);
+
+	//first element of allied unit list is the main character info
+	_allAlliedUnitData.push_back(_mainCharacterData);
+
+	for (auto &alliedUnit : getUnitsDataListByUnitIdIdList(b))
+	{
+		_allAlliedUnitData.push_back(alliedUnit);
+	}
 
 	//For test
 	_redTeamTowerData = UserUnitModel::getInstance()->getUnitInfoById(1);
 	_redTeamTowerData.hp = 5000;
 	_redTeamTowerData.attack_range = 200;
 	_redTeamTowerData.attack_speed = 5;
+	_redTeamTowerData.uuid = "redTower";
+
 	_blueTeamTowerData = UserUnitModel::getInstance()->getUnitInfoById(2);
 
 	_blueTeamTowerData.hp = 5000;
 	_blueTeamTowerData.attack_range = 200;
 	_blueTeamTowerData.attack_speed = 5;
+	_blueTeamTowerData.uuid = "blueTower";
 
 	//////////
 	//_moveImagePath = "image/unit_new/move/red/";
@@ -126,7 +170,7 @@ bool BattleScene::init()
 		info.unitId = _mainCharacterData.mst_unit_id;
 		info.imagePath = UserUnitModel::getInstance()->getUnitImageById(_mainCharacterData.mst_unit_id);
 		_blueTeamInfo.push_back(info);
-		for (int i = 0; i < ENEMY_NUM; i++)
+		for (int i = 0; i < _allEnemyUnitData.size(); i++)
 		{
 			UserBattleInfo enemy;
 			enemy.name = _allEnemyUnitData[i].name;
@@ -140,7 +184,7 @@ bool BattleScene::init()
 		info.name = _mainCharacterData.name;
 		info.unitId = _mainCharacterData.mst_unit_id;
 		_redTeamInfo.push_back(info);
-		for (int i = 0; i < ENEMY_NUM; i++)
+		for (int i = 0; i < _allEnemyUnitData.size(); i++)
 		{
 			UserBattleInfo enemy;
 			enemy.name = _allEnemyUnitData[i].name;
@@ -148,16 +192,17 @@ bool BattleScene::init()
 			_blueTeamInfo.push_back(enemy);
 		}
 	}
-
+	scheduleUpdate();
 	return true;
 }
 void BattleScene::createContent()
 {
+	//create e battle background
 	_battleBackround = Node::create();
 	_battleBackround->setPosition(Vec2::ZERO);
 	_battleBackround->setAnchorPoint(Vec2::ANCHOR_TOP_RIGHT);
 	addChild(_battleBackround);
-
+	//Load the MTC map
 	string pathFIle = FileUtils::getInstance()->fullPathForFilename("map/map3.tmx");
 	_myMap = TMXTiledMap::create(pathFIle.c_str());
 
@@ -183,7 +228,6 @@ void BattleScene::createContent()
 		log("null");
 	}
 
-
 	createPhysicBolder();
 	/*create blue and red line*/
 	auto line = DrawNode::create();
@@ -193,26 +237,29 @@ void BattleScene::createContent()
 	line->drawRect(Vec2(_visibleSize.width - 100, _visibleSize.height * 2 - 150), Vec2(_visibleSize.width + 100, _visibleSize.height * 2),Color4F::RED);
 	_battleBackround->addChild(line);
 
+
 	auto blueTeamAreaNode = Node::create();
 	blueTeamAreaNode->setPhysicsBody(PhysicsBody::createBox(Size(200, 150), PhysicsMaterial(1, 0, 0)));
 	blueTeamAreaNode->setPosition(Vec2(_visibleSize.width, 75));
-	blueTeamAreaNode->getPhysicsBody()->setCategoryBitmask(ALLIED_CONTACT_CATEGORY_BITMAP);
-	blueTeamAreaNode->getPhysicsBody()->setCollisionBitmask(ALLIED_CONTACT_COLLISION_BITMAP);
+	blueTeamAreaNode->getPhysicsBody()->setCategoryBitmask(BLUETEAM_CONTACT_CATEGORY_BITMAP);
+	blueTeamAreaNode->getPhysicsBody()->setCollisionBitmask(BLUETEAM_CONTACT_COLLISION_BITMAP);
 	blueTeamAreaNode->getPhysicsBody()->setGravityEnable(false);
 	blueTeamAreaNode->getPhysicsBody()->setDynamic(false);
 	_battleBackround->addChild(blueTeamAreaNode);
 
 	auto redTeamAreaNode = Node::create();
 	redTeamAreaNode->setPhysicsBody(PhysicsBody::createBox(Size(200, 150), PhysicsMaterial(1, 0, 0)));
-	redTeamAreaNode->getPhysicsBody()->setCategoryBitmask(ENEMY_CONTACT_CATEGORY_BITMAP);
-	redTeamAreaNode->getPhysicsBody()->setCollisionBitmask(ENEMY_CONTACT_COLLISION_BITMAP);
+	redTeamAreaNode->getPhysicsBody()->setCategoryBitmask(REDTEAM_CONTACT_CATEGORY_BITMAP);
+	redTeamAreaNode->getPhysicsBody()->setCollisionBitmask(REDTEAM_CONTACT_COLLISION_BITMAP);
 	redTeamAreaNode->getPhysicsBody()->setGravityEnable(false);
 	redTeamAreaNode->getPhysicsBody()->setDynamic(false);
 	redTeamAreaNode->setPosition(Vec2(_visibleSize.width, 2 * _visibleSize.height - 75));
 	_battleBackround->addChild(redTeamAreaNode);
 
-
+	//red Tower
 	auto redTower = Sprite::create("tower_red.png");
+	redTower->setTag(TOWER_TAG);
+
 	redTower->setPosition(Vec2(_visibleSize.width, _visibleSize.height * 2 - 150));
 	//redTower->setAnchorPoint(Vec2::ANCHOR_MIDDLE_BOTTOM);
 	_battleBackround->addChild(redTower);
@@ -235,6 +282,7 @@ void BattleScene::createContent()
 	redTower->setTag(ENEMY_NUM);
 
 	auto blueTower = Sprite::create("tower_blue.png");
+	blueTower->setTag(TOWER_TAG);
 	blueTower->setPosition(Vec2(_visibleSize.width, 250));
 	//blueTower->setAnchorPoint(Vec2::ANCHOR_MIDDLE_BOTTOM);
 	_battleBackround->addChild(blueTower);
@@ -254,18 +302,43 @@ void BattleScene::createContent()
 
 	//_allStone.push_back(redTower);
 	//_allStone.push_back(blueTower);
+	auto uuId = UserModel::getInstance()->getUuId();
+	auto unitInfo = BattleModel::getInstance()->getUnitInforByUuid(uuId.c_str());
+	// Here is setting position and direction for main unit. But by this way will make error to reference to the UserModel and BattleModel.
+
+	int cTeamContactCategory;
+	int cTeamContactCollision;
+	int cEnemyContactCategory;
+	int cEnemyContactCollision;
+
+	if (_currentPlayerTeamFlg == TEAM_FLG_BLUE) {
+		cTeamContactCategory = BLUETEAM_CONTACT_CATEGORY_BITMAP;
+		cTeamContactCollision = BLUETEAM_CONTACT_COLLISION_BITMAP;
+		cEnemyContactCategory = REDTEAM_CONTACT_CATEGORY_BITMAP;
+		cEnemyContactCollision = REDTEAM_CONTACT_COLLISION_BITMAP;
+	}
+	else {
+		cTeamContactCategory = REDTEAM_CONTACT_CATEGORY_BITMAP;
+		cTeamContactCollision = REDTEAM_CONTACT_COLLISION_BITMAP;
+		cEnemyContactCategory = BLUETEAM_CONTACT_CATEGORY_BITMAP;
+		cEnemyContactCollision = BLUETEAM_CONTACT_COLLISION_BITMAP;
+	}
+
 
 	testObject = Character::createCharacter(_selectedUnitId + 1);
 	testObject->setTag(10);
 	testObject->setPosition(_visibleSize);
 	_battleBackround->addChild(testObject, MID);
-	testObject->setPosition(Vec2(_visibleSize.width, 100));
+	//testObject->setPosition(Vec2(_visibleSize.width, 100));
+	testObject->setPosition(Vec2(unitInfo.position_x, unitInfo.position_y));
+	testObject->rotateCharacter(unitInfo.direction);
+
 	testObject->setScale(IMAGE_SCALE);
 	testObject->setPhysicsBody(PhysicsBody::createCircle(30, PhysicsMaterial(1, 0, 1)));
 	testObject->getPhysicsBody()->setRotationEnable(false);
 	testObject->getPhysicsBody()->setContactTestBitmask(0x1);
-	testObject->getPhysicsBody()->setCategoryBitmask(ALLIED_CONTACT_CATEGORY_BITMAP);
-	testObject->getPhysicsBody()->setCollisionBitmask(ALLIED_CONTACT_COLLISION_BITMAP);
+	testObject->getPhysicsBody()->setCategoryBitmask(cTeamContactCategory);
+	testObject->getPhysicsBody()->setCollisionBitmask(cTeamContactCollision);
 	testObject->setCharacterMoveSpeed(_mainCharacterData.move_speed);
 
 
@@ -367,6 +440,7 @@ void BattleScene::createContent()
 	_mainCharacterIconInMiniMap = Sprite::create("mini_icon.png");
 	_mainCharacterIconInMiniMap->setPosition(Vec2(_selectRect->getContentSize().width / 2, _selectRect->getContentSize().height / 2));
 	_selectRect->addChild(_mainCharacterIconInMiniMap);
+	_mainCharacterIconInMiniMap->setRotation(-(unitInfo.angle) + 90);
 
 
 
@@ -462,18 +536,20 @@ void BattleScene::createContent()
 
 	auto node = Node::create();
 	node->setPosition(Vec2::ZERO);
-	for (int i = 0; i < ENEMY_NUM; i++)
+	for (int i = 0; i < _allEnemyUnitData.size(); i++)
 	{
-		auto sp = Sprite::create("image/unit_new/move/red/unit_00_02_2.png");
-		sp->setPosition(Vec2(_visibleSize.width +(i-1) * 70, 2 * _visibleSize.height-100));
+		auto battleUnitInfo = BattleModel::getInstance()->getUnitInforByUuid(_allEnemyUnitData[i].uuid.c_str());
+		auto sp = Character::createCharacter(_allEnemyUnitData[i].mst_unit_id +1);
+		sp->rotateCharacter(battleUnitInfo.direction);
+		sp->setPosition(Vec2(battleUnitInfo.position_x +(i-1) * 70, battleUnitInfo.position_y));
 		sp->setScale(IMAGE_SCALE);
 		sp->setTag(i);
 		sp->setPhysicsBody(PhysicsBody::createCircle(30, PhysicsMaterial(1, 0, 0)/*, Vec2(0, -50)*/));
 		sp->getPhysicsBody()->setRotationEnable(false);
 		sp->getPhysicsBody()->setGravityEnable(false);
 		sp->getPhysicsBody()->setContactTestBitmask(0x1);
-		sp->getPhysicsBody()->setCategoryBitmask(ENEMY_CONTACT_CATEGORY_BITMAP);
-		sp->getPhysicsBody()->setCollisionBitmask(ENEMY_CONTACT_COLLISION_BITMAP);
+		sp->getPhysicsBody()->setCategoryBitmask(cEnemyContactCategory);
+		sp->getPhysicsBody()->setCollisionBitmask(cEnemyContactCollision);
 		auto hpB = Slider::create();
 		hpB->loadBarTexture("image/screen/battle/mini_hp_base.png");
 		hpB->setPercent(100);
@@ -499,6 +575,43 @@ void BattleScene::createContent()
 
 	_miniMap->addChild(node, 1);
 
+	for (int i = 1; i < _allAlliedUnitData.size(); i++)
+	{
+		auto battleUnitInfo1 = BattleModel::getInstance()->getUnitInforByUuid(_allAlliedUnitData[i].uuid.c_str());
+		auto sp1 = Character::createCharacter(_allAlliedUnitData[i].mst_unit_id + 1);
+		sp1->rotateCharacter(battleUnitInfo1.direction);
+		sp1->setPosition(Vec2(battleUnitInfo1.position_x + (i - 1) * 70, battleUnitInfo1.position_y));
+		sp1->setScale(IMAGE_SCALE);
+		sp1->setTag(i);
+		sp1->setPhysicsBody(PhysicsBody::createCircle(30, PhysicsMaterial(1, 0, 0)/*, Vec2(0, -50)*/));
+		sp1->getPhysicsBody()->setRotationEnable(false);
+		sp1->getPhysicsBody()->setGravityEnable(false);
+		sp1->getPhysicsBody()->setContactTestBitmask(0x1);
+		sp1->getPhysicsBody()->setCategoryBitmask(cTeamContactCategory);
+		sp1->getPhysicsBody()->setCollisionBitmask(cTeamContactCollision);
+		auto hpB1 = Slider::create();
+		hpB1->loadBarTexture("image/screen/battle/mini_hp_base.png");
+		hpB1->setPercent(100);
+		//hpB->loadSlidBallTextureNormal("image/screen/battle/test.png");
+		hpB1->loadProgressBarTexture("image/screen/battle/mini_hp_gauge.png");
+		//_hpSlider->setContentSize(Size(372, 12));
+		hpB1->setPosition(Vec2(sp1->getContentSize().width / 2, sp1->getContentSize().height - 10));
+		_allEnemyHpBar.push_back(hpB1);
+		sp1->addChild(_allEnemyHpBar.back(), 100);
+		_allAlliedUnitSprite.push_back(sp1);
+		_battleBackround->addChild(_allAlliedUnitSprite.back(), MID);
+
+		auto enemyIcon1 = Sprite::create("image/screen/battle/enemyicon.png");
+		enemyIcon1->setOpacity(255);
+		enemyIcon1->setColor(Color3B::RED);
+		enemyIcon1->setPosition(Vec2(sp1->getPositionX()*positionXScaleRate, sp1->getPositionY()*positionYScaleRate));
+		_allAlliedUnitIconInMiniMap.push_back(enemyIcon1);
+		node->addChild(_allAlliedUnitIconInMiniMap.back(), 1);
+		_allEnemyAttachDelay.push_back(false);
+
+		vector<string> tmp1 = {};
+		_alliedStatusImagePath.push_back(tmp1);
+	}
 	/*_testAttackTarget = Sprite::create("image/unit_new/move/red/unit_00_02_2.png");
 	_testAttackTarget->setPosition(_visibleSize);
 	_testAttackTarget->setScale(IMAGE_SCALE);
@@ -506,13 +619,22 @@ void BattleScene::createContent()
 
 	auto enemyIcon1 = Sprite::create("image/screen/battle/enemyicon.png");
 	enemyIcon1->setOpacity(255);
+
+	auto alliedIcon = Sprite::create("image/screen/battle/enemyicon.png");
+	alliedIcon->setOpacity(255);
+	alliedIcon->setColor(Color3B::RED);
 	vector<string> tmp1 = {};
+
 	switch (_currentPlayerTeamFlg)
 	{
 	case TEAM_FLG_RED:
 		_allAlliedUnitSprite.push_back(redTower);
 		_allAlliedUnitHpBar.push_back(redTHpBar);
 		_allAlliedUnitData.push_back(_redTeamTowerData);
+		alliedIcon->setPosition(Vec2(redTower->getPositionX()*positionXScaleRate, redTower->getPositionY()*positionYScaleRate));
+		_allAlliedUnitIconInMiniMap.push_back(alliedIcon);
+		node->addChild(_allAlliedUnitIconInMiniMap.back(), 1);
+
 
 		_allEnemyAttachDelay.push_back(false);
 		_allEnemyHpBar.push_back(blueTHpBar);
@@ -532,6 +654,10 @@ void BattleScene::createContent()
 		_allAlliedUnitSprite.push_back(blueTower);
 		_allAlliedUnitHpBar.push_back(blueTHpBar);
 		_allAlliedUnitData.push_back(_blueTeamTowerData);
+		alliedIcon->setPosition(Vec2(blueTower->getPositionX()*positionXScaleRate, blueTower->getPositionY()*positionYScaleRate));
+		_allAlliedUnitIconInMiniMap.push_back(alliedIcon);
+		node->addChild(_allAlliedUnitIconInMiniMap.back(), 1);
+
 
 		_allEnemyAttachDelay.push_back(false);
 		_allEnemyHpBar.push_back(redTHpBar);
@@ -566,7 +692,7 @@ void BattleScene::createContent()
 	_battleBackround->addChild(testSprite, 100);
 	testSprite->setPhysicsBody(PhysicsBody::createCircle(20, PhysicsMaterial(1, 1, 1)));
 
-	auto testCharacter = Character::createCharacter(2);
+	/*auto testCharacter = Character::createCharacter(2);
 	_battleBackround->addChild(testCharacter, 100);
 	testCharacter->setPhysicsBody(PhysicsBody::createCircle(20, PhysicsMaterial(1, 1, 1)));
 	testCharacter->setScale(IMAGE_SCALE);
@@ -594,11 +720,11 @@ void BattleScene::createContent()
 				}
 				else {
 					log("Angle: %f", doc["angle"].GetDouble());
+					log("Direc: %d", doc["direction"].GetInt());
+					int direc = doc["direction"].GetInt();
+					float angle = doc["angle"].GetDouble();
 					if (doc["user_unit"][rapidjson::SizeType(i)]["user_id"].GetInt() == 10) continue;
 					testCharacter->changeAnimationImagePathByUnitId(doc["user_unit"][rapidjson::SizeType(i)]["mst_unit_id"].GetInt() + 1);
-					float angle = doc["angle"].GetDouble();
-					int direc = detectDirectionBaseOnTouchAngle(angle);
-
 					testCharacter->setPosition(Vec2(doc["user_unit"][rapidjson::SizeType(i)]["position_x"].GetDouble(), doc["user_unit"][rapidjson::SizeType(i)]["position_y"].GetDouble()));
 					//TODO need to check this unit is moving or not --> Need event call from client
 					//testCharacter->rotateCharacter(direc);
@@ -606,6 +732,9 @@ void BattleScene::createContent()
 					if (doc["moving"].GetBool())
 					{
 						testCharacter->actionMoveCharacter(direc);
+					}
+					else {
+						testCharacter->stopMoveAction();
 					}
 					//testSprite->setPosition(Vec2(doc["user_unit"][rapidjson::SizeType(i)]["position_x"].GetDouble(), doc["user_unit"][rapidjson::SizeType(i)]["position_y"].GetDouble()));
 					//testSprite->setRotation(doc["angle"].GetDouble());
@@ -618,6 +747,108 @@ void BattleScene::createContent()
 				}
 			}
 		}
+
+	});
+	*/
+	sv->on("battle_update", [&](SIOClient* client, const std::string data){
+		log("BATTLE UPDATE data: %s", data.c_str());
+		//same data with battle sync but change for detect unit by uuid
+		auto uuid = UserModel::getInstance()->getUuId();
+		Document doc;
+		doc.Parse<0>(data.c_str());
+		if (doc.HasParseError()) {
+			log("Parse JSOn error");
+			return;
+		}
+		if (doc.IsObject()) {
+			//Update position of all unit
+			//sync HP, MP...
+			//Update all data of Room_User_Unit_model in Battle Model
+			for (int i = 0; i < doc["user_unit"].Size(); i++) {
+				log("!EEEE");
+				Room_User_Unit_Model tempUnit;
+				tempUnit._id = doc["user_unit"][rapidjson::SizeType(i)]["_id"].GetString();
+				tempUnit.status = doc["user_unit"][rapidjson::SizeType(i)]["status"].GetInt();
+				tempUnit.mp = doc["user_unit"][rapidjson::SizeType(i)]["mp"].GetInt();
+				tempUnit.hp = doc["user_unit"][rapidjson::SizeType(i)]["hp"].GetInt();
+				tempUnit.position_x = doc["user_unit"][rapidjson::SizeType(i)]["position_x"].GetDouble();
+				tempUnit.position_y = doc["user_unit"][rapidjson::SizeType(i)]["position_y"].GetDouble();
+				tempUnit.direction = doc["user_unit"][rapidjson::SizeType(i)]["direction"].GetInt();
+				tempUnit.team_id = doc["user_unit"][rapidjson::SizeType(i)]["team_id"].GetInt();
+				tempUnit.room_id = doc["user_unit"][rapidjson::SizeType(i)]["room_id"].GetInt();
+				tempUnit.user_id = doc["user_unit"][rapidjson::SizeType(i)]["user_id"].GetInt();
+				tempUnit.mst_unit_id = doc["user_unit"][rapidjson::SizeType(i)]["mst_unit_id"].GetInt();
+				tempUnit.uuid = doc["user_unit"][rapidjson::SizeType(i)]["uuid"].GetString();
+				tempUnit.angle = doc["user_unit"][rapidjson::SizeType(i)]["angle"].GetDouble();
+				tempUnit.moving = doc["user_unit"][rapidjson::SizeType(i)]["moving"].GetBool();
+
+				BattleModel::getInstance()->updateUserUnit(tempUnit);
+				/*//bellow code for sync HP and MP of all Unit
+
+				for (auto &unit1  : _allAlliedUnitData)
+				{
+					if (strcmp(unit1.uuid.c_str(), tempUnit.uuid.c_str()) == 0) {
+						unit1.hp = tempUnit.hp;
+						unit1.mp = tempUnit.mp;
+						//attack, defence, speed....
+
+					}
+
+				}
+				for (auto &ene : _allEnemyUnitData)
+				{
+					if (strcmp(ene.uuid.c_str(), tempUnit.uuid.c_str()) == 0) {
+						ene.hp = tempUnit.hp;
+						ene.mp = tempUnit.mp;
+					}
+				}*/
+
+
+				string sv_uuid = doc["user_unit"][rapidjson::SizeType(i)]["uuid"].GetString();
+				if (strcmp(sv_uuid.c_str(), uuid.c_str()) == 0) {
+					log("this is my unit");
+					continue;
+				}
+				int teamId = UserModel::getInstance()->getUserInfo().team_id;
+
+				//bellow code for sync position and move Animation
+				vector<Sprite*> processUnitSprite = {};
+				vector<UserUnitInfo> processUnitData = {};
+				if (doc["user_unit"][rapidjson::SizeType(i)]["team_id"].GetInt() == teamId) {
+					processUnitSprite = _allAlliedUnitSprite;
+					processUnitData = _allAlliedUnitData;
+				}
+				else {
+					processUnitSprite = _allEnemyUnitSprite;
+					processUnitData = _allEnemyUnitData;
+				}
+				for (int j = 0; j < processUnitSprite.size(); j++)
+				{
+					if (processUnitSprite[j]->getTag() == TOWER_TAG) {
+						continue;
+					}
+					if (strcmp(processUnitData[j].uuid.c_str(), sv_uuid.c_str()) == 0)
+					{					
+						Character* cha = (Character*)processUnitSprite[j];
+						cha->setPosition(Vec2(doc["user_unit"][rapidjson::SizeType(i)]["position_x"].GetDouble(), doc["user_unit"][rapidjson::SizeType(i)]["position_y"].GetDouble()));
+						if (doc["user_unit"][rapidjson::SizeType(i)]["moving"].GetBool())
+						{
+							cha->actionMoveCharacter(doc["user_unit"][rapidjson::SizeType(i)]["direction"].GetInt());
+						}
+						else {
+							cha->stopMoveAction();
+						}
+					}
+				}
+
+
+			}
+
+		}
+		else {
+			log("Error in JSON Object. Type: %d", doc.GetType());
+		}
+
 
 	});
 
@@ -637,12 +868,90 @@ void BattleScene::createContent()
 		}
 	});*/
 
-	sv->on("unit_move_end", [&, testSprite](SIOClient* client, const string& data) {
+	sv->on("unit_move_end", [&](SIOClient* client, const string& data) {
 		log("Unit_move_end data: %s", data.c_str());
 		//testSprite->getPhysicsBody()->setVelocity(Vec2::ZERO);
 
 	});
 
+
+	sv->on("attack", [&](SIOClient *client, const string data) {
+		log("Another attacks: %s", data.c_str());
+		auto uuid = UserModel::getInstance()->getUuId();
+		Document doc;
+		doc.Parse<0>(data.c_str());
+		if (doc.HasParseError()) {
+			log("Parse JSOn error");
+			return;
+		}
+		if (doc.IsObject()) {
+			int teamId = UserModel::getInstance()->getUserInfo().team_id;
+			vector<Sprite*> processUnitSprite = {};
+			vector<UserUnitInfo> processUnitData = {};
+
+			vector<Sprite*> targetSpriteList = {};
+			vector<UserUnitInfo> targetDataList = {};
+			if (doc["team_id"].GetInt() == teamId) {
+				processUnitSprite = _allAlliedUnitSprite;
+				processUnitData = _allAlliedUnitData;
+				targetDataList = _allEnemyUnitData;
+				targetSpriteList = _allEnemyUnitSprite;
+
+			}
+			else {
+				processUnitSprite = _allEnemyUnitSprite;
+				processUnitData = _allEnemyUnitData;
+				targetDataList = _allAlliedUnitData;
+				targetSpriteList = _allAlliedUnitSprite;
+			}
+
+			for (int i = 0; i < processUnitData.size(); i++)
+			{
+				if (strcmp(processUnitData[i].uuid.c_str(), doc["uuid"].GetString()) == 0) {
+					log("HERE IS ATTACKER");
+					Character* cha = (Character*)processUnitSprite[i];
+					//bellow code for detect be attacked unit and sync data:
+					Sprite* target;
+					for (int j = 0; i < targetDataList.size(); j ++)
+					{
+						if (strcmp(doc["target"]["uuid"].GetString(), targetDataList[j].uuid.c_str()) == 0) {
+							log("Here is target");
+							target = targetSpriteList[j];
+							break;
+						}
+					}
+					int dame = doc["dame"].GetInt();
+					if (dame <= 0) {
+						dame = 1;
+					}
+					log("Dame: %d", dame);
+					cha->attackActionByUnitPosition(doc["direction"].GetInt(), doc["user_unit"]["attack_speed"].GetInt()/*, nullptr, [&, target,dame]() {
+						
+						//show hp lost = final attack dame
+						showAttackDame(dame, target->getPosition() + Vec2(0, 100), 1);
+
+						_allEnemyUnitData[i].hp -= dame;
+						//save dame deal info to battle result
+						saveDameInfo(dame, 0, i, _currentPlayerTeamFlg);
+						//check if enemy die
+						if (_allEnemyUnitData[i].hp <= 0)
+						{
+							enemyDieAction(i);
+							return;
+						}
+						//update enemy hp status bar
+						_allEnemyHpBar[i]->setPercent(ceil((100.0f * _allEnemyUnitData[i].hp / _allEnemuUnitMaxHp[i])));
+					}*/);
+
+					break;
+				}
+			}
+
+
+
+		}
+
+	});
 }
 
 void BattleScene::displaySkillMpInButton(Button *parent, int mp)
@@ -681,7 +990,7 @@ Node* BattleScene::createHBolder()
 	wallBd->setGravityEnable(false);
 	wallBd->setDynamic(false);
 	wallBd->setContactTestBitmask(0x1);
-
+	
 	auto node = Node::create();
 	node->setPhysicsBody(wallBd);
 
@@ -715,7 +1024,7 @@ void BattleScene::onEnter()
 	contactListener->onContactBegin = CC_CALLBACK_1(BattleScene::onPhysicContactBegin, this);
 	contactListener->onContactPreSolve = CC_CALLBACK_2(BattleScene::onPhysicContactPreSolve, this);
 	dispath->addEventListenerWithSceneGraphPriority(contactListener, this);
-	scheduleUpdate();
+	
 
 }
 
@@ -723,6 +1032,7 @@ void BattleScene::update(float delta)
 {
 	//log("Current Hp: %d", _characterCurentHp);
 	_checkTime += delta;
+	//TODO: uncomment to send unit status every 0.07 seconds
 	if (_checkTime >= 0.07) {
 		float angle = _mainCharacterIconInMiniMap->getRotation();
 		int direc = detectDirectionBaseOnTouchAngle(angle);
@@ -777,49 +1087,61 @@ void BattleScene::checkForAutoAttack()
 	//Check for main character attack
 	for (int i = 0; i < _allEnemyUnitSprite.size(); i++)
 	{
-		auto posDistan = _allEnemyUnitSprite[i]->getPosition() - testObject->getPosition();
-		int direc = detectDirectionBaseOnTouchAngle(-posDistan.getAngle()*RAD_DEG + 90);
-		if (posDistan.length() - _allEnemyUnitSprite[i]->getBoundingBox().size.width / 4 < ATTACK_AOE*_mainCharacterData.attack_range / 100.0f && _allEnemyUnitSprite[i]->isVisible()) {
+		///Check for main character run attack animation
 
-			if (testObject->getActionByTag(_currentAttackActionTag) == nullptr && _onDelayAttackFlg == false) {
-				_mainCharacterIconInMiniMap->setRotation(-(posDistan.getAngle() * RAD_DEG) + 90);
+			auto posDistan = _allEnemyUnitSprite[i]->getPosition() - testObject->getPosition();
+			int direc = detectDirectionBaseOnTouchAngle(-posDistan.getAngle()*RAD_DEG + 90);
+			if (posDistan.length() - _allEnemyUnitSprite[i]->getBoundingBox().size.width / 4 < ATTACK_AOE*_mainCharacterData.attack_range / 100.0f && _allEnemyUnitSprite[i]->isVisible()) {
 
-				auto call1 = CallFuncN::create(CC_CALLBACK_0(BattleScene::characterAttackCallback, this));
-				testObject->attackActionByUnitPosition(direc, _mainCharacterData.attack_speed, CC_CALLBACK_0(BattleScene::characterAttackCallback, this));
-				if (!testObject->getAttackDelayFlag()) {
-					BattleAPI::getInstance()->sendAttackEvent();
+				if (/*testObject->getActionByTag(testObject->getCurrentAttackActionTag()) == nullptr && */_onDelayAttackFlg == false) {
+					_onDelayAttackFlg = true;
+					_mainCharacterIconInMiniMap->setRotation(-(posDistan.getAngle() * RAD_DEG) + 90);
+
+					//auto call1 = CallFuncN::create(CC_CALLBACK_0(BattleScene::characterAttackCallback, this));
+				
+					BattleAPI::getInstance()->sendAttackEvent(direc,_mainCharacterData, _allEnemyUnitData[i], [&, i, direc](SIOClient *client, const string data) {
+						log("Battle attack callback with data: %s", data.c_str());
+						Document doc;
+						doc.Parse<0>(data.c_str());
+						if (doc.HasParseError()) {
+							log("ATTACK: Parse JSOn error");
+							return;
+						}
+						testObject->attackActionByUnitPosition(direc, _mainCharacterData.attack_speed, CC_CALLBACK_0(BattleScene::oneSecondAttackCallback,this), CC_CALLBACK_0(BattleScene::characterAttackCallback, this, i, doc["dame"].GetInt()));
+
+						if (_moveMode == MOVE_CIRCLE)
+						{
+							_miniUnit->attackActionByUnitPosition(direc, _mainCharacterData.attack_speed);
+						}
+
+						_indexOfBeAttackEnemy = i;
+					});
+
 				}
-				if (_moveMode == MOVE_CIRCLE)
-				{
-					_miniUnit->attackActionByUnitPosition(direc, _mainCharacterData.attack_speed);
-				}
-
-				_indexOfBeAttackEnemy = i;
-
 			}
-		}
 
-		//check for enemy unit auto attack
-		if (posDistan.length() < ATTACK_AOE*_allEnemyUnitData[i].attack_range/100.0f && _allEnemyUnitSprite[i]->isVisible() && !_allEnemyUnitData[i].isStun) {
-
-			if (/*_allEnemyUnitSprite[i]->getNumberOfRunningActions() < 1 &&*/ _allEnemyAttachDelay[i] == false) {
-				_allEnemyUnitSprite[i]->stopAllActionsByTag(_allEnemyUnitSprite[i]->getTag());
-				string path = "image/unit_new/attack/red/";
-				auto target_ani = createAttackAnimationWithDefine(10 - direc, path);
-				auto call2 = CallFuncN::create(CC_CALLBACK_1(BattleScene::enemyAttackCallback, this,i));
-				auto action2 = Sequence::create(Animate::create(target_ani), call2, nullptr);
-				_allEnemyAttachDelay[i] = true;
-				auto forCallback = Sequence::create(DelayTime::create(_allEnemyUnitData[i].attack_speed), CallFuncN::create([&, i](Ref *p) {
-					if (i < _allEnemyAttachDelay.size()) {
-						_allEnemyAttachDelay[i] = false;
-					}
-				}), nullptr);
-				action2->setTag(1111);
-				//rotateCharacter(_alltargetUnit[i], 10 - direc);
-				_allEnemyUnitSprite[i]->runAction(Spawn::create(action2, forCallback, nullptr));
-				//_indexOfRunningActionTarget = i;
-			}
-		}
+			//check for enemy unit auto attack
+// 			if (posDistan.length() < ATTACK_AOE*_allEnemyUnitData[i].attack_range/100.0f && _allEnemyUnitSprite[i]->isVisible() && !_allEnemyUnitData[i].isStun) {
+// 
+// 				if (/*_allEnemyUnitSprite[i]->getNumberOfRunningActions() < 1 &&*/ _allEnemyAttachDelay[i] == false) {
+// 					_allEnemyUnitSprite[i]->stopAllActionsByTag(_allEnemyUnitSprite[i]->getTag());
+// 					string path = "image/unit_new/attack/red/";
+// 
+// 					auto target_ani = createAttackAnimationWithDefine(10 - direc, path);
+// 					auto call2 = CallFuncN::create(CC_CALLBACK_1(BattleScene::enemyAttackCallback, this,i));
+// 					auto action2 = Sequence::create(Animate::create(target_ani), call2, nullptr);
+// 					_allEnemyAttachDelay[i] = true;
+// 					auto forCallback = Sequence::create(DelayTime::create(_allEnemyUnitData[i].attack_speed), CallFuncN::create([&, i](Ref *p) {
+// 						if (i < _allEnemyAttachDelay.size()) {
+// 							_allEnemyAttachDelay[i] = false;
+// 						}
+// 					}), nullptr);
+// 					action2->setTag(1111);
+// 					//rotateCharacter(_alltargetUnit[i], 10 - direc);
+// 					_allEnemyUnitSprite[i]->runAction(Spawn::create(action2, forCallback, nullptr));
+// 					//_indexOfRunningActionTarget = i;
+// 				}
+// 			}
 	}
 
 	//check for run fountain restore action
@@ -831,45 +1153,52 @@ void BattleScene::checkForAutoAttack()
 		testObject->stopActionByTag(FOUNTAIN_ACTION);
 	}
 }
-void BattleScene::characterAttackCallback()
+void BattleScene::characterAttackCallback(int  i, int dame)
 {
 	//if main character die before atack event end.
 	if (_onRespwanFlg) return;
 	//log("charater");
 	//check for enemy unit still alive
-	if (_allEnemyUnitData[_indexOfBeAttackEnemy].hp > 0) {
+	if (_allEnemyUnitData[i].hp > 0) {
 		//default dame = attack -  defence
-		int dame = (_mainCharacterData.attack - _allEnemyUnitData[_indexOfBeAttackEnemy].defence);
+		/*int dame = (_mainCharacterData.attack - _allEnemyUnitData[i].defence);
 		//calculate dame by unit attribute ( fire, water, wind, sand.... or none)
-		float defaultDameRate = caculDameRate(_mainCharacterData.element, _allEnemyUnitData[_indexOfBeAttackEnemy].element);
+		float defaultDameRate = caculDameRate(_mainCharacterData.element, _allEnemyUnitData[i].element);
 
 		//random dame by rate from 85% to 100%
 		dame = ceil(random(0.85f, 1.0f)*dame*defaultDameRate);
-		//check if dame < 0 (in case of attack < defence
+		//check if dame < 0 (in case of attack < defence*/
 		if (dame <= 0) {
 			dame = 1;
 		}
 		//show hp lost = final attack dame
-		showAttackDame(dame, _allEnemyUnitSprite[_indexOfBeAttackEnemy]->getPosition() + Vec2(0, 100), 1);
+		showAttackDame(dame, _allEnemyUnitSprite[i]->getPosition() + Vec2(0, 100), 1);
 
-		_allEnemyUnitData[_indexOfBeAttackEnemy].hp -= dame;
+		_allEnemyUnitData[i].hp -= dame;
 		//save dame deal info to battle result
-		saveDameInfo(dame, 0, _indexOfBeAttackEnemy, _currentPlayerTeamFlg);
+		saveDameInfo(dame, 0, i, _currentPlayerTeamFlg);
 		//check if enemy die
-		if (_allEnemyUnitData[_indexOfBeAttackEnemy].hp <= 0)
+		if (_allEnemyUnitData[i].hp <= 0)
 		{
-			enemyDieAction(_indexOfBeAttackEnemy);
+			enemyDieAction(i);
 			return;
 		}
 		//update enemy hp status bar
-		_allEnemyHpBar[_indexOfBeAttackEnemy]->setPercent(ceil((100.0f * _allEnemyUnitData[_indexOfBeAttackEnemy].hp / _allEnemuUnitMaxHp[_indexOfBeAttackEnemy])));
+		_allEnemyHpBar[i]->setPercent(ceil((100.0f * _allEnemyUnitData[i].hp / _allEnemuUnitMaxHp[i])));
 		
 
 	}
 	else {
 		//enemyDieAction(_indexOfBeAttackEnemy);
 	}
+	//_onDelayAttackFlg = false;
 }
+void BattleScene::oneSecondAttackCallback()
+{
+	_onDelayAttackFlg = false;
+}
+
+
 
 void BattleScene::enemyDieAction(int id)
 {
@@ -957,49 +1286,63 @@ void BattleScene::runRespawnAction(int killerId)
 {
 	if (_onRespwanFlg) return;
 	_onRespwanFlg = true;
-	saveKillDeadInfo(killerId, 0, _currentEnemyTeamFlg);
-	_alliedTeamTotalDead += 1;
-	if (_alliedTeamTotalDead == 5)
-	{
-		endBattle();
-	}
-	auto timeLb = Label::createWithSystemFont("5", JAPANESE_FONT_1_HEAVY, 150);
-	_battleBackround->addChild(timeLb, 1000);
-	timeLb->setPosition(testObject->getPosition());
-	timeLb->setColor(Color3B::RED);
-	/* Move skill area sprite
-	*/
-	while (_battleBackround->getChildByTag(DRAW_UNIT))
-	{
-		_battleBackround->removeChildByTag(DRAW_UNIT);
-	}
-	/*reset enemy unit color*/
-	for (auto& e : _allEnemyUnitSprite)
-	{
-		e->setColor(Color3B::WHITE);
-	}
-	_mainCharacterMiniHpBar->setPercent(100);
-	_mainCharacterHpBar->setPercent(100);
-	_mainCharacterMpBar->setPercent(100);
-	_mainCharacterData.hp = _allAlliedUnitMaxHp[0];
-	_mainCharacterData.mp = _mainCharacerMaxMp;
-	testObject->setVisible(false);
-	auto action = Repeat::create(Sequence::create(DelayTime::create(1), CallFuncN::create([&](Ref *pSender){
-		Label* lb = dynamic_cast<Label*>(pSender);
-		int t = DataUtils::stringToFloat(lb->getString());
-		lb->setString(DataUtils::numberToString(t - 1));
-	}), nullptr), 5);
-	auto action2 = CallFuncN::create([&](Ref *pSEnder){
-		Label* lb = dynamic_cast<Label*>(pSEnder);
-		lb->removeFromParent();
-		testObject->setPosition(Vec2(_visibleSize.width, 100));
-		testObject->setVisible(true);
-		auto action3 = Spawn::create(Blink::create(0.6f, 6), Sequence::create(DelayTime::create(RESPAWN_DELAY), CallFuncN::create(CC_CALLBACK_0(BattleScene::removeRespawnFlg,this)), nullptr), nullptr);
-		testObject->runAction(action3);
-		//BattleAPI::getInstance()->battleSyncEvent(_mainCharacterData);
-		//SEND RESPAWN ACTIOn
+	//FOR sever fix position
+	BattleAPI::getInstance()->sendDeadEvent(_mainCharacterData, [&](SIOClient* client, const std::string json) {
+
+		log("Dead event callback From server with data: %s", json.c_str());
+
 	});
-	timeLb->runAction(Sequence::create(action, action2, nullptr));
+
+		saveKillDeadInfo(killerId, 0, _currentEnemyTeamFlg);
+		_alliedTeamTotalDead += 1;
+		if (_alliedTeamTotalDead == 5)
+		{
+			endBattle();
+		}
+		auto timeLb = Label::createWithSystemFont("5", JAPANESE_FONT_1_HEAVY, 150);
+		_battleBackround->addChild(timeLb, 1000);
+		timeLb->setPosition(testObject->getPosition());
+		timeLb->setColor(Color3B::RED);
+		/* Move skill area sprite
+		*/
+		while (_battleBackround->getChildByTag(DRAW_UNIT))
+		{
+			_battleBackround->removeChildByTag(DRAW_UNIT);
+		}
+		/*reset enemy unit color*/
+		for (auto& e : _allEnemyUnitSprite)
+		{
+			e->setColor(Color3B::WHITE);
+		}
+		_mainCharacterMiniHpBar->setPercent(100);
+		_mainCharacterHpBar->setPercent(100);
+		_mainCharacterMpBar->setPercent(100);
+		_mainCharacterData.hp = _allAlliedUnitMaxHp[0];
+		_mainCharacterData.mp = _mainCharacerMaxMp;
+		testObject->setVisible(false);
+		auto action = Repeat::create(Sequence::create(DelayTime::create(1), CallFuncN::create([&](Ref *pSender){
+			Label* lb = dynamic_cast<Label*>(pSender);
+			int t = DataUtils::stringToFloat(lb->getString());
+			lb->setString(DataUtils::numberToString(t - 1));
+		}), nullptr), 5);
+		auto action2 = CallFuncN::create([&](Ref *pSEnder){
+			Label* lb = dynamic_cast<Label*>(pSEnder);
+			lb->removeFromParent();
+
+			auto unitData = BattleModel::getInstance()->getUnitInforByUuid(UserModel::getInstance()->getUuId());
+			testObject->setPosition(Vec2(unitData.position_x, unitData.position_y));
+			testObject->rotateCharacter(unitData.direction);
+			//testObject->setPosition(Vec2(_visibleSize.width, 100)); //need to change to value base on callback from server
+			testObject->setVisible(true);
+			auto action3 = Spawn::create(Blink::create(0.6f, 6), Sequence::create(DelayTime::create(RESPAWN_DELAY), CallFuncN::create(CC_CALLBACK_0(BattleScene::removeRespawnFlg, this)), nullptr), nullptr);
+			testObject->runAction(action3);
+			//BattleAPI::getInstance()->battleSyncEvent(_mainCharacterData);
+			//SEND RESPAWN ACTION
+
+		});
+		timeLb->runAction(Sequence::create(action, action2, nullptr));
+
+	
 }
 void BattleScene::removeRespawnFlg()
 {
@@ -1246,11 +1589,14 @@ void BattleScene::updateMiniMap()
 	float positionXScaleRate = _miniMap->getContentSize().width / (_visibleSize.width * 2);
 	float positionYScaleRate = _miniMap->getContentSize().height / (_visibleSize.height * 2);
 	_selectRect->setPosition(Vec2(objectPos.x*positionXScaleRate,objectPos.y*positionYScaleRate));
-	for (int i = 0; i < ENEMY_NUM; i++)
+	for (int i = 0; i < _allEnemyUnitData.size(); i++)
 	{
 		_allEnemyIconInMinimap[i]->setPosition(Vec2(_allEnemyUnitSprite[i]->getPositionX()*positionXScaleRate, _allEnemyUnitSprite[i]->getPositionY()*positionYScaleRate));
 	}
-
+	for (int i = 1; i < _allAlliedUnitData.size(); i++)
+	{
+		_allAlliedUnitIconInMiniMap[i-1]->setPosition(Vec2(_allAlliedUnitSprite[i]->getPositionX()*positionXScaleRate, _allAlliedUnitSprite[i]->getPositionY()*positionYScaleRate));
+	}
 	
 }
 
@@ -1673,12 +2019,14 @@ vector<UserSkillInfo> BattleScene::getUnitSkillFromDataBase(UserUnitInfo unitDat
 	return result;
 }
 
-vector<UserUnitInfo> BattleScene::getEnemyUnitsData(vector<int> enemyIdList)
+vector<UserUnitInfo> BattleScene::getUnitsDataListByUnitIdIdList(vector<Room_User_Unit_Model> idList)
 {
 	vector<UserUnitInfo> returnData;
-	for (int i = 0; i < ENEMY_NUM; i++)
+	for (int i = 0; i < idList.size(); i++)
 	{
-		returnData.push_back(UserUnitModel::getInstance()->getUnitInfoById(random(1,6)));
+		auto unitInfo = UserUnitModel::getInstance()->getUnitInfoById(idList[i].mst_unit_id);
+		unitInfo.uuid = idList[i].uuid;
+		returnData.push_back(unitInfo);
 	}
 	
 
@@ -2350,13 +2698,22 @@ vector<int> BattleScene::detectUnitInAoe(UserSkillInfo skill, int unitFlg, bool 
 {
 	vector<int> resultUnitId;
 	vector<Sprite*> allUnit;
+	auto teamFlg = UserModel::getInstance()->getUserInfo().team_id;
 	switch (unitFlg)
 	{
 	case ENEMY_FLAG:
-		allUnit = _allEnemyUnitSprite;
+		for (auto &unit : _allEnemyUnitSprite)
+		{
+			allUnit.push_back(unit);
+		}
+		//More for tower
 		break;
 	case ALLIED_FLAG:
-		allUnit = _allAlliedUnitSprite;
+		for (auto &unit: _allAlliedUnitSprite)
+		{
+			allUnit.push_back(unit);
+			//more for tower
+		}
 		break;
 	default:
 		break;
@@ -2475,7 +2832,9 @@ void BattleScene::updateHpAndMpViewLabel()
 
 void BattleScene::endBattle()
 {
-	BattleAPI::getInstance()->sendBattleEndEvent();
+	BattleAPI::getInstance()->sendBattleEndEvent([&](SIOClient *client, const string data) {
+		log("battle end callback with data: %s", data.c_str());
+	});
 	Director::getInstance()->replaceScene(TransitionMoveInR::create(SCREEN_TRANSI_DELAY, BatleResultScene::createScene(_blueTeamInfo,_redTeamInfo)));
 }
 
@@ -2546,6 +2905,14 @@ BattleScene::BattleScene() :
 BattleScene::~BattleScene()
 {
 	Director::getInstance()->getScheduler()->unschedule(schedule_selector(BattleScene::update), this);
+	_allAlliedUnitData = {};
+	_allAlliedUnitSprite = {};
+	_allAlliedUnitHpBar = {};
+
+	_allEnemyUnitData = {};
+	_allEnemyUnitSprite = {};
+	_allAlliedUnitData = {};
+
 }
 
 void BattleScene::saveDameInfo(int dame, int attackUnitId, int beAttackUnitId, int teamFlg)
@@ -2579,11 +2946,11 @@ void BattleScene::saveKillDeadInfo(int killerId, int deadUnitId, int teamFlg)
 		{
 		case TEAM_FLG_BLUE:
 			_blueTeamInfo[killerId].killNum++;
-			if(deadUnitId < ENEMY_NUM) _redTeamInfo[deadUnitId].deadNum++;
+			if(deadUnitId < _allEnemyUnitData.size()) _redTeamInfo[deadUnitId].deadNum++;
 			break;
 		case TEAM_FLG_RED:
 			_redTeamInfo[killerId].killNum++;
-			if(deadUnitId < ENEMY_NUM)_blueTeamInfo[deadUnitId].deadNum++;
+			if (deadUnitId < _allEnemyUnitData.size())_blueTeamInfo[deadUnitId].deadNum++;
 			break;
 		default:
 			break;
@@ -2596,12 +2963,12 @@ void BattleScene::saveKillDeadInfo(int killerId, int deadUnitId, int teamFlg)
 			{
 			case TEAM_FLG_BLUE:
 				_blueTeamInfo[deadUnitId].deadNum++;
-				if(killerId < ENEMY_NUM) _redTeamInfo[killerId].killNum++;
+				if (killerId < _allEnemyUnitData.size()) _redTeamInfo[killerId].killNum++;
 
 				break;
 			case TEAM_FLG_RED:
 				_redTeamInfo[deadUnitId].deadNum++;
-				if(killerId < ENEMY_NUM)_blueTeamInfo[killerId].killNum++;
+				if (killerId < _allEnemyUnitData.size())_blueTeamInfo[killerId].killNum++;
 				break;
 			default:
 				break;
@@ -2739,7 +3106,7 @@ void BattleScene::poisonEffectAction(UserSkillInfo skill, int index)
 
 void BattleScene::enemyUnitAutoMoveTest()
 {
-	for (int i = 0; i < ENEMY_NUM; i++)
+	for (int i = 0; i < _allEnemyUnitData.size(); i++)
 	{
 		if (!_allEnemyUnitSprite[i]->isVisible())
 		{

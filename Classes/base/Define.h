@@ -8,6 +8,38 @@ User default information
 _name: User name
 _onRoom: Current room where user is playing. Default 0 is idle user
 */
+
+
+struct Room_User_Unit_Model
+{
+	string _id = "";
+	int status = 0;
+	int mp = 0;
+	int hp = 0;
+	float position_x = 0;
+	float position_y = 0;
+	int direction = 0;
+	int team_id = 0;
+	int room_id = 0;
+	int user_id = 0;
+	int mst_unit_id = 0;
+	string uuid = "";
+	int angle = 0;
+	bool moving = false;
+};
+
+//Double bellow
+struct Room_User_Model
+{
+	string _id = "";
+	int npc = 0;
+	int state = 0;
+	int ready = 0;
+	int team_id = 0;
+	int user_id = 0;
+	int room_id = 0;
+	string uuid = "";
+};
 struct RoomUser
 {
 	string _uuid;
@@ -113,8 +145,8 @@ struct UserBattleInfo
 #define DAME_TYPE_PERCENT 2
 #define DAME_TYPE_PURE 1
 
-#define TEAM_FLG_RED 1
-#define TEAM_FLG_BLUE 2
+#define TEAM_FLG_RED 2
+#define TEAM_FLG_BLUE 1
 
 enum SKILL_HELP_TYPE
 {

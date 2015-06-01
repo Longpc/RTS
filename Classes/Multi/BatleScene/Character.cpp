@@ -108,14 +108,18 @@ void Character::moveActionByVector(Vec2 destination)
 	}
 }
 
-void Character::attackActionByUnitPosition(int direction , int attackTime ,AttackCallback attackCallback)
+void Character::attackActionByUnitPosition(int direction , int attackTime, AttackCallback oneSecondCb, AttackCallback attackCallback)
 {
 	if (getAttackDelayFlag() == false) {
 		setAttackDelayFlag(true);
 		rotateCharacter(direction);
 		auto ani = Animate::create(createAttackAnimationWithDefine(direction));
-		auto call1 = CallFuncN::create([& , attackCallback](Ref* pSender){
+		auto call1 = CallFuncN::create([& , oneSecondCb](Ref* pSender){
 			setAttackDelayFlag(false);
+			if (oneSecondCb != nullptr)
+			{
+				oneSecondCb();
+			}
 			
 		});
 		this->runAction(Spawn::create(Sequence::create(DelayTime::create(attackTime), call1, nullptr), Sequence::create(ani, CallFuncN::create([&, attackCallback](Ref* pSender){
