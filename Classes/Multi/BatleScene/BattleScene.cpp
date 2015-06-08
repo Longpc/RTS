@@ -40,7 +40,7 @@ bool BattleScene::init()
 		_playerSkills.push_back(UserSkillModel::getInstance()->getSkillInfoById(sk));
 	}
 	///INIT DATA FOR ALL UNIT IN BATTLE
-	_mainCharacterData = getUnitDataFromDataBase(_selectedUnitId);
+	auto _mainCharacterData = getUnitDataFromDataBase(_selectedUnitId);
 	_mainCharacterData.uuid = UserModel::getInstance()->getUuId();
 
 	_mainCharacterSkillData = getUnitSkillFromDataBase(_mainCharacterData);
@@ -163,35 +163,24 @@ bool BattleScene::init()
 		}
 	}
 	testObject->setMoveMode(_moveMode);
-
-	if (_currentPlayerTeamFlg == TEAM_FLG_BLUE) {
+	/*size - 1 because we don't save dame dead by tower*/
+	for (int i = 0; i < _allAlliedUnitData.size() - 1; i++)
+	{
 		UserBattleInfo info;
-		info.name = _mainCharacterData.name;
-		info.unitId = _mainCharacterData.mst_unit_id;
-		info.imagePath = UserUnitModel::getInstance()->getUnitImageById(_mainCharacterData.mst_unit_id);
-		_blueTeamInfo.push_back(info);
-		for (int i = 0; i < _allEnemyUnitData.size(); i++)
-		{
-			UserBattleInfo enemy;
-			enemy.name = _allEnemyUnitData[i].name;
-			enemy.unitId = _allEnemyUnitData[i].mst_unit_id;
-			_redTeamInfo.push_back(enemy);
-		}
-		
+		info.name = _allAlliedUnitData[i].name;
+		info.unitId = _allAlliedUnitData[i].mst_unit_id;
+		info.imagePath = UserUnitModel::getInstance()->getUnitImageById(_allAlliedUnitData[i].mst_unit_id);
+		_saveBattleInfoAlliedTeam.push_back(info);
 	}
-	else {
-		UserBattleInfo info;
-		info.name = _mainCharacterData.name;
-		info.unitId = _mainCharacterData.mst_unit_id;
-		_redTeamInfo.push_back(info);
-		for (int i = 0; i < _allEnemyUnitData.size(); i++)
-		{
-			UserBattleInfo enemy;
-			enemy.name = _allEnemyUnitData[i].name;
-			enemy.unitId = _allEnemyUnitData[i].mst_unit_id;
-			_blueTeamInfo.push_back(enemy);
-		}
+	/*Size - 1 because we don't save dame dead by tower*/
+	for (int i = 0; i < _allEnemyUnitData.size() - 1; i++)
+	{
+		UserBattleInfo enemy;
+		enemy.name = _allEnemyUnitData[i].name;
+		enemy.unitId = _allEnemyUnitData[i].mst_unit_id;
+		_saveBattleInfoEnemyTeam.push_back(enemy);
 	}
+	/*Scene main schedule update init*/
 	scheduleUpdate();
 	return true;
 }
@@ -339,7 +328,7 @@ void BattleScene::createContent()
 	testObject->getPhysicsBody()->setContactTestBitmask(0x1);
 	testObject->getPhysicsBody()->setCategoryBitmask(cTeamContactCategory);
 	testObject->getPhysicsBody()->setCollisionBitmask(cTeamContactCollision);
-	testObject->setCharacterMoveSpeed(_mainCharacterData.move_speed);
+	testObject->setCharacterMoveSpeed(_allAlliedUnitData[0].move_speed);
 
 
 	_statusContainer = Node::create();
@@ -392,7 +381,7 @@ void BattleScene::createContent()
 	_mainCharacterHpBar->setPosition(Vec2(topMenu->getContentSize().width / 2 + 25, _visibleSize.height - 22));
 	addChild(_mainCharacterHpBar);
 
-	_hpViewLabel = Label::createWithSystemFont(DataUtils::numberToString(_mainCharacterData.hp), "", 20);
+	_hpViewLabel = Label::createWithSystemFont(DataUtils::numberToString(_allAlliedUnitData[0].hp), "", 20);
 	_hpViewLabel->setColor(Color3B::GREEN);
 	_hpViewLabel->setContentSize(Size(150, 50));
 	_hpViewLabel->setPosition(Vec2(_mainCharacterHpBar->getContentSize()) - Vec2(0, 50));
@@ -409,7 +398,7 @@ void BattleScene::createContent()
 	mask->setPosition(slotPos);
 	_characterImageViewNode->setStencil(mask);
 
-	auto icon = Sprite::create(UserUnitModel::getInstance()->getUnitImageById(_mainCharacterData.mst_unit_id));
+	auto icon = Sprite::create(UserUnitModel::getInstance()->getUnitImageById(_allAlliedUnitData[0].mst_unit_id));
 	icon->setPosition(slotPos + Vec2(0,0));
 	icon->setScale(1.4f);
 	icon->setTag(ICON);
@@ -503,7 +492,7 @@ void BattleScene::createContent()
 	_mainCharacterMpBar->setPosition(Vec2(_visibleSize.width / 2, baseSize.height + baseMargin * 2));
 	addChild(_mainCharacterMpBar);
 
-	_mpViewlabel = Label::createWithSystemFont(DataUtils::numberToString(_mainCharacterData.mp), "", 20);
+	_mpViewlabel = Label::createWithSystemFont(DataUtils::numberToString(_allAlliedUnitData[0].mp), "", 20);
 	_mpViewlabel->setColor(Color3B::BLUE);
 	_mpViewlabel->setContentSize(Size(150, 50));
 	_mpViewlabel->setPosition(Vec2(_mainCharacterMpBar->getContentSize()) + Vec2(50, 0));
@@ -557,12 +546,13 @@ void BattleScene::createContent()
 		hpB->loadProgressBarTexture("image/screen/battle/mini_hp_gauge.png");
 		//_hpSlider->setContentSize(Size(372, 12));
 		hpB->setPosition(Vec2(sp->getContentSize().width / 2, sp->getContentSize().height - 10));
+		hpB->setTag(HPBAR_TAG);
 		_allEnemyHpBar.push_back(hpB);
 		sp->addChild(_allEnemyHpBar.back(), 100);
 		_allEnemyUnitSprite.push_back(sp);
 		_battleBackround->addChild(_allEnemyUnitSprite.back(), MID);
 
-		auto enemyIcon = Sprite::create("image/screen/battle/enemyicon.png");
+		auto enemyIcon = Sprite::create("image/screen/battle/enemy_icon.png");
 		enemyIcon->setOpacity(255);
 		enemyIcon->setPosition(Vec2(sp->getPositionX()*positionXScaleRate, sp->getPositionY()*positionYScaleRate));
 		_allEnemyIconInMinimap.push_back(enemyIcon);
@@ -596,19 +586,17 @@ void BattleScene::createContent()
 		hpB1->loadProgressBarTexture("image/screen/battle/mini_hp_gauge.png");
 		//_hpSlider->setContentSize(Size(372, 12));
 		hpB1->setPosition(Vec2(sp1->getContentSize().width / 2, sp1->getContentSize().height - 10));
-		_allEnemyHpBar.push_back(hpB1);
-		sp1->addChild(_allEnemyHpBar.back(), 100);
+		hpB1->setTag(HPBAR_TAG);
+		_allAlliedUnitHpBar.push_back(hpB1);
+		sp1->addChild(_allAlliedUnitHpBar.back(), 100);
 		_allAlliedUnitSprite.push_back(sp1);
 		_battleBackround->addChild(_allAlliedUnitSprite.back(), MID);
 
-		auto enemyIcon1 = Sprite::create("image/screen/battle/enemyicon.png");
-		enemyIcon1->setOpacity(255);
-		enemyIcon1->setColor(Color3B::RED);
-		enemyIcon1->setPosition(Vec2(sp1->getPositionX()*positionXScaleRate, sp1->getPositionY()*positionYScaleRate));
-		_allAlliedUnitIconInMiniMap.push_back(enemyIcon1);
+		auto allied = Sprite::create("image/screen/battle/allied_icon.png");
+		allied->setOpacity(255);
+		allied->setPosition(Vec2(sp1->getPositionX()*positionXScaleRate, sp1->getPositionY()*positionYScaleRate));
+		_allAlliedUnitIconInMiniMap.push_back(allied);
 		node->addChild(_allAlliedUnitIconInMiniMap.back(), 1);
-		_allEnemyAttachDelay.push_back(false);
-
 		vector<string> tmp1 = {};
 		_alliedStatusImagePath.push_back(tmp1);
 	}
@@ -617,12 +605,11 @@ void BattleScene::createContent()
 	_testAttackTarget->setScale(IMAGE_SCALE);
 	_battleBackround->addChild(_testAttackTarget);*/
 
-	auto enemyIcon1 = Sprite::create("image/screen/battle/enemyicon.png");
+	auto enemyIcon1 = Sprite::create("image/screen/battle/enemy_icon.png");
 	enemyIcon1->setOpacity(255);
 
-	auto alliedIcon = Sprite::create("image/screen/battle/enemyicon.png");
+	auto alliedIcon = Sprite::create("image/screen/battle/allied_icon.png");
 	alliedIcon->setOpacity(255);
-	alliedIcon->setColor(Color3B::RED);
 	vector<string> tmp1 = {};
 
 	switch (_currentPlayerTeamFlg)
@@ -750,9 +737,18 @@ void BattleScene::createContent()
 
 	});
 	*/
+
+	/************************************************************************/
+	/* HANDLERS FOR BATTLE BROADCAST EVENTS                                                                     */
+	/************************************************************************/
+	/*Battle update event*/
 	sv->on("battle_update", [&](SIOClient* client, const std::string data){
-		log("BATTLE UPDATE data: %s", data.c_str());
+		//log("BATTLE UPDATE data: %s", data.c_str());
 		//same data with battle sync but change for detect unit by uuid
+		
+		/*Check for battle destruct called*/
+		if (_onDestructCalled) return;
+
 		auto uuid = UserModel::getInstance()->getUuId();
 		Document doc;
 		doc.Parse<0>(data.c_str());
@@ -765,7 +761,7 @@ void BattleScene::createContent()
 			//sync HP, MP...
 			//Update all data of Room_User_Unit_model in Battle Model
 			for (int i = 0; i < doc["user_unit"].Size(); i++) {
-				log("!EEEE");
+				//log("!EEEE");
 				Room_User_Unit_Model tempUnit;
 				tempUnit._id = doc["user_unit"][rapidjson::SizeType(i)]["_id"].GetString();
 				tempUnit.status = doc["user_unit"][rapidjson::SizeType(i)]["status"].GetInt();
@@ -783,9 +779,9 @@ void BattleScene::createContent()
 				tempUnit.moving = doc["user_unit"][rapidjson::SizeType(i)]["moving"].GetBool();
 
 				BattleModel::getInstance()->updateUserUnit(tempUnit);
-				/*//bellow code for sync HP and MP of all Unit
-
-				for (auto &unit1  : _allAlliedUnitData)
+				//bellow code for sync HP and MP of all Unit
+				//Not using yet. Need data sync function in server
+				/*for (auto &unit1  : _allAlliedUnitData)
 				{
 					if (strcmp(unit1.uuid.c_str(), tempUnit.uuid.c_str()) == 0) {
 						unit1.hp = tempUnit.hp;
@@ -801,8 +797,8 @@ void BattleScene::createContent()
 						ene.hp = tempUnit.hp;
 						ene.mp = tempUnit.mp;
 					}
-				}*/
-
+				}
+				*/
 
 				string sv_uuid = doc["user_unit"][rapidjson::SizeType(i)]["uuid"].GetString();
 				if (strcmp(sv_uuid.c_str(), uuid.c_str()) == 0) {
@@ -867,16 +863,21 @@ void BattleScene::createContent()
 			testSprite->setPosition(Vec2(doc["position_x"].GetDouble(), doc["position_y"].GetDouble()));
 		}
 	});*/
-
+	/*Unit move event public event*/
 	sv->on("unit_move_end", [&](SIOClient* client, const string& data) {
 		log("Unit_move_end data: %s", data.c_str());
+		/*check for battle scene ondestruct called*/
+		if (_onDestructCalled) return;
 		//testSprite->getPhysicsBody()->setVelocity(Vec2::ZERO);
 
 	});
 
-
+	/*Unit attack public event*/
 	sv->on("attack", [&](SIOClient *client, const string data) {
 		log("Another attacks: %s", data.c_str());
+		/*check for battle destruct called*/
+		if (_onDestructCalled) return;
+
 		auto uuid = UserModel::getInstance()->getUuId();
 		Document doc;
 		doc.Parse<0>(data.c_str());
@@ -886,71 +887,122 @@ void BattleScene::createContent()
 		}
 		if (doc.IsObject()) {
 			int teamId = UserModel::getInstance()->getUserInfo().team_id;
-			vector<Sprite*> processUnitSprite = {};
-			vector<UserUnitInfo> processUnitData = {};
-
-			vector<Sprite*> targetSpriteList = {};
-			vector<UserUnitInfo> targetDataList = {};
 			if (doc["team_id"].GetInt() == teamId) {
-				processUnitSprite = _allAlliedUnitSprite;
-				processUnitData = _allAlliedUnitData;
-				targetDataList = _allEnemyUnitData;
-				targetSpriteList = _allEnemyUnitSprite;
+				rt_attackAnimationandLogic(doc, _allAlliedUnitSprite, _allAlliedUnitData, _allEnemyUnitSprite, _allEnemyUnitData);
 
 			}
 			else {
-				processUnitSprite = _allEnemyUnitSprite;
-				processUnitData = _allEnemyUnitData;
-				targetDataList = _allAlliedUnitData;
-				targetSpriteList = _allAlliedUnitSprite;
+				rt_attackAnimationandLogic(doc, _allEnemyUnitSprite, _allEnemyUnitData, _allAlliedUnitSprite, _allAlliedUnitData);
 			}
 
-			for (int i = 0; i < processUnitData.size(); i++)
+		}
+	});
+	/*Handler for battle public skill event*/
+	sv->on("play_skill_end", [&](SIOClient* client, const std::string data ) {
+		log("Skill event callback data: %s", data.c_str());
+		/*check for battle scene destruct called*/
+		if (_onDestructCalled) return;
+		Document doc;
+		doc.Parse<0>(data.c_str());
+		if (doc.HasParseError()) {
+			log("Parse JSOn error");
+			return;
+		}
+		if (doc.IsObject()) {
+			/************************************************************************/
+			/* PARSE SKILL DATA                                                     */
+			/************************************************************************/
+			UserSkillInfo skill;
+			skill.mst_skill_id = doc["mst_skill"]["mst_skill_id"].GetInt();
+			skill.skill_type = doc["mst_skill"]["skill_type"].GetInt();
+			skill.mp_cost = doc["mst_skill"]["mp_cost"].GetInt();
+			skill.cooldown_time = doc["mst_skill"]["cooldown_time"].GetInt();
+			skill.range_type = doc["mst_skill"]["range_type"].GetInt();
+			skill.range_distance = doc["mst_skill"]["range_distance"].GetInt();
+			skill.multi_effect = doc["mst_skill"]["multi_effect"].GetInt();
+			skill.target_type = doc["mst_skill"]["target_type"].GetInt();
+			skill.effect_type = doc["mst_skill"]["effect_type"].GetInt();
+			skill.buff_effect_type = doc["mst_skill"]["buff_effect_type"].GetInt();
+			skill.duration = doc["mst_skill"]["duration"].GetInt();
+			skill.corrett_value = doc["mst_skill"]["corrett_value"].GetInt();
+			skill.correct_type = doc["mst_skill"]["correct_type"].GetInt();
+
+			/************************************************************************/
+			/* PARSER UNIT DATA                                                     */
+			/************************************************************************/
+
+			UserUnitInfo unit;
+			unit.mst_unit_id = doc["mst_unit"]["mst_unit_id"].GetInt();
+			unit.hp = doc["mst_unit"]["hp"].GetInt();
+			unit.hp_heal = doc["mst_unit"]["hp_heal"].GetInt();
+			unit.mp = doc["mst_unit"]["mp"].GetInt();
+			unit.mp_heal = doc["mst_unit"]["mp_heal"].GetInt();
+			unit.attack = doc["mst_unit"]["attack"].GetInt();
+			unit.attack_range = doc["mst_unit"]["attack_range"].GetInt();
+			unit.attack_speed = doc["mst_unit"]["attack_speed"].GetInt();
+			unit.defence = doc["mst_unit"]["defence"].GetInt();
+			unit.move_speed = doc["mst_unit"]["move_speed"].GetInt();
+			unit.element = doc["mst_unit"]["element"].GetInt();
+
+
+			
+			Sprite* playObject;
+			bool found = false;
+			for (int i = 0; i < _allAlliedUnitData.size(); i++)
 			{
-				if (strcmp(processUnitData[i].uuid.c_str(), doc["uuid"].GetString()) == 0) {
-					log("HERE IS ATTACKER");
-					Character* cha = (Character*)processUnitSprite[i];
-					//bellow code for detect be attacked unit and sync data:
-					Sprite* target;
-					for (int j = 0; i < targetDataList.size(); j ++)
-					{
-						if (strcmp(doc["target"]["uuid"].GetString(), targetDataList[j].uuid.c_str()) == 0) {
-							log("Here is target");
-							target = targetSpriteList[j];
-							break;
-						}
-					}
-					int dame = doc["dame"].GetInt();
-					if (dame <= 0) {
-						dame = 1;
-					}
-					log("Dame: %d", dame);
-					cha->attackActionByUnitPosition(doc["direction"].GetInt(), doc["user_unit"]["attack_speed"].GetInt()/*, nullptr, [&, target,dame]() {
-						
-						//show hp lost = final attack dame
-						showAttackDame(dame, target->getPosition() + Vec2(0, 100), 1);
-
-						_allEnemyUnitData[i].hp -= dame;
-						//save dame deal info to battle result
-						saveDameInfo(dame, 0, i, _currentPlayerTeamFlg);
-						//check if enemy die
-						if (_allEnemyUnitData[i].hp <= 0)
-						{
-							enemyDieAction(i);
-							return;
-						}
-						//update enemy hp status bar
-						_allEnemyHpBar[i]->setPercent(ceil((100.0f * _allEnemyUnitData[i].hp / _allEnemuUnitMaxHp[i])));
-					}*/);
-
+				if (strcmp(_allAlliedUnitData[i].uuid.c_str(), doc["uuid"].GetString()) == 0) {
+					playObject = _allAlliedUnitSprite[i];
+					found = true;
+					log("Object in allied[%d]", i);
 					break;
 				}
 			}
+			if (!found)
+			{
+				for (int j = 0; j < _allEnemyUnitData.size(); j++)
+				{
+					if (strcmp(_allEnemyUnitData[j].uuid.c_str(), doc["uuid"].GetString()) == 0) {
+						playObject = _allEnemyUnitSprite[j];
+						found = true;
+						log("Object in enemy[%d]", j);
+						break;
+					}
+				}
+			}
 
-
-
+			if (playObject == testObject) {
+				for (auto& e : _allEnemyUnitSprite)
+				{
+					e->setColor(Color3B::WHITE);
+				}
+				_allAlliedUnitData[0].mp -= skill.mp_cost;
+				//BattleAPI::getInstance()->battleSyncEvent(_allAlliedUnitData[0]);
+				_mainCharacterMpBar->setPercent(ceil(100.0f * _allAlliedUnitData[0].mp / _mainCharacerMaxMp));
+			}
+			int team_id = doc["team_id"].GetInt();
+			float randNum = doc["random"].GetDouble();
+			log("team Id: %d", team_id);
+			switch (skill.effect_type)
+			{
+			case TYPE_BUFF:
+				skillBuffAction(playObject, skill, team_id);
+				break;
+			case TYPE_RESTORE:
+				skillRestoreAction(playObject, skill, team_id);
+				break;
+			case TYPE_ATTACK:
+				skillAttackAction(playObject, skill, unit, team_id,randNum);
+				break;
+			case TYPE_POISON:
+				skillPoisonAction(playObject, skill, team_id);
+				break;
+			case TYPE_STUN:
+				skillStunAction(playObject, skill, team_id);
+				break;
+			default:
+				break;
+			}
 		}
-
 	});
 }
 
@@ -1058,7 +1110,7 @@ void BattleScene::update(float delta)
 		{
 			a->setColor(Color3B::WHITE);
 		}
-		vector<int> detectedUnit = detectUnitInAoe(_onSelectSkillData, ENEMY_FLAG, false);
+		vector<int> detectedUnit = detectUnitInAoe(testObject,_onSelectSkillData, ENEMY_FLAG, false);
 		for (auto &c : detectedUnit)
 		{
 			_allEnemyUnitSprite[c]->setColor(Color3B::RED);
@@ -1091,7 +1143,7 @@ void BattleScene::checkForAutoAttack()
 
 			auto posDistan = _allEnemyUnitSprite[i]->getPosition() - testObject->getPosition();
 			int direc = detectDirectionBaseOnTouchAngle(-posDistan.getAngle()*RAD_DEG + 90);
-			if (posDistan.length() - _allEnemyUnitSprite[i]->getBoundingBox().size.width / 4 < ATTACK_AOE*_mainCharacterData.attack_range / 100.0f && _allEnemyUnitSprite[i]->isVisible()) {
+			if (posDistan.length() - _allEnemyUnitSprite[i]->getBoundingBox().size.width / 4 < ATTACK_AOE*_allAlliedUnitData[0].attack_range / 100.0f && _allEnemyUnitSprite[i]->isVisible()) {
 
 				if (/*testObject->getActionByTag(testObject->getCurrentAttackActionTag()) == nullptr && */_onDelayAttackFlg == false) {
 					_onDelayAttackFlg = true;
@@ -1099,7 +1151,7 @@ void BattleScene::checkForAutoAttack()
 
 					//auto call1 = CallFuncN::create(CC_CALLBACK_0(BattleScene::characterAttackCallback, this));
 				
-					BattleAPI::getInstance()->sendAttackEvent(direc,_mainCharacterData, _allEnemyUnitData[i], [&, i, direc](SIOClient *client, const string data) {
+					BattleAPI::getInstance()->sendAttackEvent(direc,_allAlliedUnitData[0], _allEnemyUnitData[i], [&, i, direc](SIOClient *client, const string data) {
 						log("Battle attack callback with data: %s", data.c_str());
 						Document doc;
 						doc.Parse<0>(data.c_str());
@@ -1107,11 +1159,11 @@ void BattleScene::checkForAutoAttack()
 							log("ATTACK: Parse JSOn error");
 							return;
 						}
-						testObject->attackActionByUnitPosition(direc, _mainCharacterData.attack_speed, CC_CALLBACK_0(BattleScene::oneSecondAttackCallback,this), CC_CALLBACK_0(BattleScene::characterAttackCallback, this, i, doc["dame"].GetInt()));
+						testObject->attackActionByUnitPosition(direc, _allAlliedUnitData[0].attack_speed, CC_CALLBACK_0(BattleScene::oneSecondAttackCallback,this), CC_CALLBACK_0(BattleScene::characterAttackCallback, this, i, doc["dame"].GetInt()));
 
 						if (_moveMode == MOVE_CIRCLE)
 						{
-							_miniUnit->attackActionByUnitPosition(direc, _mainCharacterData.attack_speed);
+							_miniUnit->attackActionByUnitPosition(direc, _allAlliedUnitData[0].attack_speed);
 						}
 
 						_indexOfBeAttackEnemy = i;
@@ -1161,9 +1213,9 @@ void BattleScene::characterAttackCallback(int  i, int dame)
 	//check for enemy unit still alive
 	if (_allEnemyUnitData[i].hp > 0) {
 		//default dame = attack -  defence
-		/*int dame = (_mainCharacterData.attack - _allEnemyUnitData[i].defence);
+		/*int dame = (_allAlliedUnitData[0].attack - _allEnemyUnitData[i].defence);
 		//calculate dame by unit attribute ( fire, water, wind, sand.... or none)
-		float defaultDameRate = caculDameRate(_mainCharacterData.element, _allEnemyUnitData[i].element);
+		float defaultDameRate = caculDameRate(_allAlliedUnitData[0].element, _allEnemyUnitData[i].element);
 
 		//random dame by rate from 85% to 100%
 		dame = ceil(random(0.85f, 1.0f)*dame*defaultDameRate);
@@ -1231,12 +1283,12 @@ void BattleScene::enemyAttackCallback(Ref *pSEnder, int i)
 	Sprite *_sprite = (Sprite*)pSEnder;
 	_sprite->stopActionByTag(1111);
 	//log("enemy");
-	if (_mainCharacterData.hp > 0)
+	if (_allAlliedUnitData[0].hp > 0)
 	{
 		if (!_onRespwanFlg)
 		{
-			int dame = _allEnemyUnitData[i].attack - _mainCharacterData.defence;
-			float defaultDameRate = caculDameRate(_allEnemyUnitData[i].element, _mainCharacterData.element);
+			int dame = _allEnemyUnitData[i].attack - _allAlliedUnitData[0].defence;
+			float defaultDameRate = caculDameRate(_allEnemyUnitData[i].element, _allAlliedUnitData[0].element);
 
 			dame = ceil(random(0.85f, 1.0f)*dame*defaultDameRate);
 			if (dame <= 0) {
@@ -1247,15 +1299,15 @@ void BattleScene::enemyAttackCallback(Ref *pSEnder, int i)
 				dame = 1;
 			}
 			showAttackDame(dame, testObject->getPosition() + Vec2(0, 100), 2);
-			_mainCharacterData.hp -= dame;
+			_allAlliedUnitData[0].hp -= dame;
 			saveDameInfo(dame, i, 0, _currentEnemyTeamFlg);
-			//BattleAPI::getInstance()->battleSyncEvent(_mainCharacterData);
-			if (_mainCharacterData.hp <= 0) {
+			//BattleAPI::getInstance()->battleSyncEvent(_allAlliedUnitData[0]);
+			if (_allAlliedUnitData[0].hp <= 0) {
 				runRespawnAction(i);
 				return;
 			}
 			//log("Percent: %d", ceil(float(float(_characterCurentHp) / float(_unitData.hp)) * 100));
-			_mainCharacterMiniHpBar->setPercent(ceil((100.0f * _mainCharacterData.hp / _allAlliedUnitMaxHp[0])));
+			_mainCharacterMiniHpBar->setPercent(ceil((100.0f * _allAlliedUnitData[0].hp / _allAlliedUnitMaxHp[0])));
 			_mainCharacterHpBar->setPercent(_mainCharacterMiniHpBar->getPercent());
 			
 		}
@@ -1287,7 +1339,8 @@ void BattleScene::runRespawnAction(int killerId)
 	if (_onRespwanFlg) return;
 	_onRespwanFlg = true;
 	//FOR sever fix position
-	BattleAPI::getInstance()->sendDeadEvent(_mainCharacterData, [&](SIOClient* client, const std::string json) {
+	
+	BattleAPI::getInstance()->sendDeadEvent(_allAlliedUnitData[0], [&](SIOClient* client, const std::string json) {
 
 		log("Dead event callback From server with data: %s", json.c_str());
 
@@ -1317,9 +1370,12 @@ void BattleScene::runRespawnAction(int killerId)
 		_mainCharacterMiniHpBar->setPercent(100);
 		_mainCharacterHpBar->setPercent(100);
 		_mainCharacterMpBar->setPercent(100);
-		_mainCharacterData.hp = _allAlliedUnitMaxHp[0];
-		_mainCharacterData.mp = _mainCharacerMaxMp;
+		_allAlliedUnitData[0].hp = _allAlliedUnitMaxHp[0];
+		_allAlliedUnitData[0].mp = _mainCharacerMaxMp;
+
+		_battleBackround->stopActionByTag(121);
 		testObject->setVisible(false);
+		testObject->setPosition(Vec2(-200, _visibleSize.height));
 		auto action = Repeat::create(Sequence::create(DelayTime::create(1), CallFuncN::create([&](Ref *pSender){
 			Label* lb = dynamic_cast<Label*>(pSender);
 			int t = DataUtils::stringToFloat(lb->getString());
@@ -1334,9 +1390,13 @@ void BattleScene::runRespawnAction(int killerId)
 			testObject->rotateCharacter(unitData.direction);
 			//testObject->setPosition(Vec2(_visibleSize.width, 100)); //need to change to value base on callback from server
 			testObject->setVisible(true);
+			auto follow = Follow::create(testObject);
+			follow->setTag(121);
+			_battleBackround->runAction(follow);
+
 			auto action3 = Spawn::create(Blink::create(0.6f, 6), Sequence::create(DelayTime::create(RESPAWN_DELAY), CallFuncN::create(CC_CALLBACK_0(BattleScene::removeRespawnFlg, this)), nullptr), nullptr);
 			testObject->runAction(action3);
-			//BattleAPI::getInstance()->battleSyncEvent(_mainCharacterData);
+			//BattleAPI::getInstance()->battleSyncEvent(_allAlliedUnitData[0]);
 			//SEND RESPAWN ACTION
 
 		});
@@ -1652,7 +1712,7 @@ void BattleScene::onTouchEnded(Touch *touch, Event *unused_event)
 				}
 				if (_circleProperty == MOVE_CIRCLE_DISTANCE)
 				{
-					moveTime = (float)(MOVE_DISTANCE / _mainCharacterData.move_speed);
+					moveTime = (float)(MOVE_DISTANCE / _allAlliedUnitData[0].move_speed);
 				}
 				testObject->setMoveOneTapTime(moveTime);
 				_miniUnit->setMoveOneTapTime(moveTime);
@@ -2034,30 +2094,30 @@ vector<UserUnitInfo> BattleScene::getUnitsDataListByUnitIdIdList(vector<Room_Use
 }
 void BattleScene::sendMoveBeginEvent(float angle)
 {
-	//BattleAPI::getInstance()->sendMoveBeginEvent(_mainCharacterData, detectDirectionBaseOnTouchAngle(angle));
+	//BattleAPI::getInstance()->sendMoveBeginEvent(_allAlliedUnitData[0], detectDirectionBaseOnTouchAngle(angle));
 }
 
 void BattleScene::sendMoveEvent(int direction, float angle, bool onMovingFlg)
 {
-	BattleAPI::getInstance()->sendMoveEvent(_mainCharacterData,direction,angle, testObject->getPosition(),getUnitStatus(), onMovingFlg );
+	BattleAPI::getInstance()->sendMoveEvent(_allAlliedUnitData[0],direction,angle, testObject->getPosition(),getUnitStatus(), onMovingFlg );
 }
 
 void BattleScene::sendMoveEndEvent()
 {
-	BattleAPI::getInstance()->sendMoveEndEvent(_mainCharacterData);
+	BattleAPI::getInstance()->sendMoveEndEvent(_allAlliedUnitData[0]);
 }
 
 
 void BattleScene::autoRestoreHpAndMp()
 { 
-	_mainCharacterData.hp += _mainCharacterData.hp_heal / RESTORE_MULTI;
-	if (_mainCharacterData.hp > _allAlliedUnitMaxHp[0]) {
-		_mainCharacterData.hp = _allAlliedUnitMaxHp[0];
+	_allAlliedUnitData[0].hp += _allAlliedUnitData[0].hp_heal / RESTORE_MULTI;
+	if (_allAlliedUnitData[0].hp > _allAlliedUnitMaxHp[0]) {
+		_allAlliedUnitData[0].hp = _allAlliedUnitMaxHp[0];
 	}
-	_mainCharacterData.mp += _mainCharacterData.mp_heal/RESTORE_MULTI;
-	if (_mainCharacterData.mp > _mainCharacerMaxMp)
+	_allAlliedUnitData[0].mp += _allAlliedUnitData[0].mp_heal/RESTORE_MULTI;
+	if (_allAlliedUnitData[0].mp > _mainCharacerMaxMp)
 	{
-		_mainCharacterData.mp = _mainCharacerMaxMp;
+		_allAlliedUnitData[0].mp = _mainCharacerMaxMp;
 	}
 
 	for (int i = 0; i < _allEnemyUnitData.size(); i++)
@@ -2068,19 +2128,23 @@ void BattleScene::autoRestoreHpAndMp()
 		}
 	}
 	updateSlider();
-	//BattleAPI::getInstance()->battleSyncEvent(_mainCharacterData);
+	//BattleAPI::getInstance()->battleSyncEvent(_allAlliedUnitData[0]);
 }
 
 void BattleScene::updateSlider()
 {
-	_mainCharacterMiniHpBar->setPercent(ceil((100.0f *_mainCharacterData.hp / _allAlliedUnitMaxHp[0])));
+	_mainCharacterMiniHpBar->setPercent(ceil((100.0f *_allAlliedUnitData[0].hp / _allAlliedUnitMaxHp[0])));
 	_mainCharacterHpBar->setPercent(_mainCharacterMiniHpBar->getPercent());
 
-	_mainCharacterMpBar->setPercent(ceil((100.0f * _mainCharacterData.mp / _mainCharacerMaxMp)));
+	_mainCharacterMpBar->setPercent(ceil((100.0f * _allAlliedUnitData[0].mp / _mainCharacerMaxMp)));
 
 	for (int i = 0; i < _allEnemyUnitData.size(); i++)
 	{
 		_allEnemyHpBar[i]->setPercent(ceil(( 100.0f * _allEnemyUnitData[i].hp / _allEnemuUnitMaxHp[i])));
+	}
+	for (int i = 0; i < _allAlliedUnitData.size(); i++)
+	{
+		_allAlliedUnitHpBar[i]->setPercent(ceil((100.0f * _allAlliedUnitData[i].hp / _allAlliedUnitMaxHp[i])));
 	}
 }
 void BattleScene::skill1ButtonCallback(Ref *pSender, Widget::TouchEventType type)
@@ -2101,7 +2165,7 @@ void BattleScene::skill1ButtonCallback(Ref *pSender, Widget::TouchEventType type
 	switch (type)
 	{
 	case cocos2d::ui::Widget::TouchEventType::BEGAN:
-		if (skill.range_distance > 0 && skill.mp_cost <= _mainCharacterData.mp)  {
+		if (skill.range_distance > 0 && skill.mp_cost <= _allAlliedUnitData[0].mp)  {
 			longPressAction(bt, skill);
 			_showSkillTargetFlag = true;
 		}
@@ -2117,7 +2181,7 @@ void BattleScene::skill1ButtonCallback(Ref *pSender, Widget::TouchEventType type
 			log("Invalid attack target");
 			return;
 		}
-		if (skill.mp_cost <= _mainCharacterData.mp){
+		if (skill.mp_cost <= _allAlliedUnitData[0].mp){
 			bt->setColor(Color3B::GRAY);
 			bt->setTouchEnabled(false);
 			bt->setEnabled(true);
@@ -2130,10 +2194,7 @@ void BattleScene::skill1ButtonCallback(Ref *pSender, Widget::TouchEventType type
 				button->setTouchEnabled(true);
 				button->setColor(Color3B::WHITE);
 			}), nullptr));
-			while (_battleBackround->getChildByTag(DRAW_UNIT))
-			{
-				_battleBackround->removeChildByTag(DRAW_UNIT);
-			}
+			
 			
 		}
 		else {
@@ -2181,47 +2242,20 @@ void BattleScene::showCoolDownTime(Button *parentButton, int time)
 
 void BattleScene::playSkill(UserSkillInfo skillData)
 {
-	for (auto& e :_allEnemyUnitSprite)
-	{
-		e->setColor(Color3B::WHITE);
-	}
-	UserSkillInfo skill = skillData;
-	_mainCharacterData.mp -= skill.mp_cost;
-	//BattleAPI::getInstance()->battleSyncEvent(_mainCharacterData);
-	_mainCharacterMpBar->setPercent(ceil(100.0f * _mainCharacterData.mp / _mainCharacerMaxMp));
-	switch (skill.effect_type)
-	{
-	case TYPE_BUFF:
-		skillBuffAction(skill);
-		break;
-	case TYPE_RESTORE:
-		skillRestoreAction(skill);
-		break;
-	case TYPE_ATTACK:
-		skillAttackAction(skill);
-		break;
-	case TYPE_POISON:
-		skillPoisonAction(skill);
-		break;
-	case TYPE_STUN:
-		skillStunAction(skill);
-		break;
-	default:
-		break;
-	}
-
+	
+	BattleAPI::getInstance()->sendSkillEvent(skillData, _allAlliedUnitData[0]);
 }
 
 
-void BattleScene::skillRestoreAction(UserSkillInfo skillInfo)
+void BattleScene::skillRestoreAction(Sprite* object, UserSkillInfo skillInfo, int teamId)
 {
 	switch (skillInfo.multi_effect)
 	{
 	case TARGET_ALL:
-		skillRestoreAll(skillInfo);
+		skillRestoreAll(object,skillInfo, teamId);
 		break;
 	case TARGET_ONE:
-		skillRestoreOne(skillInfo);
+		skillRestoreOne(object,skillInfo, teamId);
 		break;
 	default:
 		break;
@@ -2230,154 +2264,153 @@ void BattleScene::skillRestoreAction(UserSkillInfo skillInfo)
 
 }
 
-void BattleScene::skillBuffAction(UserSkillInfo skillInfo)
+void BattleScene::skillBuffAction(Sprite* object, UserSkillInfo skillInfo, int teamId)
 {
 	switch (skillInfo.multi_effect)
 	{
 	case TARGET_ALL :
-		skillHelpAll(skillInfo);
+		skillHelpAll(object,skillInfo, teamId);
 		break;
 	case TARGET_ONE:
-		skillHelpOne(skillInfo);
+		skillHelpOne(object,skillInfo, teamId);
 		break;
 	default:
 		break;
 	}
 }
 
-void BattleScene::skillAttackAction(UserSkillInfo skillInfo)
+void BattleScene::skillAttackAction(Sprite* object, UserSkillInfo skillInfo,UserUnitInfo attacker,  int teamId, float randNum)
 {
 	switch (skillInfo.multi_effect)
 	{
 	case TARGET_ALL:
-		skillAttackAll(skillInfo);
+		skillAttackAll(object, skillInfo,attacker, teamId, randNum);
 		break;
 	case TARGET_ONE:
-		skillAttackOne(skillInfo);
+		skillAttackOne(object,skillInfo, attacker, teamId, randNum);
 	default:
 		break;
 	}
 }
 
-void BattleScene::skillRestoreAll(UserSkillInfo skillInfo)
+void BattleScene::skillRestoreAll(Sprite* object,UserSkillInfo skillInfo, int teamId)
 {
-	int value = 0;
-	switch (skillInfo.corrett_value)
-	{
-	case DAME_TYPE_PERCENT:
-		value = ceil(1.0f*_saveMainStatusData.hp *skillInfo.corrett_value/100.0f);
-		break;
-	case DAME_TYPE_PURE:
-		value = ceil(skillInfo.corrett_value);
-		break;
-	}
-	//TODO
-	vector<int> effectUnitList = {};
-	if (skillInfo.range_distance > 0) 
-	{
-
-		vector<int> allUnitIndex = detectUnitInAoe(skillInfo, ALLIED_FLAG);
-
-		for (int &index : allUnitIndex)
+	if (object == testObject) {
+		int value = 0;
+		switch (skillInfo.corrett_value)
 		{
-			//TODO change to unique unitID
-			effectUnitList.push_back(_allAlliedUnitData[index].mst_unit_id);
+		case DAME_TYPE_PERCENT:
+			value = ceil(1.0f*_saveMainStatusData.hp *skillInfo.corrett_value / 100.0f);
+			break;
+		case DAME_TYPE_PURE:
+			value = ceil(skillInfo.corrett_value);
+			break;
+		}
+		//TODO
+		if (skillInfo.range_distance > 0)
+		{
 
-			_allAlliedUnitData[index].hp += value;
-			if (_allAlliedUnitData[index].hp > _allAlliedUnitMaxHp[index]) {
-				_allAlliedUnitData[index].hp = _allAlliedUnitMaxHp[index];
+			vector<int> allUnitIndex = detectUnitInAoe(object, skillInfo, teamId);
+
+			for (int &index : allUnitIndex)
+			{
+				//TODO change to unique unitID
+
+				_allAlliedUnitData[index].hp += value;
+				if (_allAlliedUnitData[index].hp > _allAlliedUnitMaxHp[index]) {
+					_allAlliedUnitData[index].hp = _allAlliedUnitMaxHp[index];
+				}
+				_allAlliedUnitHpBar[index]->setPercent(100.0f *_allAlliedUnitData[index].hp / _allEnemuUnitMaxHp[index]);
+
 			}
-			_allAlliedUnitHpBar[index]->setPercent( 100.0f *_allAlliedUnitData[index].hp / _allEnemuUnitMaxHp[index]);
-		
+		}
+		else {
+
+			log("Restore All");
+			for (int i = 0; i < _allAlliedUnitData.size(); i++)
+			{
+				//TODO change to unique unit ID
+				_allAlliedUnitData[i].hp += value;
+				if (_allAlliedUnitData[i].hp > _allAlliedUnitMaxHp[i]) {
+					_allAlliedUnitData[i].hp = _allEnemuUnitMaxHp[i];
+				}
+				//BattleAPI::getInstance()->battleSyncEvent(_allAlliedUnitData[0]);
+				_allAlliedUnitHpBar[i]->setPercent(100.0f * _allAlliedUnitData[i].hp / _allEnemuUnitMaxHp[i]);
+
+			}
 		}
 	}
-	else {
-
-		log("Restore All");
-		for (int i = 0; i < _allAlliedUnitData.size(); i++)
-		{
-			//TODO change to unique unit ID
-			effectUnitList.push_back(_allAlliedUnitData[i].mst_unit_id);
-			_allAlliedUnitData[i].hp += value;
-			if (_allAlliedUnitData[i].hp > _allAlliedUnitMaxHp[i]) {
-				_allAlliedUnitData[i].hp = _allEnemuUnitMaxHp[i];
-			}
-			//BattleAPI::getInstance()->battleSyncEvent(_mainCharacterData);
-			_allAlliedUnitHpBar[i]->setPercent(100.0f * _allAlliedUnitData[i].hp/ _allEnemuUnitMaxHp[i]);
-
-		}
-	}
-	//TODO
-	BattleAPI::getInstance()->sendSkillEvent(skillInfo, effectUnitList);
-
-	createSorceryEffect(testObject, SORCERY_GREEN);
+	createSorceryEffect(object, SORCERY_GREEN);
 }
 
-void BattleScene::skillRestoreOne(UserSkillInfo skillInfo)
+void BattleScene::skillRestoreOne(Sprite* object,UserSkillInfo skillInfo, int teamId)
 {
-	//TODO
-	//
-	BattleAPI::getInstance()->sendSkillEvent(skillInfo, { _mainCharacterData.mst_unit_id });
-	log("Restore One");
+	if (object == testObject) {
+		int value = 0;
+		switch (skillInfo.correct_type)
+		{
+		case DAME_TYPE_PERCENT:
+			value = ceil(1.0f*_saveMainStatusData.hp *skillInfo.corrett_value / 100.0f);
+			break;
+		case DAME_TYPE_PURE:
+			log("Restore One: DAME_TYPE_PURE");
+			value = ceil(skillInfo.corrett_value);
+			break;
+		}
+		_allAlliedUnitData[0].hp += value;
+		if (_allAlliedUnitData[0].hp > _allAlliedUnitMaxHp[0]) {
+			_allAlliedUnitData[0].hp = _allAlliedUnitMaxHp[0];
+		}
+		//BattleAPI::getInstance()->battleSyncEvent(_allAlliedUnitData[0]);
+		_mainCharacterMiniHpBar->setPercent(100.0f * _allAlliedUnitData[0].hp / _allAlliedUnitMaxHp[0]);
+		_mainCharacterHpBar->setPercent(_mainCharacterMiniHpBar->getPercent());
+	}
 
-	int value = 0;
-	switch (skillInfo.correct_type)
-	{
-	case DAME_TYPE_PERCENT:
-		value = ceil(1.0f*_saveMainStatusData.hp *skillInfo.corrett_value/100.0f);
-		break;
-	case DAME_TYPE_PURE:
-		log("Restore One: DAME_TYPE_PURE");
-		value = ceil(skillInfo.corrett_value);
-		break;
-	}
-	_mainCharacterData.hp += value;
-	if (_mainCharacterData.hp > _allEnemuUnitMaxHp[0]) {
-		_mainCharacterData.hp = _allEnemuUnitMaxHp[0];
-	}
-	//BattleAPI::getInstance()->battleSyncEvent(_mainCharacterData);
-	_mainCharacterMiniHpBar->setPercent(100.0f * _mainCharacterData.hp / _allEnemuUnitMaxHp[0]);
-	_mainCharacterHpBar->setPercent(_mainCharacterMiniHpBar->getPercent());
-	
+	healEffectWithObject(object);
+}
+
+void BattleScene::healEffectWithObject(Sprite* obj) {
 	/////////////////////////////////////////
 	///////////RUN EFFECT HEAL ONE
-	createSorceryEffect(testObject , SORCERY_GREEN);
+	createSorceryEffect(obj, SORCERY_GREEN);
 
 	Effect* effectHeal = Effect::createWithParticle(PARTICLE_HEAL, effectHeal->EC_Other, effectHeal->Restore);
 	effectHeal->setTag(10);
-	testObject->addChild(effectHeal);
-	effectHeal->setPosition(Vec2(testObject->getContentSize().width / 2, testObject->getContentSize().height / 2));
+	obj->addChild(effectHeal);
+	effectHeal->setPosition(Vec2(obj->getContentSize().width / 2, obj->getContentSize().height / 2));
 
 	auto healSequence = Sequence::create(
 		DelayTime::create(DELAY_RESTORE)
-		, CallFuncN::create(CC_CALLBACK_1(BattleScene::removeEffect, this))
+		, RemoveSelf::create(true)
 		, nullptr);
 	effectHeal->runAction(healSequence);
 
+
 }
 
-void BattleScene::skillHelpAll(UserSkillInfo skillInfo)
+void BattleScene::skillHelpAll(Sprite* object, UserSkillInfo skillInfo, int teamId)
 {
 	int value = 0;
 }
 
-void BattleScene::skillHelpOne(UserSkillInfo skillInfo)
+void BattleScene::skillHelpOne(Sprite* object, UserSkillInfo skillInfo, int teamId)
 {
 	//TODO
-	//Change this id by unique unit Id
-	BattleAPI::getInstance()->sendSkillEvent(skillInfo, { _mainCharacterData.mst_unit_id });
 	float value = 1.0f;
 	int pureValue = 0;
-	switch (skillInfo.correct_type)
-	{
-	case DAME_TYPE_PERCENT:
-		value = ceil(skillInfo.corrett_value / 100.0f);
-		break;
-	case DAME_TYPE_PURE:
-		pureValue = skillInfo.corrett_value;
-		break;
-	default:
-		break;
+	/*Only run logic if object is current player unit*/
+	if (object == testObject) {
+		switch (skillInfo.correct_type)
+		{
+		case DAME_TYPE_PERCENT:
+			value = ceil(skillInfo.corrett_value / 100.0f);
+			break;
+		case DAME_TYPE_PURE:
+			pureValue = skillInfo.corrett_value;
+			break;
+		default:
+			break;
+		}
 	}
 	int saveValue = 0;
 
@@ -2388,25 +2421,25 @@ void BattleScene::skillHelpOne(UserSkillInfo skillInfo)
 	case SKILL_HELP_TYPE::HP:
 	{
 		log("help HP");
-		saveValue = 1.0f*_saveMainStatusData.hp*(value - 1.0f) + pureValue;
-		_mainCharacterData.hp += saveValue;
-		//BattleAPI::getInstance()->battleSyncEvent(_mainCharacterData);
-		runAction(Sequence::create(DelayTime::create(skillInfo.duration), CallFuncN::create([&, saveValue](Ref *pSEnder){
-			_mainCharacterData.hp -= saveValue;
-		}), nullptr));
-		
-
+		if (object == testObject) {
+			saveValue = 1.0f*_saveMainStatusData.hp*(value - 1.0f) + pureValue;
+			_allAlliedUnitData[0].hp += saveValue;
+			//BattleAPI::getInstance()->battleSyncEvent(_allAlliedUnitData[0]);
+			runAction(Sequence::create(DelayTime::create(skillInfo.duration), CallFuncN::create([&, saveValue](Ref *pSEnder){
+				_allAlliedUnitData[0].hp -= saveValue;
+			}), nullptr));
+		}
 		/////////////////////////////////////////
 		///////////RUN EFFECT HP RESTORE
-		createSorceryEffect(testObject, SORCERY_GREEN);
+		createSorceryEffect(object, SORCERY_GREEN);
 
 		Effect* hp = Effect::createWithParticle(PARTICLE_HEAL, effect->EC_Other, effect->Restore);
-		testObject->addChild(hp);
-		hp->setPosition(Vec2(testObject->getContentSize().width / 2, testObject->getContentSize().height / 2));
+		object->addChild(hp);
+		hp->setPosition(Vec2(object->getContentSize().width / 2, object->getContentSize().height / 2));
 
 		auto hpSequence = Sequence::create(
 			DelayTime::create(DELAY_HELP)
-			, CallFuncN::create(CC_CALLBACK_1(BattleScene::removeEffect, this))
+			, RemoveSelf::create(true)
 			, nullptr);
 		hp->runAction(hpSequence);
 
@@ -2414,85 +2447,95 @@ void BattleScene::skillHelpOne(UserSkillInfo skillInfo)
 	}
 	case SKILL_HELP_TYPE::HP_RESTORE:
 	{
-		saveValue = 1.0f*_saveMainStatusData.hp_heal*(value -1.0f) + pureValue;
-		_mainCharacterData.hp_heal += saveValue;
-		//BattleAPI::getInstance()->battleSyncEvent(_mainCharacterData);
-		runAction(Sequence::create(DelayTime::create(skillInfo.duration), CallFuncN::create([&, saveValue](Ref *pSEnder){
-			_mainCharacterData.hp_heal -= saveValue;
-		}), nullptr));
-
+		if (object == testObject) {
+			saveValue = 1.0f*_saveMainStatusData.hp_heal*(value - 1.0f) + pureValue;
+			_allAlliedUnitData[0].hp_heal += saveValue;
+			//BattleAPI::getInstance()->battleSyncEvent(_allAlliedUnitData[0]);
+			runAction(Sequence::create(DelayTime::create(skillInfo.duration), CallFuncN::create([&, saveValue](Ref *pSEnder){
+				_allAlliedUnitData[0].hp_heal -= saveValue;
+			}), nullptr));
+		}
 		/////////////////////////////////////////
 		///////////RUN EFFECT HP RESTORE
-		createSorceryEffect(testObject, SORCERY_GREEN);
+		createSorceryEffect(object, SORCERY_GREEN);
 
 		Effect* hpRestore = Effect::createWithParticle(PARTICLE_HEAL, effect->EC_Other, effect->Restore);
-		testObject->addChild(hpRestore);
-		hpRestore->setPosition(Vec2(testObject->getContentSize().width / 2, testObject->getContentSize().height / 2));
+		object->addChild(hpRestore);
+		hpRestore->setPosition(Vec2(object->getContentSize().width / 2, object->getContentSize().height / 2));
 
 		auto hpRestoreSequence = Sequence::create(
 			DelayTime::create(DELAY_HELP)
-			, CallFuncN::create(CC_CALLBACK_1(BattleScene::removeEffect, this))
+			, RemoveSelf::create(true)
 			, nullptr);
 		hpRestore->runAction(hpRestoreSequence);
 
 		break;
 	}
 	case SKILL_HELP_TYPE::MP:
-		saveValue = 1.0f*_saveMainStatusData.mp*(value-1.0f) + pureValue;
-		_mainCharacterData.mp += saveValue;
-		//BattleAPI::getInstance()->battleSyncEvent(_mainCharacterData);
-		runAction(Sequence::create(DelayTime::create(skillInfo.duration), CallFuncN::create([&, saveValue](Ref *pSEnder){
-			_mainCharacterData.mp -= saveValue;
-		}), nullptr));
+		if (object == testObject) {
+			saveValue = 1.0f*_saveMainStatusData.mp*(value - 1.0f) + pureValue;
+			_allAlliedUnitData[0].mp += saveValue;
+			//BattleAPI::getInstance()->battleSyncEvent(_allAlliedUnitData[0]);
+			runAction(Sequence::create(DelayTime::create(skillInfo.duration), CallFuncN::create([&, saveValue](Ref *pSEnder){
+				_allAlliedUnitData[0].mp -= saveValue;
+			}), nullptr));
+		}
 		break;
 	case SKILL_HELP_TYPE::MP_RESTORE:
-		saveValue = 1.0f*_saveMainStatusData.mp_heal*(value-1.0f) + pureValue;
-		_mainCharacterData.mp_heal += saveValue;
-		//BattleAPI::getInstance()->battleSyncEvent(_mainCharacterData);
-		runAction(Sequence::create(DelayTime::create(skillInfo.duration), CallFuncN::create([&, saveValue](Ref *pSEnder){
-			_mainCharacterData.mp_heal -= saveValue;
-		}), nullptr));
+		if (object == testObject)
+		{
+			saveValue = 1.0f*_saveMainStatusData.mp_heal*(value - 1.0f) + pureValue;
+			_allAlliedUnitData[0].mp_heal += saveValue;
+			//BattleAPI::getInstance()->battleSyncEvent(_allAlliedUnitData[0]);
+			runAction(Sequence::create(DelayTime::create(skillInfo.duration), CallFuncN::create([&, saveValue](Ref *pSEnder){
+				_allAlliedUnitData[0].mp_heal -= saveValue;
+			}), nullptr));
+		}
 		break;
 	case SKILL_HELP_TYPE::ATTACK_DAME:
 	{
-		saveValue = 1.0f*_saveMainStatusData.attack*(value - 1.0f) + pureValue;
-		_mainCharacterData.attack += saveValue;
-		//BattleAPI::getInstance()->battleSyncEvent(_mainCharacterData);
-		log("increase attack by %d", saveValue);
-		runAction(Sequence::create(DelayTime::create(skillInfo.duration), CallFuncN::create([&, saveValue](Ref *pSEnder){
-			_mainCharacterData.attack -= saveValue;
-			log("remove attack buff %d", saveValue);
-		}), nullptr));
-
-		displayUnitStatus(testObject, BUFF_ATTACK, skillInfo);
+		if (object == testObject)
+		{
+			saveValue = 1.0f*_saveMainStatusData.attack*(value - 1.0f) + pureValue;
+			_allAlliedUnitData[0].attack += saveValue;
+			//BattleAPI::getInstance()->battleSyncEvent(_allAlliedUnitData[0]);
+			log("increase attack by %d", saveValue);
+			runAction(Sequence::create(DelayTime::create(skillInfo.duration), CallFuncN::create([&, saveValue](Ref *pSEnder){
+				_allAlliedUnitData[0].attack -= saveValue;
+				log("remove attack buff %d", saveValue);
+			}), nullptr));
+		}
+		displayUnitStatus(object, BUFF_ATTACK, skillInfo);
 		break;
 	}
 	case SKILL_HELP_TYPE::DEFENCE:
 	{
-		saveValue = 1.0f*_saveMainStatusData.defence*(value-1.0f) + pureValue;
-		log("increase defence by %d", saveValue);
-		_mainCharacterData.defence += saveValue;
-		//BattleAPI::getInstance()->battleSyncEvent(_mainCharacterData);
-		displayUnitStatus(testObject, BUFF_DEFENCE, skillInfo);
-		runAction(Sequence::create(DelayTime::create(skillInfo.duration), CallFuncN::create([&, saveValue](Ref *pSEnder){
-			if (saveValue > 0) {
-				_mainCharacterData.defence  -= saveValue;
-			}
+		if (object == testObject) {
+			saveValue = 1.0f*_saveMainStatusData.defence*(value - 1.0f) + pureValue;
+			log("increase defence by %d", saveValue);
+			_allAlliedUnitData[0].defence += saveValue;
+			//BattleAPI::getInstance()->battleSyncEvent(_allAlliedUnitData[0]);
 			
-			log("remove defence buff %d",saveValue);
-		}), nullptr));
-		
+			runAction(Sequence::create(DelayTime::create(skillInfo.duration), CallFuncN::create([&, saveValue](Ref *pSEnder){
+				if (saveValue > 0) {
+					_allAlliedUnitData[0].defence -= saveValue;
+				}
+
+				log("remove defence buff %d", saveValue);
+			}), nullptr));
+		}
+		displayUnitStatus(object, BUFF_DEFENCE, skillInfo);
 		/////////////////////////////////////////
 		///////////RUN EFFECT HELP DEFENCE
-		createSorceryEffect(testObject, SORCERY_BLUE);
+		createSorceryEffect(object, SORCERY_BLUE);
 
 		Effect* effectHelpDefence = Effect::createWithParticle(PARTICLE_DEFENCE_H, effect->EC_Other, effect->Help_Defence);
-		testObject->addChild(effectHelpDefence);
-		effectHelpDefence->setPosition(Vec2(testObject->getContentSize().width / 2, testObject->getContentSize().height / 2));
+		object->addChild(effectHelpDefence);
+		effectHelpDefence->setPosition(Vec2(object->getContentSize().width / 2, object->getContentSize().height / 2));
 
 		auto helpDefenceSequence = Sequence::create(
 			DelayTime::create(DELAY_HELP)
-			, CallFuncN::create(CC_CALLBACK_1(BattleScene::removeEffect, this))
+			, RemoveSelf::create(true)
 			, nullptr);
 		effectHelpDefence->runAction(helpDefenceSequence);
 
@@ -2501,34 +2544,39 @@ void BattleScene::skillHelpOne(UserSkillInfo skillInfo)
 	}
 	case SKILL_HELP_TYPE::ATTACK_RANGE:
 	{
-		saveValue = 1.0f*_saveMainStatusData.attack_range*(value-1.0f) + pureValue;
-		_mainCharacterData.attack_range += saveValue;
-		//BattleAPI::getInstance()->battleSyncEvent(_mainCharacterData);
-		runAction(Sequence::create(DelayTime::create(skillInfo.duration), CallFuncN::create([&, saveValue](Ref *pSEnder){
-			_mainCharacterData.attack_range -= saveValue;
-		}), nullptr));
+		if (object = testObject)
+		{
+			saveValue = 1.0f*_saveMainStatusData.attack_range*(value - 1.0f) + pureValue;
+			_allAlliedUnitData[0].attack_range += saveValue;
+			//BattleAPI::getInstance()->battleSyncEvent(_allAlliedUnitData[0]);
+			runAction(Sequence::create(DelayTime::create(skillInfo.duration), CallFuncN::create([&, saveValue](Ref *pSEnder){
+				_allAlliedUnitData[0].attack_range -= saveValue;
+			}), nullptr));
+		}
 		break;
 	}
 	case SKILL_HELP_TYPE::MOVESPEED:
 	{
-		saveValue = 1.0f* _saveMainStatusData.move_speed *(value - 1.0f) + pureValue;
-		_mainCharacterData.move_speed += saveValue;
-		//BattleAPI::getInstance()->battleSyncEvent(_mainCharacterData);
-		runAction(Sequence::create(DelayTime::create(skillInfo.duration), CallFuncN::create([&, saveValue](Ref *pSEnder){
-			_mainCharacterData.move_speed -= saveValue;
-		}), nullptr));
-
+		if (object = testObject)
+		{
+			saveValue = 1.0f* _saveMainStatusData.move_speed *(value - 1.0f) + pureValue;
+			_allAlliedUnitData[0].move_speed += saveValue;
+			//BattleAPI::getInstance()->battleSyncEvent(_allAlliedUnitData[0]);
+			runAction(Sequence::create(DelayTime::create(skillInfo.duration), CallFuncN::create([&, saveValue](Ref *pSEnder){
+				_allAlliedUnitData[0].move_speed -= saveValue;
+			}), nullptr));
+		}
 		/////////////////////////////////////////
 		///////////RUN EFFECT HELP MOVE SPEED
-		createSorceryEffect(testObject, SORCERY_BLUE);
+		createSorceryEffect(object, SORCERY_BLUE);
 
 		Effect* effectHelpMoveSpeed = Effect::createWithParticle(PARTICLE_MOVESPEED, effect->EC_Other, effect->Help);
-		testObject->addChild(effectHelpMoveSpeed);
-		effectHelpMoveSpeed->setPosition(Vec2(testObject->getContentSize().width / 2, testObject->getContentSize().height / 2));
+		object->addChild(effectHelpMoveSpeed);
+		effectHelpMoveSpeed->setPosition(Vec2(object->getContentSize().width / 2, object->getContentSize().height / 2));
 
 		auto helpmMoveSpeedSequence = Sequence::create(
 			DelayTime::create(DELAY_HELP)
-			, CallFuncN::create(CC_CALLBACK_1(BattleScene::removeEffect, this))
+			, RemoveSelf::create(true)
 			, nullptr);
 		effectHelpMoveSpeed->runAction(helpmMoveSpeedSequence);
 
@@ -2541,184 +2589,185 @@ void BattleScene::skillHelpOne(UserSkillInfo skillInfo)
 
 }
 
-void BattleScene::skillAttackAll(UserSkillInfo skillInfo)
+void BattleScene::skillAttackAll(Sprite* object, UserSkillInfo skillInfo,UserUnitInfo attacker, int teamId, float randNum)
 {
 	int value = 0;
 	switch (skillInfo.correct_type)
 	{
 	case DAME_TYPE_PERCENT:
-		value = _mainCharacterData.attack*100.0f / skillInfo.corrett_value;
+		value = attacker.attack*100.0f / skillInfo.corrett_value;
 		break;
 	case DAME_TYPE_PURE:
 		value = skillInfo.corrett_value;
 	default:
 		break;
 	}
-
+	
 	vector<int> unitIndex;
+	int flg = 0;
+	vector<UserUnitInfo> effectUnitList;
+	vector<Sprite*> effectUnitSpriteList;
+	if (teamId == _currentEnemyTeamFlg) {
+		flg = ALLIED_FLAG;
+		effectUnitList = _allAlliedUnitData;
+		effectUnitSpriteList = _allAlliedUnitSprite;
+	}
+	else {
+		flg = ENEMY_FLAG;
+		effectUnitList = _allEnemyUnitData;
+		effectUnitSpriteList = _allEnemyUnitSprite;
+	}
 	if (skillInfo.range_distance > 0) {
-
-		unitIndex = detectUnitInAoe(skillInfo, ENEMY_FLAG);
+		
+		unitIndex = detectUnitInAoe(object, skillInfo, flg);
 	}
 	else 
 	{
-		for (int i = 0; i < _allEnemyUnitData.size(); i++)
+		for (int i = 0; i < effectUnitList.size(); i++)
 
 		{
 			unitIndex.push_back(i);
 		}
 	}
-	//TODO change to unique unitID
-	vector<int> effectdUnitId;
-	for (auto &in : unitIndex)
-	{
-		effectdUnitId.push_back(_allEnemyUnitData[in].mst_unit_id);
-	}
-	BattleAPI::getInstance()->sendSkillEvent(skillInfo, effectdUnitId);
-
+	
 	for (int &index : unitIndex)
 	{
-		int dame = (value - _allEnemyUnitData[index].defence);
-		float defaultDameRate = caculDameRate(_mainCharacterData.element, _allEnemyUnitData[index].element);
-		dame = ceil(random(0.85f, 1.0f)*dame*defaultDameRate);
+		int dame = 0;
+		dame = (value - effectUnitList[index].defence);
+		float defaultDameRate = caculDameRate(attacker.element, effectUnitList[index].element);
+		dame = ceil(randNum*dame*defaultDameRate);
 
 		if (dame <= 0) dame = 1;
-
-		if (_allEnemyUnitSprite[index]->isVisible())
+		
+		if (effectUnitSpriteList[index]->isVisible())
 		{
-			auto action = Spawn::create(Sequence::create(DelayTime::create(2), CallFuncN::create([&, this, index, dame](Ref *p) {
-				showAttackDame(dame, _allEnemyUnitSprite[index]->getPosition() + Vec2(0, 100), 1);
-				_allEnemyHpBar[index]->setPercent( 100.0f *_allEnemyUnitData[index].hp / _allEnemuUnitMaxHp[index]);
-				_allEnemyUnitData[index].hp -= dame;
-				saveDameInfo(dame, 0, index, TEAM_FLG_BLUE);
-				if (_allEnemyUnitData[index].hp <= 0) {
-					enemyDieAction(index);
+			auto action = /*Spawn::create(*/Sequence::create(DelayTime::create(2), CallFuncN::create([&, this, index, dame, object, effectUnitSpriteList](Ref *p) {
+				showAttackDame(dame, effectUnitSpriteList[index]->getPosition() + Vec2(0, 100), 1);
+				if (object == testObject) {
+					_allEnemyUnitData[index].hp -= dame;
+					_allEnemyHpBar[index]->setPercent(100.0f *_allEnemyUnitData[index].hp / _allEnemuUnitMaxHp[index]);
+					/*Save dame info will process in future*/
+					saveDameInfo(dame, 0, index, _currentPlayerTeamFlg);
+					if (_allEnemyUnitData[index].hp <= 0) {
+						enemyDieAction(index);
+					}
 				}
-			}), nullptr), CallFuncN::create([&, this, index](Ref *p) {
-				
-				///////////////////////////////////////////////////
-				//RUN EFFECT ATTACK ONE UNIT
-				///////////////////////////////////////////////////
 
-				createSorceryEffect(testObject, SORCERY_RED);
-				// Create attack effect
-				Effect* attackFire = Effect::createWithParticle(PARTICLE_FIRE, attackFire->EC_Other, attackFire->Help);
-				attackFire->setTargetAttack(_allEnemyUnitSprite[index]);
-				testObject->getParent()->addChild(attackFire);
-				attackFire->setPosition(testObject->getPosition());
 
-				auto attackFireSequence = Sequence::create(
-					DelayTime::create(DELAY_HELP)
-					, CallFuncN::create(CC_CALLBACK_1(BattleScene::removeEffect, this))
-					, nullptr);
-				attackFire->runAction(attackFireSequence);
+			}), nullptr);/* , CallFuncN::create([&, this, index](Ref *p) {*/
+			/*Not need Spawn with CallFuncC. We can use code directly*/
+			effectUnitSpriteList[index]->setTag(index);
+			effectUnitSpriteList[index]->runAction(action);
 
-			}), nullptr);
-			_allEnemyUnitSprite[index]->setTag(index);
-			_allEnemyUnitSprite[index]->runAction(action);
+			///////////////////////////////////////////////////
+			//RUN EFFECT ATTACK ONE UNIT
+			///////////////////////////////////////////////////
+
+			createSorceryEffect(object, SORCERY_RED);
+			// Create attack effect
+			Effect* attackFire = Effect::createWithParticle(PARTICLE_FIRE, attackFire->EC_Other, attackFire->Help);
+			attackFire->setTargetAttack(effectUnitSpriteList[index]);
+			object->getParent()->addChild(attackFire);
+			attackFire->setPosition(object->getPosition());
+
+			auto attackFireSequence = Sequence::create(
+				DelayTime::create(DELAY_HELP)
+				, RemoveSelf::create(true)
+				, nullptr);
+			attackFire->runAction(attackFireSequence);
+
+			/*}), nullptr);*/
+
+			
 		}
 	}
 }
 
-void BattleScene::skillAttackOne(UserSkillInfo skillInfo)
+void BattleScene::skillAttackOne(Sprite* object, UserSkillInfo skillInfo,UserUnitInfo attacker, int teamId ,float randNum)
 {
 	log("Attack One");
-
-	//TODO change to unique unitID
-	BattleAPI::getInstance()->sendSkillEvent(skillInfo, { _allEnemyUnitData[_indexOfBeAttackEnemy].mst_unit_id });
-
-	int value = 0;
-	switch (skillInfo.correct_type)
-	{
-	case DAME_TYPE_PERCENT:
-		value = _mainCharacterData.attack*100.0f / skillInfo.corrett_value;
-		break;
-	case DAME_TYPE_PURE:
-		value = skillInfo.corrett_value;
-	default:
-		break;
-	}
-
-
-	int dame = (value - _allEnemyUnitData[_indexOfBeAttackEnemy].defence);
-	float defaultDameRate = caculDameRate(_mainCharacterData.element, _allEnemyUnitData[_indexOfBeAttackEnemy].element);
-
-	dame = ceil(random(0.85f, 1.0f)*dame*defaultDameRate);
-	if (dame <= 0) dame = 1;
-
-	int indexValue = _indexOfBeAttackEnemy;
-
-
-	auto action = Spawn::create(
-		Sequence::create(
-		//////Start Sequence
-		DelayTime::create(5),  //DELAY_ATTACK_MOVE + DELAY_ATTACK_FIRE_LIFE
-		CallFuncN::create([&, this, dame, indexValue](Ref *p) {
-		showAttackDame(dame, _allEnemyUnitSprite[indexValue]->getPosition() + Vec2(0, 100), 1);
-		_allEnemyHpBar[indexValue]->setPercent(100.0f *_allEnemyUnitData[indexValue].hp / _allEnemuUnitMaxHp[indexValue]);
-		_allEnemyUnitData[indexValue].hp -= dame;
-		saveDameInfo(dame, 0, indexValue, TEAM_FLG_BLUE);
-		if (_allEnemyUnitData[indexValue].hp <= 0)
+	/*Need more param for skill attack one in RTS mode: target id*/
+	if (object == testObject) {
+		int value = 0;
+		switch (skillInfo.correct_type)
 		{
-			enemyDieAction(indexValue);
-			return;
+		case DAME_TYPE_PERCENT:
+			value = _allAlliedUnitData[0].attack*100.0f / skillInfo.corrett_value;
+			break;
+		case DAME_TYPE_PURE:
+			value = skillInfo.corrett_value;
+		default:
+			break;
 		}
-		
-		}), nullptr), 
-		
-		////////End Sequence
-		CallFuncN::create([&, this, indexValue](Ref *p) {
-	///////////////////////////////////////////////////
-	//RUN EFFECT ATTACK ONE UNIT
-	///////////////////////////////////////////////////
+		/*Need more parameter*/
+		if (_indexOfBeAttackEnemy < 0) return;
 
-	createSorceryEffect(testObject, SORCERY_ORANGE);
-	// Create attack effect
-	Effect* attackFire = Effect::createWithParticle(PARTICLE_FIRE, attackFire->EC_Other, attackFire->Help);
-	attackFire->setTargetAttack(_allEnemyUnitSprite[indexValue]);
-	testObject->getParent()->addChild(attackFire);
-	attackFire->setPosition(testObject->getPosition());
+		int dame = (value - _allEnemyUnitData[_indexOfBeAttackEnemy].defence);
+		float defaultDameRate = caculDameRate(_allAlliedUnitData[0].element, _allEnemyUnitData[_indexOfBeAttackEnemy].element);
 
-	// Effect life in 1s , remove Effect
-	auto attackFireSequence = Sequence::create(
-		DelayTime::create(DELAY_ATTACK_FIRE_LIFE)
-		, CallFuncN::create(CC_CALLBACK_1(BattleScene::removeEffect, this))
-		, nullptr);
-	attackFire->runAction(attackFireSequence);
+		dame = ceil(randNum*dame*defaultDameRate);
+		if (dame <= 0) dame = 1;
 
-	}), nullptr); 
+		int indexValue = _indexOfBeAttackEnemy;
 
-	_allEnemyUnitSprite[_indexOfBeAttackEnemy]->runAction(action);
+
+		auto action = /*Spawn::create(*/
+			Sequence::create(
+			//////Start Sequence
+			DelayTime::create(5),  //DELAY_ATTACK_MOVE + DELAY_ATTACK_FIRE_LIFE
+			CallFuncN::create([&, this, dame, indexValue](Ref *p) {
+			showAttackDame(dame, _allEnemyUnitSprite[indexValue]->getPosition() + Vec2(0, 100), 1);
+			_allEnemyHpBar[indexValue]->setPercent(100.0f *_allEnemyUnitData[indexValue].hp / _allEnemuUnitMaxHp[indexValue]);
+			_allEnemyUnitData[indexValue].hp -= dame;
+			saveDameInfo(dame, 0, indexValue, _currentPlayerTeamFlg);
+			if (_allEnemyUnitData[indexValue].hp <= 0)
+			{
+				enemyDieAction(indexValue);
+				return;
+			}
+
+		}), nullptr);/* ,
+
+			////////End Sequence
+			CallFuncN::create([&, this, indexValue](Ref *p) {*/
+		///////////////////////////////////////////////////
+		//RUN EFFECT ATTACK ONE UNIT
+		///////////////////////////////////////////////////
+		_allEnemyUnitSprite[_indexOfBeAttackEnemy]->runAction(action);
+		createSorceryEffect(testObject, SORCERY_ORANGE);
+		// Create attack effect
+		Effect* attackFire = Effect::createWithParticle(PARTICLE_FIRE, attackFire->EC_Other, attackFire->Help);
+		attackFire->setTargetAttack(_allEnemyUnitSprite[indexValue]);
+		testObject->getParent()->addChild(attackFire);
+		attackFire->setPosition(testObject->getPosition());
+
+		// Effect life in 1s , remove Effect
+		auto attackFireSequence = Sequence::create(
+			DelayTime::create(DELAY_ATTACK_FIRE_LIFE)
+			, RemoveSelf::create(true)
+			, nullptr);
+		attackFire->runAction(attackFireSequence);
+
+		/*}), nullptr); */
+
+	}
 
 }
 
 
-vector<int> BattleScene::detectUnitInAoe(UserSkillInfo skill, int unitFlg, bool drawFlg /*= true*/)
+vector<int> BattleScene::detectUnitInAoe(Sprite* mainObj, UserSkillInfo skill, int unitFlg, bool drawFlg /*= true*/)
 
 {
 	vector<int> resultUnitId;
 	vector<Sprite*> allUnit;
 	auto teamFlg = UserModel::getInstance()->getUserInfo().team_id;
-	switch (unitFlg)
-	{
-	case ENEMY_FLAG:
-		for (auto &unit : _allEnemyUnitSprite)
-		{
-			allUnit.push_back(unit);
-		}
-		//More for tower
-		break;
-	case ALLIED_FLAG:
-		for (auto &unit: _allAlliedUnitSprite)
-		{
-			allUnit.push_back(unit);
-			//more for tower
-		}
-		break;
-	default:
-		break;
+	if (unitFlg == teamFlg) {
+		allUnit = _allAlliedUnitSprite;
 	}
-	auto pos = testObject->getPosition();
+	else {
+		allUnit = _allEnemyUnitSprite;
+	}
+	auto pos = mainObj->getPosition();
 	vector<Vec2> vec;
 	DrawNode *draw = DrawNode::create();
 	switch (skill.range_type)
@@ -2762,7 +2811,7 @@ vector<int> BattleScene::detectUnitInAoe(UserSkillInfo skill, int unitFlg, bool 
 	{
 		drawFlg = false;
 	}
-	if (drawFlg) {
+	if (drawFlg && mainObj == testObject) {
 		_battleBackround->addChild(draw);
 	}
 
@@ -2824,9 +2873,9 @@ vector<int> BattleScene::detectUnitInAoe(UserSkillInfo skill, int unitFlg, bool 
 
 void BattleScene::updateHpAndMpViewLabel()
 {
-	string hp = DataUtils::numberToString(_mainCharacterData.hp).append("/").append(DataUtils::numberToString(_allAlliedUnitMaxHp[0]));
+	string hp = DataUtils::numberToString(_allAlliedUnitData[0].hp).append("/").append(DataUtils::numberToString(_allAlliedUnitMaxHp[0]));
 	_hpViewLabel->setString(hp.c_str());
-	string mp = DataUtils::numberToString(_mainCharacterData.mp).append("/").append(DataUtils::numberToString(_mainCharacerMaxMp));
+	string mp = DataUtils::numberToString(_allAlliedUnitData[0].mp).append("/").append(DataUtils::numberToString(_mainCharacerMaxMp));
 	_mpViewlabel->setString(mp.c_str());
 }
 
@@ -2835,7 +2884,7 @@ void BattleScene::endBattle()
 	BattleAPI::getInstance()->sendBattleEndEvent([&](SIOClient *client, const string data) {
 		log("battle end callback with data: %s", data.c_str());
 	});
-	Director::getInstance()->replaceScene(TransitionMoveInR::create(SCREEN_TRANSI_DELAY, BatleResultScene::createScene(_blueTeamInfo,_redTeamInfo)));
+	Director::getInstance()->replaceScene(TransitionMoveInR::create(SCREEN_TRANSI_DELAY, BatleResultScene::createScene(_saveBattleInfoAlliedTeam,_saveBattleInfoEnemyTeam)));
 }
 
 float BattleScene::caculDameRate(int mainC, int enemy)
@@ -2852,7 +2901,7 @@ float BattleScene::caculDameRate(int mainC, int enemy)
 
 void BattleScene::longPressAction(Button *pSender,UserSkillInfo skill)
 {
-	auto a = detectUnitInAoe(skill, ENEMY_FLAG);
+	auto a = detectUnitInAoe(testObject,skill, ENEMY_FLAG);
 	_onSelectSkillData = skill;
 	for (auto& enemy : a)
 	{
@@ -2912,71 +2961,65 @@ BattleScene::~BattleScene()
 	_allEnemyUnitData = {};
 	_allEnemyUnitSprite = {};
 	_allAlliedUnitData = {};
-
+	_onDestructCalled = true;
 }
 
 void BattleScene::saveDameInfo(int dame, int attackUnitId, int beAttackUnitId, int teamFlg)
 {
-	switch (teamFlg)
+	if (teamFlg == _currentPlayerTeamFlg) {
+		if (attackUnitId < _allAlliedUnitData.size() - 1) 
+		{
+			_saveBattleInfoAlliedTeam[attackUnitId].totalDealDame += dame;
+		}
+		if (beAttackUnitId < _allEnemyUnitData.size() - 1)
+		{
+
+			_saveBattleInfoEnemyTeam[beAttackUnitId].totalReceivedDame += dame;
+		}
+		return;
+	}
+	else 
 	{
-	case TEAM_FLG_BLUE:
-		_blueTeamInfo[attackUnitId].totalDealDame += dame;
-		if (beAttackUnitId < ENEMY_NUM)
+		if (attackUnitId < _allEnemyUnitData.size() - 1)
 		{
-			_redTeamInfo[beAttackUnitId].totalReceivedDame += dame;
-		}	
-		break;
-	case TEAM_FLG_RED:
-		_blueTeamInfo[beAttackUnitId].totalReceivedDame += dame;
-		if (attackUnitId < ENEMY_NUM)
+			_saveBattleInfoEnemyTeam[attackUnitId].totalDealDame += dame;
+		}
+
+		if (beAttackUnitId < _allAlliedUnitData.size() - 1)
 		{
-			_redTeamInfo[attackUnitId].totalDealDame += dame;
+			_saveBattleInfoAlliedTeam[beAttackUnitId].totalReceivedDame += dame;
 		}
 		
-		break;
-	default:
-		break;
 	}
 }
 
 void BattleScene::saveKillDeadInfo(int killerId, int deadUnitId, int teamFlg)
 {
 	if (teamFlg == _currentPlayerTeamFlg) {
-		switch (_currentPlayerTeamFlg)
+		if (killerId < _allAlliedUnitData.size() - 1)
 		{
-		case TEAM_FLG_BLUE:
-			_blueTeamInfo[killerId].killNum++;
-			if(deadUnitId < _allEnemyUnitData.size()) _redTeamInfo[deadUnitId].deadNum++;
-			break;
-		case TEAM_FLG_RED:
-			_redTeamInfo[killerId].killNum++;
-			if (deadUnitId < _allEnemyUnitData.size())_blueTeamInfo[deadUnitId].deadNum++;
-			break;
-		default:
-			break;
+			_saveBattleInfoAlliedTeam[killerId].killNum++;
 		}
-	}
-	else {
-		if (teamFlg == _currentEnemyTeamFlg)
-		{
-			switch (_currentPlayerTeamFlg)
-			{
-			case TEAM_FLG_BLUE:
-				_blueTeamInfo[deadUnitId].deadNum++;
-				if (killerId < _allEnemyUnitData.size()) _redTeamInfo[killerId].killNum++;
+		if (deadUnitId < _allEnemyUnitData.size() - 1) {
+			_saveBattleInfoEnemyTeam[deadUnitId].deadNum++;
+		}
 
-				break;
-			case TEAM_FLG_RED:
-				_redTeamInfo[deadUnitId].deadNum++;
-				if (killerId < _allEnemyUnitData.size())_blueTeamInfo[killerId].killNum++;
-				break;
-			default:
-				break;
-			}
+	}
+	else 
+	{
+		if (killerId < _allEnemyUnitData.size() - 1)
+		{
+			_saveBattleInfoEnemyTeam[killerId].killNum++;
+		}
+		if (deadUnitId < _allAlliedUnitData.size() - 1)
+		{
+			_saveBattleInfoAlliedTeam[deadUnitId].deadNum++;
 		}
 	}
 }
 /*status type: POISON, STUN, BUFF_ATTACK, BUFF_DEFENCE, DEBUFF_ATTACK*/
+/*Need to modify for RTS process*/
+//TODO
 void BattleScene::displayUnitStatus(Sprite *parent, int statusType, UserSkillInfo skillInfo, int spIndex /*= 0*/)
 {
 	string imagePath;
@@ -3049,41 +3092,47 @@ Animation* BattleScene::createStatusAnimation(string imagePath)
 	return animation;
 }
 
-void BattleScene::skillPoisonAction(UserSkillInfo skillInfo)
+void BattleScene::skillPoisonAction(Sprite* object, UserSkillInfo skillInfo, int teamId)
 {
-	vector<int> units = detectUnitInAoe(skillInfo, ENEMY_FLAG);
-	//TODO change to unit unitque ID
-	vector<int> effectedUnits;
-	for (auto &i : units)
-	{
-		effectedUnits.push_back(_allEnemyUnitData[i].mst_unit_id);
+	int teamFlg = 0;
+	vector<Sprite*> effectedUnitSprite;
+	if (teamId == _currentPlayerTeamFlg) {
+		teamFlg = _currentEnemyTeamFlg;
+		effectedUnitSprite = _allEnemyUnitSprite;
 	}
-	BattleAPI::getInstance()->sendSkillEvent(skillInfo, effectedUnits);
-
+	else {
+		teamFlg = _currentPlayerTeamFlg;
+		effectedUnitSprite = _allAlliedUnitSprite;
+	}
+	vector<int> units = detectUnitInAoe(object,skillInfo, teamFlg);
 	for (auto & index :units)
 	{
-		displayUnitStatus(_allEnemyUnitSprite[index], POISON, skillInfo,index);
+		displayUnitStatus(effectedUnitSprite[index], POISON, skillInfo,index);
 		poisonEffectAction(skillInfo, index);
 	}
 }
 
-void BattleScene::skillStunAction(UserSkillInfo skillInfo)
+void BattleScene::skillStunAction(Sprite* object, UserSkillInfo skillInfo, int teamId)
 {
-	vector<int> units = detectUnitInAoe(skillInfo,ENEMY_FLAG);
-	//TODO change to unique unitID
-	vector<int> effectedUnits;
-	for (int &index : units)
-	{
-		effectedUnits.push_back(_allEnemyUnitData[index].mst_unit_id);
+	int teamFlg = 0;
+	vector<Sprite*> effectedUnitSprite;
+	if (teamId == _currentPlayerTeamFlg) {
+		teamFlg = _currentEnemyTeamFlg;
+		effectedUnitSprite = _allEnemyUnitSprite;
 	}
-	BattleAPI::getInstance()->sendSkillEvent(skillInfo, effectedUnits);
+	else {
+		teamFlg = _currentPlayerTeamFlg;
+		effectedUnitSprite = _allAlliedUnitSprite;
+	}
+	vector<int> units = detectUnitInAoe(object,skillInfo,teamFlg);
 
 	for (auto& i : units)
 	{
-		displayUnitStatus(_allEnemyUnitSprite[i], STUN, skillInfo,i);
-		_allEnemyUnitData[i].isStun = true;
-		_allEnemyUnitSprite[i]->runAction(Sequence::create(DelayTime::create(skillInfo.duration), CallFuncN::create([&,i](Ref *p){
-			_allEnemyUnitData[i].isStun = false;
+		displayUnitStatus(effectedUnitSprite[i], STUN, skillInfo,i);
+		/* comment for future logic when data in client and server was sync*/
+		//_allEnemyUnitData[i].isStun = true;
+		effectedUnitSprite[i]->runAction(Sequence::create(DelayTime::create(skillInfo.duration), CallFuncN::create([&,i](Ref *p){
+			//_allEnemyUnitData[i].isStun = false;
 		}), nullptr));
 	}
 }
@@ -3149,19 +3198,19 @@ void BattleScene::fountainRestoreEffect()
 		return;
 	}
 	auto action = RepeatForever::create(Sequence::create(CallFuncN::create([&](Ref *p){
-		_mainCharacterData.mp += ceil(_saveMainStatusData.mp *0.05f);
-		if (_mainCharacterData.mp > _mainCharacerMaxMp)
+		_allAlliedUnitData[0].mp += ceil(_saveMainStatusData.mp *0.05f);
+		if (_allAlliedUnitData[0].mp > _mainCharacerMaxMp)
 		{
-			_mainCharacterData.mp = _mainCharacerMaxMp;
+			_allAlliedUnitData[0].mp = _mainCharacerMaxMp;
 		}
-		_mainCharacterMpBar->setPercent(ceil(100.0f*_mainCharacterData.mp / _saveMainStatusData.mp));
-		_mainCharacterData.hp += ceil(_saveMainStatusData.hp * 0.05f);
-		if (_mainCharacterData.hp > _allAlliedUnitMaxHp[0]) {
-			_mainCharacterData.hp = _allAlliedUnitMaxHp[0];
+		_mainCharacterMpBar->setPercent(ceil(100.0f*_allAlliedUnitData[0].mp / _saveMainStatusData.mp));
+		_allAlliedUnitData[0].hp += ceil(_saveMainStatusData.hp * 0.05f);
+		if (_allAlliedUnitData[0].hp > _allAlliedUnitMaxHp[0]) {
+			_allAlliedUnitData[0].hp = _allAlliedUnitMaxHp[0];
 		}
-		//BattleAPI::getInstance()->battleSyncEvent(_mainCharacterData);
-		_allAlliedUnitHpBar[0]->setPercent(ceil(100.0f*_mainCharacterData.hp / _saveMainStatusData.hp));
-		_mainCharacterHpBar->setPercent(ceil(100.0f*_mainCharacterData.hp / _saveMainStatusData.hp));
+		//BattleAPI::getInstance()->battleSyncEvent(_allAlliedUnitData[0]);
+		_allAlliedUnitHpBar[0]->setPercent(ceil(100.0f*_allAlliedUnitData[0].hp / _saveMainStatusData.hp));
+		_mainCharacterHpBar->setPercent(ceil(100.0f*_allAlliedUnitData[0].hp / _saveMainStatusData.hp));
 		updateSlider();
 	}), DelayTime::create(1), nullptr));
 	action->setTag(FOUNTAIN_ACTION);
@@ -3235,23 +3284,6 @@ void BattleScene::removeSorceryEclipse(Ref* pSender)
 	}
 }
 
-
-void BattleScene::removeEffect(Ref* pSender)
-{
-
-	auto effect = dynamic_cast<Sprite*>(pSender);
-
-	if (effect != nullptr)
-	{
-		effect->removeFromParentAndCleanup(true);
-		//log("Remove Effect");
-	}
-	else
-	{
-		//log("Remove Effect");
-		return;
-	}
-}
 
 void BattleScene::pushStatusImagePath(string imagepath, vector<string> &allImages)
 {
@@ -3615,7 +3647,7 @@ void BattleScene::moveStepAction()
 
 	Vec2 desPos = getPositionForTitleCoord(s->getPosition());
 	Vec2 distanVector = desPos - testObject->getPosition();
-	float time = distanVector.length() / _mainCharacterData.move_speed;
+	float time = distanVector.length() / _allAlliedUnitData[0].move_speed;
 	MoveTo *moveAction = MoveTo::create(time, desPos );
 	_mainCharacterIconInMiniMap->setRotation(-(distanVector.getAngle() * RAD_DEG) + 90);
 
@@ -3760,6 +3792,50 @@ void BattleScene::createMiniControlUnit(int circleType) {
 	_miniUnit->setScale(float(0.25));
 	addChild(_miniUnit, 100);
 	_miniUnit->setPosition(_miniCircle->getPosition());
+}
+
+void BattleScene::rt_attackAnimationandLogic(Document& doc, vector<Sprite*> processUnitSprite, vector<UserUnitInfo>& processUnitData, vector<Sprite*> targetSpriteList, vector<UserUnitInfo>& targetDataList)
+{
+	for (int i = 0; i < processUnitData.size(); i++)
+	{
+		if (strcmp(processUnitData[i].uuid.c_str(), doc["uuid"].GetString()) == 0) {
+			log("****ATTACKER****");
+			Character* cha = (Character*)processUnitSprite[i];
+			//bellow code for detect be attacked unit and sync data:
+			Sprite* target;
+			for (int j = 0; i < targetDataList.size(); j++)
+			{
+				if (strcmp(doc["target"]["uuid"].GetString(), targetDataList[j].uuid.c_str()) == 0) {
+					log("****TARGET****");
+					target = targetSpriteList[j];
+					targetDataList[i].hp = doc["target"]["hp"].GetInt();
+					log("updated");
+					break;
+				}
+			}
+			int dame = doc["dame"].GetInt();
+			if (dame <= 0) {
+				dame = 1;
+			}
+			log("Dame: %d", dame);
+
+			cha->attackActionByUnitPosition(doc["direction"].GetInt(), doc["user_unit"]["attack_speed"].GetInt(), nullptr, [&, i, target,dame]() {	
+				if (target == testObject)
+				{
+					showAttackDame(dame, target->getPosition() + Vec2(0, 100), 1);
+					updateHpAndMpViewLabel();
+					saveDameInfo(dame, i, 0, _currentEnemyTeamFlg);
+					if (_allAlliedUnitData[0].hp - dame <= 0) {
+						runRespawnAction(i);
+					}
+				}
+				updateSlider();
+			});
+			
+			break;
+		}
+
+	}
 }
 
 

@@ -78,6 +78,8 @@
 
 #define TOWER_TAG 222
 
+#define HPBAR_TAG 1232
+
 using namespace cocostudio;
 class BattleScene : public LayerBase
 {
@@ -93,7 +95,10 @@ public:
 	static BattleScene* create();
 	bool init();
 private:
-	///VARIABLES///////////////////////////////////////////////////////////////////////
+	/************************************************************************/
+	/* VARIABLES                                                            */
+	/************************************************************************/
+	bool _onDestructCalled = false;
 	struct tm day;
 	time_t timer;
 	struct tm * timeinfo;
@@ -154,7 +159,7 @@ private:
 	///CHARACTER///
 
 	int _selectedUnitId;
-	UserUnitInfo _mainCharacterData;
+// 	UserUnitInfo _mainCharacterData;
 	UserUnitInfo _saveMainStatusData;
 	vector<UserSkillInfo> _mainCharacterSkillData;
 	Character* testObject;
@@ -190,8 +195,8 @@ private:
 	int _currentEnemyTeamFlg = TEAM_FLG_RED;
 
 	//For battle result
-	vector<UserBattleInfo> _blueTeamInfo;
-	vector<UserBattleInfo> _redTeamInfo;
+	vector<UserBattleInfo> _saveBattleInfoAlliedTeam;
+	vector<UserBattleInfo> _saveBattleInfoEnemyTeam;
 
 	/*All battle variables*/
 	int _alliedTeamTotalDead = 0;
@@ -210,7 +215,9 @@ private:
 	/*Titled Map for Path finding and simple background*/
 	TMXTiledMap* _myMap;
 
-	///FUNCTIONS///////////////////////////////////////////////////////////////////////
+	/************************************************************************/
+	/* FUNCTIONS                                                            */
+	/************************************************************************/
 
 	///DATABASE API
 	virtual UserUnitInfo getUnitDataFromDataBase(int unitId);
@@ -329,6 +336,18 @@ private:
 	/*this function will change animation image path by unit id*/
 	virtual void changeAnimationImagePathByUnitId(int unitId);
 
+	/*
+	************************************************************
+	* REAL TIME FUNCTIONS BLOCK
+	************************************************************
+	*/
+	virtual void rt_attackAnimationandLogic(Document& doc, vector<Sprite*> processUnitSprite, vector<UserUnitInfo>& processUnitData, vector<Sprite*> targetSpriteList, vector<UserUnitInfo>& targetDataList);
+
+
+
+
+
+
 	/*this function will call every 5s to restore all unit hp and mp
 	*/
 	virtual void autoRestoreHpAndMp();
@@ -346,31 +365,35 @@ private:
 	return value is the vector store all unit id which contained by effect area
 	@drawFlg is flag to decide this function will show or not show the skill effect area
 	*/
-	virtual vector<int> detectUnitInAoe(UserSkillInfo skill, int unitFlg, bool drawFlg = true);
+	virtual vector<int> detectUnitInAoe(Sprite* mainObj, UserSkillInfo skill, int unitFlg, bool drawFlg = true);
+	
 	/* run logic and effect of heal skills
 	*/
-	virtual void skillRestoreAction(UserSkillInfo skillInfo);
+	virtual void skillRestoreAction(Sprite* object,  UserSkillInfo skillInfo, int teamId);
 
-	virtual void skillRestoreAll(UserSkillInfo skillInfo);
-	virtual void skillRestoreOne(UserSkillInfo skillInfo);
+	virtual void skillRestoreAll(Sprite* object,  UserSkillInfo skillInfo, int teamId);
+	virtual void skillRestoreOne(Sprite* object, UserSkillInfo skillInfo, int teamId);
+	/*Help effect with object*/
+	virtual void healEffectWithObject(Sprite* obj);
 
 	/*Run logic and effect of buff skills*/
-	virtual void skillBuffAction(UserSkillInfo skillInfo);
-	virtual void skillHelpAll(UserSkillInfo skillInfo);
-	virtual void skillHelpOne(UserSkillInfo skillInfo);
+	virtual void skillBuffAction(Sprite* object, UserSkillInfo skillInfo, int teamId);
+	virtual void skillHelpAll(Sprite* object, UserSkillInfo skillInfo, int teamId);
+	virtual void skillHelpOne(Sprite* object, UserSkillInfo skillInfo, int teamId);
 
 	/*Run logic and effect of attack skills*/
-	virtual void skillAttackAction(UserSkillInfo skillInfo);
-	virtual void skillAttackAll(UserSkillInfo skillInfo);
-	virtual void skillAttackOne(UserSkillInfo skillInfo);
+	virtual void skillAttackAction(Sprite* object, UserSkillInfo skillInfo, UserUnitInfo attacker, int teamId, float randNum);
+	virtual void skillAttackAll(Sprite* object, UserSkillInfo skillInfo, UserUnitInfo attacker, int teamId, float randNum);
+	virtual void skillAttackOne(Sprite* object, UserSkillInfo skillInfo, UserUnitInfo attacker, int teamId, float randNum);
 
 	/*Run logic and effect of poison skills */
-	virtual void skillPoisonAction(UserSkillInfo skillInfo);
+	virtual void skillPoisonAction(Sprite* object, UserSkillInfo skillInfo, int teamId);
 	/*Run logic and effect of Stun skills*/
-	virtual void skillStunAction(UserSkillInfo skillInfo);
+	virtual void skillStunAction(Sprite* object, UserSkillInfo skillInfo, int teamId);
 
 	/*Calculate logic and play effect for poison skill for defined unit base on @index as the index in _allEnemyUnitData*/
 	virtual void poisonEffectAction(UserSkillInfo skill, int index);
+
 
 	/*End of battle logic*/
 	virtual void endBattle();
@@ -408,8 +431,6 @@ private:
 
 	virtual void createSorceryEffect(Sprite* spriteUnit, std::string eclipseFilePath);
 	virtual void removeSorceryEclipse(Ref* pSender);
-	virtual void removeEffect(Ref* pSender);
-
 	/*For calculate and display effect status*/
 	virtual void pushStatusImagePath(string imagepath, vector<string> &allImages);
 	virtual void removeStatusImagePath(string imagepath, vector<string> &allImages);
@@ -429,6 +450,9 @@ private:
 	virtual bool isWallAtTileCoord(Vec2 &titleCoord);
 	virtual PointArray *allWalkableTitlesCoordForTitleCoord(Vec2 titleCoord);
 
+	/************************************************************************/
+	/* CLASS USING FOR DETECT SHORTEST PATH BY A* ALGORITHM                 */
+	/************************************************************************/
 	class ShortestPathStep : public cocos2d::Object
 	{
 	public:

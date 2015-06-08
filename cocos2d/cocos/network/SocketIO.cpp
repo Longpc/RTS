@@ -203,7 +203,7 @@ namespace network {
 
 	std::string SocketIOPacket::stringify()
 	{
-		log("Before Stringify: %s", _args[0].c_str());
+		//log("Before Stringify: %s", _args[0].c_str());
 		std::string outS;
 		if (_type == "message") {
 			outS = _args[0];
@@ -230,7 +230,7 @@ namespace network {
 
 			outS = s.GetString();
 
-			log("create args object: %s:", outS.c_str());
+			//log("create args object: %s:", outS.c_str());
 		}
 
 		return outS;
@@ -298,7 +298,7 @@ namespace network {
 
 		outS = s.GetString();
 
-		log("create args object: %s:", outS.c_str());
+		//log("create args object: %s:", outS.c_str());
 
 		return outS;
 
@@ -712,7 +712,7 @@ namespace network {
 		std::string req = packet->toString();
 		if (_connected)
 		{
-			log("-->SEND:%s", req.data());
+			//log("-->SEND:%s", req.data());
 			_ws->send(req.data());
 		}
 		else
@@ -721,7 +721,7 @@ namespace network {
 
 	void SIOClientImpl::emit(std::string endpoint, std::string eventname, std::string args)
 	{
-		log("Emitting event \"%s\"", eventname.c_str());
+		//log("Emitting event \"%s\"", eventname.c_str());
 		SocketIOPacket *packet = SocketIOPacket::createPacketWithType("event", _version);
 		packet->setEndpoint(endpoint == "/" ? "" : endpoint);
 		packet->setEvent(eventname);
@@ -753,7 +753,7 @@ namespace network {
 
 	void SIOClientImpl::onMessage(WebSocket* ws, const WebSocket::Data& data)
 	{
-		log("SIOClientImpl::onMessage received: %s", data.bytes);
+		//log("SIOClientImpl::onMessage received: %s", data.bytes);
 
 		std::string payload = data.bytes;
 		int control = atoi(payload.substr(0, 1).c_str());
@@ -886,7 +886,7 @@ namespace network {
 
 				const char second = payload.at(0);
 				int control2 = atoi(&second);
-				log("Message code: [%i]", control);
+				//log("Message code: [%i]", control);
 
 				SocketIOPacket *packetOut = SocketIOPacket::createPacketWithType("event", _version);
 				std::string endpoint = "";
@@ -933,13 +933,13 @@ namespace network {
 					break;
 				case 2:
 				{
-					log("Event Received (%s)", payload.c_str());
+					//log("Event Received (%s)", payload.c_str());
 
 					int a = payload.find("\"");
 					int b = payload.substr(a + 1).find("\"");
 
 					std::string eventname = payload.substr(a + 1, b - a + 1);
-					log("event name %s between %i and %i", eventname.c_str(), a, b);
+					//log("event name %s between %i and %i", eventname.c_str(), a, b);
 
 					payload = payload.substr(b + 4, payload.size() - (b + 5));
 
@@ -1079,7 +1079,7 @@ namespace network {
 
 	void SIOClient::fireEvent(const std::string& eventName, const std::string& data)
 	{
-		log("SIOClient::fireEvent called with event name: %s and data: %s", eventName.c_str(), data.c_str());
+		//log("SIOClient::fireEvent called with event name: %s and data: %s", eventName.c_str(), data.c_str());
 
 		_delegate->fireEventToScript(this, eventName, data);
 

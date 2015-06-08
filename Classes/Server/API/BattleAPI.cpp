@@ -22,7 +22,15 @@ bool BattleAPI::init()
 
 	return true;
 }
+/************************************************************************/
+/* Send unit move event to server 
+	@param: unitdata: Moving unit information
+	@param: moveDirection: Move direction
+	@param: angle: Move angle
+	@param: position: Unit 's current position
 
+*/
+/************************************************************************/
 void BattleAPI::sendMoveEvent(UserUnitInfo unitdata, int moveDirection,float angle, Vec2 position, int statusId, bool onMovingFlg)
 {
 	auto a = NodeServer::getInstance()->getClient();
@@ -47,7 +55,7 @@ void BattleAPI::sendMoveEvent(UserUnitInfo unitdata, int moveDirection,float ang
 	Writer<StringBuffer> writer(buffer);
 	doc.Accept(writer);
 
-	log("send move data: %s", buffer.GetString());
+	//log("send move data: %s", buffer.GetString());
 	a->emit("move", buffer.GetString());
 	a->on("move_end", [&](SIOClient* client, const std::string& data)
 	{
@@ -111,7 +119,7 @@ void BattleAPI::sendAttackEvent(int direction,UserUnitInfo unit, UserUnitInfo ta
 	return;
 }
 
-void BattleAPI::sendSkillEvent(UserSkillInfo skillData, vector<int> targetsId)
+void BattleAPI::sendSkillEvent(UserSkillInfo skillData, UserUnitInfo attacker/*, SocketIOCallback callback*/)
 {
 	auto c = NodeServer::getInstance()->getClient();
 	if (c == nullptr) return;
@@ -123,38 +131,56 @@ void BattleAPI::sendSkillEvent(UserSkillInfo skillData, vector<int> targetsId)
 	doc.AddMember("user_id", userData.user_id, allo);
 	doc.AddMember("room_id", userData.room_id, allo);
 	doc.AddMember("unit_id", unitId, allo);
+	doc.AddMember("team_id", userData.team_id, allo);
 	string uu = UserModel::getInstance()->getUuId().c_str();
 	doc.AddMember("uuid", uu.c_str(), allo);
-
+	auto u = convertUnitDataToJsonObject(attacker, allo);
+	doc.AddMember("mst_unit", *u, allo);
 	auto s = convertSkillDataToJsonObject(skillData, allo);
 	doc.AddMember("mst_skill", *s, allo);
+
+	StringBuffer  buffer;
+	Writer<StringBuffer> writer(buffer);
+	doc.Accept(writer);
+
+	log("Skill: %s", buffer.GetString());
+	c->emit("play_skill", buffer.GetString());
+	//c->on("play_skill_end", callback);
+}
+
+void BattleAPI::sendBuffSkillEvent(UserSkillInfo skill, SocketIOCallback callback)
+{
+	auto c = NodeServer::getInstance()->getClient();
+	if (c == nullptr) return;
+	auto userData = UserModel::getInstance()->getUserInfo();
+	Document doc;
+	doc.SetObject();
+	Document::AllocatorType& allo = doc.GetAllocator();
+	doc.AddMember("user_id", userData.user_id, allo);
+	doc.AddMember("room_id", userData.room_id, allo);
+	doc.AddMember("team_id", userData.team_id, allo);
+	string uu = UserModel::getInstance()->getUuId().c_str();
+	doc.AddMember("uuid", uu.c_str(), allo);
+	auto unitInfo = UserUnitModel::getInstance()->getUnitInfoById(UserModel::getInstance()->getSelectedUnitId());
+	doc.AddMember("user_unit", *convertUnitDataToJsonObject(unitInfo, allo), allo);
+	auto s = convertSkillDataToJsonObject(skill, allo);
+	doc.AddMember("mst_skill", *s, allo);
+
 	rapidjson::Value targetList;
 	targetList.SetArray();
-	for (int i = 0; i < targetsId.size(); i++)
-	{
-		targetList.PushBack(targetsId[i], allo);
-		//targetList.AddMember("target_unique_id", targetsId[i], allo);
-	}
-	doc.AddMember("target_list", targetList, allo);
+	
 
 	StringBuffer  buffer;
 	Writer<StringBuffer> writer(buffer);
 	doc.Accept(writer);
 
 	log("Emit data: %s", buffer.GetString());
-	string eventName = "skill_";
-	if (skillData.skill_type == 1) {
-		eventName.append("player");
-	}
-	else {
-		eventName.append("unit");
-	}
-
-	c->emit(eventName.c_str(), buffer.GetString());
-	c->on("skill_end", [&](SIOClient* client, const std::string data){
-		log("skill_end :%s", data.c_str());
-	});
+	c->emit("buff_skill", buffer.GetString());
+	c->on("buffskill_end", callback);
 }
+
+
+
 
 void BattleAPI::sendDeadEvent(UserUnitInfo unitData, SocketIOCallback callBack)
 {
@@ -288,7 +314,7 @@ Document::GenericValue* BattleAPI::convertSkillDataToJsonObject(UserSkillInfo sk
 
 	rapidjson::Value *skillDataValue = new rapidjson::Value();
 	skillDataValue->SetObject();
-	skillDataValue->AddMember("mst_unit_id", skillData.mst_skill_id, allo);
+	skillDataValue->AddMember("mst_skill_id", skillData.mst_skill_id, allo);
 	skillDataValue->AddMember("skill_type", skillData.skill_type, allo);
 	skillDataValue->AddMember("mp_cost", skillData.mp_cost, allo);
 	skillDataValue->AddMember("cooldown_time", skillData.cooldown_time, allo);
@@ -304,6 +330,7 @@ Document::GenericValue* BattleAPI::convertSkillDataToJsonObject(UserSkillInfo sk
 
 	return skillDataValue;
 }
+
 
 
 

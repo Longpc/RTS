@@ -16,6 +16,7 @@
 ///Include library header here///
 #include <string.h>
 #include "extensions/cocos-ext.h"
+
 #define REMOVE_CHILD 1111
 USING_NS_CC_EXT;
 class MultiTeamSelectScene :public LayerBase

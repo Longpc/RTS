@@ -4,6 +4,7 @@
 #include "cocos2d.h"
 #include "Server/Server.h"
 #include "Model/data/UserModel.h"
+#include "Model/data/UserUnitModel.h"
 #include "base/database/DataUtils.h"
 
 #include <string>
@@ -28,7 +29,8 @@ public:
 	void sendMoveEvent(UserUnitInfo unitdata, int moveDirection,float angle, Vec2 position, int statusId, bool onMovingFlg);
 	void sendMoveEndEvent(UserUnitInfo unitdata);
 	void sendAttackEvent(int direction,UserUnitInfo attackerUnit, UserUnitInfo targetData, SocketIOCallback callback);
-	void sendSkillEvent(UserSkillInfo skillData, vector<int> targetsId = {});
+	void sendSkillEvent(UserSkillInfo skillData, UserUnitInfo attacker/*, SocketIOCallback callback*/);
+	void sendBuffSkillEvent(UserSkillInfo skill, SocketIOCallback callback);
 	void sendDeadEvent(UserUnitInfo unitData, SocketIOCallback callback);
 	void sendRepawnEvent(SocketIOCallback callback);
 	void battleSyncEvent(UserUnitInfo unitData);

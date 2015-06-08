@@ -2,14 +2,11 @@
 #define MODE_SELECT_SCENE_H__
 ///Include scene header here///
 #include "../base/LayerBase.h"
-#include "Multi/TeamSelectScene/MultiTeamSelectScene.h"
 #include "Multi/MemberFullDialogLayer.h"
 #include "Multi/UnitSelectScene/UnitSelectScene.h"
 
 #include "UserSelectScene/UserSelectScene.h"
 
-//for test
-#include "Multi/BatleScene/BattleScene.h"
 
 #include "Server/API/StartPHPAPI.h"
 #include "Server/API/HttpClientBase.h"

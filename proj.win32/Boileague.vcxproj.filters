@@ -61,9 +61,6 @@
     <Filter Include="src\Server">
       <UniqueIdentifier>{ae0940ec-d72c-426a-be42-e2bd1a7c7dfc}</UniqueIdentifier>
     </Filter>
-    <Filter Include="src\UserSelectScene">
-      <UniqueIdentifier>{dbe5f6e0-060a-449e-add1-f3522f40bc51}</UniqueIdentifier>
-    </Filter>
     <Filter Include="src\Model">
       <UniqueIdentifier>{75e19c9d-6a66-42c5-80b2-d965896fac3a}</UniqueIdentifier>
     </Filter>
@@ -75,6 +72,9 @@
     </Filter>
     <Filter Include="src\base\dialogBase\pageViewBase">
       <UniqueIdentifier>{1fae0e35-1ac0-4017-b5c8-9b3598685eac}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\Multi\UserSelectScene">
+      <UniqueIdentifier>{dbe5f6e0-060a-449e-add1-f3522f40bc51}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -160,7 +160,7 @@
       <Filter>src\Server</Filter>
     </ClCompile>
     <ClCompile Include="..\Classes\UserSelectScene\UserSelectScene.cpp">
-      <Filter>src\UserSelectScene</Filter>
+      <Filter>src\Multi\UserSelectScene</Filter>
     </ClCompile>
     <ClCompile Include="..\Classes\Model\data\UserModel.cpp">
       <Filter>src\Model\data</Filter>
@@ -285,7 +285,7 @@
       <Filter>src\Server</Filter>
     </ClInclude>
     <ClInclude Include="..\Classes\UserSelectScene\UserSelectScene.h">
-      <Filter>src\UserSelectScene</Filter>
+      <Filter>src\Multi\UserSelectScene</Filter>
     </ClInclude>
     <ClInclude Include="..\Classes\Model\data\UserModel.h">
       <Filter>src\Model\data</Filter>

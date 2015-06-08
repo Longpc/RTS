@@ -101,7 +101,6 @@ void UserSelect::userSelectCallback(Ref *pSender, Widget::TouchEventType type)
 			Writer<StringBuffer> wt(buff);
 			doc.Accept(wt);
 
-
 			auto client = NodeServer::getInstance()->getClient();
 			client->emit("connect_begin", buff.GetString());
 			int roomId = uif.room_id;

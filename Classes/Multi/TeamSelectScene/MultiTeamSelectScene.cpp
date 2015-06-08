@@ -1,8 +1,6 @@
 ﻿#pragma execution_character_set("utf-8")
 #include "MultiTeamSelectScene.h"
 
-//FOR TEST
-#include "Server/API/BattleAPI.h"
 
 Scene * MultiTeamSelectScene::createScene(int userId)
 {
