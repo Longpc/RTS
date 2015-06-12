@@ -564,6 +564,8 @@ void BattleScene::createContent()
 		_enemyStatusImagePath.push_back(tmp);
 	}
 
+	vector<string> myList = {};
+	_alliedStatusImagePath.push_back(myList);
 	_miniMap->addChild(node, 1);
 
 	for (int i = 1; i < _allAlliedUnitData.size(); i++)
@@ -683,65 +685,6 @@ void BattleScene::createContent()
 	auto testSprite = Sprite::create("ball.png");
 	_battleBackround->addChild(testSprite, 100);
 	testSprite->setPhysicsBody(PhysicsBody::createCircle(20, PhysicsMaterial(1, 1, 1)));
-
-	/*auto testCharacter = Character::createCharacter(2);
-	_battleBackround->addChild(testCharacter, 100);
-	testCharacter->setPhysicsBody(PhysicsBody::createCircle(20, PhysicsMaterial(1, 1, 1)));
-	testCharacter->setScale(IMAGE_SCALE);
-	testCharacter->getPhysicsBody()->setRotationEnable(false);
-	testCharacter->getPhysicsBody()->setContactTestBitmask(0x1);
-	testCharacter->getPhysicsBody()->setCategoryBitmask(ALLIED_CONTACT_CATEGORY_BITMAP);
-	testCharacter->getPhysicsBody()->setCollisionBitmask(ALLIED_CONTACT_COLLISION_BITMAP);
-	sv->on("move_sync_end", [&, testSprite, testCharacter](SIOClient* client, const std::string data){
-		log("SYNC end data :%s", data.c_str());
-		auto info = UserModel::getInstance()->getUserInfo();
-		Document doc;
-		doc.Parse<0>(data.c_str());
-		if (doc.HasParseError()) {
-			log("Parse JSOn error");
-			return;
-		}
-		if (doc.IsObject()) {
-			//need same data when battle start for save player and unit data for future logic( attack, move, stop move, skill, dead, respawn)
-			for (int i = 0; i < doc["user_unit"].Size(); i++)
-			{
-				//log("position: %f %f", doc["user_unit"][rapidjson::SizeType(i)]["position_x"].GetDouble(), doc["user_unit"][rapidjson::SizeType(i)]["position_y"].GetDouble());
-				if (doc["user_unit"][rapidjson::SizeType(i)]["user_id"].GetInt() == info.user_id) {
-					log("this is my unit");
-					continue;
-				}
-				else {
-					log("Angle: %f", doc["angle"].GetDouble());
-					log("Direc: %d", doc["direction"].GetInt());
-					int direc = doc["direction"].GetInt();
-					float angle = doc["angle"].GetDouble();
-					if (doc["user_unit"][rapidjson::SizeType(i)]["user_id"].GetInt() == 10) continue;
-					testCharacter->changeAnimationImagePathByUnitId(doc["user_unit"][rapidjson::SizeType(i)]["mst_unit_id"].GetInt() + 1);
-					testCharacter->setPosition(Vec2(doc["user_unit"][rapidjson::SizeType(i)]["position_x"].GetDouble(), doc["user_unit"][rapidjson::SizeType(i)]["position_y"].GetDouble()));
-					//TODO need to check this unit is moving or not --> Need event call from client
-					//testCharacter->rotateCharacter(direc);
-					//
-					if (doc["moving"].GetBool())
-					{
-						testCharacter->actionMoveCharacter(direc);
-					}
-					else {
-						testCharacter->stopMoveAction();
-					}
-					//testSprite->setPosition(Vec2(doc["user_unit"][rapidjson::SizeType(i)]["position_x"].GetDouble(), doc["user_unit"][rapidjson::SizeType(i)]["position_y"].GetDouble()));
-					//testSprite->setRotation(doc["angle"].GetDouble());
-					auto uinfo = UserUnitModel::getInstance()->getUnitInfoById(doc["user_unit"][rapidjson::SizeType(i)]["mst_unit_id"].GetInt());
-					testCharacter->getPhysicsBody()->setVelocity(Vec2::ZERO);
-					
-					//testSprite->setRotation(angle);
-					testCharacter->getPhysicsBody()->applyImpulse(Vec2(uinfo.move_speed * cos(angle), uinfo.move_speed * sin(angle)));
-					return;
-				}
-			}
-		}
-
-	});
-	*/
 
 	/************************************************************************/
 	/* HANDLERS FOR BATTLE BROADCAST EVENTS                                                                     */
@@ -1027,6 +970,31 @@ void BattleScene::createContent()
 		}
 	});
 
+	sv->on("tower_attack", [&](SIOClient *client, const string data) {
+		log("===================================================================");
+		log("TOWER ATTACK EVENT DATA:");
+		log("%s", data.c_str());
+		log("===================================================================");
+		if (_onDestructCalled) return;
+		Document doc;
+		doc.Parse<0>(data.c_str());
+		if (doc.HasParseError()) {
+			log("on: play_skill_end Parse JSOn error");
+			return;
+		}
+		if (doc.IsObject()) {
+			string towerUUid = doc["tower"].GetString();
+			string targetUuid = doc["target"].GetString();
+			//OK OK. NEXT WEEK: SYNC TOWER ATTACK ANIMATION
+
+		}
+
+
+
+
+	});
+
+
 	sv->on("battle_public_battle_end", [&](SIOClient *client, const string data) {
 
 		Director::getInstance()->replaceScene(TransitionMoveInR::create(SCREEN_TRANSI_DELAY, BatleResultScene::createScene()));
@@ -1162,10 +1130,22 @@ void BattleScene::update(float delta)
 }
 void BattleScene::checkForAutoAttack()
 {
+	/************************************************************************/
+	/*Check auto attack of tower                                            */
+	/************************************************************************/
+
+	//checkAutoAttackOfTower(_allAlliedUnitSprite[_allAlliedUnitSprite.size() - 1],_allAlliedUnitData[_allAlliedUnitData.size()- 1], _allEnemyUnitSprite, _allEnemyUnitData, _alliedTowerAttackdelay, _currentEnemyTeamFlg);
+	//checkAutoAttackOfTower(_allEnemyUnitSprite[_allEnemyUnitSprite.size() - 1], _allEnemyUnitData[_allEnemyUnitData.size() - 1],_allAlliedUnitSprite, _allAlliedUnitData, _enemyTowerAttackdelay.);
+
+
+	/************************************************************************/
+	/* CHECK AUTO ATTACK OF MAIN UNIT                                       */
+	/************************************************************************/
 	if (_onRespwanFlg) return;
 	//float area = IMAGE_SCALE*_autoAttackArea->getContentSize().width / 2 + 25;
 	//Check for main character attack
-	for (int i = 0; i < _allEnemyUnitSprite.size(); i++)
+	//-1 for test tower attack event in server
+	for (int i = 0; i < _allEnemyUnitSprite.size() - 1; i++)
 	{
 		///Check for main character run attack animation
 
@@ -1232,6 +1212,24 @@ void BattleScene::checkForAutoAttack()
 		testObject->stopActionByTag(FOUNTAIN_ACTION);
 	}
 }
+
+
+void BattleScene::checkAutoAttackOfTower(Sprite* tower, UserUnitInfo towerData, vector<Sprite*> targetSpritelist, vector<UserUnitInfo> targetDataList, bool & attackDelayFlg, int teamId)
+{
+	if (attackDelayFlg) return;
+	auto pos = tower->getPosition();
+	for (int i = 0; i < targetSpritelist.size(); i++)
+	{
+		auto distan = pos - targetSpritelist[i]->getPosition();
+		if (distan.length() <= towerData.attack_range) {
+			attackDelayFlg = true;
+		}
+	}
+}
+void BattleScene::removeTowerDelayFlg(Ref * p, bool *delay) {
+
+}
+
 void BattleScene::characterAttackCallback(int  i, int dame)
 {
 	//if main character die before atack event end.
@@ -1318,6 +1316,8 @@ void BattleScene::enemyDieAction(int id)
 	_allEnemyUnitSprite[id]->setVisible(false);
 	_allEnemyIconInMinimap[id]->setVisible(false);
 	saveKillDeadInfo(0, id, _currentPlayerTeamFlg);
+	/*SEND SKILLDEAD DATA TO SERVER*/
+	sendKillDead(id, nullptr);
 	_indexOfBeAttackEnemy = -1;
 	testObject->stopActionByTag(_currentAttackActionTag);
 	if (id == _allEnemyUnitData.size() - 1) {
@@ -1514,7 +1514,7 @@ string BattleScene::makeTimeString(int second) {
 bool BattleScene::onTouchBegan(Touch *touch, Event *unused_event)
 {
 	_touchStartPoint = touch->getLocation();
-	if (_moveDisableFlg == false) {
+	if (_moveDisableFlg == false && _allAlliedUnitData[0].isStun == false) {
 
 		_touchMoveBeginSprite->setTexture("image/screen/battle/ui_move.png");
 		_touchMoveEndSprite->setTexture("image/screen/battle/ui_move_end.png");
@@ -1572,6 +1572,9 @@ bool BattleScene::onTouchBegan(Touch *touch, Event *unused_event)
 void BattleScene::onTouchMoved(Touch *touch, Event *unused_event)
 {
 	// Xac dinh vector giua diem touchMove va touchBegin
+	//Stunning unit cannot move
+	if (_allAlliedUnitData[0].isStun) return;
+
 	Vec2 distanVector;
 	if (_moveMode == MOVE_MANUAL)
 	{
@@ -1717,6 +1720,8 @@ void BattleScene::updateMiniMap()
 
 void BattleScene::onTouchEnded(Touch *touch, Event *unused_event)
 {
+	if (_allAlliedUnitData[0].isStun) return;
+
 	_touchMoveBeginSprite->setTexture("image/screen/battle/ui_move.png");
 	_touchMoveEndSprite->setTexture("image/screen/battle/ui_move_end.png");
 	_touchMoveBeginSprite->setVisible(false);
@@ -3208,15 +3213,14 @@ Animation* BattleScene::createStatusAnimation(string imagePath)
 
 void BattleScene::skillPoisonAction(Sprite* object, UserSkillInfo skillInfo, int teamId)
 {
-	int teamFlg = 0;
 	vector<Sprite*> effectedUnitSprite;
 	if (teamId == _currentPlayerTeamFlg) {
-		effectedUnitSprite = _allEnemyUnitSprite;
+		poisonEffectAction(object,skillInfo, &_allEnemyUnitData, _allEnemyUnitSprite, teamId);
 	}
 	else {
-		effectedUnitSprite = _allAlliedUnitSprite;
+		poisonEffectAction(object, skillInfo, &_allAlliedUnitData, _allAlliedUnitSprite, teamId);
 	}
-	vector<int> units = detectUnitInAoe(object,skillInfo, effectedUnitSprite, false);
+	/*vector<int> units = detectUnitInAoe(object,skillInfo, effectedUnitSprite, false);
 	for (auto & index :units)
 	{
 		
@@ -3230,24 +3234,37 @@ void BattleScene::skillPoisonAction(Sprite* object, UserSkillInfo skillInfo, int
 			displayUnitStatus(effectedUnitSprite[index], POISON, skillInfo, index, &_alliedStatusImagePath);
 			poisonEffectAction(skillInfo, index, &_allAlliedUnitData, effectedUnitSprite[index]);
 		}
-	}
+	}*/
 }
 
-void BattleScene::poisonEffectAction(UserSkillInfo skill, int index, vector<UserUnitInfo>* unitList, Sprite* targetSprite)
+void BattleScene::poisonEffectAction(Sprite* object, UserSkillInfo skill, vector<UserUnitInfo>* unitList, vector<Sprite*> targetSprite, int teamId)
 {
-	int dame = ceil(1.0f*UserUnitModel::getInstance()->getUnitInfoById(unitList->at(index).mst_unit_id).hp * 0.05f);
-	auto action = Sequence::create(CallFuncN::create([&, index, dame, targetSprite, unitList](Ref *p){
-		showAttackDame(dame, targetSprite->getPosition() + Vec2(0, 100), 1);
-		unitList->at(index).hp -= dame;
-		updateSlider();
-		//TODO die action will process in furture
-		/*if (_allEnemyUnitData[index].hp < 0)
-		{
-		enemyDieAction(index);
-		}*/
-	}), DelayTime::create(POISON_STEP_TIME), nullptr);
+	vector<int> unitIds = detectUnitInAoe(object, skill, targetSprite, false);
 
-	targetSprite->runAction(Repeat::create(action, ceil(skill.duration / POISON_STEP_TIME)));
+	for (auto &index : unitIds)
+	{
+		int dame = ceil(1.0f*UserUnitModel::getInstance()->getUnitInfoById(unitList->at(index).mst_unit_id).hp * 0.05f);
+
+
+		auto psAction = Sequence::create(CallFuncN::create([&, index, dame, targetSprite, unitList](Ref *p) {
+			showAttackDame(dame, targetSprite[index]->getPosition() + Vec2(0, 100), 1);
+			unitList->at(index).hp -= dame;
+			updateSlider();
+			if (unitList->at(index).hp <= 0) {
+				targetSprite[index]->stopAllActions();
+				unitDieAction(targetSprite[index], unitList, index);
+			}
+		}), DelayTime::create(POISON_STEP_TIME), nullptr);
+		targetSprite[index]->runAction(Repeat::create(psAction, ceil(skill.duration / POISON_STEP_TIME)));
+		if (teamId == _currentPlayerTeamFlg) {
+			displayUnitStatus(targetSprite[index], POISON, skill, index, &_enemyStatusImagePath);
+		}
+		else
+		{
+			displayUnitStatus(targetSprite[index], POISON, skill, index, &_alliedStatusImagePath);
+		}
+	
+	}
 }
 
 void BattleScene::skillStunAction(Sprite* object, UserSkillInfo skillInfo, int teamId)
@@ -3273,12 +3290,6 @@ void BattleScene::skillStunAction(Sprite* object, UserSkillInfo skillInfo, int t
 			displayUnitStatus(effectedUnitSprite[i], STUN, skillInfo, i, &_alliedStatusImagePath);
 			stunEffecAction(effectedUnitSprite[i], skillInfo, i, &_allAlliedUnitData);
 		}
-
-		/*displayUnitStatus(effectedUnitSprite[i], STUN, skillInfo,i);
-		//_allEnemyUnitData[i].isStun = true;
-		effectedUnitSprite[i]->runAction(Sequence::create(DelayTime::create(skillInfo.duration), CallFuncN::create([&,i](Ref *p){
-			//_allEnemyUnitData[i].isStun = false;
-		}), nullptr));*/
 	}
 }
 

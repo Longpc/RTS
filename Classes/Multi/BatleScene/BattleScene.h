@@ -326,6 +326,11 @@ private:
 	*/
 	virtual void checkForAutoAttack();
 
+	/*check auto atack of tower*/
+	bool _alliedTowerAttackdelay = false;
+	bool _enemyTowerAttackdelay = false;
+	virtual void checkAutoAttackOfTower(Sprite* tower, UserUnitInfo towerData, vector<Sprite*> targetSpritelist, vector<UserUnitInfo> targetDataList, bool &attackDelay, int teamId);
+	virtual void removeTowerDelayFlg(Ref * p, bool *delay);
 	void update(float delta);
 	float _checkTime = 0; //for test Battle sync
 	//TODO
@@ -400,6 +405,7 @@ private:
 
 	/*Run logic and effect of poison skills */
 	virtual void skillPoisonAction(Sprite* object, UserSkillInfo skillInfo, int teamId);
+		
 	/*Run logic and effect of Stun skills*/
 	virtual void skillStunAction(Sprite* object, UserSkillInfo skillInfo, int teamId);
 
@@ -407,7 +413,7 @@ private:
 
 
 	/*Calculate logic and play effect for poison skill for defined unit base on @index as the index in _allEnemyUnitData*/
-	virtual void poisonEffectAction(UserSkillInfo skill, int index, vector<UserUnitInfo>* unitList, Sprite* targetSprite );
+	virtual void poisonEffectAction(Sprite* object, UserSkillInfo skill, vector<UserUnitInfo>* unitList, vector<Sprite*> targetSprite, int teamID );
 
 
 	/*End of battle logic*/

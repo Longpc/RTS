@@ -45,6 +45,10 @@ public:
 	void sendRepawnEvent(SocketIOCallback callback);
 	
 	void battleSyncEvent(UserUnitInfo unitData);
+
+	void sendTowerAttackEvent(string towerUuid, string targetUuid, int direction, int teamId);
+
+
 	
 	void sendBattleEndEvent();
 

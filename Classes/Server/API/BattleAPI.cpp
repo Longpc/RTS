@@ -289,6 +289,29 @@ void BattleAPI::sendRepawnEvent(SocketIOCallback callback)
 	c->on("respawn_end", callback);
 }
 
+void BattleAPI::sendTowerAttackEvent(string towerUuid, string targetUuid, int direction, int teamId)
+{
+	auto sv = NodeServer::getInstance()->getClient();
+	if (sv == nullptr) return;
+
+	Document doc;
+	doc.SetObject();
+	Document::AllocatorType& allo = doc.GetAllocator();
+	doc.AddMember("tower", towerUuid.c_str(), allo);
+	doc.AddMember("target", targetUuid.c_str(), allo);
+	doc.AddMember("direction", direction, allo);
+	doc.AddMember("team_id", teamId, allo);
+
+	StringBuffer buffer;
+	Writer<StringBuffer> writer(buffer);
+	doc.Accept(writer);
+
+	log("Tower Attack: %s", buffer.GetString());
+
+
+	sv->emit("tower_attack", buffer.GetString());
+}
+
 void BattleAPI::battleSyncEvent(UserUnitInfo unitData)
 {
 	auto c = NodeServer::getInstance()->getClient();
@@ -388,6 +411,7 @@ Document::GenericValue* BattleAPI::convertSkillDataToJsonObject(UserSkillInfo sk
 
 	return skillDataValue;
 }
+
 
 
 
