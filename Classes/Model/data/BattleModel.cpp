@@ -29,9 +29,7 @@ void BattleModel::parserJsonToInitData(string jsonData)
 		return;
 	}
 	if (doc.IsObject()/*doc.IsObject() && doc.HasMember("args")*/) {
-		log("HERE");
 		auto a = UserModel::getInstance()->getUuId();
-		log("Args Size: %d", doc/*["args"]*/["room_user"].Size());
 		vector<Room_User_Model> userList;
 		vector<Room_User_Unit_Model> unitList;
 		for (int i = 0; i < doc/*["args"][rapidjson::SizeType(0)]*/["room_user"].Size(); i++)
@@ -50,7 +48,7 @@ void BattleModel::parserJsonToInitData(string jsonData)
 		}
 		setRoomUserList(userList);
 
-		log("Room use unit array length: %d", doc["room_user_unit"].Size());
+		log("BattleModel: Room use unit array length: %d", doc["room_user_unit"].Size());
 		for (int i = 0; i < doc["room_user_unit"].Size(); i++)
 		{
 			Room_User_Unit_Model temp1;
@@ -116,7 +114,7 @@ void BattleModel::updateUserUnit(Room_User_Unit_Model unitData)
 		}
 	}
 	setRoomUserUnitList(tempList);
-	log("updated unit with uuid: %s", unitData.uuid.c_str());
+	log("BattleModel: updated unit with uuid: %s", unitData.uuid.c_str());
 	return;
 }
 

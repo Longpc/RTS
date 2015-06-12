@@ -10,9 +10,9 @@ class BatleResultScene : public LayerBase
 {
 
 public:
-	static Scene* createScene(vector<UserBattleInfo> blueTeamInfo, vector<UserBattleInfo> readTeamInfo);
-	static BatleResultScene* create(vector<UserBattleInfo> blueTeamInfo, vector<UserBattleInfo> readTeamInfo);
-	bool init(vector<UserBattleInfo> blueTeamInfo, vector<UserBattleInfo> readTeamInfo);
+	static Scene* createScene();
+	static BatleResultScene* create();
+	bool init();
 private:
 	///VARIABLES///////////////////////////////////////////////////////////////////////
 	Sprite *_blueTeamTabBackground;
@@ -24,8 +24,10 @@ private:
 
 	vector<ClipingButtonBase*> _allSlot;
 
-	vector<UserBattleInfo> _blueTeamInfo;
-	vector<UserBattleInfo> _readTeamInfo;
+	vector<UserBattleInfo> _blueTeamBattleResult;
+	vector<UserBattleInfo> _redTeamBattleResult;
+	int _saveYourUnitIndex = 0;
+	int _currentTeam = 0;
 
 	///FUNCTIONS///////////////////////////////////////////////////////////////////////
 	virtual void createContent();
@@ -35,7 +37,7 @@ private:
 	virtual Sprite* createUnitNameBg(Vec2 pos);
 	virtual Label* createUniNameLabel(Vec2 pos);
 	virtual void createBattleInfo(Sprite *parent, vector<UserBattleInfo> info);
-	virtual void updateUnitSlot(vector<UserBattleInfo> info);
+	virtual void updateUnitSlot(vector<UserBattleInfo> info, bool checkFlg = false);
 };
 
 

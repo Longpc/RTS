@@ -23,6 +23,7 @@ public:
 	void setNormalBackGroundImagePath(const string& imagePath);
 	void setSelectedBackGroundImagePath(const string& imagePath);
 	Button* getClickableButton();
+	void resetClickableButton();
 	Button* getBackgroundButton();
 	void setSelected(bool selectedFlg);
 private:

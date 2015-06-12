@@ -2,18 +2,18 @@
 
 #include "BatleResultScene.h"
 
-Scene* BatleResultScene::createScene(vector<UserBattleInfo> blueTeamInfo, vector<UserBattleInfo> readTeamInfo)
+Scene* BatleResultScene::createScene()
 {
 	auto scene = Scene::create();
-	auto lay = BatleResultScene::create(blueTeamInfo,readTeamInfo);
+	auto lay = BatleResultScene::create();
 
 	scene->addChild(lay);
 	return scene;
 }
-BatleResultScene* BatleResultScene::create(vector<UserBattleInfo> blueTeamInfo, vector<UserBattleInfo> readTeamInfo)
+BatleResultScene* BatleResultScene::create()
 {
 	BatleResultScene *layer = new BatleResultScene();
-	if (layer && layer->init(blueTeamInfo, readTeamInfo)) {
+	if (layer && layer->init()) {
 		layer->autorelease();
 		return layer;
 	}
@@ -21,15 +21,14 @@ BatleResultScene* BatleResultScene::create(vector<UserBattleInfo> blueTeamInfo, 
 	CC_SAFE_DELETE(layer);
 	return NULL;
 }
-bool BatleResultScene::init(vector<UserBattleInfo> blueTeamInfo, vector<UserBattleInfo> readTeamInfo)
+bool BatleResultScene::init()
 {
 	if (!LayerBase::init()) {
 		return false;
 	}
 	_menu->setVisible(false);
-
-	_blueTeamInfo = blueTeamInfo;
-	_readTeamInfo = readTeamInfo;
+	_currentTeam = UserModel::getInstance()->getUserInfo().team_id;
+	
 	_defaultLabel->setString("TEAM BLUE WIN");
 	auto homeButton = Button::create();
 	homeButton->loadTextureNormal("image/button/new/button_home.png");
@@ -38,7 +37,65 @@ bool BatleResultScene::init(vector<UserBattleInfo> blueTeamInfo, vector<UserBatt
 	homeButton->addTouchEventListener(CC_CALLBACK_2(BatleResultScene::nextButtonCallback, this));
 	addChild(homeButton, 10);
 
-	createContent();
+	auto sv = NodeServer::getInstance()->getClient();
+	sv->emit("get_battle_result", "hello");
+	sv->on("battle_result", [&](SIOClient* client, const string data) {
+		log("battle result with data: %s", data.c_str());
+		Document doc;
+		doc.Parse<0>(data.c_str());
+		if (doc.HasParseError()) {
+			log("Parse JSOn error");
+			return;
+		}
+		if (doc.IsArray()) {
+			
+			vector<UserBattleInfo> alliedTeam;
+			vector<UserBattleInfo> enemyTeam;
+			for (int i = 0; i < doc.Size(); i ++)
+			{
+				int unitID = doc[rapidjson::SizeType(i)]["unit_id"].GetInt();
+				auto unitInfo = UserUnitModel::getInstance()->getUnitInfoById(unitID);
+				UserBattleInfo temp;
+				temp.name = unitInfo.name;
+				temp.unitId = unitID;
+				temp.totalDealDame = doc[rapidjson::SizeType(i)]["totalDealDame"].GetInt();
+				temp.totalReceivedDame = doc[rapidjson::SizeType(i)]["totalReceiveDame"].GetInt();
+				temp.killNum = doc[rapidjson::SizeType(i)]["killNum"].GetInt();
+				temp.deadNum = doc[rapidjson::SizeType(i)]["deadNum"].GetInt();
+				temp.assistNum = doc[rapidjson::SizeType(i)]["assistNum"].GetInt();
+				temp.maxKillCombo = doc[rapidjson::SizeType(i)]["maxKillCombo"].GetInt();
+				temp.longestKillstreak = doc[rapidjson::SizeType(i)]["longestKillStreak"].GetInt();
+
+				
+				if (doc[rapidjson::SizeType(i)]["team_id"].GetInt() == _currentTeam)
+				{
+					alliedTeam.push_back(temp);
+					if (strcmp(doc[rapidjson::SizeType(i)]["uuid"].GetString(), UserModel::getInstance()->getUuId().c_str()) == 0) {
+						_saveYourUnitIndex = alliedTeam.size() - 1;
+					}
+				}
+				else
+				{
+					enemyTeam.push_back(temp);
+				}
+			}
+
+			if (_currentTeam == TEAM_FLG_BLUE) 
+			{
+				_blueTeamBattleResult = alliedTeam;
+				_redTeamBattleResult = enemyTeam;
+			}
+			else 
+			{
+				_blueTeamBattleResult = enemyTeam;
+				_redTeamBattleResult = alliedTeam;
+			}
+
+			createContent();
+		}
+	});
+
+	
 	return true;
 }
 
@@ -52,6 +109,9 @@ void BatleResultScene::nextButtonCallback(Ref *pSender, Widget::TouchEventType t
 		break;
 	case cocos2d::ui::Widget::TouchEventType::ENDED:
 	{
+		auto sv = NodeServer::getInstance()->getClient();
+		string uu = UserModel::getInstance()->getUuId();
+		sv->emit("clean_battle_result", uu.c_str());
 		Director::getInstance()->replaceScene(TransitionMoveInL::create(SCREEN_TRANSI_DELAY, ModeSelectScene::createScene()));
 		break; 
 	}
@@ -77,27 +137,29 @@ void BatleResultScene::createContent()
 		_allSlot.push_back(slot);
 		addChild(_allSlot.back(), 100);
 	}
-	_allSlot[0]->setSelected(true);
+	/*to special current player unit*/
+	//_allSlot[0]->setSelected(true);
 
 	_blueTeamTabBackground = Sprite::create("image/screen/battleResult/back.png");
 	_blueTeamTabBackground->setPosition(Vec2(_visibleSize.width/2,_visibleSize.height/2 - 95));
 	addChild(_blueTeamTabBackground, 10);
 
-	createBattleInfo(_blueTeamTabBackground,_blueTeamInfo);
-	updateUnitSlot(_blueTeamInfo);
+	createBattleInfo(_blueTeamTabBackground,_blueTeamBattleResult);
+
+	//updateUnitSlot(_blueTeamBattleResult);
 
 	_redTeamTabBackground = Sprite::create("image/screen/battleResult/back.png");
 	_redTeamTabBackground->setPosition(_blueTeamTabBackground->getPosition());
 	addChild(_redTeamTabBackground, 10);
-	_redTeamTabBackground->setVisible(false);
+	//_redTeamTabBackground->setVisible(false);
 
-	createBattleInfo(_redTeamTabBackground, _readTeamInfo);
+	createBattleInfo(_redTeamTabBackground, _redTeamBattleResult);
 	
 	_blueTeamButton = Button::create();
 	_blueTeamButton->loadTextureNormal("image/tab/new/blue_team_tab.png");
 	_blueTeamButton->setPosition(Vec2(_blueTeamTabBackground->getPositionX() + _blueTeamTabBackground->getContentSize().width / 2 - _blueTeamButton->getContentSize().width / 2 - 10, _blueTeamTabBackground->getPositionY() - _blueTeamTabBackground->getContentSize().height/2 - 20));
 	_blueTeamButton->addTouchEventListener(CC_CALLBACK_2(BatleResultScene::tabButtonClickCallback, this));
-	_blueTeamButton->setTouchEnabled(false);
+	//_blueTeamButton->setTouchEnabled(false);
 	addChild(_blueTeamButton, 10);
 
 	_redTeamButton = Button::create();
@@ -105,7 +167,23 @@ void BatleResultScene::createContent()
 	_redTeamButton->setPosition(_blueTeamButton->getPosition() - Vec2(_redTeamButton->getContentSize().width, 0));
 	_redTeamButton->addTouchEventListener(CC_CALLBACK_2(BatleResultScene::tabButtonClickCallback, this));
 	addChild(_redTeamButton, 10);
-
+	if (_currentTeam == TEAM_FLG_BLUE) {
+		updateUnitSlot(_blueTeamBattleResult, true);
+		_redTeamTabBackground->setVisible(false);
+		_blueTeamButton->loadTextureNormal("image/tab/new/blue_team_tab.png");
+		_blueTeamButton->setTouchEnabled(false);
+		_blueTeamButton->setTag(100);
+		_redTeamButton->loadTextureNormal("image/tab/new/red_tab_disable.png");
+	}
+	else 
+	{
+		updateUnitSlot(_redTeamBattleResult, true);
+		_blueTeamTabBackground->setVisible(false);
+		_blueTeamButton->loadTextureNormal("image/tab/new/blue_team_tab_disable.png");
+		_redTeamButton->setTouchEnabled(false);
+		_redTeamButton->setTag(100);
+		_redTeamButton->loadTextureNormal("image/tab/new/red_team_tab.png");
+	}
 
 }
 
@@ -121,6 +199,8 @@ void BatleResultScene::tabButtonClickCallback(Ref *pSender, Widget::TouchEventTy
 	case cocos2d::ui::Widget::TouchEventType::ENDED:
 	{
 		auto bt = (Button*)(pSender);
+		bool checkFlg = false;
+		if (bt->getTag() == 100) checkFlg = true;
 		if (bt == _blueTeamButton)
 		{
 			_allSlot[0]->setSelected(true);
@@ -130,7 +210,7 @@ void BatleResultScene::tabButtonClickCallback(Ref *pSender, Widget::TouchEventTy
 			_redTeamButton->loadTextureNormal("image/tab/new/red_tab_disable.png");
 			_blueTeamButton->setTouchEnabled(false);
 			_redTeamButton->setTouchEnabled(true);
-			updateUnitSlot(_blueTeamInfo);
+			updateUnitSlot(_blueTeamBattleResult,checkFlg);
 		}
 		else {
 			_allSlot[0]->setSelected(false);
@@ -140,7 +220,7 @@ void BatleResultScene::tabButtonClickCallback(Ref *pSender, Widget::TouchEventTy
 			_redTeamButton->loadTextureNormal("image/tab/new/red_team_tab.png");
 			_blueTeamButton->setTouchEnabled(true);
 			_redTeamButton->setTouchEnabled(false);
-			updateUnitSlot(_readTeamInfo);
+			updateUnitSlot(_redTeamBattleResult,checkFlg);
 		}
 		
 		break;
@@ -192,13 +272,27 @@ void BatleResultScene::createBattleInfo(Sprite *parent, vector<UserBattleInfo> i
 	}
 }
 
-void BatleResultScene::updateUnitSlot(vector<UserBattleInfo> info)
+void BatleResultScene::updateUnitSlot(vector<UserBattleInfo> info, bool checkFlg)
 {
 	for (int i = 0; i < info.size(); i++)
 	{
 		_unitNameLabel[i]->setString(info[i].name);
 		_allSlot[i]->getClickableButton()->loadTextureNormal(UserUnitModel::getInstance()->getUnitImageById(info[i].unitId));
 		//update image
+		if (checkFlg && i == _saveYourUnitIndex) {
+			_allSlot[i]->setSelected(true);
+		}
+		else{
+			_allSlot[i]->setSelected(false);
+		}
+	}
+	if (info.size() == _allSlot.size()) return;
+
+	for (int j = info.size(); j < _allSlot.size(); j++)
+	{
+		_allSlot[j]->setSelected(false);
+		_unitNameLabel[j]->setString("");
+		_allSlot[j]->resetClickableButton();
 	}
 }
 

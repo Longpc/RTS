@@ -194,9 +194,9 @@ private:
 	int _currentPlayerTeamFlg = TEAM_FLG_BLUE;
 	int _currentEnemyTeamFlg = TEAM_FLG_RED;
 
-	//For battle result
-	vector<UserBattleInfo> _saveBattleInfoAlliedTeam;
-	vector<UserBattleInfo> _saveBattleInfoEnemyTeam;
+	////For battle result
+	//vector<UserBattleInfo> _saveBattleInfoAlliedTeam;
+	//vector<UserBattleInfo> _saveBattleInfoEnemyTeam;
 
 	/*All battle variables*/
 	int _alliedTeamTotalDead = 0;
@@ -302,6 +302,13 @@ private:
 	/*function to display the @dameValue as the image in the @position with color base on colorType ( 1: Yellow, 2: Blue */
 	virtual void showAttackDame(int dameValue, Vec2 pos, int colorType);
 
+	/**/
+	virtual void unitDieAction(Sprite* unitSprite, vector<UserUnitInfo>* processUnitList, int index);
+
+	/*Battle RT Unit respwan action*/
+	virtual void unitRespwanAction(Ref* pSender, Sprite* unitSprite, vector<UserUnitInfo>* processUnitList, int index);
+
+	/**/
 	virtual void enemyDieAction(int id);
 	/* display dead time and save kill/dead info
 	*/
@@ -341,7 +348,7 @@ private:
 	* REAL TIME FUNCTIONS BLOCK
 	************************************************************
 	*/
-	virtual void rt_attackAnimationandLogic(Document& doc, vector<Sprite*> processUnitSprite, vector<UserUnitInfo>& processUnitData, vector<Sprite*> targetSpriteList, vector<UserUnitInfo>& targetDataList);
+	virtual void rt_attackAnimationandLogic(Document& doc, vector<Sprite*> processUnitSprite, vector<UserUnitInfo>* processUnitData, vector<Sprite*> targetSpriteList, vector<UserUnitInfo>* targetDataList);
 
 
 
@@ -365,25 +372,30 @@ private:
 	return value is the vector store all unit id which contained by effect area
 	@drawFlg is flag to decide this function will show or not show the skill effect area
 	*/
-	virtual vector<int> detectUnitInAoe(Sprite* mainObj, UserSkillInfo skill, int unitFlg, bool drawFlg = true);
+	virtual vector<int> detectUnitInAoe(Sprite* mainObj, UserSkillInfo skill, vector<Sprite*> targetList, bool drawFlg = true);
 	
 	/* run logic and effect of heal skills
 	*/
-	virtual void skillRestoreAction(Sprite* object,  UserSkillInfo skillInfo, int teamId);
+	virtual void skillRestoreAction(Sprite* object,  UserSkillInfo skillInfo, int targetUnitIndex, int teamId);
 
 	virtual void skillRestoreAll(Sprite* object,  UserSkillInfo skillInfo, int teamId);
-	virtual void skillRestoreOne(Sprite* object, UserSkillInfo skillInfo, int teamId);
+	/*restore all action logic*/
+	virtual void restoreAllActionLogic(Sprite* object, UserSkillInfo skillInfo, vector<UserUnitInfo>& targetUnitDataList, vector<Sprite*> targetUnitList);
+	
+	virtual void skillRestoreOne(Sprite* object, UserUnitInfo* unitData, UserSkillInfo skillInfo, int teamId);
 	/*Help effect with object*/
 	virtual void healEffectWithObject(Sprite* obj);
 
 	/*Run logic and effect of buff skills*/
-	virtual void skillBuffAction(Sprite* object, UserSkillInfo skillInfo, int teamId);
+	virtual void skillBuffAction(Sprite* object, UserSkillInfo skillInfo, int teamId, int saveIndex);
 	virtual void skillHelpAll(Sprite* object, UserSkillInfo skillInfo, int teamId);
-	virtual void skillHelpOne(Sprite* object, UserSkillInfo skillInfo, int teamId);
+	virtual void skillHelpOne(Sprite* object, UserSkillInfo skillInfo, int teamId, int saveIndex);
 
 	/*Run logic and effect of attack skills*/
 	virtual void skillAttackAction(Sprite* object, UserSkillInfo skillInfo, UserUnitInfo attacker, int teamId, float randNum);
-	virtual void skillAttackAll(Sprite* object, UserSkillInfo skillInfo, UserUnitInfo attacker, int teamId, float randNum);
+	virtual void skillAttackAll(Sprite* object, UserSkillInfo skillInfo, UserUnitInfo attacker, int flg, float randNum, vector<Sprite*> &effectUnitSpriteList, vector<UserUnitInfo>* effectUnitlist);	
+	virtual void showDameAndSkillLogic(Ref *p, int index, int dame, Sprite* object, Sprite* target, vector<UserUnitInfo>* effectUnitlist);
+	
 	virtual void skillAttackOne(Sprite* object, UserSkillInfo skillInfo, UserUnitInfo attacker, int teamId, float randNum);
 
 	/*Run logic and effect of poison skills */
@@ -391,8 +403,11 @@ private:
 	/*Run logic and effect of Stun skills*/
 	virtual void skillStunAction(Sprite* object, UserSkillInfo skillInfo, int teamId);
 
+	virtual void stunEffecAction(Sprite* object, UserSkillInfo skill, int index, vector<UserUnitInfo>* effectUnitDataList);
+
+
 	/*Calculate logic and play effect for poison skill for defined unit base on @index as the index in _allEnemyUnitData*/
-	virtual void poisonEffectAction(UserSkillInfo skill, int index);
+	virtual void poisonEffectAction(UserSkillInfo skill, int index, vector<UserUnitInfo>* unitList, Sprite* targetSprite );
 
 
 	/*End of battle logic*/
@@ -414,11 +429,21 @@ private:
 	/*save dame deal from @attackUnit to @beAttackUnit as the attack target*/
 	virtual void saveDameInfo(int dame, int attackUnitId, int beAttackUnitId, int teamFlg);
 	
+	/*send dame deal information to server for sync battle information*/
+	virtual void sendDameDeal(int dame, int targetID, SocketIOCallback callback);
+
 	/*save kill and dead info*/
 	virtual void saveKillDeadInfo(int killerId, int deadUnitId, int teamFlg);
 
-	/*function to show status of unit by animation. (status: buff, de-buff, poison, stun..*/
-	virtual void displayUnitStatus(Sprite *parent, int statusType, UserSkillInfo skillInfo, int spIndex = 0);
+	/*Send kill dead information to server for sync*/
+	virtual void sendKillDead(int deadUnitId, SocketIOCallback callback);
+
+	/*function to show status of unit by animation. (status: buff, poison, stun..*/
+	virtual void displayUnitStatus(Sprite *parent, int statusType, UserSkillInfo skillInfo, int spIndex, vector<vector<string>>* targetImageStatus);
+	
+	/*for remove skill status image when skill effect duration end*/
+	virtual void removeStatus(Ref *p, string imagepath, vector<string>& targetStatus);
+	
 	virtual Animation*  createStatusAnimation(string imagePath);
 
 	virtual void enemyUnitAutoMoveTest();

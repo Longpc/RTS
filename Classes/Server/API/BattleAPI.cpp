@@ -18,8 +18,6 @@ void BattleAPI::destroyInstance()
 
 bool BattleAPI::init()
 {
-	auto a = NodeServer::getInstance()->getClient();
-
 	return true;
 }
 /************************************************************************/
@@ -148,6 +146,67 @@ void BattleAPI::sendSkillEvent(UserSkillInfo skillData, UserUnitInfo attacker/*,
 	//c->on("play_skill_end", callback);
 }
 
+void BattleAPI::sendDameDealEvent(int dame, string targetUuid, SocketIOCallback callback)
+{
+	auto sv = NodeServer::getInstance()->getClient();
+	if (sv == nullptr) return;
+
+	auto userData = UserModel::getInstance()->getUserInfo();
+	int unitId = UserModel::getInstance()->getSelectedUnitId();
+	Document doc;
+	doc.SetObject();
+
+	Document::AllocatorType& allo = doc.GetAllocator();
+
+	doc.AddMember("user_id", userData.user_id, allo);
+	doc.AddMember("room_id", userData.room_id, allo);
+	doc.AddMember("unit_id", unitId, allo);
+	doc.AddMember("team_id", userData.team_id, allo);
+	string uu = UserModel::getInstance()->getUuId().c_str();
+	doc.AddMember("uuid", uu.c_str(), allo);
+	doc.AddMember("dame",dame, allo);
+	doc.AddMember("target", targetUuid.c_str(), allo);
+
+	StringBuffer  buffer;
+	Writer<StringBuffer> writer(buffer);
+	doc.Accept(writer);
+
+	log("send dame Event data : %s", buffer.GetString());
+	sv->emit("dame_deal", buffer.GetString());
+
+}
+
+void BattleAPI::sendKillDeadEvent(string targetUnit, SocketIOCallback callback)
+{
+	auto sv = NodeServer::getInstance()->getClient();
+	if (sv == nullptr) return;
+
+	auto userData = UserModel::getInstance()->getUserInfo();
+	int unitId = UserModel::getInstance()->getSelectedUnitId();
+	Document doc;
+	doc.SetObject();
+
+	Document::AllocatorType& allo = doc.GetAllocator();
+
+	doc.AddMember("user_id", userData.user_id, allo);
+	doc.AddMember("room_id", userData.room_id, allo);
+	doc.AddMember("unit_id", unitId, allo);
+	doc.AddMember("team_id", userData.team_id, allo);
+	string uu = UserModel::getInstance()->getUuId().c_str();
+	doc.AddMember("uuid", uu.c_str(), allo);
+	doc.AddMember("kill", 1, allo);
+	doc.AddMember("target", targetUnit.c_str(), allo);
+
+	StringBuffer  buffer;
+	Writer<StringBuffer> writer(buffer);
+	doc.Accept(writer);
+
+	log("Send kill event data : %s", buffer.GetString());
+	sv->emit("kill_dead", buffer.GetString());
+}
+
+
+
 void BattleAPI::sendBuffSkillEvent(UserSkillInfo skill, SocketIOCallback callback)
 {
 	auto c = NodeServer::getInstance()->getClient();
@@ -262,7 +321,7 @@ void BattleAPI::battleSyncEvent(UserUnitInfo unitData)
 	
 }
 
-void BattleAPI::sendBattleEndEvent(SocketIOCallback callBack)
+void BattleAPI::sendBattleEndEvent()
 {
 	auto sv = NodeServer::getInstance()->getClient();
 	if (sv == nullptr) return;
@@ -281,7 +340,6 @@ void BattleAPI::sendBattleEndEvent(SocketIOCallback callBack)
 	Writer<StringBuffer> writer(buffer);
 	doc.Accept(writer);
 	sv->emit("battle_end", buffer.GetString());
-	sv->on("battle_end_end", callBack);
 }
 Document::GenericValue* BattleAPI::convertUnitDataToJsonObject(UserUnitInfo unitData, Document::AllocatorType& allo)
 {
@@ -330,6 +388,8 @@ Document::GenericValue* BattleAPI::convertSkillDataToJsonObject(UserSkillInfo sk
 
 	return skillDataValue;
 }
+
+
 
 
 

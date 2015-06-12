@@ -27,14 +27,26 @@ public:
 	static void destroyInstance();
 
 	void sendMoveEvent(UserUnitInfo unitdata, int moveDirection,float angle, Vec2 position, int statusId, bool onMovingFlg);
+	
 	void sendMoveEndEvent(UserUnitInfo unitdata);
+	
 	void sendAttackEvent(int direction,UserUnitInfo attackerUnit, UserUnitInfo targetData, SocketIOCallback callback);
+	
 	void sendSkillEvent(UserSkillInfo skillData, UserUnitInfo attacker/*, SocketIOCallback callback*/);
+	
 	void sendBuffSkillEvent(UserSkillInfo skill, SocketIOCallback callback);
+	
 	void sendDeadEvent(UserUnitInfo unitData, SocketIOCallback callback);
+
+	void sendDameDealEvent(int dame, string targetUuid, SocketIOCallback callback);
+
+	void sendKillDeadEvent(string targetUnit, SocketIOCallback callback);
+	
 	void sendRepawnEvent(SocketIOCallback callback);
+	
 	void battleSyncEvent(UserUnitInfo unitData);
-	void sendBattleEndEvent(SocketIOCallback callback);
+	
+	void sendBattleEndEvent();
 
 	bool init();
 private:
