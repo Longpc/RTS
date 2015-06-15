@@ -448,7 +448,7 @@ private:
 	virtual void saveKillDeadInfo(int killerId, int deadUnitId, int teamFlg);
 
 	/*Send kill dead information to server for sync*/
-	virtual void sendKillDead(int deadUnitId, SocketIOCallback callback);
+	virtual void sendKillDead(string killerUUid, string deadUnitUuid, SocketIOCallback callback);
 
 	/*function to show status of unit by animation. (status: buff, poison, stun..*/
 	virtual void displayUnitStatus(Sprite *parent, int statusType, UserSkillInfo skillInfo, int spIndex, vector<vector<string>>* targetImageStatus);

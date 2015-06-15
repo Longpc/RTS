@@ -40,7 +40,7 @@ public:
 
 	void sendDameDealEvent(int dame, string targetUuid, SocketIOCallback callback);
 
-	void sendKillDeadEvent(string targetUnit, SocketIOCallback callback);
+	void sendKillDeadEvent(string killerUuid, string targetUnit, SocketIOCallback callback);
 	
 	void sendRepawnEvent(SocketIOCallback callback);
 	

@@ -176,7 +176,7 @@ void BattleAPI::sendDameDealEvent(int dame, string targetUuid, SocketIOCallback 
 
 }
 
-void BattleAPI::sendKillDeadEvent(string targetUnit, SocketIOCallback callback)
+void BattleAPI::sendKillDeadEvent(string killerUuid, string targetUnit, SocketIOCallback callback)
 {
 	auto sv = NodeServer::getInstance()->getClient();
 	if (sv == nullptr) return;
@@ -192,8 +192,7 @@ void BattleAPI::sendKillDeadEvent(string targetUnit, SocketIOCallback callback)
 	doc.AddMember("room_id", userData.room_id, allo);
 	doc.AddMember("unit_id", unitId, allo);
 	doc.AddMember("team_id", userData.team_id, allo);
-	string uu = UserModel::getInstance()->getUuId().c_str();
-	doc.AddMember("uuid", uu.c_str(), allo);
+	doc.AddMember("uuid", killerUuid.c_str(), allo);
 	doc.AddMember("kill", 1, allo);
 	doc.AddMember("target", targetUnit.c_str(), allo);
 

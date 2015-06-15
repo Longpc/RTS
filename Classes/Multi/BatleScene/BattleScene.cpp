@@ -1015,6 +1015,9 @@ void BattleScene::createContent()
 
 void BattleScene::towerAttackLogic(Sprite* towerSprite,UserUnitInfo towerData, vector<Sprite*> targetFindList, vector<UserUnitInfo>* unitDataList, string targetUuid, float randomNum)
 {
+
+	if (towerData.isStun) return;
+
 	for (int i = 0; i < unitDataList->size(); i++)
 	{
 		if (strcmp(unitDataList->at(i).uuid.c_str(), targetUuid.c_str()) ==0)
@@ -1203,8 +1206,7 @@ void BattleScene::checkForAutoAttack()
 	if (_onRespwanFlg || _allAlliedUnitData[0].isStun) return;
 	//float area = IMAGE_SCALE*_autoAttackArea->getContentSize().width / 2 + 25;
 	//Check for main character attack
-	//-1 for test tower attack event in server
-	for (int i = 0; i < _allEnemyUnitSprite.size() - 1; i++)
+	for (int i = 0; i < _allEnemyUnitSprite.size(); i++)
 	{
 		///Check for main character run attack animation
 
@@ -1380,7 +1382,8 @@ void BattleScene::enemyDieAction(int id)
 	_allEnemyIconInMinimap[id]->setVisible(false);
 	saveKillDeadInfo(0, id, _currentPlayerTeamFlg);
 	/*SEND SKILLDEAD DATA TO SERVER*/
-	sendKillDead(id, nullptr);
+	string uu = UserModel::getInstance()->getUuId().c_str();
+	sendKillDead(uu.c_str(), _allEnemyUnitData[id].uuid, nullptr);
 	_indexOfBeAttackEnemy = -1;
 	testObject->stopActionByTag(_currentAttackActionTag);
 	if (id == _allEnemyUnitData.size() - 1) {
@@ -1463,7 +1466,8 @@ void BattleScene::runRespawnAction(int killerId)
 	});
 
 		//saveKillDeadInfo(killerId, 0, _currentEnemyTeamFlg);
-		sendKillDead(killerId, nullptr);
+		string uu = UserModel::getInstance()->getUuId().c_str();
+		sendKillDead(_allEnemyUnitData[killerId].uuid.c_str(), uu.c_str(), nullptr);
 		_alliedTeamTotalDead += 1;
 		if (_alliedTeamTotalDead == 5)
 		{
@@ -3178,9 +3182,9 @@ void BattleScene::sendDameDeal(int dame, int targetId, SocketIOCallback callback
 	BattleAPI::getInstance()->sendDameDealEvent(dame, _allEnemyUnitData[targetId].uuid.c_str(), callback);
 }
 
-void BattleScene::sendKillDead(int deadUnitId, SocketIOCallback callback)
+void BattleScene::sendKillDead(string killerUuid, string deadUnitUuid, SocketIOCallback callback)
 {
-	BattleAPI::getInstance()->sendKillDeadEvent(_allEnemyUnitData[deadUnitId].uuid.c_str(), callback);
+	BattleAPI::getInstance()->sendKillDeadEvent(killerUuid.c_str(), deadUnitUuid.c_str(), callback);
 }
 
 
