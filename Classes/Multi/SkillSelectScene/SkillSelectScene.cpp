@@ -144,7 +144,7 @@ void SkillSelectScene::displayUnit(Button *parent, Label *label, int unitId)
 
 void SkillSelectScene::nextButtonCallback(Ref *pSender, Widget::TouchEventType type)
 {
-	if (_onTouchDisable) return;
+	if (_onTouchDisable || _isSentRequest) return;
 	switch (type)
 	{
 	case cocos2d::ui::Widget::TouchEventType::BEGAN:
@@ -192,6 +192,7 @@ void SkillSelectScene::nextButtonCallback(Ref *pSender, Widget::TouchEventType t
 
 		auto client = NodeServer::getInstance()->getClient();
 		client->emit("connect_select_skill", buff.GetString());
+		_isSentRequest = true;
 		string temp = buff.GetString();
 		BattleModel::getInstance()->setPlayerSkills(listSkillId);
 		client->on("connect_select_skill_end", [&,temp](SIOClient* client, const std::string& data) {

@@ -985,7 +985,18 @@ void BattleScene::createContent()
 		if (doc.IsObject()) {
 			string towerUUid = doc["tower"].GetString();
 			string targetUuid = doc["target"].GetString();
+			int teamId = doc["team_id"].GetInt();
+			float randomNum = doc["rand_num"].GetDouble();
 			//OK OK. NEXT WEEK: SYNC TOWER ATTACK ANIMATION
+			
+			if (teamId == _currentPlayerTeamFlg)
+			{
+				towerAttackLogic(_allAlliedUnitSprite.back(),_allAlliedUnitData.back(), _allEnemyUnitSprite, &_allEnemyUnitData, targetUuid.c_str(),  randomNum);
+			}
+			else
+			{
+				towerAttackLogic(_allEnemyUnitSprite.back(),_allEnemyUnitData.back(), _allAlliedUnitSprite, &_allAlliedUnitData, targetUuid.c_str(),  randomNum);
+			}
 
 		}
 
@@ -1000,6 +1011,53 @@ void BattleScene::createContent()
 		Director::getInstance()->replaceScene(TransitionMoveInR::create(SCREEN_TRANSI_DELAY, BatleResultScene::createScene()));
 	});
 
+}
+
+void BattleScene::towerAttackLogic(Sprite* towerSprite,UserUnitInfo towerData, vector<Sprite*> targetFindList, vector<UserUnitInfo>* unitDataList, string targetUuid, float randomNum)
+{
+	for (int i = 0; i < unitDataList->size(); i++)
+	{
+		if (strcmp(unitDataList->at(i).uuid.c_str(), targetUuid.c_str()) ==0)
+		{
+			//target found
+			auto towerPos = towerSprite->getPosition();
+			auto targetPos = targetFindList[i]->getPosition();
+			auto distanVector = targetPos - towerPos;
+
+			int direc = detectDirectionBaseOnTouchAngle(-distanVector.getAngle()*RAD_DEG + 90);
+			string path = "image/unit_new/attack/red/";
+
+			auto attackAni = createAttackAnimationWithDefine(direc, path);
+			towerSprite->runAction(Sequence::create(Animate::create(attackAni), CallFuncN::create(CC_CALLBACK_1(BattleScene::towerAttackCallback, this,towerData,targetFindList[i], unitDataList, i, randomNum)), nullptr));
+			break;
+		}
+	}
+}
+
+void BattleScene::towerAttackCallback(Ref *p, UserUnitInfo towerData, Sprite* target, vector<UserUnitInfo>* unitDataList, int targetIndex, float randomNum)
+{
+	int dame = (towerData.attack - unitDataList->at(targetIndex).defence) * caculDameRate(towerData.element, unitDataList->at(targetIndex).element)*randomNum;
+	if (dame <= 1)
+	{
+		dame = 1;
+	}
+	unitDataList->at(targetIndex).hp -= dame;	
+	//check die
+	//check to show dame if target is curren player unit 
+	if (target == testObject) {
+		showAttackDame(dame, target->getPosition() + Vec2(0, 100), 1);
+		//TODO
+		//send receive dame event to save value
+
+		if (unitDataList->at(targetIndex).hp <=0)
+		{
+			runRespawnAction(_allEnemyUnitData.size()-1);
+		}
+	}
+	if (unitDataList->at(targetIndex).hp <= 0) {
+		unitDieAction(target, unitDataList, targetIndex);
+	}
+	updateSlider();
 }
 
 void BattleScene::displaySkillMpInButton(Button *parent, int mp)
@@ -1151,12 +1209,15 @@ void BattleScene::checkForAutoAttack()
 
 			auto posDistan = _allEnemyUnitSprite[i]->getPosition() - testObject->getPosition();
 			int direc = detectDirectionBaseOnTouchAngle(-posDistan.getAngle()*RAD_DEG + 90);
-			if (posDistan.length() - _allEnemyUnitSprite[i]->getBoundingBox().size.width / 4 < ATTACK_AOE*_allAlliedUnitData[0].attack_range / 100.0f && _allEnemyUnitSprite[i]->isVisible()) {
+			if (posDistan.length() - _allEnemyUnitSprite[i]->getBoundingBox().size.width / 4 < ATTACK_AOE*_allAlliedUnitData[0].attack_range / 100.0f && _allEnemyUnitSprite[i]->isVisible()) 
+			{
 
-				if (/*testObject->getActionByTag(testObject->getCurrentAttackActionTag()) == nullptr && */_onDelayAttackFlg == false) {
-										//auto call1 = CallFuncN::create(CC_CALLBACK_0(BattleScene::characterAttackCallback, this));
+				if (/*testObject->getActionByTag(testObject->getCurrentAttackActionTag()) == nullptr && */_onDelayAttackFlg == false) 
+				{
+					//auto call1 = CallFuncN::create(CC_CALLBACK_0(BattleScene::characterAttackCallback, this));
 				
-					BattleAPI::getInstance()->sendAttackEvent(direc,_allAlliedUnitData[0], _allEnemyUnitData[i], [&, i, direc](SIOClient *client, const string data) {
+					BattleAPI::getInstance()->sendAttackEvent(direc,_allAlliedUnitData[0], _allEnemyUnitData[i], [&, i, direc](SIOClient *client, const string data)
+					{
 						log("Battle attack callback with data: %s", data.c_str());
 						Document doc;
 						doc.Parse<0>(data.c_str());
@@ -1175,8 +1236,8 @@ void BattleScene::checkForAutoAttack()
 
 						_indexOfBeAttackEnemy = i;
 					});
-
 				}
+				break;
 			}
 
 			//check for enemy unit auto attack
@@ -1211,6 +1272,7 @@ void BattleScene::checkForAutoAttack()
 	else {
 		testObject->stopActionByTag(FOUNTAIN_ACTION);
 	}
+
 }
 
 
@@ -1399,7 +1461,7 @@ void BattleScene::runRespawnAction(int killerId)
 
 	});
 
-		saveKillDeadInfo(killerId, 0, _currentEnemyTeamFlg);
+		//saveKillDeadInfo(killerId, 0, _currentEnemyTeamFlg);
 		sendKillDead(killerId, nullptr);
 		_alliedTeamTotalDead += 1;
 		if (_alliedTeamTotalDead == 5)
@@ -2788,6 +2850,9 @@ void BattleScene::showDameAndSkillLogic(Ref *p, int index, int dame, Sprite* obj
 	effectUnitlist->at(index).hp -= dame;
 	if (object == testObject) {
 		saveDameInfo(dame, 0, index, _currentPlayerTeamFlg);
+		sendDameDeal(dame, index, [&](SIOClient *c, const string data) {
+			log("send dame event in play skill completed");
+		});
 		if (effectUnitlist->at(index).hp <= 0) {
 			enemyDieAction(index);
 		}

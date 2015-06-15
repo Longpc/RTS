@@ -114,7 +114,7 @@ void BattleModel::updateUserUnit(Room_User_Unit_Model unitData)
 		}
 	}
 	setRoomUserUnitList(tempList);
-	log("BattleModel: updated unit with uuid: %s", unitData.uuid.c_str());
+	//log("BattleModel: updated unit with uuid: %s", unitData.uuid.c_str());
 	return;
 }
 

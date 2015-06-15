@@ -331,6 +331,12 @@ private:
 	bool _enemyTowerAttackdelay = false;
 	virtual void checkAutoAttackOfTower(Sprite* tower, UserUnitInfo towerData, vector<Sprite*> targetSpritelist, vector<UserUnitInfo> targetDataList, bool &attackDelay, int teamId);
 	virtual void removeTowerDelayFlg(Ref * p, bool *delay);
+
+	/*Tower attack animation*/
+	virtual void towerAttackLogic(Sprite* towerSprite, UserUnitInfo towerData, vector<Sprite*> targetFindList, vector<UserUnitInfo>* unitDataList, string targetUuid, float randomNum);
+	
+	virtual void towerAttackCallback(Ref *p, UserUnitInfo towerData, Sprite* target, vector<UserUnitInfo>* unitDataList, int targetIndex, float randomNum);
+	
 	void update(float delta);
 	float _checkTime = 0; //for test Battle sync
 	//TODO

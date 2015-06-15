@@ -40,6 +40,7 @@ private:
 	vector<UserSkillInfo> _allSkillInfo;
 
 	bool _onTouchDisable = false;
+	bool _isSentRequest = false;
 	Vec2 _beginTouchPoint;
 
 	int _selectedSkillNum = 0;
