@@ -434,7 +434,7 @@ private:
 
 	/* this function will calculate for detect a @point is contained in the triangle or not
 	@Return true if point inside the triangle and false for else*/
-	virtual bool detectPointInTriangle(Vec2 point, vector<Vec2> points);
+	virtual bool detectPointInTriangle(Vec2 point, vector<Vec2> points, Sprite* object);
 	virtual float makeDot(Vec2 v1, Vec2 v2);
 	virtual Vec2 makePoint(Vec2 v1, Vec2 v2);
 
@@ -454,7 +454,7 @@ private:
 	virtual void displayUnitStatus(Sprite *parent, int statusType, UserSkillInfo skillInfo, int spIndex, vector<vector<string>>* targetImageStatus);
 	
 	/*for remove skill status image when skill effect duration end*/
-	virtual void removeStatus(Ref *p, string imagepath, vector<string>& targetStatus);
+	virtual void removeStatus(Ref *p, string imagepath, vector<vector<string>>* targetStatus, int index);
 	
 	virtual Animation*  createStatusAnimation(string imagePath);
 

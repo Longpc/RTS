@@ -1199,7 +1199,8 @@ void BattleScene::checkForAutoAttack()
 	/************************************************************************/
 	/* CHECK AUTO ATTACK OF MAIN UNIT                                       */
 	/************************************************************************/
-	if (_onRespwanFlg) return;
+	/*Dead or stunning unit cannot attack*/
+	if (_onRespwanFlg || _allAlliedUnitData[0].isStun) return;
 	//float area = IMAGE_SCALE*_autoAttackArea->getContentSize().width / 2 + 25;
 	//Check for main character attack
 	//-1 for test tower attack event in server
@@ -1264,7 +1265,7 @@ void BattleScene::checkForAutoAttack()
 // 			}
 	}
 
-	//check for run fountain restore action
+	//check for run fountain restore action. Now is only main character
 	if( (testObject->getPosition()-Vec2(_visibleSize.width,0)).length() < 150)
 	{
 		fountainRestoreEffect();
@@ -1624,8 +1625,8 @@ bool BattleScene::onTouchBegan(Touch *touch, Event *unused_event)
 		}
 	}
 	else {
-		_selectTargetSprite->setPosition(testObject->getPosition());
-		_selectTargetSprite->setVisible(true);
+		//_selectTargetSprite->setPosition(testObject->getPosition());
+		//_selectTargetSprite->setVisible(true);
 	}
 
 	return true;
@@ -1649,19 +1650,11 @@ void BattleScene::onTouchMoved(Touch *touch, Event *unused_event)
 	}
 
 
-
-	// Xu ly truong hop ngon tay khi cham,se chuyen touchBegin thanh touchMove
-	// Test tren Win32 thi se khong gap truong hop nay neu touchOne , nhung neu test tren tanmatsu thi se nhay vao day
-	// Nen can check do rong cua ngon tay touc
 	if ((touch->getLocation() - _touchStartPoint).length() < 20) {
 		_checkOneTapMoveFlg = false;
 		return;
 	}
 
-
-	/////////////////////////////////////////////////////////////////////////
-	// Xu ly hien thi vong tron di chuyen cho cac truong hop touch and move
-	/////////////////////////////////////////////////////////////////////////
 	if (_moveMode == MOVE_MANUAL) {
 		_touchMoveEndSprite->setVisible(true);
 		if (distanVector.length() < 200) {
@@ -1683,11 +1676,6 @@ void BattleScene::onTouchMoved(Touch *touch, Event *unused_event)
 		}
 	}
 
-	/////////////////////////////////////////////////////////////////////////
-	// Xu ly logic di chuyen cho cac truong hop touch and move
-	/////////////////////////////////////////////////////////////////////////
-
-	// Di vao ben trong vong tron thi se ko di chuyen tiep,su dung cho ca move_manual && move_circle_manual
 	if (distanVector.length() < _touchMoveBeginSprite->getContentSize().width / 6 && _moveMode != MOVE_CIRCLE) {
 		testObject->stopMoveAction();
 		return;
@@ -2958,7 +2946,7 @@ vector<int> BattleScene::detectUnitInAoe(Sprite* mainObj, UserSkillInfo skill, v
 	case SKILL_RANGE_TYPE::STAR:
 		//draw->drawPolygon()
 		vec.push_back(Vec2(-skill.range_distance / 2, 0));
-		vec.push_back(Vec2(-100, -100));
+		vec.push_back(Vec2(-skill.range_distance/6, -skill.range_distance/6));
 		vec.push_back(Vec2(0, -skill.range_distance / 2));
 		vec.push_back(Vec2(skill.range_distance / 6, -skill.range_distance / 6));
 		vec.push_back(Vec2(skill.range_distance / 2, 0));
@@ -2980,7 +2968,7 @@ vector<int> BattleScene::detectUnitInAoe(Sprite* mainObj, UserSkillInfo skill, v
 	{
 		drawFlg = false;
 	}
-	if (drawFlg && mainObj == testObject) {
+	if (drawFlg) {
 		_battleBackround->addChild(draw);
 	}
 
@@ -2998,29 +2986,29 @@ vector<int> BattleScene::detectUnitInAoe(Sprite* mainObj, UserSkillInfo skill, v
 			}
 			break;
 		case SKILL_RANGE_TYPE::TRIANGLE:
-			if (detectPointInTriangle(targetList[i]->getPosition(), vec)) {
+			if (detectPointInTriangle(targetList[i]->getPosition(), vec,mainObj)) {
 				resultUnitId.push_back(i);
 			}
 			break;
 		case SKILL_RANGE_TYPE::STAR:
-			if (detectPointInTriangle(targetList[i]->getPosition(), {vec[0],vec[1],vec[7]})) {
+			if (detectPointInTriangle(targetList[i]->getPosition(), {vec[0],vec[1],vec[7]},mainObj)) {
 				resultUnitId.push_back(i);
 				break;
 			}
-			if (detectPointInTriangle(targetList[i]->getPosition(), {vec[1],vec[2],vec[3]}))
+			if (detectPointInTriangle(targetList[i]->getPosition(), {vec[1],vec[2],vec[3]}, mainObj))
 			{
 				resultUnitId.push_back(i);
 				break;
 			}
-			if (detectPointInTriangle(targetList[i]->getPosition(), { vec[3], vec[4], vec[5] })) {
+			if (detectPointInTriangle(targetList[i]->getPosition(), { vec[3], vec[4], vec[5] },mainObj)) {
 				resultUnitId.push_back(i);
 				break;
 			}
-			if (detectPointInTriangle(targetList[i]->getPosition(), { vec[7], vec[5], vec[6] })) {
+			if (detectPointInTriangle(targetList[i]->getPosition(), { vec[7], vec[5], vec[6] }, mainObj)) {
 				resultUnitId.push_back(i);
 				break;
 			}
-			if (distan.length() < (skill.range_distance / 6 * sqrt(2))) {
+			if (Rect(pos.x - skill.range_distance / 6, pos.y - skill.range_distance / 6, skill.range_distance / 3, skill.range_distance / 3).containsPoint(targetList[i]->getPosition())) {
 				resultUnitId.push_back(i);
 				break;
 			}
@@ -3077,11 +3065,11 @@ void BattleScene::longPressAction(Button *pSender,UserSkillInfo skill)
 }
 
 
-bool BattleScene::detectPointInTriangle(Vec2 point, vector<Vec2> points)
+bool BattleScene::detectPointInTriangle(Vec2 point, vector<Vec2> points, Sprite* object)
 {
-	Vec2 v0 = makePoint(points[1]+testObject->getPosition(), points[0]+testObject->getPosition());
-	Vec2 v1 = makePoint(points[2]+testObject->getPosition(), points[0]+testObject->getPosition());
-	Vec2 v2 = makePoint(point, points[0]+testObject->getPosition());
+	Vec2 v0 = makePoint(points[1]+object->getPosition(), points[0]+object->getPosition());
+	Vec2 v1 = makePoint(points[2]+object->getPosition(), points[0]+object->getPosition());
+	Vec2 v2 = makePoint(point, points[0]+object->getPosition());
 
 	float dot00 = makeDot(v0, v0);
 	float dot01 = makeDot(v0, v1);
@@ -3225,7 +3213,7 @@ void BattleScene::displayUnitStatus(Sprite *object, int statusType, UserSkillInf
 
 	pushStatusImagePath(imagePath, targetImageStatus->at(spIndex));
 
-	object->runAction(Sequence::create(DelayTime::create(skillInfo.duration), CallFuncN::create(CC_CALLBACK_1(BattleScene::removeStatus, this, imagePath, targetImageStatus->at(spIndex))), nullptr));
+	object->runAction(Sequence::create(DelayTime::create(skillInfo.duration), CallFuncN::create(CC_CALLBACK_1(BattleScene::removeStatus, this, imagePath, targetImageStatus,spIndex)), nullptr));
 	displayStatusInTime(object, targetImageStatus->at(spIndex));
 
 	/*if (object != testObject)
@@ -3250,10 +3238,10 @@ void BattleScene::displayUnitStatus(Sprite *object, int statusType, UserSkillInf
 
 }
 
-void BattleScene::removeStatus(Ref *p, string imagepath, vector<string>& targetStatus) 
+void BattleScene::removeStatus(Ref *p, string imagepath, vector<vector<string>>* targetStatus , int index) 
 {
-	removeStatusImagePath(imagepath, targetStatus);
-	displayStatusInTime((Sprite*)p, targetStatus);
+	removeStatusImagePath(imagepath, targetStatus->at(index));
+	displayStatusInTime((Sprite*)p, targetStatus->at(index));
 }
 
 Animation* BattleScene::createStatusAnimation(string imagePath)
