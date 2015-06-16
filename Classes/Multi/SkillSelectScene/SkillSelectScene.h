@@ -17,6 +17,7 @@ class SkillSelectScene : public LayerBase
 public:
 	static Scene *createScene();
 	static SkillSelectScene* create();
+	~SkillSelectScene();
 	bool init();
 
 private:

@@ -33,6 +33,8 @@ bool BattleScene::init()
 	_menu->setVisible(false);
 	_pageTitleSprite->setVisible(false);
 	_usernameBg->setVisible(false);
+	_onDestructCalled = false;
+
 	_selectedUnitId = UserModel::getInstance()->getSelectedUnitId();
 	setUnitStatus(1);
 	for (auto &sk : BattleModel::getInstance()->getPlayerSkills())
@@ -1218,7 +1220,7 @@ void BattleScene::checkForAutoAttack()
 				if (/*testObject->getActionByTag(testObject->getCurrentAttackActionTag()) == nullptr && */_onDelayAttackFlg == false) 
 				{
 					//auto call1 = CallFuncN::create(CC_CALLBACK_0(BattleScene::characterAttackCallback, this));
-				
+					_onDelayAttackFlg = true;
 					BattleAPI::getInstance()->sendAttackEvent(direc,_allAlliedUnitData[0], _allEnemyUnitData[i], [&, i, direc](SIOClient *client, const string data)
 					{
 						log("Battle attack callback with data: %s", data.c_str());
@@ -1228,7 +1230,7 @@ void BattleScene::checkForAutoAttack()
 							log("ATTACK: Parse JSOn error");
 							return;
 						}
-						_onDelayAttackFlg = true;
+						
 						_mainCharacterIconInMiniMap->setRotation(-(posDistan.getAngle() * RAD_DEG) + 90);
 						testObject->attackActionByUnitPosition(direc, _allAlliedUnitData[0].attack_speed, CC_CALLBACK_0(BattleScene::oneSecondAttackCallback,this), CC_CALLBACK_0(BattleScene::characterAttackCallback, this, i, doc["dame"].GetInt()));
 
@@ -1386,9 +1388,9 @@ void BattleScene::enemyDieAction(int id)
 	sendKillDead(uu.c_str(), _allEnemyUnitData[id].uuid, nullptr);
 	_indexOfBeAttackEnemy = -1;
 	testObject->stopActionByTag(_currentAttackActionTag);
-	if (id == _allEnemyUnitData.size() - 1) {
+	/*if (id == _allEnemyUnitData.size() - 1) {
 		endBattle();
-	}
+	}*/
 	enemyRespawAction(id);
 	_enemyTeamTotalDead += 1;
 	if (_enemyTeamTotalDead == 5)
@@ -3352,6 +3354,7 @@ void BattleScene::skillStunAction(Sprite* object, UserSkillInfo skillInfo, int t
 
 void BattleScene::stunEffecAction(Sprite* object, UserSkillInfo skill, int index, vector<UserUnitInfo>* effectUnitDataList) {
 	effectUnitDataList->at(index).isStun = true;
+	object->getPhysicsBody()->setVelocity(Vec2::ZERO);
 	object->runAction(Sequence::create(DelayTime::create(skill.duration), CallFuncN::create([&, index, effectUnitDataList](Ref*p){
 		effectUnitDataList->at(index).isStun = false;
 	}), nullptr));

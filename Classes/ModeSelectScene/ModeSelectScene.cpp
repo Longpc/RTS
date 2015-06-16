@@ -34,10 +34,10 @@ bool ModeSelectScene::init()
 	{
 		config->loadConfigFile("configs/config-test-ok.plist");
 	}
-	if (CC_TARGET_PLATFORM != CC_PLATFORM_WIN32)
+	/*if (CC_TARGET_PLATFORM != CC_PLATFORM_WIN32)
 	{
 		downloadDatabase();
-	}
+	}*/
 
 	HttpClientBase::getInstance()->postAPIWithMethodNameAndParam("uuid.php", "uuid", [&](string a){
 		log("UUID: %s", a.c_str());

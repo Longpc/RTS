@@ -12,6 +12,7 @@ class BatleResultScene : public LayerBase
 public:
 	static Scene* createScene();
 	static BatleResultScene* create();
+	~BatleResultScene();
 	bool init();
 private:
 	///VARIABLES///////////////////////////////////////////////////////////////////////
@@ -28,6 +29,7 @@ private:
 	vector<UserBattleInfo> _redTeamBattleResult;
 	int _saveYourUnitIndex = 0;
 	int _currentTeam = 0;
+	bool _isSendRequest = false;
 
 	///FUNCTIONS///////////////////////////////////////////////////////////////////////
 	virtual void createContent();

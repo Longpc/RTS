@@ -512,3 +512,9 @@ void SkillSelectScene::startBattleCallback(SIOClient* client, const std::string&
 	Director::getInstance()->replaceScene(TransitionMoveInR::create(SCREEN_TRANSI_DELAY, BattleScene::createScene()));
 
 }
+
+SkillSelectScene::~SkillSelectScene()
+{
+	_onTouchDisable = false;
+	_isSentRequest = false;
+}

@@ -28,7 +28,7 @@ NodeServer* NodeServer::getInstance()
 void NodeServer::destroyInstance()
 {
 	s_sharedTestServer->freeClient();
-	CC_SAFE_DELETE(s_sharedTestServer);
+	s_sharedTestServer = nullptr;
 }
 
 void NodeServer::freeClient()
@@ -100,11 +100,13 @@ void NodeServer::onConnect(SIOClient* client)
 void NodeServer::onMessage(SIOClient* client, const std::string& data)
 {
 	log("----->onMessage");
+	log("%s", data.c_str());
 }
 
 void NodeServer::onClose(SIOClient* client)
 {
 	log("----->onClose");
+	//destroyInstance();
 }
 
 void NodeServer::onError(SIOClient* client, const std::string& data)
