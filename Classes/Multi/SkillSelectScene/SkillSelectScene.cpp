@@ -28,6 +28,9 @@ bool SkillSelectScene::init()
 		return false;
 	}
 
+	auto a = UserModel::getInstance()->getUserInfo();
+	_userNameLabel->setString(a.name.c_str());
+
 	getSkillDataFromDatabase();
 	_selectedUnitId = UserModel::getInstance()->getSelectedUnitId();
 	_allSelectedSkilId.push_back(-1);

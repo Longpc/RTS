@@ -34,6 +34,11 @@ bool MultiUnitSelectScene::init(int roomId,int pageFlg)
 	_roomId = roomId;
 	_pageFlg = pageFlg;
 	_onTouchDisable = false;
+
+	auto a = UserModel::getInstance()->getUserInfo();
+	_userNameLabel->setString(a.name.c_str());
+
+
 	UserDefault::getInstance()->setIntegerForKey("MODE", _pageFlg);
 
 	_defaultLabel->setString("ユニットを選択して下さい");

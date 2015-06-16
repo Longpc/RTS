@@ -460,7 +460,7 @@ private:
 
 	virtual void enemyUnitAutoMoveTest();
 	/*define the function to play effect and logic when player move on fountain area*/
-	virtual void fountainRestoreEffect();
+	virtual void fountainRestoreEffect(Sprite *object, vector<UserUnitInfo>*  unitList, int index);
 	virtual void enemyRespawAction(int index);
 
 

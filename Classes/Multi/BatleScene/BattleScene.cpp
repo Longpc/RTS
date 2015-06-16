@@ -1270,12 +1270,29 @@ void BattleScene::checkForAutoAttack()
 	}
 
 	//check for run fountain restore action. Now is only main character
-	if( (testObject->getPosition()-Vec2(_visibleSize.width,0)).length() < 150)
+	/*if( (testObject->getPosition()-Vec2(_visibleSize.width,0)).length() < 150)
 	{
 		fountainRestoreEffect();
 	}
 	else {
 		testObject->stopActionByTag(FOUNTAIN_ACTION);
+	}*/
+	/*this effect not active in tower
+	*/
+	for (int i = 0; i < _allAlliedUnitData.size()-1; i ++)
+	{
+		if ((_allAlliedUnitSprite[i]->getPosition() - Vec2(_visibleSize.width, (_currentPlayerTeamFlg - 1) * 2 * _visibleSize.height)).length() < 150)
+		{
+			fountainRestoreEffect(_allAlliedUnitSprite[i], &_allAlliedUnitData, i);
+		}
+	}
+
+	for (int j = 0; j <_allEnemyUnitData.size() - 1; j++)
+	{
+		if ((_allEnemyUnitSprite[j]->getPosition() - Vec2(_visibleSize.width, (_currentEnemyTeamFlg - 1) * 2 * _visibleSize.height)).length() < 150)
+		{
+			fountainRestoreEffect(_allEnemyUnitSprite[j], &_allEnemyUnitData, j);
+		}
 	}
 
 }
@@ -2225,14 +2242,13 @@ void BattleScene::sendMoveEndEvent()
 
 void BattleScene::autoRestoreHpAndMp()
 { 
-	_allAlliedUnitData[0].hp += _allAlliedUnitData[0].hp_heal / RESTORE_MULTI;
-	if (_allAlliedUnitData[0].hp > _allAlliedUnitMaxHp[0]) {
-		_allAlliedUnitData[0].hp = _allAlliedUnitMaxHp[0];
-	}
-	_allAlliedUnitData[0].mp += _allAlliedUnitData[0].mp_heal/RESTORE_MULTI;
-	if (_allAlliedUnitData[0].mp > _mainCharacerMaxMp)
+	for (int j = 0; j < _allAlliedUnitData.size(); j ++)
 	{
-		_allAlliedUnitData[0].mp = _mainCharacerMaxMp;
+		_allAlliedUnitData[j].hp += _allAlliedUnitData[j].hp_heal / RESTORE_MULTI;
+		if (_allAlliedUnitData[j].hp > _allAlliedUnitMaxHp[j])
+		{
+			_allAlliedUnitData[j].hp = _allAlliedUnitMaxHp[j];
+		}
 	}
 
 	for (int i = 0; i < _allEnemyUnitData.size(); i++)
@@ -3400,14 +3416,14 @@ void BattleScene::actionCharacterCopy(int directionId, Sprite *sprite)
 	sprite->runAction(repeat);
 }
 
-void BattleScene::fountainRestoreEffect()
+void BattleScene::fountainRestoreEffect(Sprite *object, vector<UserUnitInfo>* unitList, int index)
 {
-	if (testObject->getActionByTag(FOUNTAIN_ACTION) != nullptr)
+	if (object->getActionByTag(FOUNTAIN_ACTION) != nullptr)
 	{
 		return;
 	}
-	auto action = RepeatForever::create(Sequence::create(CallFuncN::create([&](Ref *p){
-		_allAlliedUnitData[0].mp += ceil(_saveMainStatusData.mp *0.05f);
+	auto action = RepeatForever::create(Sequence::create(CallFuncN::create([&, unitList, index](Ref *p){
+		/*_allAlliedUnitData[0].mp += ceil(_saveMainStatusData.mp *0.05f);
 		if (_allAlliedUnitData[0].mp > _mainCharacerMaxMp)
 		{
 			_allAlliedUnitData[0].mp = _mainCharacerMaxMp;
@@ -3420,16 +3436,35 @@ void BattleScene::fountainRestoreEffect()
 		//BattleAPI::getInstance()->battleSyncEvent(_allAlliedUnitData[0]);
 		_allAlliedUnitHpBar[0]->setPercent(ceil(100.0f*_allAlliedUnitData[0].hp / _saveMainStatusData.hp));
 		_mainCharacterHpBar->setPercent(ceil(100.0f*_allAlliedUnitData[0].hp / _saveMainStatusData.hp));
+		*/
+		auto unit = UserUnitModel::getInstance()->getUnitInfoById(unitList->at(index).mst_unit_id);
+		unitList->at(index).mp += ceil(unit.mp*0.05f);
+		if (unitList->at(index).mp > unit.mp)
+		{
+			unitList->at(index).mp = unit.mp;
+		}
+		unitList->at(index).hp += ceil(unit.hp * 0.05f);
+		if (unitList->at(index).hp > unit.hp)
+		{
+			unitList->at(index).hp = unit.hp;
+		}
+
 		updateSlider();
 	}), DelayTime::create(1), nullptr));
 	action->setTag(FOUNTAIN_ACTION);
-	testObject->runAction(action);
+	object->runAction(action);
 }
 
 void BattleScene::enemyRespawAction(int index)
 {
 	auto action = (Sequence::create(DelayTime::create(5), CallFuncN::create([&, index](Ref *pSEnder){
-		_allEnemyUnitSprite[index]->setPosition(Vec2(_visibleSize.width + (index - 1) * 70, _visibleSize.height * 2 - 100));
+		if (_currentPlayerTeamFlg == TEAM_FLG_BLUE) {
+			_allEnemyUnitSprite[index]->setPosition(Vec2(_visibleSize.width + (index - 1) * 70, _visibleSize.height * 2 - 100));
+		}
+		else
+		{
+			_allEnemyUnitSprite[index]->setPosition(Vec2(_visibleSize.width + (index - 1) * 70, 100));
+		}
 		_allEnemyUnitSprite[index]->setVisible(true);
 		_allEnemyIconInMinimap[index]->setVisible(true);
 		_allEnemyUnitData[index].hp = _allEnemuUnitMaxHp[index];
