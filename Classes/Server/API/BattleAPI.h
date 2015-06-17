@@ -50,7 +50,7 @@ public:
 
 
 	
-	void sendBattleEndEvent();
+	void sendBattleEndEvent(int winTeamId);
 
 	bool init();
 private:

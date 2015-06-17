@@ -10,10 +10,10 @@ class BatleResultScene : public LayerBase
 {
 
 public:
-	static Scene* createScene();
-	static BatleResultScene* create();
+	static Scene* createScene(int windTeam);
+	static BatleResultScene* create(int winTeam);
 	~BatleResultScene();
-	bool init();
+	bool init(int winTeam);
 private:
 	///VARIABLES///////////////////////////////////////////////////////////////////////
 	Sprite *_blueTeamTabBackground;

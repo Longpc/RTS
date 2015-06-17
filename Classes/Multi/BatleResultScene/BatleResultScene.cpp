@@ -2,18 +2,18 @@
 
 #include "BatleResultScene.h"
 
-Scene* BatleResultScene::createScene()
+Scene* BatleResultScene::createScene(int winTeam)
 {
 	auto scene = Scene::create();
-	auto lay = BatleResultScene::create();
+	auto lay = BatleResultScene::create(winTeam);
 
 	scene->addChild(lay);
 	return scene;
 }
-BatleResultScene* BatleResultScene::create()
+BatleResultScene* BatleResultScene::create(int winTeam)
 {
 	BatleResultScene *layer = new BatleResultScene();
-	if (layer && layer->init()) {
+	if (layer && layer->init(winTeam)) {
 		layer->autorelease();
 		return layer;
 	}
@@ -21,15 +21,21 @@ BatleResultScene* BatleResultScene::create()
 	CC_SAFE_DELETE(layer);
 	return NULL;
 }
-bool BatleResultScene::init()
+bool BatleResultScene::init(int winTeam)
 {
 	if (!LayerBase::init()) {
 		return false;
 	}
 	_menu->setVisible(false);
 	_currentTeam = UserModel::getInstance()->getUserInfo().team_id;
-	
-	_defaultLabel->setString("TEAM BLUE WIN");
+	if (winTeam == TEAM_FLG_BLUE)
+	{
+		_defaultLabel->setString("BLUE TEAM WON");
+	}
+	else
+	{
+		_defaultLabel->setString("RED TEAM WON");
+	}
 	auto homeButton = Button::create();
 	homeButton->loadTextureNormal("image/button/new/button_home.png");
 	homeButton->setPosition(Vec2(homeButton->getContentSize().width/2 + 20, _visibleSize.height - 70));

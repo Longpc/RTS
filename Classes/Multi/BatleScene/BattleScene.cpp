@@ -1010,7 +1010,17 @@ void BattleScene::createContent()
 
 	sv->on("battle_public_battle_end", [&](SIOClient *client, const string data) {
 
-		Director::getInstance()->replaceScene(TransitionMoveInR::create(SCREEN_TRANSI_DELAY, BatleResultScene::createScene()));
+		if (_onDestructCalled) return;
+		Document doc;
+		doc.Parse<0>(data.c_str());
+		if (doc.HasParseError()) {
+			log("on: play_skill_end Parse JSOn error");
+			return;
+		}
+		int winTeamId = doc["win_team_id"].GetInt();
+
+
+		Director::getInstance()->replaceScene(TransitionMoveInR::create(SCREEN_TRANSI_DELAY, BatleResultScene::createScene(winTeamId)));
 	});
 
 }
@@ -1421,7 +1431,7 @@ void BattleScene::enemyDieAction(int id)
 	_enemyTeamTotalDead += 1;
 	if (_enemyTeamTotalDead == 5)
 	{
-		endBattle();
+		endBattle(_currentPlayerTeamFlg);
 	}
 }
 void BattleScene::enemyAttackCallback(Ref *pSEnder, int i)
@@ -1499,7 +1509,7 @@ void BattleScene::runRespawnAction(string killerUuid)
 		_alliedTeamTotalDead += 1;
 		if (_alliedTeamTotalDead == 5)
 		{
-			endBattle();
+			endBattle(_currentEnemyTeamFlg);
 		}
 		auto timeLb = Label::createWithSystemFont("5", JAPANESE_FONT_1_HEAVY, 150);
 		_battleBackround->addChild(timeLb, 1000);
@@ -2207,7 +2217,7 @@ void BattleScene::nextButtonCallback(Ref *pSender, Widget::TouchEventType type)
 		break;
 	case cocos2d::ui::Widget::TouchEventType::ENDED:
 	{
-		endBattle();
+		endBattle(_currentPlayerTeamFlg);
 		break;
 	}
 	case cocos2d::ui::Widget::TouchEventType::CANCELED:
@@ -3083,9 +3093,9 @@ void BattleScene::updateHpAndMpViewLabel()
 	_mpViewlabel->setString(mp.c_str());
 }
 
-void BattleScene::endBattle()
+void BattleScene::endBattle(int winTeamId)
 {
-	BattleAPI::getInstance()->sendBattleEndEvent();
+	BattleAPI::getInstance()->sendBattleEndEvent(winTeamId);
 	
 }
 

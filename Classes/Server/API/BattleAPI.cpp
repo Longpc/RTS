@@ -343,7 +343,7 @@ void BattleAPI::battleSyncEvent(UserUnitInfo unitData)
 	
 }
 
-void BattleAPI::sendBattleEndEvent()
+void BattleAPI::sendBattleEndEvent(int winTeamId)
 {
 	auto sv = NodeServer::getInstance()->getClient();
 	if (sv == nullptr) return;
@@ -356,6 +356,7 @@ void BattleAPI::sendBattleEndEvent()
 
 	doc.AddMember("user_id", userData.user_id, allo);
 	doc.AddMember("room_id", userData.room_id, allo);
+	doc.AddMember("win_team_id", winTeamId, allo);
 	string uu = UserModel::getInstance()->getUuId().c_str();
 	doc.AddMember("uuid", uu.c_str(), allo);
 	StringBuffer  buffer;

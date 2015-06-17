@@ -423,7 +423,7 @@ private:
 
 
 	/*End of battle logic*/
-	virtual void endBattle();
+	virtual void endBattle(int winteamId);
 	/*Calculate dame rate base on attacker and target attribute
 	@Return: 1.5, 1, 0
 	*/
