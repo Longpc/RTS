@@ -312,7 +312,7 @@ private:
 	virtual void enemyDieAction(int id);
 	/* display dead time and save kill/dead info
 	*/
-	virtual void runRespawnAction(int killerId);
+	virtual void runRespawnAction(string killerUuid);
 
 	virtual void removeRespawnFlg();
 	///OPTION DIALOG CALLBACK///
@@ -410,7 +410,7 @@ private:
 	virtual void skillAttackOne(Sprite* object, UserSkillInfo skillInfo, UserUnitInfo attacker, int teamId, float randNum);
 
 	/*Run logic and effect of poison skills */
-	virtual void skillPoisonAction(Sprite* object, UserSkillInfo skillInfo, int teamId);
+	virtual void skillPoisonAction(Sprite* object, UserSkillInfo skillInfo, int teamId, const string casterUuid);
 		
 	/*Run logic and effect of Stun skills*/
 	virtual void skillStunAction(Sprite* object, UserSkillInfo skillInfo, int teamId);
@@ -419,7 +419,7 @@ private:
 
 
 	/*Calculate logic and play effect for poison skill for defined unit base on @index as the index in _allEnemyUnitData*/
-	virtual void poisonEffectAction(Sprite* object, UserSkillInfo skill, vector<UserUnitInfo>* unitList, vector<Sprite*> targetSprite, int teamID );
+	virtual void poisonEffectAction(Sprite* object, UserSkillInfo skill, vector<UserUnitInfo>* unitList, vector<Sprite*> targetSprite, int teamID , const string casterUuid);
 
 
 	/*End of battle logic*/

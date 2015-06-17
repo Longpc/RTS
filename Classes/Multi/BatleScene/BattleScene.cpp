@@ -455,7 +455,7 @@ void BattleScene::createContent()
 	_skill1Button->addTouchEventListener(CC_CALLBACK_2(BattleScene::skill1ButtonCallback, this));
 	Size baseSize = _skill1Button->getContentSize();
 	_skill1Button->setTag(TAG_SKILL_1);
-	_skill1Button->setSwallowTouches(false);
+	_skill1Button->setSwallowTouches(true);
 	_skill1Button->setPosition(Vec2(_visibleSize.width / 2 - 1.5 * baseSize.width - 20, baseSize.height / 2 + baseMargin));
 	addChild(_skill1Button);
 	displaySkillMpInButton(_skill1Button, _mainCharacterSkillData[0].mp_cost);
@@ -464,7 +464,7 @@ void BattleScene::createContent()
 	_skill2Button->loadTextureNormal(skill2ImagePath.c_str());
 	_skill2Button->addTouchEventListener(CC_CALLBACK_2(BattleScene::skill1ButtonCallback, this));
 	_skill2Button->setTag(TAG_SKILL_2);
-	_skill2Button->setSwallowTouches(false);
+	_skill2Button->setSwallowTouches(true);
 	_skill2Button->setPosition(Vec2(_visibleSize.width / 2 - 0.5 *baseSize.width - 10, baseSize.height / 2 + baseMargin));
 	addChild(_skill2Button);
 	displaySkillMpInButton(_skill2Button, _mainCharacterSkillData[1].mp_cost);
@@ -473,7 +473,7 @@ void BattleScene::createContent()
 	_skill3Button->loadTextureNormal(skill3ImagePath.c_str());
 	_skill3Button->addTouchEventListener(CC_CALLBACK_2(BattleScene::skill1ButtonCallback, this));
 	_skill3Button->setTag(TAG_SKILL_3);
-	_skill3Button->setSwallowTouches(false);
+	_skill3Button->setSwallowTouches(true);
 	_skill3Button->setPosition(Vec2(_visibleSize.width / 2 + 0.5*baseSize.width + 10, baseSize.height / 2 + baseMargin));
 	addChild(_skill3Button);
 	displaySkillMpInButton(_skill3Button, _playerSkills[0].mp_cost);
@@ -482,7 +482,7 @@ void BattleScene::createContent()
 	_skill4Button->loadTextureNormal(skill4ImagePath.c_str());
 	_skill4Button->addTouchEventListener(CC_CALLBACK_2(BattleScene::skill1ButtonCallback, this));
 	_skill4Button->setTag(TAG_SKILL_4);
-	_skill4Button->setSwallowTouches(false);
+	_skill4Button->setSwallowTouches(true);
 	_skill4Button->setPosition(Vec2(_visibleSize.width / 2 + 1.5 * baseSize.width + 20, baseSize.height / 2 + baseMargin));
 	addChild(_skill4Button);
 	displaySkillMpInButton(_skill4Button, _playerSkills[1].mp_cost);
@@ -961,7 +961,7 @@ void BattleScene::createContent()
 				skillAttackAction(playObject, skill, unit, team_id,randNum);
 				break;
 			case TYPE_POISON:
-				skillPoisonAction(playObject, skill, team_id);
+				skillPoisonAction(playObject, skill, team_id, uuid.c_str());
 				break;
 			case TYPE_STUN:
 				skillStunAction(playObject, skill, team_id);
@@ -1056,7 +1056,7 @@ void BattleScene::towerAttackCallback(Ref *p, UserUnitInfo towerData, Sprite* ta
 
 		if (unitDataList->at(targetIndex).hp <=0)
 		{
-			runRespawnAction(_allEnemyUnitData.size()-1);
+			runRespawnAction(_allEnemyUnitData.back().uuid.c_str());
 		}
 	}
 	if (unitDataList->at(targetIndex).hp <= 0) {
@@ -1285,6 +1285,10 @@ void BattleScene::checkForAutoAttack()
 		{
 			fountainRestoreEffect(_allAlliedUnitSprite[i], &_allAlliedUnitData, i);
 		}
+		else
+		{
+			_allAlliedUnitSprite[i]->stopActionByTag(FOUNTAIN_ACTION);
+		}
 	}
 
 	for (int j = 0; j <_allEnemyUnitData.size() - 1; j++)
@@ -1292,6 +1296,10 @@ void BattleScene::checkForAutoAttack()
 		if ((_allEnemyUnitSprite[j]->getPosition() - Vec2(_visibleSize.width, (_currentEnemyTeamFlg - 1) * 2 * _visibleSize.height)).length() < 150)
 		{
 			fountainRestoreEffect(_allEnemyUnitSprite[j], &_allEnemyUnitData, j);
+		}
+		else
+		{
+			_allEnemyUnitSprite[j]->stopActionByTag(FOUNTAIN_ACTION);
 		}
 	}
 
@@ -1380,7 +1388,8 @@ void BattleScene::unitDieAction(Sprite* unitSprite, vector<UserUnitInfo>* proces
 
 void BattleScene::unitRespwanAction(Ref* pSender, Sprite* unitSprite, vector<UserUnitInfo>* processUnitList, int index)
 {
-	unitSprite->setPosition(Vec2(_visibleSize.width + (index - 1) * 70, _visibleSize.height * 2 - 100));
+	auto unit = BattleModel::getInstance()->getUnitInforByUuid(processUnitList->at(index).uuid.c_str());
+	unitSprite->setPosition(Vec2(unit.position_x, unit.position_y));
 	unitSprite->setVisible(true);
 	_allEnemyIconInMinimap[index]->setVisible(true);
 	processUnitList->at(index).hp = UserUnitModel::getInstance()->getUnitInfoById(processUnitList->at(index).mst_unit_id).hp;
@@ -1441,7 +1450,7 @@ void BattleScene::enemyAttackCallback(Ref *pSEnder, int i)
 			saveDameInfo(dame, i, 0, _currentEnemyTeamFlg);
 			//BattleAPI::getInstance()->battleSyncEvent(_allAlliedUnitData[0]);
 			if (_allAlliedUnitData[0].hp <= 0) {
-				runRespawnAction(i);
+				runRespawnAction(_allEnemyUnitData[i].uuid.c_str());
 				return;
 			}
 			//log("Percent: %d", ceil(float(float(_characterCurentHp) / float(_unitData.hp)) * 100));
@@ -1451,7 +1460,7 @@ void BattleScene::enemyAttackCallback(Ref *pSEnder, int i)
 		}
 	}
 	else {
-		runRespawnAction(i);
+		runRespawnAction(_allEnemyUnitData[i].uuid.c_str());
 	}
 	
 
@@ -1472,7 +1481,7 @@ void BattleScene::showAttackDame(int dameValue, Vec2 pos,int type)
 	s->runAction(action);
 }
 
-void BattleScene::runRespawnAction(int killerId)
+void BattleScene::runRespawnAction(string killerUuid)
 {
 	if (_onRespwanFlg) return;
 	_onRespwanFlg = true;
@@ -1486,7 +1495,7 @@ void BattleScene::runRespawnAction(int killerId)
 
 		//saveKillDeadInfo(killerId, 0, _currentEnemyTeamFlg);
 		string uu = UserModel::getInstance()->getUuId().c_str();
-		sendKillDead(_allEnemyUnitData[killerId].uuid.c_str(), uu.c_str(), nullptr);
+		sendKillDead(killerUuid.c_str(), uu.c_str(), nullptr);
 		_alliedTeamTotalDead += 1;
 		if (_alliedTeamTotalDead == 5)
 		{
@@ -1826,7 +1835,19 @@ void BattleScene::onTouchEnded(Touch *touch, Event *unused_event)
 			testObject->setMoveMode(1);
 			testObject->stopMoveAction();
 			auto distanVector = touch->getLocation() - Vec2(_visibleSize / 2);
-			auto vec = AStarPathFindingAlgorithm(testObject->getPosition(), testObject->getPosition() + distanVector);
+			/*test*/
+			//auto vec = AStarPathFindingAlgorithm(testObject->getPosition(), testObject->getPosition() + distanVector);
+			float time = distanVector.length() / _allAlliedUnitData[0].move_speed;
+			_mainCharacterIconInMiniMap->setRotation(-distanVector.getAngle()*RAD_DEG + 90);
+			testObject->actionMoveCharacter(detectDirectionBaseOnTouchAngle(-distanVector.getAngle()*RAD_DEG + 90));
+			auto moveAction = Sequence::create(MoveBy::create(time, distanVector), CallFuncN::create([&](Ref* p) {
+				testObject->stopMoveAction();
+			}), nullptr);
+			moveAction->setTag(919);
+			testObject->stopActionByTag(919);
+			testObject->runAction(moveAction);
+			return;
+
 		}
 
 		if (_moveMode == MOVE_CIRCLE)
@@ -2242,6 +2263,10 @@ void BattleScene::sendMoveEndEvent()
 
 void BattleScene::autoRestoreHpAndMp()
 { 
+	_allAlliedUnitData[0].mp += _allAlliedUnitData[0].mp_heal / RESTORE_MULTI;
+	if (_allAlliedUnitData[0].mp > _saveMainStatusData.mp) {
+		_allAlliedUnitData[0].mp = _saveMainStatusData.mp;
+	}
 	for (int j = 0; j < _allAlliedUnitData.size(); j ++)
 	{
 		_allAlliedUnitData[j].hp += _allAlliedUnitData[j].hp_heal / RESTORE_MULTI;
@@ -3286,14 +3311,14 @@ Animation* BattleScene::createStatusAnimation(string imagePath)
 	return animation;
 }
 
-void BattleScene::skillPoisonAction(Sprite* object, UserSkillInfo skillInfo, int teamId)
+void BattleScene::skillPoisonAction(Sprite* object, UserSkillInfo skillInfo, int teamId, const string casterUuid)
 {
 	vector<Sprite*> effectedUnitSprite;
 	if (teamId == _currentPlayerTeamFlg) {
-		poisonEffectAction(object,skillInfo, &_allEnemyUnitData, _allEnemyUnitSprite, teamId);
+		poisonEffectAction(object,skillInfo, &_allEnemyUnitData, _allEnemyUnitSprite, teamId, casterUuid);
 	}
 	else {
-		poisonEffectAction(object, skillInfo, &_allAlliedUnitData, _allAlliedUnitSprite, teamId);
+		poisonEffectAction(object, skillInfo, &_allAlliedUnitData, _allAlliedUnitSprite, teamId, casterUuid);
 	}
 	/*vector<int> units = detectUnitInAoe(object,skillInfo, effectedUnitSprite, false);
 	for (auto & index :units)
@@ -3312,7 +3337,7 @@ void BattleScene::skillPoisonAction(Sprite* object, UserSkillInfo skillInfo, int
 	}*/
 }
 
-void BattleScene::poisonEffectAction(Sprite* object, UserSkillInfo skill, vector<UserUnitInfo>* unitList, vector<Sprite*> targetSprite, int teamId)
+void BattleScene::poisonEffectAction(Sprite* object, UserSkillInfo skill, vector<UserUnitInfo>* unitList, vector<Sprite*> targetSprite, int teamId, const string casterUuid)
 {
 	vector<int> unitIds = detectUnitInAoe(object, skill, targetSprite, false);
 
@@ -3321,13 +3346,20 @@ void BattleScene::poisonEffectAction(Sprite* object, UserSkillInfo skill, vector
 		int dame = ceil(1.0f*UserUnitModel::getInstance()->getUnitInfoById(unitList->at(index).mst_unit_id).hp * 0.05f);
 
 
-		auto psAction = Sequence::create(CallFuncN::create([&, index, dame, targetSprite, unitList](Ref *p) {
+		auto psAction = Sequence::create(CallFuncN::create([&, index, dame, targetSprite, unitList, casterUuid](Ref *p) {
 			showAttackDame(dame, targetSprite[index]->getPosition() + Vec2(0, 100), 1);
 			unitList->at(index).hp -= dame;
 			updateSlider();
 			if (unitList->at(index).hp <= 0) {
-				targetSprite[index]->stopAllActions();
-				unitDieAction(targetSprite[index], unitList, index);
+				auto unit = BattleModel::getInstance()->getUnitInforByUuid(casterUuid);
+				if (targetSprite[index] == testObject) {
+					runRespawnAction(casterUuid.c_str());
+				}
+				else
+				{
+					unitDieAction(targetSprite[index], unitList, index);
+				}
+				
 			}
 		}), DelayTime::create(POISON_STEP_TIME), nullptr);
 		targetSprite[index]->runAction(Repeat::create(psAction, ceil(skill.duration / POISON_STEP_TIME)));
@@ -3891,7 +3923,7 @@ void BattleScene::moveStepAction()
 
 	Vec2 desPos = getPositionForTitleCoord(s->getPosition());
 	Vec2 distanVector = desPos - testObject->getPosition();
-	float time = distanVector.length() / _allAlliedUnitData[0].move_speed;
+	float time = distanVector.length() / (_allAlliedUnitData[0].move_speed);
 	MoveTo *moveAction = MoveTo::create(time, desPos );
 	_mainCharacterIconInMiniMap->setRotation(-(distanVector.getAngle() * RAD_DEG) + 90);
 
@@ -4074,7 +4106,7 @@ void BattleScene::rt_attackAnimationandLogic(Document& doc, vector<Sprite*> proc
 					updateHpAndMpViewLabel();
 					saveDameInfo(dame, i, 0, _currentEnemyTeamFlg);
 					if (_allAlliedUnitData[0].hp <= 0) {
-						runRespawnAction(i);
+						runRespawnAction(_allEnemyUnitData[i].uuid.c_str());
 					}
 				}
 				else {
