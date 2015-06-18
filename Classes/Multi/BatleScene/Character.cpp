@@ -95,6 +95,7 @@ void Character::moveActionByVector(Vec2 destination)
 		this->stopActionByTag(101);
 		auto actionOneTap = Sequence::create(DelayTime::create(this->getMoveOneTapTime()), CallFuncN::create([&](Ref* pSender){
 			this->stopMoveAction();
+			this->getPhysicsBody()->setVelocity(Vec2::ZERO);
 		}), nullptr);
 		actionOneTap->setTag(101);
 		this->runAction(actionOneTap);
@@ -141,14 +142,14 @@ void Character::stopMoveAction()
 {
 	this->stopAllActionsByTag(this->getCurrentMoveActionTag());
 	setOnMovingFlg(false);
-	if (this->getPhysicsBody() == nullptr)
+	/*if (this->getPhysicsBody() == nullptr)
 	{
 		return;
 	}
 	else
 	{
 		this->getPhysicsBody()->setVelocity(Vect(0,0));
-	}
+	}*/
 	
 }
 

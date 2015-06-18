@@ -364,6 +364,37 @@ void BattleAPI::sendBattleEndEvent(int winTeamId)
 	doc.Accept(writer);
 	sv->emit("battle_end", buffer.GetString());
 }
+
+void BattleAPI::sendTestMoveLogic(Vec2 titleCordPost)
+{
+	auto sv = NodeServer::getInstance()->getClient();
+
+	if (sv == nullptr) {
+		return;
+	}
+
+	auto userData = UserModel::getInstance()->getUserInfo();
+
+	Document doc;
+	doc.SetObject();
+	Document::AllocatorType& allo = doc.GetAllocator();
+
+	string uu = UserModel::getInstance()->getUuId().c_str();
+	doc.AddMember("uuid", uu.c_str(), allo);
+	doc.AddMember("pos_x", titleCordPost.x, allo);
+	doc.AddMember("pos_y", titleCordPost.y, allo);
+	doc.AddMember("team_id", userData.team_id, allo);
+	doc.AddMember("user_id", userData.user_id, allo);
+
+	StringBuffer  buffer;
+	Writer<StringBuffer> writer(buffer);
+	doc.Accept(writer);
+	sv->emit("get_title", buffer.GetString());
+
+
+}
+
+
 Document::GenericValue* BattleAPI::convertUnitDataToJsonObject(UserUnitInfo unitData, Document::AllocatorType& allo)
 {
 	rapidjson::Value *unitDataValue = new rapidjson::Value()/*(kObjectType)*/;
@@ -411,6 +442,7 @@ Document::GenericValue* BattleAPI::convertSkillDataToJsonObject(UserSkillInfo sk
 
 	return skillDataValue;
 }
+
 
 
 

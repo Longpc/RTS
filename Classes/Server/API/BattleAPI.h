@@ -48,9 +48,10 @@ public:
 
 	void sendTowerAttackEvent(string towerUuid, string targetUuid, int direction, int teamId);
 
-
-	
 	void sendBattleEndEvent(int winTeamId);
+
+	void sendTestMoveLogic(Vec2 titleCordPost);
+
 
 	bool init();
 private:

@@ -34,7 +34,6 @@ bool BattleScene::init()
 	_pageTitleSprite->setVisible(false);
 	_usernameBg->setVisible(false);
 	_onDestructCalled = false;
-
 	_selectedUnitId = UserModel::getInstance()->getSelectedUnitId();
 	setUnitStatus(1);
 	for (auto &sk : BattleModel::getInstance()->getPlayerSkills())
@@ -116,21 +115,21 @@ bool BattleScene::init()
 
 	auto nextButton = Button::create();
 	nextButton->loadTextureNormal("CloseNormal.png");
-	nextButton->setPosition(Vec2(_visibleSize.width - 50, 70));
+	nextButton->setPosition(Vec2(_fakeVisibleSize.width - 50, 70));
 	nextButton->setTouchEnabled(true);
 	nextButton->addTouchEventListener(CC_CALLBACK_2(BattleScene::nextButtonCallback, this));
 	addChild(nextButton, 10);
 
 	auto physicDebug = Button::create();
 	physicDebug->loadTextureNormal("CloseNormal.png");
-	physicDebug->setPosition(Vec2(_visibleSize.width - 100, 70));
+	physicDebug->setPosition(Vec2(_fakeVisibleSize.width - 100, 70));
 	physicDebug->setTouchEnabled(true);
 	physicDebug->addTouchEventListener(CC_CALLBACK_2(BattleScene::debugPhysicButtonCallback, this));
 	addChild(physicDebug, 10);
 
 	auto changeImage = Button::create();
 	changeImage->loadTextureNormal("CloseNormal.png");
-	changeImage->setPosition(Vec2(_visibleSize.width - 150, 70));
+	changeImage->setPosition(Vec2(_fakeVisibleSize.width - 150, 70));
 	changeImage->setTouchEnabled(true);
 	changeImage->addTouchEventListener(CC_CALLBACK_2(BattleScene::changeImageButtonCallback, this));
 	addChild(changeImage, 10);
@@ -182,7 +181,13 @@ bool BattleScene::init()
 		enemy.unitId = _allEnemyUnitData[i].mst_unit_id;
 		//_saveBattleInfoEnemyTeam.push_back(enemy);
 	}
+	auto folow = Follow::create(testObject);
+	folow->setTag(121);
+	_battleBackround->runAction(folow);
+	auto bolder = Node::create();
 	/*Scene main schedule update init*/
+	setScale(0.75f);
+	_fakeVisibleSize = _visibleSize / 0.75f;
 	scheduleUpdate();
 	return true;
 }
@@ -194,18 +199,18 @@ void BattleScene::createContent()
 	_battleBackround->setAnchorPoint(Vec2::ANCHOR_TOP_RIGHT);
 	addChild(_battleBackround);
 	//Load the MTC map
-	string pathFIle = FileUtils::getInstance()->fullPathForFilename("map/map3.tmx");
+	string pathFIle = FileUtils::getInstance()->fullPathForFilename("map/map3_1.tmx");
 	_myMap = TMXTiledMap::create(pathFIle.c_str());
 
 	if (_myMap != nullptr)
 	{
 		_battleBackround->addChild(_myMap);
 		Size CC_UNUSED s = _myMap->getContentSize();
-		//log("ContentSize: %f, %f", s.width, s.height);
+		log("MAP ContentSize: %f, %f", s.width, s.height);
 		Vec2 ts = _myMap->getTileSize();
 		//log("Title Size: %f, %f", ts.x, ts.y);
 		Vec2 ts2 = _myMap->getMapSize();
-		//log("map Size: %f, %f", ts2.x, ts2.y);
+		log("map Size: %f, %f", ts2.x, ts2.y);
 		auto& children = _myMap->getChildren();
 		SpriteBatchNode* child = nullptr;
 
@@ -214,24 +219,122 @@ void BattleScene::createContent()
 			child->getTexture()->setAntiAliasTexParameters();
 		}
 
+		_mapLayer = _myMap->getLayer("main_layer");
+
 	}
 	else {
 		log("null");
 	}
+	/*Create bounding wall*/
+	auto wallTexture = TextureCache::getInstance()->addImage("wall.png");
+	auto wall1 = Sprite::createWithTexture(wallTexture);
+	auto wallBd = PhysicsBody::createBox(wall1->getContentSize(), PhysicsMaterial(1, 1, 0));
+	wallBd->setDynamic(false);
+	wallBd->setCollisionBitmask(0x1111);
+	wallBd->setContactTestBitmask(0x1111);
+	wall1->setPhysicsBody(wallBd);
+	wall1->setTag(BOUND_BORDER_TAG);
+	wall1->setScaleX((3 * _myMap->getContentSize().width /5) /wallTexture->getContentSize().width);
+	wall1->setPosition(Vec2(_myMap->getContentSize().width / 2, 2 * _myMap->getContentSize().height / 3));
+	_battleBackround->addChild(wall1);
+
+	auto wall2 = Sprite::createWithTexture(wallTexture);
+	auto wallBd2 = PhysicsBody::createBox(wall2->getContentSize(), PhysicsMaterial(1, 1, 0));
+	wallBd2->setDynamic(false);
+	wallBd2->setCollisionBitmask(0x1111);
+	wallBd2->setContactTestBitmask(0x1111);
+	wall2->setPhysicsBody(wallBd2);
+	wall2->setTag(BOUND_BORDER_TAG);
+	wall2->setScaleX((3 * _myMap->getContentSize().width /5) /wallTexture->getContentSize().width);
+	wall2->setPosition(Vec2(_myMap->getContentSize().width / 2, _myMap->getContentSize().height / 3));
+	_battleBackround->addChild(wall2);
+
+	auto textTureSmall = TextureCache::getInstance()->addImage("wall_s.png");
+
+	auto wall3 = Sprite::createWithTexture(textTureSmall);
+	auto wallBd3 = PhysicsBody::createBox(wall3->getContentSize(), PhysicsMaterial(1, 1, 0));
+	wallBd3->setDynamic(false);
+	wallBd3->setCollisionBitmask(0x1111);
+	wallBd3->setContactTestBitmask(0x1111);
+	wall3->setPhysicsBody(wallBd3);
+	wall3->setTag(BOUND_BORDER_TAG);
+	wall3->setScaleY(1.5f);
+	wall3->setPosition(Vec2(_myMap->getContentSize().width / 5, _myMap->getContentSize().height / 3));
+	_battleBackround->addChild(wall3);
+
+	auto wall4 = Sprite::createWithTexture(textTureSmall);
+	auto wallBd4 = PhysicsBody::createBox(wall4->getContentSize(), PhysicsMaterial(1, 1, 0));
+	wallBd4->setDynamic(false);
+	wallBd4->setCollisionBitmask(0x1111);
+	wallBd4->setContactTestBitmask(0x1111);
+	wall4->setPhysicsBody(wallBd4);
+	wall4->setTag(BOUND_BORDER_TAG);
+	wall4->setScaleY(1.5f);
+	wall4->setPosition(Vec2(_myMap->getContentSize().width *4 / 5, _myMap->getContentSize().height *2/ 3));
+	_battleBackround->addChild(wall4);
+
+	
+	auto wall5 = Sprite::createWithTexture(textTureSmall);
+	auto wallBd5 = PhysicsBody::createBox(wall5->getContentSize(), PhysicsMaterial(1, 1, 0));
+	wallBd5->setDynamic(false);
+	wallBd5->setCollisionBitmask(0x1111);
+	wallBd5->setContactTestBitmask(0x1111);
+	wall5->setPhysicsBody(wallBd5);
+	wall5->setTag(BOUND_BORDER_TAG);
+	//wall5->setScaleX(0.5f);
+	wall5->setPosition(Vec2(_myMap->getContentSize().width * 2 / 5, _myMap->getContentSize().height * 5 / 9));
+	_battleBackround->addChild(wall5);
+
+	auto wall6 = Sprite::createWithTexture(textTureSmall);
+	auto wallBd6 = PhysicsBody::createBox(wall6->getContentSize(), PhysicsMaterial(1, 1, 0));
+	wallBd6->setDynamic(false);
+	wallBd6->setCollisionBitmask(0x1111);
+	wallBd6->setContactTestBitmask(0x1111);
+	wall6->setPhysicsBody(wallBd6);
+	wall6->setTag(BOUND_BORDER_TAG);
+	//wall6->setScaleX(0.5f);
+	wall6->setPosition(Vec2(_myMap->getContentSize().width * 3 / 5, _myMap->getContentSize().height * 4 / 9));
+	_battleBackround->addChild(wall6);
+
+
+	auto wall7 = Sprite::createWithTexture(textTureSmall);
+	auto wallBd7 = PhysicsBody::createBox(wall7->getContentSize(), PhysicsMaterial(1, 1, 0));
+	wallBd7->setDynamic(false);
+	wallBd7->setCollisionBitmask(0x1111);
+	wallBd7->setContactTestBitmask(0x1111);
+	wall7->setPhysicsBody(wallBd7);
+	wall7->setTag(BOUND_BORDER_TAG);
+	wall7->setScaleY(0.8f);
+	wall7->setPosition(Vec2(_myMap->getContentSize().width * 1 / 5, _myMap->getContentSize().height -wall7->getBoundingBox().size.height/2));
+	_battleBackround->addChild(wall7);
+
+
+	auto wall8 = Sprite::createWithTexture(textTureSmall);
+	auto wallBd8 = PhysicsBody::createBox(wall8->getContentSize(), PhysicsMaterial(1, 1, 0));
+	wallBd8->setDynamic(false);
+	wallBd8->setCollisionBitmask(0x1111);
+	wallBd8->setContactTestBitmask(0x1111);
+	wall8->setPhysicsBody(wallBd8);
+	wall8->setTag(BOUND_BORDER_TAG);
+	wall8->setScaleY(0.8f);
+	wall8->setPosition(Vec2(_myMap->getContentSize().width * 4 / 5, wall8->getBoundingBox().size.height / 2));
+	_battleBackround->addChild(wall8);
+
+
 
 	createPhysicBolder();
 	/*create blue and red line*/
 	auto line = DrawNode::create();
-	line->drawLine(Vec2(0, 150), Vec2(_visibleSize.width * 2, 150), Color4F::BLUE);
-	line->drawLine(Vec2(0, _visibleSize.height * 2 - 150), Vec2(_visibleSize.width * 2, _visibleSize.height * 2 - 150), Color4F::RED);
-	line->drawRect(Vec2(_visibleSize.width - 100, 0), Vec2(_visibleSize.width + 100, 150), Color4F::BLUE);
-	line->drawRect(Vec2(_visibleSize.width - 100, _visibleSize.height * 2 - 150), Vec2(_visibleSize.width + 100, _visibleSize.height * 2),Color4F::RED);
+	line->drawLine(Vec2(0, 150), Vec2(_myMap->getContentSize().width, 150), Color4F::BLUE);
+	line->drawLine(Vec2(0, _myMap->getContentSize().height - 150), Vec2(_myMap->getContentSize().width, _myMap->getContentSize().height - 150), Color4F::RED);
+	line->drawRect(Vec2(_myMap->getContentSize().width / 2 - 100, 0), Vec2(_myMap->getContentSize().width / 2 + 100, 150), Color4F::BLUE);
+	line->drawRect(Vec2(_myMap->getContentSize().width / 2 - 100, _myMap->getContentSize().height - 150), Vec2(_myMap->getContentSize().width / 2 + 100,_myMap->getContentSize().height), Color4F::RED);
 	_battleBackround->addChild(line);
 
 
 	auto blueTeamAreaNode = Node::create();
 	blueTeamAreaNode->setPhysicsBody(PhysicsBody::createBox(Size(200, 150), PhysicsMaterial(1, 0, 0)));
-	blueTeamAreaNode->setPosition(Vec2(_visibleSize.width, 75));
+	blueTeamAreaNode->setPosition(Vec2(75, _myMap->getContentSize().height /2));
 	blueTeamAreaNode->getPhysicsBody()->setCategoryBitmask(BLUETEAM_CONTACT_CATEGORY_BITMAP);
 	blueTeamAreaNode->getPhysicsBody()->setCollisionBitmask(BLUETEAM_CONTACT_COLLISION_BITMAP);
 	blueTeamAreaNode->getPhysicsBody()->setGravityEnable(false);
@@ -244,14 +347,14 @@ void BattleScene::createContent()
 	redTeamAreaNode->getPhysicsBody()->setCollisionBitmask(REDTEAM_CONTACT_COLLISION_BITMAP);
 	redTeamAreaNode->getPhysicsBody()->setGravityEnable(false);
 	redTeamAreaNode->getPhysicsBody()->setDynamic(false);
-	redTeamAreaNode->setPosition(Vec2(_visibleSize.width, 2 * _visibleSize.height - 75));
+	redTeamAreaNode->setPosition(Vec2(_myMap->getContentSize().width - 75, _myMap->getContentSize().height /2));
 	_battleBackround->addChild(redTeamAreaNode);
 
 	//red Tower
 	auto redTower = Sprite::create("tower_red.png");
 	redTower->setTag(TOWER_TAG);
 	redTower->setName("RED TOWER");
-	redTower->setPosition(Vec2(_visibleSize.width, _visibleSize.height * 2 - 150));
+	redTower->setPosition(Vec2(_myMap->getContentSize().width - 200, _myMap->getContentSize().height/ 2));
 	//redTower->setAnchorPoint(Vec2::ANCHOR_MIDDLE_BOTTOM);
 	_battleBackround->addChild(redTower);
 	MyBodyParser::getInstance()->parseJsonFile("json/tower.json");
@@ -275,7 +378,7 @@ void BattleScene::createContent()
 	auto blueTower = Sprite::create("tower_blue.png");
 	blueTower->setTag(TOWER_TAG);
 	blueTower->setName("BLUE TOWER");
-	blueTower->setPosition(Vec2(_visibleSize.width, 250));
+	blueTower->setPosition(Vec2(200,_myMap->getContentSize().height /2));
 	//blueTower->setAnchorPoint(Vec2::ANCHOR_MIDDLE_BOTTOM);
 	_battleBackround->addChild(blueTower);
 	PhysicsBody* blueTBody = MyBodyParser::getInstance()->bodyFormJson(blueTower, "tower");
@@ -319,14 +422,14 @@ void BattleScene::createContent()
 
 	testObject = Character::createCharacter(_selectedUnitId + 1);
 	testObject->setTag(10);
-	testObject->setPosition(_visibleSize);
+	//testObject->setPosition(_fakeVisibleSize);
 	_battleBackround->addChild(testObject, MID);
-	//testObject->setPosition(Vec2(_visibleSize.width, 100));
+	//testObject->setPosition(Vec2(_fakeVisibleSize.width, 100));
 	testObject->setPosition(Vec2(unitInfo.position_x, unitInfo.position_y));
 	testObject->rotateCharacter(unitInfo.direction);
 
 	testObject->setScale(IMAGE_SCALE);
-	testObject->setPhysicsBody(PhysicsBody::createCircle(30, PhysicsMaterial(1, 0, 1)));
+	testObject->setPhysicsBody(PhysicsBody::createCircle(30, PhysicsMaterial(1, 0.95, 0.5)));
 	testObject->getPhysicsBody()->setRotationEnable(false);
 	testObject->getPhysicsBody()->setContactTestBitmask(0x1);
 	testObject->getPhysicsBody()->setCategoryBitmask(cTeamContactCategory);
@@ -357,10 +460,7 @@ void BattleScene::createContent()
 	_allAlliedUnitHpBar.push_back(_mainCharacterMiniHpBar);
 	_allAlliedUnitSprite.push_back(testObject);
 
-	auto folow = Follow::create(testObject);
-	folow->setTag(121);
-	_battleBackround->runAction(folow);
-	auto bolder = Node::create();
+	
 	//bolder->setPosition(Vec2::ZERO);
 	//_battleBackround->addChild(bolder);
 	//bolder->runAction(folow->clone());
@@ -372,7 +472,7 @@ void BattleScene::createContent()
 	float baseMargin = 15;
 	Sprite *topMenu = Sprite::create("image/screen/battle/status_parts.png");
 	topMenu->setAnchorPoint(Vec2::ANCHOR_TOP_LEFT);
-	topMenu->setPosition(Vec2(0, _visibleSize.height));
+	topMenu->setPosition(Vec2(0, _fakeVisibleSize.height));
 	addChild(topMenu);
 
 	_mainCharacterHpBar = Slider::create();
@@ -381,7 +481,7 @@ void BattleScene::createContent()
 	//_hpSlider->loadSlidBallTextureNormal("image/screen/battle/test.png");
 	_mainCharacterHpBar->loadProgressBarTexture("image/screen/battle/hp.png");
 	//_hpSlider->setContentSize(Size(372, 12));
-	_mainCharacterHpBar->setPosition(Vec2(topMenu->getContentSize().width / 2 + 25, _visibleSize.height - 22));
+	_mainCharacterHpBar->setPosition(Vec2(topMenu->getContentSize().width / 2 + 25, _fakeVisibleSize.height - 22));
 	addChild(_mainCharacterHpBar);
 
 	_hpViewLabel = Label::createWithSystemFont(DataUtils::numberToString(_allAlliedUnitData[0].hp), "", 20);
@@ -411,13 +511,13 @@ void BattleScene::createContent()
 	_menuButton = Button::create();
 	_menuButton->loadTextureNormal("image/screen/battle/menu_btn.png");
 	_menuButton->addTouchEventListener(CC_CALLBACK_2(BattleScene::menuButtonCallback, this));
-	_menuButton->setPosition(Vec2(_menuButton->getContentSize().width / 2 + 10, _visibleSize.height - topMenu->getContentSize().height));
+	_menuButton->setPosition(Vec2(_menuButton->getContentSize().width / 2 + 10, _fakeVisibleSize.height - topMenu->getContentSize().height));
 	_menuButton->setAnchorPoint(Vec2::ANCHOR_MIDDLE_TOP);
 	addChild(_menuButton);
 
 	Sprite *timeViewContainer = Sprite::create("image/screen/battle/time_parts.png");
 	timeViewContainer->setAnchorPoint(Vec2::ANCHOR_TOP_RIGHT);
-	timeViewContainer->setPosition(Vec2(_visibleSize.width - baseMargin, _visibleSize.height - baseMargin));
+	timeViewContainer->setPosition(Vec2(_fakeVisibleSize.width - baseMargin, _fakeVisibleSize.height - baseMargin));
 	addChild(timeViewContainer);
 
 	_miniMap = Sprite::create("image/screen/battle/map.png");
@@ -456,7 +556,7 @@ void BattleScene::createContent()
 	Size baseSize = _skill1Button->getContentSize();
 	_skill1Button->setTag(TAG_SKILL_1);
 	_skill1Button->setSwallowTouches(true);
-	_skill1Button->setPosition(Vec2(_visibleSize.width / 2 - 1.5 * baseSize.width - 20, baseSize.height / 2 + baseMargin));
+	_skill1Button->setPosition(Vec2(_fakeVisibleSize.width / 2 - 1.5 * baseSize.width - 20, baseSize.height / 2 + baseMargin));
 	addChild(_skill1Button);
 	displaySkillMpInButton(_skill1Button, _mainCharacterSkillData[0].mp_cost);
 
@@ -465,7 +565,7 @@ void BattleScene::createContent()
 	_skill2Button->addTouchEventListener(CC_CALLBACK_2(BattleScene::skill1ButtonCallback, this));
 	_skill2Button->setTag(TAG_SKILL_2);
 	_skill2Button->setSwallowTouches(true);
-	_skill2Button->setPosition(Vec2(_visibleSize.width / 2 - 0.5 *baseSize.width - 10, baseSize.height / 2 + baseMargin));
+	_skill2Button->setPosition(Vec2(_fakeVisibleSize.width / 2 - 0.5 *baseSize.width - 10, baseSize.height / 2 + baseMargin));
 	addChild(_skill2Button);
 	displaySkillMpInButton(_skill2Button, _mainCharacterSkillData[1].mp_cost);
 
@@ -474,7 +574,7 @@ void BattleScene::createContent()
 	_skill3Button->addTouchEventListener(CC_CALLBACK_2(BattleScene::skill1ButtonCallback, this));
 	_skill3Button->setTag(TAG_SKILL_3);
 	_skill3Button->setSwallowTouches(true);
-	_skill3Button->setPosition(Vec2(_visibleSize.width / 2 + 0.5*baseSize.width + 10, baseSize.height / 2 + baseMargin));
+	_skill3Button->setPosition(Vec2(_fakeVisibleSize.width / 2 + 0.5*baseSize.width + 10, baseSize.height / 2 + baseMargin));
 	addChild(_skill3Button);
 	displaySkillMpInButton(_skill3Button, _playerSkills[0].mp_cost);
 
@@ -483,7 +583,7 @@ void BattleScene::createContent()
 	_skill4Button->addTouchEventListener(CC_CALLBACK_2(BattleScene::skill1ButtonCallback, this));
 	_skill4Button->setTag(TAG_SKILL_4);
 	_skill4Button->setSwallowTouches(true);
-	_skill4Button->setPosition(Vec2(_visibleSize.width / 2 + 1.5 * baseSize.width + 20, baseSize.height / 2 + baseMargin));
+	_skill4Button->setPosition(Vec2(_fakeVisibleSize.width / 2 + 1.5 * baseSize.width + 20, baseSize.height / 2 + baseMargin));
 	addChild(_skill4Button);
 	displaySkillMpInButton(_skill4Button, _playerSkills[1].mp_cost);
 
@@ -492,7 +592,7 @@ void BattleScene::createContent()
 	//_manaSlider->loadSlidBallTextureNormal("image/screen/battle/test.png");
 	_mainCharacterMpBar->loadProgressBarTexture("image/screen/battle/mp.png");
 	_mainCharacterMpBar->setPercent(100);
-	_mainCharacterMpBar->setPosition(Vec2(_visibleSize.width / 2, baseSize.height + baseMargin * 2));
+	_mainCharacterMpBar->setPosition(Vec2(_fakeVisibleSize.width / 2, baseSize.height + baseMargin * 2));
 	addChild(_mainCharacterMpBar);
 
 	_mpViewlabel = Label::createWithSystemFont(DataUtils::numberToString(_allAlliedUnitData[0].mp), "", 20);
@@ -523,8 +623,8 @@ void BattleScene::createContent()
 	_autoAttackArea->setPosition(Vec2(testObject->getContentSize().width / 2, testObject->getContentSize().height / 2 - 30));
 	_autoAttackArea->setVisible(false);
 
-	float positionXScaleRate = _miniMap->getContentSize().width / (_visibleSize.width * 2);
-	float positionYScaleRate = _miniMap->getContentSize().height / (_visibleSize.height * 2);
+	float positionXScaleRate = _miniMap->getContentSize().width / (_myMap->getContentSize().width);
+	float positionYScaleRate = _miniMap->getContentSize().height / (_myMap->getContentSize().height);
 
 	auto node = Node::create();
 	node->setPosition(Vec2::ZERO);
@@ -607,7 +707,7 @@ void BattleScene::createContent()
 		_alliedStatusImagePath.push_back(tmp1);
 	}
 	/*_testAttackTarget = Sprite::create("image/unit_new/move/red/unit_00_02_2.png");
-	_testAttackTarget->setPosition(_visibleSize);
+	_testAttackTarget->setPosition(_fakeVisibleSize);
 	_testAttackTarget->setScale(IMAGE_SCALE);
 	_battleBackround->addChild(_testAttackTarget);*/
 
@@ -638,8 +738,8 @@ void BattleScene::createContent()
 		
 		_enemyStatusImagePath.push_back(tmp1);
 		
-// 		float positionXScaleRate = _miniMap->getContentSize().width / (_visibleSize.width * 2);
-// 		float positionYScaleRate = _miniMap->getContentSize().height / (_visibleSize.height * 2);
+// 		float positionXScaleRate = _miniMap->getContentSize().width / (_fakeVisibleSize.width * 2);
+// 		float positionYScaleRate = _miniMap->getContentSize().height / (_fakeVisibleSize.height * 2);
 		enemyIcon1->setPosition(Vec2(blueTower->getPositionX()*positionXScaleRate, blueTower->getPositionY()*positionYScaleRate));
 		_allEnemyIconInMinimap.push_back(enemyIcon1);
 		node->addChild(_allEnemyIconInMinimap.back(), 1);
@@ -684,10 +784,10 @@ void BattleScene::createContent()
 
 	auto sv = NodeServer::getInstance()->getClient();
 
-	auto testSprite = Sprite::create("ball.png");
+	/*auto testSprite = Sprite::create("ball.png");
 	_battleBackround->addChild(testSprite, 100);
 	testSprite->setPhysicsBody(PhysicsBody::createCircle(20, PhysicsMaterial(1, 1, 1)));
-
+	*/
 	/************************************************************************/
 	/* HANDLERS FOR BATTLE BROADCAST EVENTS                                                                     */
 	/************************************************************************/
@@ -783,6 +883,7 @@ void BattleScene::createContent()
 						}
 						else {
 							cha->stopMoveAction();
+							cha->getPhysicsBody()->setVelocity(Vec2::ZERO);
 						}
 					}
 				}
@@ -1007,6 +1108,40 @@ void BattleScene::createContent()
 
 	});
 
+	sv->on("set_title", [&](SIOClient* client, const string data) {
+		if (_onDestructCalled) return;
+		Document doc;
+		doc.Parse<0>(data.c_str());
+		if (doc.HasParseError()) {
+			log("on: set_title Parse JSOn error");
+			return;
+		}
+
+		int team_Id = doc["team_id"].GetInt();
+		int x = doc["pos_x"].GetInt();
+		int y = doc["pos_y"].GetInt();
+		Vec2 titleCoor = Vec2(x, y);
+		auto title = _mapLayer->getTileAt(titleCoor);
+		if (team_Id == TEAM_FLG_BLUE)
+		{
+			if (title->getColor() != Color3B::GREEN)
+			{
+				title->setColor(Color3B::GREEN);
+				
+			}
+			return;
+		}
+		else
+		{
+			if (title->getColor() != Color3B::RED)
+			{
+				title->setColor(Color3B::RED);
+			}
+			return;
+		}
+
+	});
+
 
 	sv->on("battle_public_battle_end", [&](SIOClient *client, const string data) {
 
@@ -1014,7 +1149,7 @@ void BattleScene::createContent()
 		Document doc;
 		doc.Parse<0>(data.c_str());
 		if (doc.HasParseError()) {
-			log("on: play_skill_end Parse JSOn error");
+			log("on: public_battle_end Parse JSOn error");
 			return;
 		}
 		int winTeamId = doc["win_team_id"].GetInt();
@@ -1087,45 +1222,48 @@ void BattleScene::displaySkillMpInButton(Button *parent, int mp)
 void BattleScene::createPhysicBolder()
 {
 	auto bottomB = createHBolder();
-	bottomB->setPosition(Vec2(_visibleSize.width, -50));
+	bottomB->setPosition(Vec2(_myMap->getContentSize().width/2, -50));
 	_battleBackround->addChild(bottomB);
 
 	auto topB = createHBolder();
-	topB->setPosition(Vec2(_visibleSize.width, _visibleSize.height * 2 + 50));
+	topB->setPosition(Vec2(_myMap->getContentSize().width /2, _myMap->getContentSize().height + 50));
 	_battleBackround->addChild(topB);
 
 	auto leftB = createVBolder();
-	leftB->setPosition(Vec2(-50, _visibleSize.height));
+	leftB->setPosition(Vec2(-50, _myMap->getContentSize().height /2));
 	_battleBackround->addChild(leftB);
 
 	auto rightB = createVBolder();
-	rightB->setPosition(Vec2(_visibleSize.width * 2 + 50, _visibleSize.height));
+	rightB->setPosition(Vec2(_myMap->getContentSize().width+ 50, _myMap->getContentSize().height/2));
 	_battleBackround->addChild(rightB);
-
-	createRandomRock();
+	//createRandomRock();
 }
 
 Node* BattleScene::createHBolder()
 {
-	auto wallBd = PhysicsBody::createBox(Size(_visibleSize.width * 2, 100), PhysicsMaterial(1, 0, 0));
+	auto wallBd = PhysicsBody::createBox(Size(_myMap->getContentSize().width, 100), PhysicsMaterial(1, 0.95, 0));
 	wallBd->setGravityEnable(false);
 	wallBd->setDynamic(false);
-	wallBd->setContactTestBitmask(0x1);
+	wallBd->setContactTestBitmask(0x111);
+	wallBd->setCollisionBitmask(0x1111);
 	
 	auto node = Node::create();
-	node->setPhysicsBody(wallBd);
 
+	node->setPhysicsBody(wallBd);
+	node->setTag(BOUND_BORDER_TAG);
 	return node;
 }
 
 Node* BattleScene::createVBolder()
 {
-	auto wallBd = PhysicsBody::createBox(Size(100, _visibleSize.height * 2), PhysicsMaterial(1, 0, 0));
+	auto wallBd = PhysicsBody::createBox(Size(100, _myMap->getContentSize().height), PhysicsMaterial(1, 0.95, 0));
 	wallBd->setGravityEnable(false);
 	wallBd->setDynamic(false);
-	wallBd->setContactTestBitmask(0x1);
+	wallBd->setContactTestBitmask(0x111);
+	wallBd->setCollisionBitmask(0x1111);
 
 	auto node = Node::create();
+	node->setTag(BOUND_BORDER_TAG);
 	node->setPhysicsBody(wallBd);
 
 	return node;
@@ -1144,6 +1282,7 @@ void BattleScene::onEnter()
 	auto contactListener = EventListenerPhysicsContact::create();
 	contactListener->onContactBegin = CC_CALLBACK_1(BattleScene::onPhysicContactBegin, this);
 	contactListener->onContactPreSolve = CC_CALLBACK_2(BattleScene::onPhysicContactPreSolve, this);
+	contactListener->onContactPostSolve = CC_CALLBACK_2(BattleScene::onPhysicContactPostSlove, this);
 	dispath->addEventListenerWithSceneGraphPriority(contactListener, this);
 	
 
@@ -1200,6 +1339,34 @@ void BattleScene::update(float delta)
 
 	fakeZOrder();
 
+	testMoveLogic();
+
+
+
+}
+void BattleScene::testMoveLogic()
+{
+	if (_onRespwanFlg) return;
+	auto pos = testObject->getPosition();
+	if (pos.x < 0 || pos.y < 0 || pos.x > _myMap->getContentSize().width || pos.y > _myMap->getContentSize().height) return;
+	Vec2 titlePos = getTitlePosForPosition(pos);
+	auto title = _mapLayer->getTileAt(titlePos);
+	if (title == _oldTitle) return;
+	if (_currentPlayerTeamFlg == TEAM_FLG_BLUE) {
+		if (title->getColor() != Color3B::GREEN)
+		{
+			_oldTitle = title;
+			BattleAPI::getInstance()->sendTestMoveLogic(titlePos);
+		}
+	}
+	else {
+		if (title->getColor() != Color3B::RED)
+		{
+			_oldTitle = title;
+			BattleAPI::getInstance()->sendTestMoveLogic(titlePos);
+		}
+	}
+
 }
 void BattleScene::checkForAutoAttack()
 {
@@ -1231,8 +1398,11 @@ void BattleScene::checkForAutoAttack()
 				{
 					//auto call1 = CallFuncN::create(CC_CALLBACK_0(BattleScene::characterAttackCallback, this));
 					_onDelayAttackFlg = true;
+					testObject->getPhysicsBody()->setVelocity(Vec2::ZERO);
+					testObject->stopMoveAction();
 					BattleAPI::getInstance()->sendAttackEvent(direc,_allAlliedUnitData[0], _allEnemyUnitData[i], [&, i, direc](SIOClient *client, const string data)
 					{
+						if (_onDestructCalled) return;
 						log("Battle attack callback with data: %s", data.c_str());
 						Document doc;
 						doc.Parse<0>(data.c_str());
@@ -1280,7 +1450,7 @@ void BattleScene::checkForAutoAttack()
 	}
 
 	//check for run fountain restore action. Now is only main character
-	/*if( (testObject->getPosition()-Vec2(_visibleSize.width,0)).length() < 150)
+	/*if( (testObject->getPosition()-Vec2(_fakeVisibleSize.width,0)).length() < 150)
 	{
 		fountainRestoreEffect();
 	}
@@ -1291,7 +1461,7 @@ void BattleScene::checkForAutoAttack()
 	*/
 	for (int i = 0; i < _allAlliedUnitData.size()-1; i ++)
 	{
-		if ((_allAlliedUnitSprite[i]->getPosition() - Vec2(_visibleSize.width, (_currentPlayerTeamFlg - 1) * 2 * _visibleSize.height)).length() < 150)
+		if ((_allAlliedUnitSprite[i]->getPosition() - Vec2((_currentPlayerTeamFlg - 1) * _myMap->getContentSize().width, _myMap->getContentSize().height/2)).length() < 150)
 		{
 			fountainRestoreEffect(_allAlliedUnitSprite[i], &_allAlliedUnitData, i);
 		}
@@ -1303,7 +1473,7 @@ void BattleScene::checkForAutoAttack()
 
 	for (int j = 0; j <_allEnemyUnitData.size() - 1; j++)
 	{
-		if ((_allEnemyUnitSprite[j]->getPosition() - Vec2(_visibleSize.width, (_currentEnemyTeamFlg - 1) * 2 * _visibleSize.height)).length() < 150)
+		if ((_allEnemyUnitSprite[j]->getPosition() - Vec2((_currentEnemyTeamFlg - 1) * _myMap->getContentSize().width, _myMap->getContentSize().height)).length() < 150)
 		{
 			fountainRestoreEffect(_allEnemyUnitSprite[j], &_allEnemyUnitData, j);
 		}
@@ -1534,7 +1704,8 @@ void BattleScene::runRespawnAction(string killerUuid)
 
 		_battleBackround->stopActionByTag(121);
 		testObject->setVisible(false);
-		testObject->setPosition(Vec2(-200, _visibleSize.height));
+		testObject->getPhysicsBody()->setVelocity(Vec2::ZERO);
+		testObject->setPosition(Vec2(-200, _myMap->getContentSize().height/2));
 		auto action = Repeat::create(Sequence::create(DelayTime::create(1), CallFuncN::create([&](Ref *pSender){
 			Label* lb = dynamic_cast<Label*>(pSender);
 			int t = DataUtils::stringToFloat(lb->getString());
@@ -1547,7 +1718,7 @@ void BattleScene::runRespawnAction(string killerUuid)
 			auto unitData = BattleModel::getInstance()->getUnitInforByUuid(UserModel::getInstance()->getUuId());
 			testObject->setPosition(Vec2(unitData.position_x, unitData.position_y));
 			testObject->rotateCharacter(unitData.direction);
-			//testObject->setPosition(Vec2(_visibleSize.width, 100)); //need to change to value base on callback from server
+			//testObject->setPosition(Vec2(_fakeVisibleSize.width, 100)); //need to change to value base on callback from server
 			testObject->setVisible(true);
 			auto follow = Follow::create(testObject);
 			follow->setTag(121);
@@ -1720,6 +1891,7 @@ void BattleScene::onTouchMoved(Touch *touch, Event *unused_event)
 
 	if (distanVector.length() < _touchMoveBeginSprite->getContentSize().width / 6 && _moveMode != MOVE_CIRCLE) {
 		testObject->stopMoveAction();
+		testObject->getPhysicsBody()->setVelocity(Vec2::ZERO);
 		return;
 	}
 
@@ -1795,8 +1967,8 @@ void BattleScene::updateMiniMap()
 	if (testObject == nullptr) return;
 	auto objectPos = testObject->getPosition();
 
-	float positionXScaleRate = _miniMap->getContentSize().width / (_visibleSize.width * 2);
-	float positionYScaleRate = _miniMap->getContentSize().height / (_visibleSize.height * 2);
+	float positionXScaleRate = _miniMap->getContentSize().width / (_myMap->getContentSize().width);
+	float positionYScaleRate = _miniMap->getContentSize().height / (_myMap->getContentSize().height);
 	_selectRect->setPosition(Vec2(objectPos.x*positionXScaleRate,objectPos.y*positionYScaleRate));
 	for (int i = 0; i < _allEnemyUnitData.size(); i++)
 	{
@@ -1827,6 +1999,7 @@ void BattleScene::onTouchEnded(Touch *touch, Event *unused_event)
 	{
 		/* Day la truong hop MOVE_MANUAL || MOVE_CIRCLE_MANUAL || MOVE_CIRCLE_LONGTAP */
 		testObject->stopMoveAction();
+		testObject->getPhysicsBody()->setVelocity(Vec2::ZERO);
 		if (_moveMode == MOVE_CIRCLE)
 		{
 			_miniUnit->stopMoveAction();
@@ -1844,18 +2017,27 @@ void BattleScene::onTouchEnded(Touch *touch, Event *unused_event)
 		{
 			testObject->setMoveMode(1);
 			testObject->stopMoveAction();
-			auto distanVector = touch->getLocation() - Vec2(_visibleSize / 2);
+			testObject->getPhysicsBody()->setVelocity(Vec2::ZERO);
+			auto distanVector = touch->getLocation() - Vec2(_fakeVisibleSize / 2);
 			/*test*/
 			//auto vec = AStarPathFindingAlgorithm(testObject->getPosition(), testObject->getPosition() + distanVector);
 			float time = distanVector.length() / _allAlliedUnitData[0].move_speed;
 			_mainCharacterIconInMiniMap->setRotation(-distanVector.getAngle()*RAD_DEG + 90);
-			testObject->actionMoveCharacter(detectDirectionBaseOnTouchAngle(-distanVector.getAngle()*RAD_DEG + 90));
-			auto moveAction = Sequence::create(MoveBy::create(time, distanVector), CallFuncN::create([&](Ref* p) {
+			int direc = detectDirectionBaseOnTouchAngle(-distanVector.getAngle()*RAD_DEG + 90);
+			if (testObject->getCurrentMoveActionTag() != direc)
+			{
+				testObject->actionMoveCharacter(direc);
+			}
+			/*auto moveAction = Sequence::create(MoveBy::create(time, distanVector), CallFuncN::create([&](Ref* p) {
 				testObject->stopMoveAction();
 			}), nullptr);
 			moveAction->setTag(919);
 			testObject->stopActionByTag(919);
-			testObject->runAction(moveAction);
+			testObject->runAction(moveAction);*/
+			testObject->getPhysicsBody()->setVelocity(Vec2::ZERO);
+			Vec2 force = Vec2(250 * cos(distanVector.getAngle()), 250 * sin(distanVector.getAngle()));
+
+			testObject->getPhysicsBody()->applyImpulse(force * 7000);
 			return;
 
 		}
@@ -2008,14 +2190,15 @@ void BattleScene::createRandomRock()
 		auto body = MyBodyParser::getInstance()->bodyFormJson(sp, "stone");
 		body->setDynamic(false);
 		body->getShape(0)->setRestitution(0);
+		body->getShape(0)->setFriction(0);
 		body->setGravityEnable(false);
 		body->setContactTestBitmask(0x1);
 		sp->setPhysicsBody(body);
 		sp->setAnchorPoint(Vec2::ANCHOR_MIDDLE);
 		sp->setTag(2);
-		sp->setPosition(Vec2(random(0.1f, 0.9f)*_visibleSize.width * 2,random(0.1f,0.9f)*_visibleSize.height*2));
+		sp->setPosition(Vec2(random(0.1f, 0.9f)*_myMap->getContentSize().width,random(0.1f,0.9f)*_myMap->getContentSize().height));
 		_allStone.push_back(sp);
-		_battleBackround->addChild(_allStone.back(),ceil(_visibleSize.height * 3 - sp->getPositionY()));
+		_battleBackround->addChild(_allStone.back(),ceil(_fakeVisibleSize.height * 3 - sp->getPositionY()));
 	}
 	for (int i = 1; i < 6; i++)
 	{
@@ -2029,9 +2212,9 @@ void BattleScene::createRandomRock()
 		tree->setPhysicsBody(body);
 		tree->setAnchorPoint(Vec2::ANCHOR_MIDDLE_BOTTOM);
 		tree->setTag(1);
-		tree->setPosition(Vec2(random(0.1f, 0.9f)*_visibleSize.width * 2, random(0.1f, 0.9f)*_visibleSize.height * 2));
+		tree->setPosition(Vec2(random(0.1f, 0.9f)*_myMap->getContentSize().width, random(0.1f, 0.9f)*_myMap->getContentSize().height));
 		_allStone.push_back(tree);
-		_battleBackround->addChild(_allStone.back(),ceil(_visibleSize.height*3 - tree->getPositionY()));
+		_battleBackround->addChild(_allStone.back(),ceil(_fakeVisibleSize.height*3 - tree->getPositionY()));
 	}
 }
 
@@ -2065,6 +2248,11 @@ void BattleScene::fakeZOrder()
 
 bool BattleScene::onPhysicContactBegin(const PhysicsContact &contact)
 {
+	auto spriteA = contact.getShapeA()->getBody()->getNode();
+	auto spriteB = contact.getShapeB()->getBody()->getNode();
+
+
+
 	return true;
 }
 
@@ -2075,6 +2263,39 @@ bool BattleScene::onPhysicContactPreSolve(PhysicsContact& contact, PhysicsContac
 	auto spriteB = contact.getShapeB()->getBody()->getNode();
 
 	return true;
+}
+
+void BattleScene::onPhysicContactPostSlove(PhysicsContact& contact, const PhysicsContactPostSolve& solve)
+{
+	auto spriteA = contact.getShapeA()->getBody()->getNode();
+	auto spriteB = contact.getShapeB()->getBody()->getNode();
+
+	if ((spriteA->getTag() == BOUND_BORDER_TAG && spriteB == testObject) || (spriteA == testObject && spriteB->getTag() == BOUND_BORDER_TAG))
+	{
+		contactWithWall();
+	}
+
+	if ((spriteA->getTag() == TOWER_TAG && spriteB == testObject) || (spriteA == testObject & spriteB->getTag() == TOWER_TAG))
+	{
+		contactWithTower();
+	}
+}
+
+void BattleScene::contactWithWall()
+{
+	Vec2 veloc = testObject->getPhysicsBody()->getVelocity();
+	int direc = detectDirectionBaseOnTouchAngle(-veloc.getAngle() * RAD_DEG+90);
+	_mainCharacterIconInMiniMap->setRotation(-veloc.getAngle() * RAD_DEG + 90);
+	testObject->stopMoveAction();
+	if (veloc.length() > 50)
+	{
+		testObject->actionMoveCharacter(direc);
+	}
+}
+
+void BattleScene::contactWithTower()
+{
+
 }
 
 void BattleScene::rotateCharacter(Sprite *target, int direc)
@@ -3501,11 +3722,11 @@ void BattleScene::enemyRespawAction(int index)
 {
 	auto action = (Sequence::create(DelayTime::create(5), CallFuncN::create([&, index](Ref *pSEnder){
 		if (_currentPlayerTeamFlg == TEAM_FLG_BLUE) {
-			_allEnemyUnitSprite[index]->setPosition(Vec2(_visibleSize.width + (index - 1) * 70, _visibleSize.height * 2 - 100));
+			_allEnemyUnitSprite[index]->setPosition(Vec2(_myMap->getContentSize().width - 70 , _myMap->getContentSize().height /2 +(index - 1)*50));
 		}
 		else
 		{
-			_allEnemyUnitSprite[index]->setPosition(Vec2(_visibleSize.width + (index - 1) * 70, 100));
+			_allEnemyUnitSprite[index]->setPosition(Vec2(70, _myMap->getContentSize().height / 2 + (index - 1) * 50));
 		}
 		_allEnemyUnitSprite[index]->setVisible(true);
 		_allEnemyIconInMinimap[index]->setVisible(true);
@@ -3817,12 +4038,12 @@ bool BattleScene::isWallAtTileCoord(Vec2 &titleCoord)
 	}
 	//check EnemyRestoreArea
 	if (_currentPlayerTeamFlg == TEAM_FLG_BLUE){
-		if (Rect(_visibleSize.width - 100, _visibleSize.height * 2 - 150, 200, 150).containsPoint(point)) {
+		if (Rect(_fakeVisibleSize.width - 100, _fakeVisibleSize.height * 2 - 150, 200, 150).containsPoint(point)) {
 			return true;
 		}
 	}
 	else {
-		if (Rect(_visibleSize.width - 100, 0, 200, 150).containsPoint(point)) {
+		if (Rect(_fakeVisibleSize.width - 100, 0, 200, 150).containsPoint(point)) {
 			return true;
 		}
 	}
@@ -4028,8 +4249,8 @@ Sprite* BattleScene::createMiniMoveCircle() {
 	float x = float(diameter / miniCircle->getContentSize().height);
 
 	// Do co kich thuoc cua thiet bi voi man hinh hien thi
-	float scaleRateX = Director::getInstance()->getOpenGLView()->getFrameSize().width / _visibleSize.width;
-	float scaleRateY = Director::getInstance()->getOpenGLView()->getFrameSize().height / _visibleSize.height;
+	float scaleRateX = Director::getInstance()->getOpenGLView()->getFrameSize().width / _fakeVisibleSize.width;
+	float scaleRateY = Director::getInstance()->getOpenGLView()->getFrameSize().height / _fakeVisibleSize.height;
 
 	miniCircle->setScale(x * (1 / scaleRateY));
 	miniCircle->setScaleX(x * (1 / scaleRateX));
@@ -4043,8 +4264,8 @@ void BattleScene::createMiniControlUnit(int circleType) {
 	Size visibleSize = Director::getInstance()->getVisibleSize();
 	float diameter = Director::getInstance()->getOpenGLView()->getFrameSize().height * MINU_CIRCLE_SCALE;
 	float x = float(diameter / _miniCircle->getContentSize().height);
-	float scaleRateX = Director::getInstance()->getOpenGLView()->getFrameSize().width / _visibleSize.width;
-	float scaleRateY = Director::getInstance()->getOpenGLView()->getFrameSize().height / _visibleSize.height;
+	float scaleRateX = Director::getInstance()->getOpenGLView()->getFrameSize().width / _fakeVisibleSize.width;
+	float scaleRateY = Director::getInstance()->getOpenGLView()->getFrameSize().height / _fakeVisibleSize.height;
 
 	circleX = _miniCircle->getContentSize().width * x * (1 / scaleRateX),
 		circleY = _miniCircle->getContentSize().height * x * (1 / scaleRateY);

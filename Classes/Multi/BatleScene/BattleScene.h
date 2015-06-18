@@ -80,6 +80,8 @@
 
 #define HPBAR_TAG 1232
 
+#define BOUND_BORDER_TAG 1905
+
 using namespace cocostudio;
 class BattleScene : public LayerBase
 {
@@ -99,6 +101,8 @@ private:
 	/* VARIABLES                                                            */
 	/************************************************************************/
 	bool _onDestructCalled = false;
+	Size _fakeVisibleSize;
+
 	struct tm day;
 	time_t timer;
 	struct tm * timeinfo;
@@ -214,6 +218,8 @@ private:
 
 	/*Titled Map for Path finding and simple background*/
 	TMXTiledMap* _myMap;
+	TMXLayer* _mapLayer;
+	Sprite* _oldTitle = nullptr;
 
 	/************************************************************************/
 	/* FUNCTIONS                                                            */
@@ -252,6 +258,13 @@ private:
 	virtual bool onPhysicContactBegin(const PhysicsContact &contact);
 	/*Pre-Solve of physic contact event*/
 	virtual bool onPhysicContactPreSolve(PhysicsContact& contact, PhysicsContactPreSolve& solve);
+	
+	virtual void onPhysicContactPostSlove(PhysicsContact& contact, const PhysicsContactPostSolve& solve);
+	
+	virtual void contactWithWall();
+
+	virtual void contactWithTower();
+
 	///BUTTON CALLBACK///
 	virtual void nextButtonCallback(Ref *pSender, Widget::TouchEventType type);
 	virtual void menuButtonCallback(Ref *pSender, Widget::TouchEventType type);
@@ -339,6 +352,9 @@ private:
 	
 	void update(float delta);
 	float _checkTime = 0; //for test Battle sync
+
+	void testMoveLogic();
+
 	//TODO
 	///FAKE  Z Order///
 	void fakeZOrder();
