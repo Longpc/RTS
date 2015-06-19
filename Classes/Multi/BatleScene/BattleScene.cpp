@@ -115,21 +115,21 @@ bool BattleScene::init()
 
 	auto nextButton = Button::create();
 	nextButton->loadTextureNormal("CloseNormal.png");
-	nextButton->setPosition(Vec2(_fakeVisibleSize.width - 50, 70));
+	nextButton->setPosition(Vec2(_visibleSize.width - 50, 70));
 	nextButton->setTouchEnabled(true);
 	nextButton->addTouchEventListener(CC_CALLBACK_2(BattleScene::nextButtonCallback, this));
 	addChild(nextButton, 10);
 
 	auto physicDebug = Button::create();
 	physicDebug->loadTextureNormal("CloseNormal.png");
-	physicDebug->setPosition(Vec2(_fakeVisibleSize.width - 100, 70));
+	physicDebug->setPosition(Vec2(_visibleSize.width - 100, 70));
 	physicDebug->setTouchEnabled(true);
 	physicDebug->addTouchEventListener(CC_CALLBACK_2(BattleScene::debugPhysicButtonCallback, this));
 	addChild(physicDebug, 10);
 
 	auto changeImage = Button::create();
 	changeImage->loadTextureNormal("CloseNormal.png");
-	changeImage->setPosition(Vec2(_fakeVisibleSize.width - 150, 70));
+	changeImage->setPosition(Vec2(_visibleSize.width - 150, 70));
 	changeImage->setTouchEnabled(true);
 	changeImage->addTouchEventListener(CC_CALLBACK_2(BattleScene::changeImageButtonCallback, this));
 	addChild(changeImage, 10);
@@ -186,18 +186,28 @@ bool BattleScene::init()
 	_battleBackround->runAction(folow);
 	auto bolder = Node::create();
 	/*Scene main schedule update init*/
-	setScale(0.75f);
-	_fakeVisibleSize = _visibleSize / 0.75f;
+	//setScale(0.75f);
+	
 	scheduleUpdate();
+
 	return true;
 }
 void BattleScene::createContent()
 {
 	//create e battle background
+	auto realVisibleSize = _visibleSize / 0.75f;
+	auto parentNode = Node::create();
+	parentNode->setPosition((realVisibleSize - _visibleSize)/2);
+	addChild(parentNode);
+	parentNode->setScale(0.75f);
+
+	
+
+
 	_battleBackround = Node::create();
 	_battleBackround->setPosition(Vec2::ZERO);
 	_battleBackround->setAnchorPoint(Vec2::ANCHOR_TOP_RIGHT);
-	addChild(_battleBackround);
+	parentNode->addChild(_battleBackround);
 	//Load the MTC map
 	string pathFIle = FileUtils::getInstance()->fullPathForFilename("map/map3_1.tmx");
 	_myMap = TMXTiledMap::create(pathFIle.c_str());
@@ -422,9 +432,9 @@ void BattleScene::createContent()
 
 	testObject = Character::createCharacter(_selectedUnitId + 1);
 	testObject->setTag(10);
-	//testObject->setPosition(_fakeVisibleSize);
+	//testObject->setPosition(_visibleSize);
 	_battleBackround->addChild(testObject, MID);
-	//testObject->setPosition(Vec2(_fakeVisibleSize.width, 100));
+	//testObject->setPosition(Vec2(_visibleSize.width, 100));
 	testObject->setPosition(Vec2(unitInfo.position_x, unitInfo.position_y));
 	testObject->rotateCharacter(unitInfo.direction);
 
@@ -472,7 +482,7 @@ void BattleScene::createContent()
 	float baseMargin = 15;
 	Sprite *topMenu = Sprite::create("image/screen/battle/status_parts.png");
 	topMenu->setAnchorPoint(Vec2::ANCHOR_TOP_LEFT);
-	topMenu->setPosition(Vec2(0, _fakeVisibleSize.height));
+	topMenu->setPosition(Vec2(0, _visibleSize.height));
 	addChild(topMenu);
 
 	_mainCharacterHpBar = Slider::create();
@@ -481,7 +491,7 @@ void BattleScene::createContent()
 	//_hpSlider->loadSlidBallTextureNormal("image/screen/battle/test.png");
 	_mainCharacterHpBar->loadProgressBarTexture("image/screen/battle/hp.png");
 	//_hpSlider->setContentSize(Size(372, 12));
-	_mainCharacterHpBar->setPosition(Vec2(topMenu->getContentSize().width / 2 + 25, _fakeVisibleSize.height - 22));
+	_mainCharacterHpBar->setPosition(Vec2(topMenu->getContentSize().width / 2 + 25, _visibleSize.height - 22));
 	addChild(_mainCharacterHpBar);
 
 	_hpViewLabel = Label::createWithSystemFont(DataUtils::numberToString(_allAlliedUnitData[0].hp), "", 20);
@@ -511,13 +521,13 @@ void BattleScene::createContent()
 	_menuButton = Button::create();
 	_menuButton->loadTextureNormal("image/screen/battle/menu_btn.png");
 	_menuButton->addTouchEventListener(CC_CALLBACK_2(BattleScene::menuButtonCallback, this));
-	_menuButton->setPosition(Vec2(_menuButton->getContentSize().width / 2 + 10, _fakeVisibleSize.height - topMenu->getContentSize().height));
+	_menuButton->setPosition(Vec2(_menuButton->getContentSize().width / 2 + 10, _visibleSize.height - topMenu->getContentSize().height));
 	_menuButton->setAnchorPoint(Vec2::ANCHOR_MIDDLE_TOP);
 	addChild(_menuButton);
 
 	Sprite *timeViewContainer = Sprite::create("image/screen/battle/time_parts.png");
 	timeViewContainer->setAnchorPoint(Vec2::ANCHOR_TOP_RIGHT);
-	timeViewContainer->setPosition(Vec2(_fakeVisibleSize.width - baseMargin, _fakeVisibleSize.height - baseMargin));
+	timeViewContainer->setPosition(Vec2(_visibleSize.width - baseMargin, _visibleSize.height - baseMargin));
 	addChild(timeViewContainer);
 
 	_miniMap = Sprite::create("image/screen/battle/map.png");
@@ -556,7 +566,7 @@ void BattleScene::createContent()
 	Size baseSize = _skill1Button->getContentSize();
 	_skill1Button->setTag(TAG_SKILL_1);
 	_skill1Button->setSwallowTouches(true);
-	_skill1Button->setPosition(Vec2(_fakeVisibleSize.width / 2 - 1.5 * baseSize.width - 20, baseSize.height / 2 + baseMargin));
+	_skill1Button->setPosition(Vec2(_visibleSize.width / 2 - 1.5 * baseSize.width - 20, baseSize.height / 2 + baseMargin));
 	addChild(_skill1Button);
 	displaySkillMpInButton(_skill1Button, _mainCharacterSkillData[0].mp_cost);
 
@@ -565,7 +575,7 @@ void BattleScene::createContent()
 	_skill2Button->addTouchEventListener(CC_CALLBACK_2(BattleScene::skill1ButtonCallback, this));
 	_skill2Button->setTag(TAG_SKILL_2);
 	_skill2Button->setSwallowTouches(true);
-	_skill2Button->setPosition(Vec2(_fakeVisibleSize.width / 2 - 0.5 *baseSize.width - 10, baseSize.height / 2 + baseMargin));
+	_skill2Button->setPosition(Vec2(_visibleSize.width / 2 - 0.5 *baseSize.width - 10, baseSize.height / 2 + baseMargin));
 	addChild(_skill2Button);
 	displaySkillMpInButton(_skill2Button, _mainCharacterSkillData[1].mp_cost);
 
@@ -574,7 +584,7 @@ void BattleScene::createContent()
 	_skill3Button->addTouchEventListener(CC_CALLBACK_2(BattleScene::skill1ButtonCallback, this));
 	_skill3Button->setTag(TAG_SKILL_3);
 	_skill3Button->setSwallowTouches(true);
-	_skill3Button->setPosition(Vec2(_fakeVisibleSize.width / 2 + 0.5*baseSize.width + 10, baseSize.height / 2 + baseMargin));
+	_skill3Button->setPosition(Vec2(_visibleSize.width / 2 + 0.5*baseSize.width + 10, baseSize.height / 2 + baseMargin));
 	addChild(_skill3Button);
 	displaySkillMpInButton(_skill3Button, _playerSkills[0].mp_cost);
 
@@ -583,7 +593,7 @@ void BattleScene::createContent()
 	_skill4Button->addTouchEventListener(CC_CALLBACK_2(BattleScene::skill1ButtonCallback, this));
 	_skill4Button->setTag(TAG_SKILL_4);
 	_skill4Button->setSwallowTouches(true);
-	_skill4Button->setPosition(Vec2(_fakeVisibleSize.width / 2 + 1.5 * baseSize.width + 20, baseSize.height / 2 + baseMargin));
+	_skill4Button->setPosition(Vec2(_visibleSize.width / 2 + 1.5 * baseSize.width + 20, baseSize.height / 2 + baseMargin));
 	addChild(_skill4Button);
 	displaySkillMpInButton(_skill4Button, _playerSkills[1].mp_cost);
 
@@ -592,7 +602,7 @@ void BattleScene::createContent()
 	//_manaSlider->loadSlidBallTextureNormal("image/screen/battle/test.png");
 	_mainCharacterMpBar->loadProgressBarTexture("image/screen/battle/mp.png");
 	_mainCharacterMpBar->setPercent(100);
-	_mainCharacterMpBar->setPosition(Vec2(_fakeVisibleSize.width / 2, baseSize.height + baseMargin * 2));
+	_mainCharacterMpBar->setPosition(Vec2(_visibleSize.width / 2, baseSize.height + baseMargin * 2));
 	addChild(_mainCharacterMpBar);
 
 	_mpViewlabel = Label::createWithSystemFont(DataUtils::numberToString(_allAlliedUnitData[0].mp), "", 20);
@@ -707,7 +717,7 @@ void BattleScene::createContent()
 		_alliedStatusImagePath.push_back(tmp1);
 	}
 	/*_testAttackTarget = Sprite::create("image/unit_new/move/red/unit_00_02_2.png");
-	_testAttackTarget->setPosition(_fakeVisibleSize);
+	_testAttackTarget->setPosition(_visibleSize);
 	_testAttackTarget->setScale(IMAGE_SCALE);
 	_battleBackround->addChild(_testAttackTarget);*/
 
@@ -738,8 +748,8 @@ void BattleScene::createContent()
 		
 		_enemyStatusImagePath.push_back(tmp1);
 		
-// 		float positionXScaleRate = _miniMap->getContentSize().width / (_fakeVisibleSize.width * 2);
-// 		float positionYScaleRate = _miniMap->getContentSize().height / (_fakeVisibleSize.height * 2);
+// 		float positionXScaleRate = _miniMap->getContentSize().width / (_visibleSize.width * 2);
+// 		float positionYScaleRate = _miniMap->getContentSize().height / (_visibleSize.height * 2);
 		enemyIcon1->setPosition(Vec2(blueTower->getPositionX()*positionXScaleRate, blueTower->getPositionY()*positionYScaleRate));
 		_allEnemyIconInMinimap.push_back(enemyIcon1);
 		node->addChild(_allEnemyIconInMinimap.back(), 1);
@@ -852,7 +862,7 @@ void BattleScene::createContent()
 
 				string sv_uuid = doc["user_unit"][rapidjson::SizeType(i)]["uuid"].GetString();
 				if (strcmp(sv_uuid.c_str(), uuid.c_str()) == 0) {
-					log("this is my unit");
+					//log("this is my unit");
 					continue;
 				}
 				int teamId = UserModel::getInstance()->getUserInfo().team_id;
@@ -916,7 +926,7 @@ void BattleScene::createContent()
 	});*/
 	/*Unit move event public event*/
 	sv->on("unit_move_end", [&](SIOClient* client, const string& data) {
-		log("Unit_move_end data: %s", data.c_str());
+		//log("Unit_move_end data: %s", data.c_str());
 		/*check for battle scene ondestruct called*/
 		if (_onDestructCalled) return;
 		//testSprite->getPhysicsBody()->setVelocity(Vec2::ZERO);
@@ -1400,6 +1410,9 @@ void BattleScene::checkForAutoAttack()
 					_onDelayAttackFlg = true;
 					testObject->getPhysicsBody()->setVelocity(Vec2::ZERO);
 					testObject->stopMoveAction();
+					if (_moveMode == MOVE_CIRCLE) {
+						_miniUnit->stopMoveAction();
+					}
 					BattleAPI::getInstance()->sendAttackEvent(direc,_allAlliedUnitData[0], _allEnemyUnitData[i], [&, i, direc](SIOClient *client, const string data)
 					{
 						if (_onDestructCalled) return;
@@ -1450,7 +1463,7 @@ void BattleScene::checkForAutoAttack()
 	}
 
 	//check for run fountain restore action. Now is only main character
-	/*if( (testObject->getPosition()-Vec2(_fakeVisibleSize.width,0)).length() < 150)
+	/*if( (testObject->getPosition()-Vec2(_visibleSize.width,0)).length() < 150)
 	{
 		fountainRestoreEffect();
 	}
@@ -1525,7 +1538,7 @@ void BattleScene::characterAttackCallback(int  i, int dame)
 
 		_allEnemyUnitData[i].hp -= dame;
 		//save dame deal info to battle result
-		saveDameInfo(dame, 0, i, _currentPlayerTeamFlg);
+		//saveDameInfo(dame, 0, i, _currentPlayerTeamFlg);
 
 		//TODO
 		sendDameDeal(dame, i, nullptr);
@@ -1552,7 +1565,7 @@ void BattleScene::oneSecondAttackCallback()
 
 void BattleScene::unitDieAction(Sprite* unitSprite, vector<UserUnitInfo>* processUnitList, int index)
 {
-	unitSprite->stopAllActions();
+	//unitSprite->stopAllActions();
 	while (unitSprite->getChildByTag(BUFF_STATUS_TAG) != nullptr)
 	{
 		unitSprite->removeChildByTag(BUFF_STATUS_TAG);
@@ -1578,8 +1591,7 @@ void BattleScene::unitRespwanAction(Ref* pSender, Sprite* unitSprite, vector<Use
 
 void BattleScene::enemyDieAction(int id)
 {
-	
-	_allEnemyUnitSprite[id]->stopAllActions();
+	//_allEnemyUnitSprite[id]->stopAllActions();
 	while (_allEnemyUnitSprite[id]->getChildByTag(BUFF_STATUS_TAG) != nullptr)
 	{
 		_allEnemyUnitSprite[id]->removeChildByTag(BUFF_STATUS_TAG);
@@ -1590,19 +1602,20 @@ void BattleScene::enemyDieAction(int id)
 	_allEnemyIconInMinimap[id]->setVisible(false);
 	saveKillDeadInfo(0, id, _currentPlayerTeamFlg);
 	/*SEND SKILLDEAD DATA TO SERVER*/
-	string uu = UserModel::getInstance()->getUuId().c_str();
-	sendKillDead(uu.c_str(), _allEnemyUnitData[id].uuid, nullptr);
+	/*string uu = UserModel::getInstance()->getUuId().c_str();
+	sendKillDead(uu.c_str(), _allEnemyUnitData[id].uuid, nullptr);*/
 	_indexOfBeAttackEnemy = -1;
 	testObject->stopActionByTag(_currentAttackActionTag);
 	/*if (id == _allEnemyUnitData.size() - 1) {
 		endBattle();
 	}*/
 	enemyRespawAction(id);
-	_enemyTeamTotalDead += 1;
+	/* now it will checked on server. Not client*/
+	/*_enemyTeamTotalDead += 1;
 	if (_enemyTeamTotalDead == 5)
 	{
 		endBattle(_currentPlayerTeamFlg);
-	}
+	}*/
 }
 void BattleScene::enemyAttackCallback(Ref *pSEnder, int i)
 {
@@ -1718,7 +1731,7 @@ void BattleScene::runRespawnAction(string killerUuid)
 			auto unitData = BattleModel::getInstance()->getUnitInforByUuid(UserModel::getInstance()->getUuId());
 			testObject->setPosition(Vec2(unitData.position_x, unitData.position_y));
 			testObject->rotateCharacter(unitData.direction);
-			//testObject->setPosition(Vec2(_fakeVisibleSize.width, 100)); //need to change to value base on callback from server
+			//testObject->setPosition(Vec2(_visibleSize.width, 100)); //need to change to value base on callback from server
 			testObject->setVisible(true);
 			auto follow = Follow::create(testObject);
 			follow->setTag(121);
@@ -2018,7 +2031,7 @@ void BattleScene::onTouchEnded(Touch *touch, Event *unused_event)
 			testObject->setMoveMode(1);
 			testObject->stopMoveAction();
 			testObject->getPhysicsBody()->setVelocity(Vec2::ZERO);
-			auto distanVector = touch->getLocation() - Vec2(_fakeVisibleSize / 2);
+			auto distanVector = touch->getLocation() - Vec2(_visibleSize / 2);
 			/*test*/
 			//auto vec = AStarPathFindingAlgorithm(testObject->getPosition(), testObject->getPosition() + distanVector);
 			float time = distanVector.length() / _allAlliedUnitData[0].move_speed;
@@ -2035,9 +2048,14 @@ void BattleScene::onTouchEnded(Touch *touch, Event *unused_event)
 			testObject->stopActionByTag(919);
 			testObject->runAction(moveAction);*/
 			testObject->getPhysicsBody()->setVelocity(Vec2::ZERO);
-			Vec2 force = Vec2(250 * cos(distanVector.getAngle()), 250 * sin(distanVector.getAngle()));
+			/*Move by Apply Force*/
+			//Vec2 force = Vec2(250 * cos(distanVector.getAngle()), 250 * sin(distanVector.getAngle()));
 
-			testObject->getPhysicsBody()->applyImpulse(force * 7000);
+			//testObject->getPhysicsBody()->applyImpulse(force * 7000);
+			/*Move by Veloc vector. Same with force*/
+			Vec2 force = Vec2(_allAlliedUnitData[0].move_speed * SPEED_MULTIPLE * cos(distanVector.getAngle()), _allAlliedUnitData[0].move_speed * SPEED_MULTIPLE * sin(distanVector.getAngle()));
+			testObject->getPhysicsBody()->setVelocity(force);
+			
 			return;
 
 		}
@@ -2046,7 +2064,7 @@ void BattleScene::onTouchEnded(Touch *touch, Event *unused_event)
 		{
 			if (_miniCircle->getBoundingBox().containsPoint(touch->getLocation())) {
 
-				log("Day la oneTap circle");
+				//log("Day la oneTap circle");
 				testObject->setMoveMode(5);
 				_miniUnit->setMoveMode(5);
 
@@ -2198,7 +2216,7 @@ void BattleScene::createRandomRock()
 		sp->setTag(2);
 		sp->setPosition(Vec2(random(0.1f, 0.9f)*_myMap->getContentSize().width,random(0.1f,0.9f)*_myMap->getContentSize().height));
 		_allStone.push_back(sp);
-		_battleBackround->addChild(_allStone.back(),ceil(_fakeVisibleSize.height * 3 - sp->getPositionY()));
+		_battleBackround->addChild(_allStone.back(),ceil(_visibleSize.height * 3 - sp->getPositionY()));
 	}
 	for (int i = 1; i < 6; i++)
 	{
@@ -2214,7 +2232,7 @@ void BattleScene::createRandomRock()
 		tree->setTag(1);
 		tree->setPosition(Vec2(random(0.1f, 0.9f)*_myMap->getContentSize().width, random(0.1f, 0.9f)*_myMap->getContentSize().height));
 		_allStone.push_back(tree);
-		_battleBackround->addChild(_allStone.back(),ceil(_fakeVisibleSize.height*3 - tree->getPositionY()));
+		_battleBackround->addChild(_allStone.back(),ceil(_visibleSize.height*3 - tree->getPositionY()));
 	}
 }
 
@@ -2287,9 +2305,17 @@ void BattleScene::contactWithWall()
 	int direc = detectDirectionBaseOnTouchAngle(-veloc.getAngle() * RAD_DEG+90);
 	_mainCharacterIconInMiniMap->setRotation(-veloc.getAngle() * RAD_DEG + 90);
 	testObject->stopMoveAction();
+	if (_moveMode == MOVE_CIRCLE)
+	{
+		_miniUnit->stopMoveAction();
+	}
 	if (veloc.length() > 50)
 	{
 		testObject->actionMoveCharacter(direc);
+		if (_moveMode == MOVE_CIRCLE)
+		{
+			_miniUnit->actionMoveCharacter(direc);
+		}
 	}
 }
 
@@ -3577,8 +3603,11 @@ void BattleScene::poisonEffectAction(Sprite* object, UserSkillInfo skill, vector
 		int dame = ceil(1.0f*UserUnitModel::getInstance()->getUnitInfoById(unitList->at(index).mst_unit_id).hp * 0.05f);
 
 
-		auto psAction = Sequence::create(CallFuncN::create([&, index, dame, targetSprite, unitList, casterUuid](Ref *p) {
+		auto psAction = Sequence::create(CallFuncN::create([&,object, index, dame, targetSprite, unitList, casterUuid](Ref *p) {
 			showAttackDame(dame, targetSprite[index]->getPosition() + Vec2(0, 100), 1);
+			if (object == testObject) {
+				sendDameDeal(dame, index, nullptr);
+			}
 			unitList->at(index).hp -= dame;
 			updateSlider();
 			if (unitList->at(index).hp <= 0) {
@@ -4038,12 +4067,12 @@ bool BattleScene::isWallAtTileCoord(Vec2 &titleCoord)
 	}
 	//check EnemyRestoreArea
 	if (_currentPlayerTeamFlg == TEAM_FLG_BLUE){
-		if (Rect(_fakeVisibleSize.width - 100, _fakeVisibleSize.height * 2 - 150, 200, 150).containsPoint(point)) {
+		if (Rect(_visibleSize.width - 100, _visibleSize.height * 2 - 150, 200, 150).containsPoint(point)) {
 			return true;
 		}
 	}
 	else {
-		if (Rect(_fakeVisibleSize.width - 100, 0, 200, 150).containsPoint(point)) {
+		if (Rect(_visibleSize.width - 100, 0, 200, 150).containsPoint(point)) {
 			return true;
 		}
 	}
@@ -4249,8 +4278,8 @@ Sprite* BattleScene::createMiniMoveCircle() {
 	float x = float(diameter / miniCircle->getContentSize().height);
 
 	// Do co kich thuoc cua thiet bi voi man hinh hien thi
-	float scaleRateX = Director::getInstance()->getOpenGLView()->getFrameSize().width / _fakeVisibleSize.width;
-	float scaleRateY = Director::getInstance()->getOpenGLView()->getFrameSize().height / _fakeVisibleSize.height;
+	float scaleRateX = Director::getInstance()->getOpenGLView()->getFrameSize().width / _visibleSize.width;
+	float scaleRateY = Director::getInstance()->getOpenGLView()->getFrameSize().height / _visibleSize.height;
 
 	miniCircle->setScale(x * (1 / scaleRateY));
 	miniCircle->setScaleX(x * (1 / scaleRateX));
@@ -4264,8 +4293,8 @@ void BattleScene::createMiniControlUnit(int circleType) {
 	Size visibleSize = Director::getInstance()->getVisibleSize();
 	float diameter = Director::getInstance()->getOpenGLView()->getFrameSize().height * MINU_CIRCLE_SCALE;
 	float x = float(diameter / _miniCircle->getContentSize().height);
-	float scaleRateX = Director::getInstance()->getOpenGLView()->getFrameSize().width / _fakeVisibleSize.width;
-	float scaleRateY = Director::getInstance()->getOpenGLView()->getFrameSize().height / _fakeVisibleSize.height;
+	float scaleRateX = Director::getInstance()->getOpenGLView()->getFrameSize().width / _visibleSize.width;
+	float scaleRateY = Director::getInstance()->getOpenGLView()->getFrameSize().height / _visibleSize.height;
 
 	circleX = _miniCircle->getContentSize().width * x * (1 / scaleRateX),
 		circleY = _miniCircle->getContentSize().height * x * (1 / scaleRateY);
@@ -4303,13 +4332,14 @@ void BattleScene::createMiniControlUnit(int circleType) {
 
 void BattleScene::rt_attackAnimationandLogic(Document& doc, vector<Sprite*> processUnitSprite, vector<UserUnitInfo>* processUnitData, vector<Sprite*> targetSpriteList, vector<UserUnitInfo>* targetDataList)
 {
+	log(">>>>RT_ATTACK =================================================");
 	for (int i = 0; i < processUnitData->size(); i++)
 	{
 		/*Battle can have several atacker at the same time
 		 * But this function was called for only one player
 		 */
 		if (strcmp(processUnitData->at(i).uuid.c_str(), doc["uuid"].GetString()) == 0) {
-			log("****ATTACKER****");
+			log("**** ATTACKER FOUND ****");
 			Character* cha = (Character*)processUnitSprite[i];
 			//bellow code for detect be attacked unit and sync data:
 			Sprite* target;
@@ -4317,41 +4347,46 @@ void BattleScene::rt_attackAnimationandLogic(Document& doc, vector<Sprite*> proc
 			for (int j = 0; j < targetDataList->size(); j++)
 			{
 				if (strcmp(doc["target"]["uuid"].GetString(), targetDataList->at(j).uuid.c_str()) == 0) {
-					log("****TARGET****");
+					log("**** TARGET FOUND ****");
 					target = targetSpriteList[j];
 					targetDataList->at(j).hp = doc["target"]["hp"].GetInt(); //sync unit HP
 					saveTargetIndex = j;
-					log("updated");
+
+					int dame = doc["dame"].GetInt();
+					if (dame <= 0) {
+						dame = 1;
+					}
+					log("attack dame: %d", dame);
+
+					cha->attackActionByUnitPosition(doc["direction"].GetInt(), doc["user_unit"]["attack_speed"].GetInt(), nullptr, [&, i, target, dame, saveTargetIndex, targetDataList]() {
+						if (target == testObject)
+						{
+							showAttackDame(dame, target->getPosition() + Vec2(0, 100), 1);
+							_allAlliedUnitData[0].hp -= dame;
+							updateHpAndMpViewLabel();
+							saveDameInfo(dame, i, 0, _currentEnemyTeamFlg);
+							if (_allAlliedUnitData[0].hp <= 0) {
+								runRespawnAction(_allEnemyUnitData[i].uuid.c_str());
+							}
+						}
+						else {
+							//processUnitData->at(saveTargetIndex).hp -= dame;
+							if (targetDataList->at(saveTargetIndex).hp <= 0) {
+								unitDieAction(target, targetDataList, saveTargetIndex);
+							}
+							//Unit dead process
+						}
+						updateSlider();
+						log(">>>>RT ATTACK END===========================================");
+					});
 					break;
 				}
 			}
-			int dame = doc["dame"].GetInt();
-			if (dame <= 0) {
-				dame = 1;
-			}
-			cha->attackActionByUnitPosition(doc["direction"].GetInt(), doc["user_unit"]["attack_speed"].GetInt(), nullptr, [&, i, target,dame, saveTargetIndex, targetDataList]() {	
-				if (target == testObject)
-				{
-					showAttackDame(dame, target->getPosition() + Vec2(0, 100), 1);
-					_allAlliedUnitData[0].hp -= dame;
-					updateHpAndMpViewLabel();
-					saveDameInfo(dame, i, 0, _currentEnemyTeamFlg);
-					if (_allAlliedUnitData[0].hp <= 0) {
-						runRespawnAction(_allEnemyUnitData[i].uuid.c_str());
-					}
-				}
-				else {
-					//processUnitData->at(saveTargetIndex).hp -= dame;
-					if (targetDataList->at(saveTargetIndex).hp <= 0) {
-						unitDieAction(target, targetDataList, saveTargetIndex);
-					}
-					//Unit dead process
-				}
-				updateSlider();
-			});
+			log("Attack end");
 			return;
 		}
 	}
+	log("ERROR: RT ATTACKER NOT FOUND");
 }
 
 

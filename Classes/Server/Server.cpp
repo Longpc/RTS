@@ -99,8 +99,8 @@ void NodeServer::onConnect(SIOClient* client)
 
 void NodeServer::onMessage(SIOClient* client, const std::string& data)
 {
-	log("----->onMessage");
-	log("%s", data.c_str());
+	//log("----->onMessage");
+	//log("%s", data.c_str());
 }
 
 void NodeServer::onClose(SIOClient* client)

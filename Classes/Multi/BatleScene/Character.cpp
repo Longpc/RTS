@@ -93,15 +93,15 @@ void Character::moveActionByVector(Vec2 destination)
 	case 5: // MOVE_CIRCLE_ONETAP	
 		
 		this->stopActionByTag(101);
-		auto actionOneTap = Sequence::create(DelayTime::create(this->getMoveOneTapTime()), CallFuncN::create([&](Ref* pSender){
+		/*auto actionOneTap = Sequence::create(DelayTime::create(this->getMoveOneTapTime()), CallFuncN::create([&](Ref* pSender){
 			this->stopMoveAction();
 			this->getPhysicsBody()->setVelocity(Vec2::ZERO);
 		}), nullptr);
 		actionOneTap->setTag(101);
-		this->runAction(actionOneTap);
+		this->runAction(actionOneTap);*/
 		if (this->getPhysicsBody() != nullptr)
 		{
-			this->getPhysicsBody()->setVelocity(Vect(this->getCharacterMoveSpeed() * cos(destination.getAngle()), this->getCharacterMoveSpeed() * sin(destination.getAngle())));
+			this->getPhysicsBody()->setVelocity(Vect(this->getCharacterMoveSpeed()*SPEED_MULTIPLE * cos(destination.getAngle()), this->getCharacterMoveSpeed()*SPEED_MULTIPLE * sin(destination.getAngle())));
 		}
 		actionMoveCharacter(direct);
 
@@ -130,6 +130,9 @@ void Character::attackActionByUnitPosition(int direction , int attackTime, Attac
 			}
 
 		}),nullptr), nullptr));
+	}
+	else {
+		log("Unit on delay attack");
 	}
 }
 

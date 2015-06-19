@@ -218,7 +218,33 @@ void SkillSelectScene::onBackButtonClick(Ref *pSender)
 {
 	if (_onTouchDisable) return;
 	int pageFlg = UserDefault::getInstance()->getIntegerForKey("MODE");
-	Director::getInstance()->replaceScene(TransitionMoveInL::create(SCREEN_TRANSI_DELAY, MultiUnitSelectScene::createScene(1,pageFlg)));
+	if (pageFlg == MULTI_MODE) {
+		/*Send event to delete selected unit data*/
+		auto a = UserModel::getInstance()->getUserInfo();
+		Document doc;
+		doc.SetObject();
+		Document::AllocatorType& allo = doc.GetAllocator();
+
+		doc.AddMember("room_id", a.room_id, allo);
+		doc.AddMember("team_id", a.team_id, allo);
+		doc.AddMember("user_id", a.user_id, allo);
+		doc.AddMember("unit_id", _selectedUnitId, allo);
+		string uu = UserModel::getInstance()->getUuId().c_str();
+		doc.AddMember("uuid", uu.c_str(), allo);
+
+		StringBuffer buff;
+		Writer<StringBuffer> wt(buff);
+		doc.Accept(wt);
+
+		auto client = NodeServer::getInstance()->getClient();
+		client->emit("re_select_unit", buff.GetString());
+		client->on("re_select_unit_end", [&, pageFlg](SIOClient * client, const string data) {
+			Director::getInstance()->replaceScene(TransitionMoveInL::create(SCREEN_TRANSI_DELAY, MultiUnitSelectScene::createScene(1, pageFlg)));
+		});
+	}
+
+
+	
 }
 
 void SkillSelectScene::decideCallBack(Ref *pSender, Widget::TouchEventType type)
@@ -229,6 +255,7 @@ void SkillSelectScene::decideCallBack(Ref *pSender, Widget::TouchEventType type)
 	{
 		onSelectUnit(_onSelectSkillTag);
 		_onTouchDisable = false;
+		_isSentRequest = false;
 		break;
 	}
 	case cocos2d::ui::Widget::TouchEventType::MOVED:
