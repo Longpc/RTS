@@ -127,12 +127,12 @@ bool BattleScene::init()
 	physicDebug->addTouchEventListener(CC_CALLBACK_2(BattleScene::debugPhysicButtonCallback, this));
 	addChild(physicDebug, 10);
 
-	auto changeImage = Button::create();
-	changeImage->loadTextureNormal("CloseNormal.png");
-	changeImage->setPosition(Vec2(_visibleSize.width - 150, 70));
-	changeImage->setTouchEnabled(true);
-	changeImage->addTouchEventListener(CC_CALLBACK_2(BattleScene::changeImageButtonCallback, this));
-	addChild(changeImage, 10);
+	auto checkMaptest = Button::create();
+	checkMaptest->loadTextureNormal("CloseNormal.png");
+	checkMaptest->setPosition(Vec2(_visibleSize.width - 150, 70));
+	checkMaptest->setTouchEnabled(true);
+	checkMaptest->addTouchEventListener(CC_CALLBACK_2(BattleScene::checkMapTestButtonClick, this));
+	addChild(checkMaptest, 10);
 
 	createContent();
 
@@ -2427,7 +2427,7 @@ void BattleScene::debugPhysicButtonCallback(Ref *pSEnder, Widget::TouchEventType
 	}
 }
 
-void BattleScene::changeImageButtonCallback(Ref *pSender, Widget::TouchEventType type)
+void BattleScene::checkMapTestButtonClick(Ref *pSender, Widget::TouchEventType type)
 {
 	switch (type)
 	{
@@ -2438,13 +2438,11 @@ void BattleScene::changeImageButtonCallback(Ref *pSender, Widget::TouchEventType
 	case cocos2d::ui::Widget::TouchEventType::ENDED:
 	{
 		//changeAnimationImagePathByUnitId();
-		if (Director::getInstance()->isPaused())
-		{
-			Director::getInstance()->resume();
-		}
-		else {
-			Director::getInstance()->pause();
-			//TODO FIX PARAM DATA
+		if (_isCheckMapCallback) {
+			_isCheckMapCallback = false;
+			BattleAPI::getInstance()->sendCheckMapEvent([&](SIOClient *client, const string data) {
+				_isCheckMapCallback = true;
+			});
 		}
 		break;
 	}
@@ -2464,7 +2462,11 @@ void BattleScene::nextButtonCallback(Ref *pSender, Widget::TouchEventType type)
 		break;
 	case cocos2d::ui::Widget::TouchEventType::ENDED:
 	{
-		endBattle(_currentPlayerTeamFlg);
+		if (!_touchEndButton)
+		{
+			_touchEndButton = true;
+			endBattle(_currentPlayerTeamFlg);
+		}
 		break;
 	}
 	case cocos2d::ui::Widget::TouchEventType::CANCELED:

@@ -266,12 +266,15 @@ private:
 	virtual void contactWithTower();
 
 	///BUTTON CALLBACK///
+	bool _touchEndButton = false;
 	virtual void nextButtonCallback(Ref *pSender, Widget::TouchEventType type);
 	virtual void menuButtonCallback(Ref *pSender, Widget::TouchEventType type);
 	virtual void skill1ButtonCallback(Ref *pSender, Widget::TouchEventType type);
 
 	virtual void debugPhysicButtonCallback(Ref *pSEnder, Widget::TouchEventType type);
-	virtual void changeImageButtonCallback(Ref *pSender, Widget::TouchEventType type);
+	
+	bool _isCheckMapCallback = true;
+	virtual void checkMapTestButtonClick(Ref *pSender, Widget::TouchEventType type);
 
 	///MAIN TOUCH EVENT///
 	virtual bool onTouchBegan(Touch *touch, Event *unused_event);

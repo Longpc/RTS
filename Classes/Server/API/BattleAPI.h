@@ -52,6 +52,8 @@ public:
 
 	void sendTestMoveLogic(Vec2 titleCordPost);
 
+	void sendCheckMapEvent(SocketIOCallback callback);
+
 
 	bool init();
 private:

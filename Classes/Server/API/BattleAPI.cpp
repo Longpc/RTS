@@ -394,6 +394,17 @@ void BattleAPI::sendTestMoveLogic(Vec2 titleCordPost)
 
 }
 
+void BattleAPI::sendCheckMapEvent(SocketIOCallback callBack)
+{
+	auto sv = NodeServer::getInstance()->getClient();
+
+	if (sv == nullptr) {
+		return;
+	}
+	sv->emit("check_map", "test");
+	sv->on("check_map_end", callBack);
+}
+
 
 Document::GenericValue* BattleAPI::convertUnitDataToJsonObject(UserUnitInfo unitData, Document::AllocatorType& allo)
 {
@@ -442,6 +453,7 @@ Document::GenericValue* BattleAPI::convertSkillDataToJsonObject(UserSkillInfo sk
 
 	return skillDataValue;
 }
+
 
 
 
