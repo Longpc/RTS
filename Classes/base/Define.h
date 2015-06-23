@@ -148,6 +148,9 @@ struct UserBattleInfo
 #define TEAM_FLG_RED 2
 #define TEAM_FLG_BLUE 1
 
+#define ANIMETE_DELAY 0.25f
+#define ATTACK_ANIMATION_DELAY 1
+
 enum SKILL_HELP_TYPE
 {
 	HP = 1,

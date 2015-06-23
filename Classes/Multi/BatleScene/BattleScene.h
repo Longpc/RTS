@@ -23,11 +23,11 @@
 #include <string.h>
 
 #include "Server/API/BattleAPI.h"
+#include "Tower.h"
 
 #define MOVE_SPEED 250
 #define IMAGE_SCALE 0.6f
-#define ANIMETE_DELAY 0.25f
-#define ATTACK_ANIMATION_DELAY 1
+
 
 #define LOW 1
 #define MID 2
@@ -221,6 +221,10 @@ private:
 	TMXLayer* _mapLayer;
 	Sprite* _oldTitle = nullptr;
 
+	/*Test neutral tower*/
+	vector<Tower*> _neutralTowerList;
+
+
 	/************************************************************************/
 	/* FUNCTIONS                                                            */
 	/************************************************************************/
@@ -312,6 +316,10 @@ private:
 	virtual void characterAttackCallback(int i, int dame);
 	/*This function will ve called when attack delay 1s ended*/
 	virtual void oneSecondAttackCallback();
+	
+	/*This function was defined for main character attack neutral tower callback*/
+	
+	virtual void neutralTowerAttackCallback(int towerIndex);
 	/*This function will be called when enemy (as pSender) attack animation was finished*/
 	virtual void enemyAttackCallback(Ref *pSEnder, int index);
 	
@@ -357,6 +365,10 @@ private:
 	float _checkTime = 0; //for test Battle sync
 
 	void testMoveLogic();
+	/*return true if title near neutral tower and cannot get*/
+	virtual bool checkTitleNearTower(Vec2 titleCoor);
+	/*Change tower nearly title color with tower title*/
+	virtual void changeNeutralTowerNearTitle(int towerIndex, int type);
 
 	//TODO
 	///FAKE  Z Order///
@@ -496,7 +508,7 @@ private:
 	virtual int findIndexOfString(vector<string> v, string element);
 
 	/*get the tilecoord( title index in the titled map) by the title position*/
-	virtual Vec2 getTitlePosForPosition(Vec2 location);
+	virtual Vec2 getTitleCoorForPosition(Vec2 location);
 	
 	/*get the position of the title cell*/
 	virtual Vec2 getPositionForTitleCoord(Vec2 titleCoord);

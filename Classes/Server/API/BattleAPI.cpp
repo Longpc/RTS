@@ -79,7 +79,7 @@ void BattleAPI::sendMoveEndEvent(UserUnitInfo unitdata)
 	doc.Accept(writer);
 
 	a->emit("move_end", buffer.GetString());
-	log("Move End data: %s", buffer.GetString());
+	//log("Move End data: %s", buffer.GetString());
 	a->on("move_end_end", [&](SIOClient* client, const std::string& data)
 	{
 		log("move end callback: %s", data.c_str());
@@ -176,7 +176,7 @@ void BattleAPI::sendDameDealEvent(int dame, string targetUuid, SocketIOCallback 
 
 }
 
-void BattleAPI::sendKillDeadEvent(string killerUuid, string targetUnit, SocketIOCallback callback)
+void BattleAPI::sendKillEvent(string killerUuid, string targetUnit, SocketIOCallback callback)
 {
 	auto sv = NodeServer::getInstance()->getClient();
 	if (sv == nullptr) return;
@@ -201,7 +201,7 @@ void BattleAPI::sendKillDeadEvent(string killerUuid, string targetUnit, SocketIO
 	doc.Accept(writer);
 
 	log("Send kill event data : %s", buffer.GetString());
-	sv->emit("kill_dead", buffer.GetString());
+	sv->emit("kill_unit", buffer.GetString());
 }
 
 
@@ -405,6 +405,35 @@ void BattleAPI::sendCheckMapEvent(SocketIOCallback callBack)
 	sv->on("check_map_end", callBack);
 }
 
+void BattleAPI::sendNeutralTowerAttackEvent(int teamID, int towerIndex, int direc, SocketIOCallback callBack)
+{
+	auto userData = UserModel::getInstance()->getUserInfo();
+
+	Document doc;
+	doc.SetObject();
+	Document::AllocatorType& allo = doc.GetAllocator();
+
+	string uu = UserModel::getInstance()->getUuId().c_str();
+	doc.AddMember("uuid", uu.c_str(), allo);
+	doc.AddMember("team_id", teamID, allo);
+	doc.AddMember("user_id", userData.user_id, allo);
+	doc.AddMember("direc", direc, allo);
+	doc.AddMember("index", towerIndex, allo);
+
+	StringBuffer  buffer;
+	Writer<StringBuffer> writer(buffer);
+	doc.Accept(writer);
+	log("Neutral attack send data: %s", buffer.GetString());
+	auto sv = NodeServer::getInstance()->getClient();
+
+	if (sv == nullptr) {
+		return;
+	}
+	sv->emit("attack_neutral_tower", buffer.GetString());
+	sv->on("attack_neutral_tower_end", callBack);
+}
+
+
 
 Document::GenericValue* BattleAPI::convertUnitDataToJsonObject(UserUnitInfo unitData, Document::AllocatorType& allo)
 {
@@ -426,7 +455,7 @@ Document::GenericValue* BattleAPI::convertUnitDataToJsonObject(UserUnitInfo unit
 	//log("uuid: %s", unitData.uuid.c_str());
 	string uu = unitData.uuid.c_str();
 	rapidjson::Value str(kStringType);
-	log("UUID: %s", uu.c_str());
+	//log("UUID: %s", uu.c_str());
 	str.SetString(uu.c_str(),allo);
 	unitDataValue->AddMember("uuid", str.GetString(), allo);
 
@@ -453,6 +482,7 @@ Document::GenericValue* BattleAPI::convertSkillDataToJsonObject(UserSkillInfo sk
 
 	return skillDataValue;
 }
+
 
 
 

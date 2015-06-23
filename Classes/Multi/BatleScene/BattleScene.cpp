@@ -330,6 +330,23 @@ void BattleScene::createContent()
 	wall8->setPosition(Vec2(_myMap->getContentSize().width * 4 / 5, wall8->getBoundingBox().size.height / 2));
 	_battleBackround->addChild(wall8);
 
+	/*Create test neutral tower*/
+	for (int i = 1; i < 6; i ++)
+	{
+		auto neutralTower1 = Tower::createTower(0);
+		_neutralTowerList.push_back(neutralTower1);
+		neutralTower1->setName("NEUTRAL");
+		if (i == 5) {
+			neutralTower1->setPosition(_myMap->getBoundingBox().size / 2);
+		}
+		else {
+			neutralTower1->setPosition(Vec2((1 + ((i - 1) % 2))*_myMap->getBoundingBox().size.width / 3, _myMap->getBoundingBox().size.height *((i/3)*4+1) / 6));
+		}
+		_battleBackround->addChild(neutralTower1);
+		auto posCoor = getTitleCoorForPosition(neutralTower1->getPosition());
+		log("Tower %d in pos: %f, %f", i, posCoor.x, posCoor.y);
+	}
+	
 
 
 	createPhysicBolder();
@@ -361,7 +378,7 @@ void BattleScene::createContent()
 	_battleBackround->addChild(redTeamAreaNode);
 
 	//red Tower
-	auto redTower = Sprite::create("tower_red.png");
+	auto redTower = Tower::createTower(2);
 	redTower->setTag(TOWER_TAG);
 	redTower->setName("RED TOWER");
 	redTower->setPosition(Vec2(_myMap->getContentSize().width - 200, _myMap->getContentSize().height/ 2));
@@ -385,7 +402,7 @@ void BattleScene::createContent()
 	redTower->addChild(redTHpBar);
 	redTower->setTag(ENEMY_NUM);
 
-	auto blueTower = Sprite::create("tower_blue.png");
+	auto blueTower = Tower::createTower(1);
 	blueTower->setTag(TOWER_TAG);
 	blueTower->setName("BLUE TOWER");
 	blueTower->setPosition(Vec2(200,_myMap->getContentSize().height /2));
@@ -1152,14 +1169,71 @@ void BattleScene::createContent()
 
 	});
 
+	/*handler for another unit attack to neutral event*/
+	/*
+	 *JSON: uuid, team_id, user_id, direc, index
+	*/
+	sv->on("neutral_tower_attack", [&](SIOClient *client, const string data) {
+		log("neutral attack receive: %s", data.c_str());
+		if (_onDestructCalled) return; 
 
+		Document doc;
+		doc.Parse<0>(data.c_str());
+		if (doc.HasParseError()) {
+			log("Battle scene: neutral_tower_attack Parse JSOn error");
+			return;
+		}
+		vector<Sprite*>  effectSpriteList;
+		vector<UserUnitInfo> effectUnitData;
+		if (doc["team_id"].GetInt() == _currentPlayerTeamFlg) {
+			effectSpriteList = _allAlliedUnitSprite;
+			effectUnitData = _allAlliedUnitData;
+		}
+		else {
+			effectSpriteList = _allEnemyUnitSprite;
+			effectUnitData = _allEnemyUnitData;
+		}
+		for (int i = 0; i < effectUnitData.size(); i ++)
+		{
+			if (strcmp(doc["uuid"].GetString(), effectUnitData[i].uuid.c_str()) == 0)
+			{
+				Character* object = (Character*)effectSpriteList[i];
+
+				object->attackActionByUnitPosition(doc["direc"].GetInt(), effectUnitData[i].attack_speed, nullptr, nullptr);
+				break;
+			}
+		}
+
+
+
+	});
+
+	/*Listener for neutral tower status change event*/
+	/*JSON: index, team_id*/
+	sv->on("neutral_status_change", [&](SIOClient *client, const string data) {
+		if (_onDestructCalled) return;
+		Document doc;
+		doc.Parse<0>(data.c_str());
+		if (doc.HasParseError()) {
+			log("battle scene: neutral_status_change Parse JSOn error");
+			return;
+		}
+
+		Tower* tower = _neutralTowerList[doc["index"].GetInt()];
+		tower->changeTowerType(doc["team_id"].GetInt());
+		changeNeutralTowerNearTitle(doc["index"].GetInt(),doc["team_id"].GetInt());
+
+	});
+
+
+	/*Listener for battle end event*/
 	sv->on("battle_public_battle_end", [&](SIOClient *client, const string data) {
 
 		if (_onDestructCalled) return;
 		Document doc;
 		doc.Parse<0>(data.c_str());
 		if (doc.HasParseError()) {
-			log("on: public_battle_end Parse JSOn error");
+			log("battle scene: public_battle_end Parse JSOn error");
 			return;
 		}
 		int winTeamId = doc["win_team_id"].GetInt();
@@ -1180,7 +1254,7 @@ void BattleScene::towerAttackLogic(Sprite* towerSprite,UserUnitInfo towerData, v
 		if (strcmp(unitDataList->at(i).uuid.c_str(), targetUuid.c_str()) ==0)
 		{
 			//target found
-			auto towerPos = towerSprite->getPosition();
+			/*auto towerPos = towerSprite->getPosition();
 			auto targetPos = targetFindList[i]->getPosition();
 			auto distanVector = targetPos - towerPos;
 
@@ -1189,6 +1263,11 @@ void BattleScene::towerAttackLogic(Sprite* towerSprite,UserUnitInfo towerData, v
 
 			auto attackAni = createAttackAnimationWithDefine(direc, path);
 			towerSprite->runAction(Sequence::create(Animate::create(attackAni), CallFuncN::create(CC_CALLBACK_1(BattleScene::towerAttackCallback, this,towerData,targetFindList[i], unitDataList, i, randomNum)), nullptr));
+			*/
+			auto tw = (Tower*)towerSprite;
+
+			tw->runAttackAnimationWithTarget(targetFindList[i], CC_CALLBACK_1(BattleScene::towerAttackCallback, this, towerData, targetFindList[i], unitDataList, i, randomNum));
+			
 			break;
 		}
 	}
@@ -1358,10 +1437,16 @@ void BattleScene::testMoveLogic()
 {
 	if (_onRespwanFlg) return;
 	auto pos = testObject->getPosition();
+	//return in wrong position title case
 	if (pos.x < 0 || pos.y < 0 || pos.x > _myMap->getContentSize().width || pos.y > _myMap->getContentSize().height) return;
-	Vec2 titlePos = getTitlePosForPosition(pos);
+	Vec2 titlePos = getTitleCoorForPosition(pos);
+	//return in nearly tower title case
+	if (checkTitleNearTower(titlePos)) return;
 	auto title = _mapLayer->getTileAt(titlePos);
+	//return in same title case
 	if (title == _oldTitle) return;
+	
+
 	if (_currentPlayerTeamFlg == TEAM_FLG_BLUE) {
 		if (title->getColor() != Color3B::GREEN)
 		{
@@ -1378,6 +1463,49 @@ void BattleScene::testMoveLogic()
 	}
 
 }
+
+bool BattleScene::checkTitleNearTower(Vec2 titleCoor) 
+{
+	for (int i = 0; i < _neutralTowerList.size(); i++)
+	{
+		auto towerCoor = getTitleCoorForPosition(_neutralTowerList[i]->getPosition()) + Vec2(0, 2);
+		if (titleCoor.x >= towerCoor.x - 3 && titleCoor.x < towerCoor.x + 3 && titleCoor.y >= towerCoor.y - 3 && titleCoor.y < towerCoor.y + 3)
+		{
+			return true;
+		}
+
+	}
+
+
+	return false;
+}
+
+void BattleScene::changeNeutralTowerNearTitle(int towerIndex, int type)
+{
+	Color3B color;
+	switch (type)
+	{
+	case  0:
+		color = Color3B::WHITE;
+		break;
+	case 1:
+		color = Color3B::GREEN;
+		break;
+	case 2:
+		color = Color3B::RED;
+		break;
+	}
+	Vec2 titleSize = _myMap->getTileSize();
+	Vec2 posCoor = getTitleCoorForPosition(_neutralTowerList[towerIndex]->getPosition() - Vec2(0, titleSize.y*2));
+	for (int i = posCoor.x - 3; i < posCoor.x + 3; i++)
+	{
+		for (int j = posCoor.y - 3; j < posCoor.y + 3; j ++)
+		{
+			_mapLayer->getTileAt(Vec2(i, j))->setColor(color);
+		}
+	}
+}
+
 void BattleScene::checkForAutoAttack()
 {
 	/************************************************************************/
@@ -1496,6 +1624,26 @@ void BattleScene::checkForAutoAttack()
 		}
 	}
 
+	/*Check for attack and get neutral tower*/
+	for (int i = 0; i < _neutralTowerList.size(); i++)
+	{
+		//log("I: %d", i);
+		int towerType = _neutralTowerList[i]->getTowerType();
+		Vec2 towerPos = _neutralTowerList[i]->getPosition() - Vec2(0, _neutralTowerList[i]->getBoundingBox().size.height /4);
+		Vec2 distan = towerPos - testObject->getPosition();
+		if ( towerType != _currentPlayerTeamFlg && !_onDelayAttackFlg && distan.length() - _neutralTowerList[i]->getBoundingBox().size.width / 4 < _allAlliedUnitData[0].attack_range) {
+			_onDelayAttackFlg = true;
+			log("SEnd attack");
+			int direc = detectDirectionBaseOnTouchAngle(-distan.getAngle()*RAD_DEG + 90);
+			BattleAPI::getInstance()->sendNeutralTowerAttackEvent(_currentPlayerTeamFlg, i, direc, [&, i, direc](SIOClient* client, const string repData) {
+				log("neutral callback");
+				testObject->attackActionByUnitPosition(direc, _allAlliedUnitData[0].attack_speed, CC_CALLBACK_0(BattleScene::oneSecondAttackCallback, this), /*CC_CALLBACK_0(BattleScene::neutralTowerAttackCallback, this, i)*/nullptr);
+			});
+			break;
+		}
+		
+	}
+
 }
 
 
@@ -1563,6 +1711,13 @@ void BattleScene::oneSecondAttackCallback()
 	_onDelayAttackFlg = false;
 }
 
+void BattleScene::neutralTowerAttackCallback(int towerIndex)
+{
+	_neutralTowerList[towerIndex]->changeTowerType(_currentPlayerTeamFlg);
+
+}
+
+
 void BattleScene::unitDieAction(Sprite* unitSprite, vector<UserUnitInfo>* processUnitList, int index)
 {
 	//unitSprite->stopAllActions();
@@ -1602,8 +1757,8 @@ void BattleScene::enemyDieAction(int id)
 	_allEnemyIconInMinimap[id]->setVisible(false);
 	saveKillDeadInfo(0, id, _currentPlayerTeamFlg);
 	/*SEND SKILLDEAD DATA TO SERVER*/
-	/*string uu = UserModel::getInstance()->getUuId().c_str();
-	sendKillDead(uu.c_str(), _allEnemyUnitData[id].uuid, nullptr);*/
+	string uu = UserModel::getInstance()->getUuId().c_str();
+	sendKillDead(uu.c_str(), _allEnemyUnitData[id].uuid, nullptr);
 	_indexOfBeAttackEnemy = -1;
 	testObject->stopActionByTag(_currentAttackActionTag);
 	/*if (id == _allEnemyUnitData.size() - 1) {
@@ -1687,8 +1842,8 @@ void BattleScene::runRespawnAction(string killerUuid)
 	});
 
 		//saveKillDeadInfo(killerId, 0, _currentEnemyTeamFlg);
-		string uu = UserModel::getInstance()->getUuId().c_str();
-		sendKillDead(killerUuid.c_str(), uu.c_str(), nullptr);
+		//string uu = UserModel::getInstance()->getUuId().c_str();
+		//sendKillDead(killerUuid.c_str(), uu.c_str(), nullptr);
 		_alliedTeamTotalDead += 1;
 		if (_alliedTeamTotalDead == 5)
 		{
@@ -1803,6 +1958,9 @@ string BattleScene::makeTimeString(int second) {
 bool BattleScene::onTouchBegan(Touch *touch, Event *unused_event)
 {
 	_touchStartPoint = touch->getLocation();
+	auto testPos = _battleBackround->convertToNodeSpace(_touchStartPoint);
+	auto cor = getTitleCoorForPosition(testPos);
+
 	if (_moveDisableFlg == false && _allAlliedUnitData[0].isStun == false) {
 
 		_touchMoveBeginSprite->setTexture("image/screen/battle/ui_move.png");
@@ -2564,7 +2722,8 @@ void BattleScene::updateSlider()
 }
 void BattleScene::skill1ButtonCallback(Ref *pSender, Widget::TouchEventType type)
 {
-	if (_onRespwanFlg) return;
+	/*On repawn/ stunning unit cannot play skill*/
+	if (_onRespwanFlg || _allAlliedUnitData[0].isStun) return;
 	Button* bt = dynamic_cast<Button*>(pSender);
 	int tag = bt->getTag();
 	bt->stopActionByTag(TAG_SKILL_AOE);
@@ -3486,7 +3645,7 @@ void BattleScene::sendDameDeal(int dame, int targetId, SocketIOCallback callback
 
 void BattleScene::sendKillDead(string killerUuid, string deadUnitUuid, SocketIOCallback callback)
 {
-	BattleAPI::getInstance()->sendKillDeadEvent(killerUuid.c_str(), deadUnitUuid.c_str(), callback);
+	BattleAPI::getInstance()->sendKillEvent(killerUuid.c_str(), deadUnitUuid.c_str(), callback);
 }
 
 
@@ -3889,7 +4048,7 @@ int BattleScene::findIndexOfString(vector<string> v, string element)
 	return 0;
 }
 
-cocos2d::Vec2 BattleScene::getTitlePosForPosition(Vec2 location)
+cocos2d::Vec2 BattleScene::getTitleCoorForPosition(Vec2 location)
 {
 	int x = location.x / _myMap->getTileSize().width;
 	int y = ((_myMap->getMapSize().height*_myMap->getTileSize().height - location.y) / _myMap->getTileSize().height);
@@ -3907,8 +4066,8 @@ vector<Vec2> BattleScene::AStarPathFindingAlgorithm(Vec2 curentPos, Vec2 destina
 {
 	vector<Vec2> result = {};
 	
-	Vec2 fromTitleCoord = getTitlePosForPosition(curentPos);
-	Vec2 desTitleCoord = getTitlePosForPosition(destinationPos);
+	Vec2 fromTitleCoord = getTitleCoorForPosition(curentPos);
+	Vec2 desTitleCoord = getTitleCoorForPosition(destinationPos);
 	if (desTitleCoord.x > _myMap->getMapSize().width) {
 		desTitleCoord.x = _myMap->getMapSize().width;
 	}
@@ -4170,7 +4329,7 @@ void BattleScene::constructPathAndStartAnimationFromStep(ShortestPathStep *step)
 void BattleScene::moveStepAction()
 {
 	//fakeZOrder();
-	Vec2 curPos = getTitlePosForPosition(testObject->getPosition());
+	Vec2 curPos = getTitleCoorForPosition(testObject->getPosition());
 	if (_onRespwanFlg) 
 	{
 		_shortestPath.clear();

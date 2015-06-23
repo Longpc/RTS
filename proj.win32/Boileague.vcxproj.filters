@@ -198,6 +198,9 @@
     <ClCompile Include="..\Classes\Multi\BatleScene\BattleScene.cpp">
       <Filter>src\Multi\BatleScene</Filter>
     </ClCompile>
+    <ClCompile Include="..\Classes\Multi\BatleScene\Tower.cpp">
+      <Filter>src\Multi\BatleScene</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="main.h">
@@ -321,6 +324,9 @@
       <Filter>src\Model\data</Filter>
     </ClInclude>
     <ClInclude Include="..\Classes\Multi\BatleScene\BattleScene.h">
+      <Filter>src\Multi\BatleScene</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Classes\Multi\BatleScene\Tower.h">
       <Filter>src\Multi\BatleScene</Filter>
     </ClInclude>
   </ItemGroup>

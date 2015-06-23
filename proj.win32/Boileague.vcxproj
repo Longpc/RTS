@@ -163,6 +163,7 @@ xcopy /Y /Q "$(EngineRoot)external\websockets\prebuilt\win32\*.*" "$(OutDir)"</C
     <ClCompile Include="..\Classes\Multi\BatleScene\Character.cpp" />
     <ClCompile Include="..\Classes\Multi\BatleScene\Effect.cpp" />
     <ClCompile Include="..\Classes\Multi\BatleScene\OptionDialog.cpp" />
+    <ClCompile Include="..\Classes\Multi\BatleScene\Tower.cpp" />
     <ClCompile Include="..\Classes\Multi\MemberFullDialogLayer.cpp" />
     <ClCompile Include="..\Classes\Multi\SkillSelectScene\SkillDetailDialog.cpp" />
     <ClCompile Include="..\Classes\Multi\SkillSelectScene\SkillSelectScene.cpp" />
@@ -206,6 +207,7 @@ xcopy /Y /Q "$(EngineRoot)external\websockets\prebuilt\win32\*.*" "$(OutDir)"</C
     <ClInclude Include="..\Classes\Multi\BatleScene\Character.h" />
     <ClInclude Include="..\Classes\Multi\BatleScene\Effect.h" />
     <ClInclude Include="..\Classes\Multi\BatleScene\OptionDialog.h" />
+    <ClInclude Include="..\Classes\Multi\BatleScene\Tower.h" />
     <ClInclude Include="..\Classes\Multi\MemberFullDialogLayer.h" />
     <ClInclude Include="..\Classes\Multi\SkillSelectScene\SkillDetailDialog.h" />
     <ClInclude Include="..\Classes\Multi\SkillSelectScene\SkillSelectScene.h" />

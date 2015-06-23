@@ -132,7 +132,7 @@ void Character::attackActionByUnitPosition(int direction , int attackTime, Attac
 		}),nullptr), nullptr));
 	}
 	else {
-		log("Unit on delay attack");
+		log("Unit on attack delay");
 	}
 }
 

@@ -40,7 +40,7 @@ public:
 
 	void sendDameDealEvent(int dame, string targetUuid, SocketIOCallback callback);
 
-	void sendKillDeadEvent(string killerUuid, string targetUnit, SocketIOCallback callback);
+	void sendKillEvent(string killerUuid, string targetUnit, SocketIOCallback callback);
 	
 	void sendRepawnEvent(SocketIOCallback callback);
 	
@@ -53,6 +53,8 @@ public:
 	void sendTestMoveLogic(Vec2 titleCordPost);
 
 	void sendCheckMapEvent(SocketIOCallback callback);
+
+	void sendNeutralTowerAttackEvent(int teamID, int towerIndex, int direction, SocketIOCallback callback);
 
 
 	bool init();
