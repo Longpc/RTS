@@ -192,6 +192,184 @@ bool BattleScene::init()
 
 	return true;
 }
+
+void BattleScene::createWormHole()
+{
+	auto redHole = TextureCache::getInstance()->addImage("image/screen/battle/wormhole_red.png");
+	auto blueHole = TextureCache::getInstance()->addImage("image/screen/battle/wormhole_blue.png");
+	auto action = RepeatForever::create(RotateBy::create(1, 135));
+	for (int i = 0; i < 2; i++)
+	{
+		/*Create red wormHole*/
+		auto parentNode1 = Node::create();
+		parentNode1->setScaleY(0.75f);
+		parentNode1->setPosition((Vec2(_myMap->getBoundingBox().size) - Vec2(200, 160))*i + Vec2(100, 80));
+		_battleBackround->addChild(parentNode1);
+		auto redHoleSprite = Sprite::createWithTexture(redHole);
+		redHoleSprite->setPosition(Vec2::ZERO);
+		redHoleSprite->setName("OPEN");
+		auto action1 = action->clone();
+		action1->setTag(WORMHOLDROTATE);
+		redHoleSprite->runAction(action1);
+		_wormHoleList.push_back(redHoleSprite);
+		parentNode1->addChild(redHoleSprite);
+
+		/*Create blue wormHole*/
+		auto blueHoleSprite = Sprite::createWithTexture(blueHole);
+		blueHoleSprite->setPosition(Vec2::ZERO);
+		blueHoleSprite->setName("OPEN");
+		auto action2 = action->clone();
+		action2->setTag(WORMHOLDROTATE);
+		blueHoleSprite->runAction(action2);
+		
+		_wormHoleList.push_back(blueHoleSprite);
+		auto parentNode2 = Node::create();
+		parentNode2->setScaleY(0.75f);
+		parentNode2->setPosition(Vec2((i + 1) % 2 * (_myMap->getBoundingBox().size.width - 200) + 100, (i % 2) * (_myMap->getBoundingBox().size.height - 160) + 80));
+		parentNode2->addChild(blueHoleSprite);
+		_battleBackround->addChild(parentNode2);
+	}
+}
+
+void BattleScene::createBoudingWall()
+{
+	/*Create bounding wall*/
+	auto wallTexture = TextureCache::getInstance()->addImage("wall.png");
+	auto wall1 = Sprite::createWithTexture(wallTexture);
+	auto wallBd = PhysicsBody::createBox(wall1->getContentSize(), PhysicsMaterial(1, 1, 0));
+	wallBd->setDynamic(false);
+	wallBd->setCollisionBitmask(0x1111);
+	wallBd->setContactTestBitmask(0x1111);
+	wall1->setPhysicsBody(wallBd);
+	wall1->setTag(BOUND_BORDER_TAG);
+	wall1->setScaleX((3 * _myMap->getContentSize().width / 5) / wallTexture->getContentSize().width);
+	wall1->setPosition(Vec2(_myMap->getContentSize().width / 2, 2 * _myMap->getContentSize().height / 3));
+	_battleBackround->addChild(wall1);
+
+	auto wall2 = Sprite::createWithTexture(wallTexture);
+	auto wallBd2 = PhysicsBody::createBox(wall2->getContentSize(), PhysicsMaterial(1, 1, 0));
+	wallBd2->setDynamic(false);
+	wallBd2->setCollisionBitmask(0x1111);
+	wallBd2->setContactTestBitmask(0x1111);
+	wall2->setPhysicsBody(wallBd2);
+	wall2->setTag(BOUND_BORDER_TAG);
+	wall2->setScaleX((3 * _myMap->getContentSize().width / 5) / wallTexture->getContentSize().width);
+	wall2->setPosition(Vec2(_myMap->getContentSize().width / 2, _myMap->getContentSize().height / 3));
+	_battleBackround->addChild(wall2);
+
+	auto textTureSmall = TextureCache::getInstance()->addImage("wall_s.png");
+
+	auto wall3 = Sprite::createWithTexture(textTureSmall);
+	auto wallBd3 = PhysicsBody::createBox(wall3->getContentSize(), PhysicsMaterial(1, 1, 0));
+	wallBd3->setDynamic(false);
+	wallBd3->setCollisionBitmask(0x1111);
+	wallBd3->setContactTestBitmask(0x1111);
+	wall3->setPhysicsBody(wallBd3);
+	wall3->setTag(BOUND_BORDER_TAG);
+	wall3->setScaleY(1.5f);
+	wall3->setPosition(Vec2(_myMap->getContentSize().width / 5, _myMap->getContentSize().height / 3));
+	_battleBackround->addChild(wall3);
+
+	auto wall4 = Sprite::createWithTexture(textTureSmall);
+	auto wallBd4 = PhysicsBody::createBox(wall4->getContentSize(), PhysicsMaterial(1, 1, 0));
+	wallBd4->setDynamic(false);
+	wallBd4->setCollisionBitmask(0x1111);
+	wallBd4->setContactTestBitmask(0x1111);
+	wall4->setPhysicsBody(wallBd4);
+	wall4->setTag(BOUND_BORDER_TAG);
+	wall4->setScaleY(1.5f);
+	wall4->setPosition(Vec2(_myMap->getContentSize().width * 4 / 5, _myMap->getContentSize().height * 2 / 3));
+	_battleBackround->addChild(wall4);
+
+
+	auto wall5 = Sprite::createWithTexture(textTureSmall);
+	auto wallBd5 = PhysicsBody::createBox(wall5->getContentSize(), PhysicsMaterial(1, 1, 0));
+	wallBd5->setDynamic(false);
+	wallBd5->setCollisionBitmask(0x1111);
+	wallBd5->setContactTestBitmask(0x1111);
+	wall5->setPhysicsBody(wallBd5);
+	wall5->setTag(BOUND_BORDER_TAG);
+	//wall5->setScaleX(0.5f);
+	wall5->setPosition(Vec2(_myMap->getContentSize().width * 2 / 5, _myMap->getContentSize().height * 5 / 9));
+	_battleBackround->addChild(wall5);
+
+	auto wall6 = Sprite::createWithTexture(textTureSmall);
+	auto wallBd6 = PhysicsBody::createBox(wall6->getContentSize(), PhysicsMaterial(1, 1, 0));
+	wallBd6->setDynamic(false);
+	wallBd6->setCollisionBitmask(0x1111);
+	wallBd6->setContactTestBitmask(0x1111);
+	wall6->setPhysicsBody(wallBd6);
+	wall6->setTag(BOUND_BORDER_TAG);
+	//wall6->setScaleX(0.5f);
+	wall6->setPosition(Vec2(_myMap->getContentSize().width * 3 / 5, _myMap->getContentSize().height * 4 / 9));
+	_battleBackround->addChild(wall6);
+
+
+	auto wall7 = Sprite::createWithTexture(textTureSmall);
+	auto wallBd7 = PhysicsBody::createBox(wall7->getContentSize(), PhysicsMaterial(1, 1, 0));
+	wallBd7->setDynamic(false);
+	wallBd7->setCollisionBitmask(0x1111);
+	wallBd7->setContactTestBitmask(0x1111);
+	wall7->setPhysicsBody(wallBd7);
+	wall7->setTag(BOUND_BORDER_TAG);
+	wall7->setScaleY(0.8f);
+	wall7->setPosition(Vec2(_myMap->getContentSize().width * 1 / 5, _myMap->getContentSize().height - wall7->getBoundingBox().size.height / 2));
+	_battleBackround->addChild(wall7);
+
+
+	auto wall8 = Sprite::createWithTexture(textTureSmall);
+	auto wallBd8 = PhysicsBody::createBox(wall8->getContentSize(), PhysicsMaterial(1, 1, 0));
+	wallBd8->setDynamic(false);
+	wallBd8->setCollisionBitmask(0x1111);
+	wallBd8->setContactTestBitmask(0x1111);
+	wall8->setPhysicsBody(wallBd8);
+	wall8->setTag(BOUND_BORDER_TAG);
+	wall8->setScaleY(0.8f);
+	wall8->setPosition(Vec2(_myMap->getContentSize().width * 4 / 5, wall8->getBoundingBox().size.height / 2));
+	_battleBackround->addChild(wall8);
+}
+
+void BattleScene::createNeutralTower()
+{
+	/*Create test neutral tower*/
+	for (int i = 1; i < 6; i++)
+	{
+		auto neutralTower1 = Tower::createTower(0);
+		MyBodyParser::getInstance()->parseJsonFile("json/tower.json");
+		PhysicsBody* body = MyBodyParser::getInstance()->bodyFormJson(neutralTower1, "tower");
+		body->setDynamic(false);
+		body->setGravityEnable(false);
+		body->setContactTestBitmask(0x1);
+		neutralTower1->setPhysicsBody(body);
+
+		_neutralTowerList.push_back(neutralTower1);
+		neutralTower1->setName("NEUTRAL");
+		if (i == 5) {
+			neutralTower1->setPosition(_myMap->getBoundingBox().size / 2);
+		}
+		else {
+			neutralTower1->setPosition(Vec2((1 + ((i - 1) % 2))*_myMap->getBoundingBox().size.width / 3, _myMap->getBoundingBox().size.height *((i / 3) * 4 + 1) / 6));
+		}
+		_battleBackround->addChild(neutralTower1);
+		//auto posCoor = getTitleCoorForPosition(neutralTower1->getPosition());
+		//log("Tower %d in pos: %f, %f", i, posCoor.x, posCoor.y);
+	}
+
+}
+
+void BattleScene::createNeutralUnit()
+{
+	for (int i = 0; i < 2; i++)
+	{
+		auto unit = Character::createCharacter(5);
+		_neutralUnitList.push_back(unit);
+		unit->setPosition(Vec2(_myMap->getBoundingBox().size.width / 2, i*(_myMap->getBoundingBox().size.height - 200) + 100));
+		unit->setName("NEUTRAL");
+		_battleBackround->addChild(unit);
+	}
+	
+}
+
 void BattleScene::createContent()
 {
 	//create e battle background
@@ -235,119 +413,15 @@ void BattleScene::createContent()
 	else {
 		log("null");
 	}
-	/*Create bounding wall*/
-	auto wallTexture = TextureCache::getInstance()->addImage("wall.png");
-	auto wall1 = Sprite::createWithTexture(wallTexture);
-	auto wallBd = PhysicsBody::createBox(wall1->getContentSize(), PhysicsMaterial(1, 1, 0));
-	wallBd->setDynamic(false);
-	wallBd->setCollisionBitmask(0x1111);
-	wallBd->setContactTestBitmask(0x1111);
-	wall1->setPhysicsBody(wallBd);
-	wall1->setTag(BOUND_BORDER_TAG);
-	wall1->setScaleX((3 * _myMap->getContentSize().width /5) /wallTexture->getContentSize().width);
-	wall1->setPosition(Vec2(_myMap->getContentSize().width / 2, 2 * _myMap->getContentSize().height / 3));
-	_battleBackround->addChild(wall1);
-
-	auto wall2 = Sprite::createWithTexture(wallTexture);
-	auto wallBd2 = PhysicsBody::createBox(wall2->getContentSize(), PhysicsMaterial(1, 1, 0));
-	wallBd2->setDynamic(false);
-	wallBd2->setCollisionBitmask(0x1111);
-	wallBd2->setContactTestBitmask(0x1111);
-	wall2->setPhysicsBody(wallBd2);
-	wall2->setTag(BOUND_BORDER_TAG);
-	wall2->setScaleX((3 * _myMap->getContentSize().width /5) /wallTexture->getContentSize().width);
-	wall2->setPosition(Vec2(_myMap->getContentSize().width / 2, _myMap->getContentSize().height / 3));
-	_battleBackround->addChild(wall2);
-
-	auto textTureSmall = TextureCache::getInstance()->addImage("wall_s.png");
-
-	auto wall3 = Sprite::createWithTexture(textTureSmall);
-	auto wallBd3 = PhysicsBody::createBox(wall3->getContentSize(), PhysicsMaterial(1, 1, 0));
-	wallBd3->setDynamic(false);
-	wallBd3->setCollisionBitmask(0x1111);
-	wallBd3->setContactTestBitmask(0x1111);
-	wall3->setPhysicsBody(wallBd3);
-	wall3->setTag(BOUND_BORDER_TAG);
-	wall3->setScaleY(1.5f);
-	wall3->setPosition(Vec2(_myMap->getContentSize().width / 5, _myMap->getContentSize().height / 3));
-	_battleBackround->addChild(wall3);
-
-	auto wall4 = Sprite::createWithTexture(textTureSmall);
-	auto wallBd4 = PhysicsBody::createBox(wall4->getContentSize(), PhysicsMaterial(1, 1, 0));
-	wallBd4->setDynamic(false);
-	wallBd4->setCollisionBitmask(0x1111);
-	wallBd4->setContactTestBitmask(0x1111);
-	wall4->setPhysicsBody(wallBd4);
-	wall4->setTag(BOUND_BORDER_TAG);
-	wall4->setScaleY(1.5f);
-	wall4->setPosition(Vec2(_myMap->getContentSize().width *4 / 5, _myMap->getContentSize().height *2/ 3));
-	_battleBackround->addChild(wall4);
-
-	
-	auto wall5 = Sprite::createWithTexture(textTureSmall);
-	auto wallBd5 = PhysicsBody::createBox(wall5->getContentSize(), PhysicsMaterial(1, 1, 0));
-	wallBd5->setDynamic(false);
-	wallBd5->setCollisionBitmask(0x1111);
-	wallBd5->setContactTestBitmask(0x1111);
-	wall5->setPhysicsBody(wallBd5);
-	wall5->setTag(BOUND_BORDER_TAG);
-	//wall5->setScaleX(0.5f);
-	wall5->setPosition(Vec2(_myMap->getContentSize().width * 2 / 5, _myMap->getContentSize().height * 5 / 9));
-	_battleBackround->addChild(wall5);
-
-	auto wall6 = Sprite::createWithTexture(textTureSmall);
-	auto wallBd6 = PhysicsBody::createBox(wall6->getContentSize(), PhysicsMaterial(1, 1, 0));
-	wallBd6->setDynamic(false);
-	wallBd6->setCollisionBitmask(0x1111);
-	wallBd6->setContactTestBitmask(0x1111);
-	wall6->setPhysicsBody(wallBd6);
-	wall6->setTag(BOUND_BORDER_TAG);
-	//wall6->setScaleX(0.5f);
-	wall6->setPosition(Vec2(_myMap->getContentSize().width * 3 / 5, _myMap->getContentSize().height * 4 / 9));
-	_battleBackround->addChild(wall6);
 
 
-	auto wall7 = Sprite::createWithTexture(textTureSmall);
-	auto wallBd7 = PhysicsBody::createBox(wall7->getContentSize(), PhysicsMaterial(1, 1, 0));
-	wallBd7->setDynamic(false);
-	wallBd7->setCollisionBitmask(0x1111);
-	wallBd7->setContactTestBitmask(0x1111);
-	wall7->setPhysicsBody(wallBd7);
-	wall7->setTag(BOUND_BORDER_TAG);
-	wall7->setScaleY(0.8f);
-	wall7->setPosition(Vec2(_myMap->getContentSize().width * 1 / 5, _myMap->getContentSize().height -wall7->getBoundingBox().size.height/2));
-	_battleBackround->addChild(wall7);
+	createWormHole();
 
+	createBoudingWall();
 
-	auto wall8 = Sprite::createWithTexture(textTureSmall);
-	auto wallBd8 = PhysicsBody::createBox(wall8->getContentSize(), PhysicsMaterial(1, 1, 0));
-	wallBd8->setDynamic(false);
-	wallBd8->setCollisionBitmask(0x1111);
-	wallBd8->setContactTestBitmask(0x1111);
-	wall8->setPhysicsBody(wallBd8);
-	wall8->setTag(BOUND_BORDER_TAG);
-	wall8->setScaleY(0.8f);
-	wall8->setPosition(Vec2(_myMap->getContentSize().width * 4 / 5, wall8->getBoundingBox().size.height / 2));
-	_battleBackround->addChild(wall8);
+	createNeutralTower();
 
-	/*Create test neutral tower*/
-	for (int i = 1; i < 6; i ++)
-	{
-		auto neutralTower1 = Tower::createTower(0);
-		_neutralTowerList.push_back(neutralTower1);
-		neutralTower1->setName("NEUTRAL");
-		if (i == 5) {
-			neutralTower1->setPosition(_myMap->getBoundingBox().size / 2);
-		}
-		else {
-			neutralTower1->setPosition(Vec2((1 + ((i - 1) % 2))*_myMap->getBoundingBox().size.width / 3, _myMap->getBoundingBox().size.height *((i/3)*4+1) / 6));
-		}
-		_battleBackround->addChild(neutralTower1);
-		auto posCoor = getTitleCoorForPosition(neutralTower1->getPosition());
-		log("Tower %d in pos: %f, %f", i, posCoor.x, posCoor.y);
-	}
-	
-
+	createNeutralUnit();
 
 	createPhysicBolder();
 	/*create blue and red line*/
@@ -856,27 +930,6 @@ void BattleScene::createContent()
 				tempUnit.moving = doc["user_unit"][rapidjson::SizeType(i)]["moving"].GetBool();
 
 				BattleModel::getInstance()->updateUserUnit(tempUnit);
-				//bellow code for sync HP and MP of all Unit
-				//Not using yet. Need data sync function in server
-				/*for (auto &unit1  : _allAlliedUnitData)
-				{
-					if (strcmp(unit1.uuid.c_str(), tempUnit.uuid.c_str()) == 0) {
-						unit1.hp = tempUnit.hp;
-						unit1.mp = tempUnit.mp;
-						//attack, defence, speed....
-
-					}
-
-				}
-				for (auto &ene : _allEnemyUnitData)
-				{
-					if (strcmp(ene.uuid.c_str(), tempUnit.uuid.c_str()) == 0) {
-						ene.hp = tempUnit.hp;
-						ene.mp = tempUnit.mp;
-					}
-				}
-				*/
-
 				string sv_uuid = doc["user_unit"][rapidjson::SizeType(i)]["uuid"].GetString();
 				if (strcmp(sv_uuid.c_str(), uuid.c_str()) == 0) {
 					//log("this is my unit");
@@ -926,21 +979,6 @@ void BattleScene::createContent()
 
 	});
 
-	/*sv->on("battle_public_move", [&, testSprite](SIOClient* client, const std::string& a) {
-		//Parser JSON data
-		log("public move data: %s", a.c_str());
-
-		rapidjson::Document doc;
-		doc.Parse<0>(a.c_str());
-		if (doc.HasParseError())
-		{
-			log("error in parse json");
-			return;
-		}
-		if (doc.IsObject()) {
-			testSprite->setPosition(Vec2(doc["position_x"].GetDouble(), doc["position_y"].GetDouble()));
-		}
-	});*/
 	/*Unit move event public event*/
 	sv->on("unit_move_end", [&](SIOClient* client, const string& data) {
 		//log("Unit_move_end data: %s", data.c_str());
@@ -1225,6 +1263,41 @@ void BattleScene::createContent()
 
 	});
 
+	sv->on("wormhole_status_change", [&](SIOClient *client, const string data) {
+		if (_onDestructCalled) return;
+		Document doc;
+		doc.Parse<0>(data.c_str());
+		if (doc.HasParseError()) {
+			log("battle scene: wormhole_status_change Parse JSOn error");
+			return;
+		}
+		int ingate = doc["index"].GetInt();
+		int outgate = doc["outgate"].GetInt();
+
+		if (doc["status"].GetInt() == 0)
+		{
+			log("close");
+			_wormHoleList[ingate]->stopActionByTag(WORMHOLDROTATE);
+			_wormHoleList[ingate]->setName("CLOSED");
+			_wormHoleList[outgate]->stopActionByTag(WORMHOLDROTATE);
+			_wormHoleList[outgate]->setName("CLOSED");
+		}
+		else {
+			log("open");
+			auto action = RepeatForever::create(RotateBy::create(1, 135));
+			action->setTag(WORMHOLDROTATE);
+			auto action2 = action->clone();
+			action2->setTag(WORMHOLDROTATE);
+			_wormHoleList[ingate]->runAction(action);
+			_wormHoleList[ingate]->setName("OPEN");
+			_wormHoleList[outgate]->runAction(action2);
+			_wormHoleList[outgate]->setName("OPEN");
+		}
+
+
+	});
+
+
 
 	/*Listener for battle end event*/
 	sv->on("battle_public_battle_end", [&](SIOClient *client, const string data) {
@@ -1430,6 +1503,7 @@ void BattleScene::update(float delta)
 
 	testMoveLogic();
 
+	checkForWarp();
 
 
 }
@@ -1503,6 +1577,42 @@ void BattleScene::changeNeutralTowerNearTitle(int towerIndex, int type)
 		{
 			_mapLayer->getTileAt(Vec2(i, j))->setColor(color);
 		}
+	}
+}
+
+void BattleScene::checkForWarp()
+{
+	if (_onWarping) return;
+	for (int i = 0; i < _wormHoleList.size(); i++)
+	{
+		Vec2 objectPos = testObject->getPosition();
+		Vec2 holePos = _wormHoleList[i]->getParent()->getPosition();
+		if ((holePos - objectPos).length() < 80 && strcmp(_wormHoleList[i]->getName().c_str(),"OPEN") ==0) {
+			_onWarping = true;
+			int outGate = -1;
+			switch (i)
+			{
+			case 0:
+				outGate = 2;
+				break;
+			case 1:
+				outGate = 3;
+				break;
+			case 2:
+				outGate = 0;
+				break;
+			case 3:
+				outGate = 1;
+				break;
+			}
+			//send warp event
+			BattleAPI::getInstance()->sendWarpEvent(i, outGate, [&, outGate](SIOClient *client, const string data) {
+				_onWarping = false;
+				testObject->setPosition(_wormHoleList[outGate]->getParent()->getPosition());
+			});
+			return;
+		}
+
 	}
 }
 

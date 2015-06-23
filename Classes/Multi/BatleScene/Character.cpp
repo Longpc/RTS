@@ -76,6 +76,16 @@ void Character::changeAnimationImagePathByUnitId(int unitId) {
 	}
 }
 
+void Character::changeUnitType(int unitId)
+{
+	changeAnimationImagePathByUnitId(unitId);
+	string path = getMoveImagePath(); // character->getMoveImagePath = _moveImagePath;
+	path.append("unit_00_08_1.png");
+	auto text = TextureCache::getInstance()->addImage(path);
+	this->setTexture(text);
+
+}
+
 void Character::moveActionByVector(Vec2 destination)
 {
 	int direct = detectDirectionBaseOnTouchAngle(-(destination.getAngle() * RAD_DEG) + 90);

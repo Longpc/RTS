@@ -56,6 +56,8 @@ public:
 
 	void sendNeutralTowerAttackEvent(int teamID, int towerIndex, int direction, SocketIOCallback callback);
 
+	void sendWarpEvent(int wormIndex, int outGateIndex, SocketIOCallback callback);
+
 
 	bool init();
 private:

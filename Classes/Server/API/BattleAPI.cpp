@@ -433,7 +433,29 @@ void BattleAPI::sendNeutralTowerAttackEvent(int teamID, int towerIndex, int dire
 	sv->on("attack_neutral_tower_end", callBack);
 }
 
+void BattleAPI::sendWarpEvent(int wormIndex, int outGateIndex, SocketIOCallback callback)
+{
+	Document doc;
+	doc.SetObject();
+	Document::AllocatorType& allo = doc.GetAllocator();
+	string uu = UserModel::getInstance()->getUuId().c_str();
+	doc.AddMember("uuid", uu.c_str(), allo);
+	doc.AddMember("index", wormIndex, allo);
+	doc.AddMember("outgate", outGateIndex, allo);
 
+	StringBuffer  buffer;
+	Writer<StringBuffer> writer(buffer);
+	doc.Accept(writer);
+	auto sv = NodeServer::getInstance()->getClient();
+
+	if (sv == nullptr) {
+		return;
+	}
+	sv->emit("warp_begin", buffer.GetString());
+	sv->on("warp_begin_end", callback);
+
+
+}
 
 Document::GenericValue* BattleAPI::convertUnitDataToJsonObject(UserUnitInfo unitData, Document::AllocatorType& allo)
 {

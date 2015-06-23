@@ -81,6 +81,7 @@
 #define HPBAR_TAG 1232
 
 #define BOUND_BORDER_TAG 1905
+#define WORMHOLDROTATE 1245
 
 using namespace cocostudio;
 class BattleScene : public LayerBase
@@ -224,7 +225,10 @@ private:
 	/*Test neutral tower*/
 	vector<Tower*> _neutralTowerList;
 
+	vector<Sprite*> _wormHoleList;
 
+
+	vector<Character*> _neutralUnitList;
 	/************************************************************************/
 	/* FUNCTIONS                                                            */
 	/************************************************************************/
@@ -248,6 +252,19 @@ private:
 	 Initial data for battle logic
 	*/
 	virtual void createContent();
+
+	/*create wormhole UI*/
+	virtual void createWormHole();
+
+	/*Create map bounding wall*/
+	virtual void createBoudingWall();
+
+	/*Create neutral tower*/
+	virtual void createNeutralTower();
+	
+	/*Create meutral unit*/
+	virtual void createNeutralUnit();
+
 
 	/*Show skill mp cost value in the skill button (@parent);
 	*/
@@ -350,6 +367,9 @@ private:
 	*/
 	virtual void checkForAutoAttack();
 
+	bool _onWarping = false;
+	/*Checker for warp by move into wormhole*/
+	virtual void checkForWarp();
 	/*check auto atack of tower*/
 	bool _alliedTowerAttackdelay = false;
 	bool _enemyTowerAttackdelay = false;

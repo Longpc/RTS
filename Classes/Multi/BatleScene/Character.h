@@ -15,7 +15,7 @@ class Character : public Sprite
 public :
 	Character();
 	~Character();
-
+	/*Character id: 1: Red, 2: Purple, 3: Green, 4: Blue, 5: Black*/
 	static Character* createCharacter(int characterId);
 	virtual bool init(int characterId);
 	// Khoi tao get,set cho 2 bien _moveImagePath , _attackImagePath
@@ -41,6 +41,11 @@ public :
 	virtual void actionMoveCharacter(int directionId);
 	virtual void rotateCharacter(int direc);
 	virtual void changeAnimationImagePathByUnitId(int unitId);
+
+	/*
+	 *Change unit type by unit id: 1: Red, 2: Purple, 3: Green, 4: Blue, 5: Black
+	 */
+	virtual void changeUnitType(int unitId);
 
 private :
 	Sprite *testObject;
