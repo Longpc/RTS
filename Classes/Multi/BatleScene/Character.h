@@ -15,10 +15,10 @@ class Character : public Sprite
 public :
 	Character();
 	~Character();
-	/*Character id: 1: Red, 2: Purple, 3: Green, 4: Blue, 5: Black*/
+	/*Character id: 2: Red, 3: Purple, 4: Green, 5: Blue, 6: Black*/
 	static Character* createCharacter(int characterId);
 	virtual bool init(int characterId);
-	// Khoi tao get,set cho 2 bien _moveImagePath , _attackImagePath
+	// get/set function
 	CC_SYNTHESIZE(string, _moveImagePath, MoveImagePath);
 	CC_SYNTHESIZE(string, _attackImagePath, AttackImagePath);
 	CC_SYNTHESIZE(int, _moveMode, MoveMode);
@@ -43,7 +43,7 @@ public :
 	virtual void changeAnimationImagePathByUnitId(int unitId);
 
 	/*
-	 *Change unit type by unit id: 1: Red, 2: Purple, 3: Green, 4: Blue, 5: Black
+	 * Character id: 2: Red, 3: Purple, 4: Green, 5: Blue, 6: Black
 	 */
 	virtual void changeUnitType(int unitId);
 

@@ -359,13 +359,30 @@ void BattleScene::createNeutralTower()
 
 void BattleScene::createNeutralUnit()
 {
+	auto iconTexture = TextureCache::getInstance()->addImage("image/screen/battle/neutral_icon.png");
+	auto parentNode = Node::create();
+	parentNode->setPosition(Vec2::ZERO);
+	_miniMap->addChild(parentNode);
 	for (int i = 0; i < 2; i++)
 	{
-		auto unit = Character::createCharacter(5);
+		auto unit = Character::createCharacter(6);
+		auto body = PhysicsBody::createCircle(30, PhysicsMaterial(1, 0, 0));
+		body->setRotationEnable(false);
+		body->setCollisionBitmask(0x00001);
+		body->setContactTestBitmask(0x00001);
+		body->setGravityEnable(false);
+		unit->setPhysicsBody(body);
+
 		_neutralUnitList.push_back(unit);
+		unit->setScale(IMAGE_SCALE);
 		unit->setPosition(Vec2(_myMap->getBoundingBox().size.width / 2, i*(_myMap->getBoundingBox().size.height - 200) + 100));
 		unit->setName("NEUTRAL");
+		unit->setTag(0);
 		_battleBackround->addChild(unit);
+
+		auto miniIcon = Sprite::createWithTexture(iconTexture);
+		parentNode->addChild(miniIcon);
+		_neutralUnitIconInMiniMap.push_back(miniIcon);
 	}
 	
 }
@@ -375,12 +392,9 @@ void BattleScene::createContent()
 	//create e battle background
 	auto realVisibleSize = _visibleSize / 0.75f;
 	auto parentNode = Node::create();
-	parentNode->setPosition((realVisibleSize - _visibleSize)/2);
+	parentNode->setPosition((realVisibleSize - _visibleSize) / 2);
 	addChild(parentNode);
 	parentNode->setScale(0.75f);
-
-	
-
 
 	_battleBackround = Node::create();
 	_battleBackround->setPosition(Vec2::ZERO);
@@ -419,23 +433,19 @@ void BattleScene::createContent()
 
 	createBoudingWall();
 
-	createNeutralTower();
-
-	createNeutralUnit();
-
 	createPhysicBolder();
 	/*create blue and red line*/
 	auto line = DrawNode::create();
 	line->drawLine(Vec2(0, 150), Vec2(_myMap->getContentSize().width, 150), Color4F::BLUE);
 	line->drawLine(Vec2(0, _myMap->getContentSize().height - 150), Vec2(_myMap->getContentSize().width, _myMap->getContentSize().height - 150), Color4F::RED);
 	line->drawRect(Vec2(_myMap->getContentSize().width / 2 - 100, 0), Vec2(_myMap->getContentSize().width / 2 + 100, 150), Color4F::BLUE);
-	line->drawRect(Vec2(_myMap->getContentSize().width / 2 - 100, _myMap->getContentSize().height - 150), Vec2(_myMap->getContentSize().width / 2 + 100,_myMap->getContentSize().height), Color4F::RED);
+	line->drawRect(Vec2(_myMap->getContentSize().width / 2 - 100, _myMap->getContentSize().height - 150), Vec2(_myMap->getContentSize().width / 2 + 100, _myMap->getContentSize().height), Color4F::RED);
 	_battleBackround->addChild(line);
 
 
 	auto blueTeamAreaNode = Node::create();
 	blueTeamAreaNode->setPhysicsBody(PhysicsBody::createBox(Size(200, 150), PhysicsMaterial(1, 0, 0)));
-	blueTeamAreaNode->setPosition(Vec2(75, _myMap->getContentSize().height /2));
+	blueTeamAreaNode->setPosition(Vec2(75, _myMap->getContentSize().height / 2));
 	blueTeamAreaNode->getPhysicsBody()->setCategoryBitmask(BLUETEAM_CONTACT_CATEGORY_BITMAP);
 	blueTeamAreaNode->getPhysicsBody()->setCollisionBitmask(BLUETEAM_CONTACT_COLLISION_BITMAP);
 	blueTeamAreaNode->getPhysicsBody()->setGravityEnable(false);
@@ -448,14 +458,14 @@ void BattleScene::createContent()
 	redTeamAreaNode->getPhysicsBody()->setCollisionBitmask(REDTEAM_CONTACT_COLLISION_BITMAP);
 	redTeamAreaNode->getPhysicsBody()->setGravityEnable(false);
 	redTeamAreaNode->getPhysicsBody()->setDynamic(false);
-	redTeamAreaNode->setPosition(Vec2(_myMap->getContentSize().width - 75, _myMap->getContentSize().height /2));
+	redTeamAreaNode->setPosition(Vec2(_myMap->getContentSize().width - 75, _myMap->getContentSize().height / 2));
 	_battleBackround->addChild(redTeamAreaNode);
 
 	//red Tower
 	auto redTower = Tower::createTower(2);
 	redTower->setTag(TOWER_TAG);
 	redTower->setName("RED TOWER");
-	redTower->setPosition(Vec2(_myMap->getContentSize().width - 200, _myMap->getContentSize().height/ 2));
+	redTower->setPosition(Vec2(_myMap->getContentSize().width - 200, _myMap->getContentSize().height / 2));
 	//redTower->setAnchorPoint(Vec2::ANCHOR_MIDDLE_BOTTOM);
 	_battleBackround->addChild(redTower);
 	MyBodyParser::getInstance()->parseJsonFile("json/tower.json");
@@ -464,7 +474,7 @@ void BattleScene::createContent()
 	redTBody->setGravityEnable(false);
 	redTBody->setContactTestBitmask(0x1);
 	redTower->setPhysicsBody(redTBody);
-	
+
 	auto redTHpBar = Slider::create();
 	redTHpBar->loadBarTexture("image/screen/battle/mini_hp_base.png");
 	redTHpBar->setPercent(100);
@@ -479,7 +489,7 @@ void BattleScene::createContent()
 	auto blueTower = Tower::createTower(1);
 	blueTower->setTag(TOWER_TAG);
 	blueTower->setName("BLUE TOWER");
-	blueTower->setPosition(Vec2(200,_myMap->getContentSize().height /2));
+	blueTower->setPosition(Vec2(200, _myMap->getContentSize().height / 2));
 	//blueTower->setAnchorPoint(Vec2::ANCHOR_MIDDLE_BOTTOM);
 	_battleBackround->addChild(blueTower);
 	PhysicsBody* blueTBody = MyBodyParser::getInstance()->bodyFormJson(blueTower, "tower");
@@ -543,11 +553,11 @@ void BattleScene::createContent()
 	_statusContainer->setPosition(Vec2(testObject->getContentSize().width / 2, testObject->getContentSize().height));
 
 
-//  	ArmatureDataManager::getInstance()->addArmatureFileInfo("animation/walk/walk.ExportJson");
-//  	testArmature = Armature::create("walk");
-//  	testArmature->setPosition(Vec2(0, 0));
-//  	testObject->addChild(testArmature);
-//  	testArmature->setScale(1.0f);
+	//  	ArmatureDataManager::getInstance()->addArmatureFileInfo("animation/walk/walk.ExportJson");
+	//  	testArmature = Armature::create("walk");
+	//  	testArmature->setPosition(Vec2(0, 0));
+	//  	testObject->addChild(testArmature);
+	//  	testArmature->setScale(1.0f);
 
 	_mainCharacterMiniHpBar = Slider::create();
 	_mainCharacterMiniHpBar->loadBarTexture("image/screen/battle/mini_hp_base.png");
@@ -561,7 +571,7 @@ void BattleScene::createContent()
 	_allAlliedUnitHpBar.push_back(_mainCharacterMiniHpBar);
 	_allAlliedUnitSprite.push_back(testObject);
 
-	
+
 	//bolder->setPosition(Vec2::ZERO);
 	//_battleBackround->addChild(bolder);
 	//bolder->runAction(folow->clone());
@@ -603,7 +613,7 @@ void BattleScene::createContent()
 	_characterImageViewNode->setStencil(mask);
 
 	auto icon = Sprite::create(UserUnitModel::getInstance()->getUnitImageById(_allAlliedUnitData[0].mst_unit_id));
-	icon->setPosition(slotPos + Vec2(0,0));
+	icon->setPosition(slotPos + Vec2(0, 0));
 	icon->setScale(1.4f);
 	icon->setTag(ICON);
 	_characterImageViewNode->addChild(icon);
@@ -732,9 +742,9 @@ void BattleScene::createContent()
 	for (int i = 0; i < _allEnemyUnitData.size(); i++)
 	{
 		auto battleUnitInfo = BattleModel::getInstance()->getUnitInforByUuid(_allEnemyUnitData[i].uuid.c_str());
-		auto sp = Character::createCharacter(_allEnemyUnitData[i].mst_unit_id +1);
+		auto sp = Character::createCharacter(_allEnemyUnitData[i].mst_unit_id + 1);
 		sp->rotateCharacter(battleUnitInfo.direction);
-		sp->setPosition(Vec2(battleUnitInfo.position_x +(i-1) * 70, battleUnitInfo.position_y));
+		sp->setPosition(Vec2(battleUnitInfo.position_x + (i - 1) * 70, battleUnitInfo.position_y));
 		sp->setScale(IMAGE_SCALE);
 		sp->setTag(i);
 		sp->setPhysicsBody(PhysicsBody::createCircle(30, PhysicsMaterial(1, 0, 0)/*, Vec2(0, -50)*/));
@@ -836,11 +846,11 @@ void BattleScene::createContent()
 		_allEnemyHpBar.push_back(blueTHpBar);
 		_allEnemyUnitData.push_back(_blueTeamTowerData);
 		_allEnemyUnitSprite.push_back(blueTower);
-		
+
 		_enemyStatusImagePath.push_back(tmp1);
-		
-// 		float positionXScaleRate = _miniMap->getContentSize().width / (_visibleSize.width * 2);
-// 		float positionYScaleRate = _miniMap->getContentSize().height / (_visibleSize.height * 2);
+
+		// 		float positionXScaleRate = _miniMap->getContentSize().width / (_visibleSize.width * 2);
+		// 		float positionYScaleRate = _miniMap->getContentSize().height / (_visibleSize.height * 2);
 		enemyIcon1->setPosition(Vec2(blueTower->getPositionX()*positionXScaleRate, blueTower->getPositionY()*positionYScaleRate));
 		_allEnemyIconInMinimap.push_back(enemyIcon1);
 		node->addChild(_allEnemyIconInMinimap.back(), 1);
@@ -880,6 +890,13 @@ void BattleScene::createContent()
 	{
 		_allEnemuUnitMaxHp.push_back(_allEnemyUnitData[i].hp);
 	}
+	/************************************************************************/
+	/* CREATE NEUTRAL                                                       */
+	/************************************************************************/
+
+	createNeutralTower();
+
+	createNeutralUnit();
 
 	//TODO HERE IS THE CODE TO TEST BATTLE MOVE SYNC FUNCTION
 
@@ -896,7 +913,7 @@ void BattleScene::createContent()
 	sv->on("battle_update", [&](SIOClient* client, const std::string data){
 		//log("BATTLE UPDATE data: %s", data.c_str());
 		//same data with battle sync but change for detect unit by uuid
-		
+
 		/*Check for battle destruct called*/
 		if (_onDestructCalled) return;
 
@@ -954,7 +971,7 @@ void BattleScene::createContent()
 						continue;
 					}
 					if (strcmp(processUnitData[j].uuid.c_str(), sv_uuid.c_str()) == 0)
-					{					
+					{
 						Character* cha = (Character*)processUnitSprite[j];
 						cha->setPosition(Vec2(doc["user_unit"][rapidjson::SizeType(i)]["position_x"].GetDouble(), doc["user_unit"][rapidjson::SizeType(i)]["position_y"].GetDouble()));
 						if (doc["user_unit"][rapidjson::SizeType(i)]["moving"].GetBool())
@@ -1019,7 +1036,7 @@ void BattleScene::createContent()
 	 *  To display all skill animation and logic
 	 */
 
-	sv->on("play_skill_end", [&](SIOClient* client, const std::string data ) {
+	sv->on("play_skill_end", [&](SIOClient* client, const std::string data) {
 		log("Skill event callback data: %s", data.c_str());
 		/*check for battle scene destruct called*/
 		if (_onDestructCalled) return;
@@ -1066,7 +1083,7 @@ void BattleScene::createContent()
 			unit.element = doc["mst_unit"]["element"].GetInt();
 
 
-			
+
 			/************************************************************************/
 			/* Bellow code to detect unit that play skill in the local data       */
 			/************************************************************************/
@@ -1121,10 +1138,10 @@ void BattleScene::createContent()
 				break;
 			case TYPE_RESTORE:
 
-				skillRestoreAction(playObject, skill,saveIndex, team_id);
+				skillRestoreAction(playObject, skill, saveIndex, team_id);
 				break;
 			case TYPE_ATTACK:
-				skillAttackAction(playObject, skill, unit, team_id,randNum);
+				skillAttackAction(playObject, skill, unit, team_id, randNum);
 				break;
 			case TYPE_POISON:
 				skillPoisonAction(playObject, skill, team_id, uuid.c_str());
@@ -1156,14 +1173,14 @@ void BattleScene::createContent()
 			int teamId = doc["team_id"].GetInt();
 			float randomNum = doc["rand_num"].GetDouble();
 			//OK OK. NEXT WEEK: SYNC TOWER ATTACK ANIMATION
-			
+
 			if (teamId == _currentPlayerTeamFlg)
 			{
-				towerAttackLogic(_allAlliedUnitSprite.back(),_allAlliedUnitData.back(), _allEnemyUnitSprite, &_allEnemyUnitData, targetUuid.c_str(),  randomNum);
+				towerAttackLogic(_allAlliedUnitSprite.back(), _allAlliedUnitData.back(), _allEnemyUnitSprite, &_allEnemyUnitData, targetUuid.c_str(), randomNum);
 			}
 			else
 			{
-				towerAttackLogic(_allEnemyUnitSprite.back(),_allEnemyUnitData.back(), _allAlliedUnitSprite, &_allAlliedUnitData, targetUuid.c_str(),  randomNum);
+				towerAttackLogic(_allEnemyUnitSprite.back(), _allEnemyUnitData.back(), _allAlliedUnitSprite, &_allAlliedUnitData, targetUuid.c_str(), randomNum);
 			}
 
 		}
@@ -1185,6 +1202,10 @@ void BattleScene::createContent()
 		int team_Id = doc["team_id"].GetInt();
 		int x = doc["pos_x"].GetInt();
 		int y = doc["pos_y"].GetInt();
+		if (x < 0 || x > _myMap->getMapSize().width || y < 0 || y > _myMap->getMapSize().height) {
+			log("Invalid title position");
+			return;
+		}
 		Vec2 titleCoor = Vec2(x, y);
 		auto title = _mapLayer->getTileAt(titleCoor);
 		if (team_Id == TEAM_FLG_BLUE)
@@ -1192,7 +1213,7 @@ void BattleScene::createContent()
 			if (title->getColor() != Color3B::GREEN)
 			{
 				title->setColor(Color3B::GREEN);
-				
+
 			}
 			return;
 		}
@@ -1210,10 +1231,10 @@ void BattleScene::createContent()
 	/*handler for another unit attack to neutral event*/
 	/*
 	 *JSON: uuid, team_id, user_id, direc, index
-	*/
+	 */
 	sv->on("neutral_tower_attack", [&](SIOClient *client, const string data) {
 		log("neutral attack receive: %s", data.c_str());
-		if (_onDestructCalled) return; 
+		if (_onDestructCalled) return;
 
 		Document doc;
 		doc.Parse<0>(data.c_str());
@@ -1231,7 +1252,7 @@ void BattleScene::createContent()
 			effectSpriteList = _allEnemyUnitSprite;
 			effectUnitData = _allEnemyUnitData;
 		}
-		for (int i = 0; i < effectUnitData.size(); i ++)
+		for (int i = 0; i < effectUnitData.size(); i++)
 		{
 			if (strcmp(doc["uuid"].GetString(), effectUnitData[i].uuid.c_str()) == 0)
 			{
@@ -1259,9 +1280,114 @@ void BattleScene::createContent()
 
 		Tower* tower = _neutralTowerList[doc["index"].GetInt()];
 		tower->changeTowerType(doc["team_id"].GetInt());
-		changeNeutralTowerNearTitle(doc["index"].GetInt(),doc["team_id"].GetInt());
+		changeNeutralTowerNearTitle(doc["index"].GetInt(), doc["team_id"].GetInt());
 
 	});
+
+	/*Listener for other player attack neutral unit for create attack animation*/
+	sv->on("neutral_unit_attack", [&](SIOClient *client, const string data) {
+		if (_onDestructCalled) return;
+
+		Document doc;
+		doc.Parse<0>(data.c_str());
+		if (doc.HasParseError()) {
+			log("Battle scene: neutral_unit_attack callback parse JSON eror");
+			return;
+		}
+
+		vector<Sprite*>  effectSpriteList;
+		vector<UserUnitInfo> effectUnitData;
+		if (doc["team_id"].GetInt() == _currentPlayerTeamFlg) {
+			effectSpriteList = _allAlliedUnitSprite;
+			effectUnitData = _allAlliedUnitData;
+		}
+		else {
+			effectSpriteList = _allEnemyUnitSprite;
+			effectUnitData = _allEnemyUnitData;
+		}
+		for (int i = 0; i < effectUnitData.size(); i++)
+		{
+			if (strcmp(doc["uuid"].GetString(), effectUnitData[i].uuid.c_str()) == 0)
+			{
+				Character* object = (Character*)effectSpriteList[i];
+
+				object->attackActionByUnitPosition(doc["direc"].GetInt(), effectUnitData[i].attack_speed, nullptr, nullptr);
+				break;
+			}
+		}
+
+	});
+
+	/*Listener for neutral unit type change event*/
+	sv->on("neutral_unit_status_change", [&](SIOClient *client, const string data) {
+		if (_onDestructCalled) return;
+		Document doc;
+		doc.Parse<0>(data.c_str());
+		if (doc.HasParseError()) {
+			log("battle scene: neutral_unit_status_change Parse JSOn error");
+			return;
+		}
+		Character* unit = _neutralUnitList[doc["index"].GetInt()];
+		Texture2D* texture;
+		if (doc["team_id"].GetInt() == _currentPlayerTeamFlg) {
+			texture = TextureCache::getInstance()->addImage("image/screen/battle/allied_icon.png");
+		}
+		else {
+			if (doc["team_id"].GetInt() == _currentEnemyTeamFlg)
+			{
+				texture = TextureCache::getInstance()->addImage("image/screen/battle/enemy_icon.png");
+			}
+			else {
+				texture = TextureCache::getInstance()->addImage("image/screen/battle/neutral_icon.png");
+			}
+		}
+		int type = 6;
+		switch (doc["team_id"].GetInt())
+		{
+		case 1:
+			type = 5;
+			break;
+		case 2:
+			type = 2;
+			break;
+		default:
+			type = 6;
+
+			break;
+		}
+		unit->changeUnitType(type);
+		unit->setTag(doc["team_id"].GetInt());
+		_neutralUnitIconInMiniMap[doc["index"].GetInt()]->setTexture(texture);
+
+	});
+
+	sv->on("neutral_move", [&](SIOClient *client, const string data) {
+		if (_onDestructCalled) return;
+		Document doc;
+		doc.Parse<0>(data.c_str());
+		if (doc.HasParseError()) {
+			log("battle scene: neutral_move Parse JSOn error");
+			return;
+		}
+		int index = doc["index"].GetInt();
+		Vec2 oldPos = Vec2(doc["pos_x"].GetDouble(), doc["pos_y"].GetDouble());
+		Vec2 newPos = Vec2(doc["new_x"].GetDouble(), doc["new_y"].GetDouble());
+		Vec2 distanVector = newPos - oldPos;
+		//_neutralUnitList[index]->setPosition(newPos);
+		//_neutralUnitList[index]->runAction(MoveTo::create(1,distanVector));
+		
+		int direc = detectDirectionBaseOnTouchAngle(-distanVector.getAngle()*RAD_DEG + 90);
+		_neutralUnitList[index]->stopMoveAction();
+		_neutralUnitList[index]->getPhysicsBody()->setVelocity(Vec2::ZERO);
+		_neutralUnitList[index]->actionMoveCharacter(direc);
+		Vec2 force = Vec2(150 * cos(distanVector.getAngle()), 150 * sin(distanVector.getAngle()));
+		_neutralUnitList[index]->getPhysicsBody()->setVelocity(force);
+
+	});
+
+
+
+
 
 	sv->on("wormhole_status_change", [&](SIOClient *client, const string data) {
 		if (_onDestructCalled) return;
@@ -1743,10 +1869,16 @@ void BattleScene::checkForAutoAttack()
 		Vec2 distan = towerPos - testObject->getPosition();
 		if ( towerType != _currentPlayerTeamFlg && !_onDelayAttackFlg && distan.length() - _neutralTowerList[i]->getBoundingBox().size.width / 4 < _allAlliedUnitData[0].attack_range) {
 			_onDelayAttackFlg = true;
-			log("SEnd attack");
+			testObject->getPhysicsBody()->setVelocity(Vec2::ZERO);
+			testObject->stopMoveAction();
+			if (_moveMode == MOVE_CIRCLE) {
+				_miniUnit->stopMoveAction();
+			}
+			//log("SEnd attack neutral tower");
 			int direc = detectDirectionBaseOnTouchAngle(-distan.getAngle()*RAD_DEG + 90);
-			BattleAPI::getInstance()->sendNeutralTowerAttackEvent(_currentPlayerTeamFlg, i, direc, [&, i, direc](SIOClient* client, const string repData) {
-				log("neutral callback");
+			BattleAPI::getInstance()->sendNeutralTowerAttackEvent(_currentPlayerTeamFlg, i, direc, [&, i, direc, distan](SIOClient* client, const string repData) {
+				//log("neutral tower callback");
+				_mainCharacterIconInMiniMap->setRotation(-(distan.getAngle() * RAD_DEG) + 90);
 				testObject->attackActionByUnitPosition(direc, _allAlliedUnitData[0].attack_speed, CC_CALLBACK_0(BattleScene::oneSecondAttackCallback, this), /*CC_CALLBACK_0(BattleScene::neutralTowerAttackCallback, this, i)*/nullptr);
 			});
 			break;
@@ -1754,6 +1886,29 @@ void BattleScene::checkForAutoAttack()
 		
 	}
 
+	/*Check for attack and get neutral unit*/
+	for (int i = 0; i < _neutralUnitList.size(); i++)
+	{
+		int unitType = _neutralUnitList[i]->getTag();
+		Vec2 unitPos = _neutralUnitList[i]->getPosition();
+		Vec2 distan = unitPos - testObject->getPosition();
+		if (unitType != _currentPlayerTeamFlg && !_onDelayAttackFlg && distan.length() - _neutralUnitList[i]->getBoundingBox().size.width / 4 < _allAlliedUnitData[0].attack_range)
+		{
+			_onDelayAttackFlg = true;
+			testObject->getPhysicsBody()->setVelocity(Vec2::ZERO);
+			testObject->stopMoveAction();
+			if (_moveMode == MOVE_CIRCLE) {
+				_miniUnit->stopMoveAction();
+			}
+			int direc = detectDirectionBaseOnTouchAngle(-distan.getAngle() *RAD_DEG + 90);
+			BattleAPI::getInstance()->sendNeutralUnitAttackEvent(_currentPlayerTeamFlg, i, direc, [&, i, direc, distan](SIOClient *client, const string data) {
+				_mainCharacterIconInMiniMap->setRotation(-(distan.getAngle() * RAD_DEG) + 90);
+				testObject->attackActionByUnitPosition(direc, _allAlliedUnitData[0].attack_speed, CC_CALLBACK_0(BattleScene::oneSecondAttackCallback, this), nullptr);
+			});
+			break;
+		}
+
+	}
 }
 
 
@@ -2258,6 +2413,10 @@ void BattleScene::updateMiniMap()
 	for (int i = 1; i < _allAlliedUnitData.size(); i++)
 	{
 		_allAlliedUnitIconInMiniMap[i-1]->setPosition(Vec2(_allAlliedUnitSprite[i]->getPositionX()*positionXScaleRate, _allAlliedUnitSprite[i]->getPositionY()*positionYScaleRate));
+	}
+	for (int i = 0; i < _neutralUnitList.size(); i++)
+	{
+		_neutralUnitIconInMiniMap[i]->setPosition(Vec2(_neutralUnitList[i]->getPositionX()*positionXScaleRate, _neutralUnitList[i]->getPositionY()* positionYScaleRate));
 	}
 	
 }

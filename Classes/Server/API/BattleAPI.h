@@ -33,9 +33,7 @@ public:
 	void sendAttackEvent(int direction,UserUnitInfo attackerUnit, UserUnitInfo targetData, SocketIOCallback callback);
 	
 	void sendSkillEvent(UserSkillInfo skillData, UserUnitInfo attacker/*, SocketIOCallback callback*/);
-	
-	void sendBuffSkillEvent(UserSkillInfo skill, SocketIOCallback callback);
-	
+		
 	void sendDeadEvent(UserUnitInfo unitData, SocketIOCallback callback);
 
 	void sendDameDealEvent(int dame, string targetUuid, SocketIOCallback callback);
@@ -58,6 +56,7 @@ public:
 
 	void sendWarpEvent(int wormIndex, int outGateIndex, SocketIOCallback callback);
 
+	void sendNeutralUnitAttackEvent(int team_id, int unitIndex, int direc, SocketIOCallback callback);
 
 	bool init();
 private:

@@ -25,7 +25,7 @@ protected:
 private:
 	static HttpClientBase *s_HttpClientBase;
 	string _data;
-	PostCallback _callback;
+	PostCallback _callback = nullptr;
 };
 
 #endif

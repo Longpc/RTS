@@ -205,41 +205,6 @@ void BattleAPI::sendKillEvent(string killerUuid, string targetUnit, SocketIOCall
 }
 
 
-
-void BattleAPI::sendBuffSkillEvent(UserSkillInfo skill, SocketIOCallback callback)
-{
-	auto c = NodeServer::getInstance()->getClient();
-	if (c == nullptr) return;
-	auto userData = UserModel::getInstance()->getUserInfo();
-	Document doc;
-	doc.SetObject();
-	Document::AllocatorType& allo = doc.GetAllocator();
-	doc.AddMember("user_id", userData.user_id, allo);
-	doc.AddMember("room_id", userData.room_id, allo);
-	doc.AddMember("team_id", userData.team_id, allo);
-	string uu = UserModel::getInstance()->getUuId().c_str();
-	doc.AddMember("uuid", uu.c_str(), allo);
-	auto unitInfo = UserUnitModel::getInstance()->getUnitInfoById(UserModel::getInstance()->getSelectedUnitId());
-	doc.AddMember("user_unit", *convertUnitDataToJsonObject(unitInfo, allo), allo);
-	auto s = convertSkillDataToJsonObject(skill, allo);
-	doc.AddMember("mst_skill", *s, allo);
-
-	rapidjson::Value targetList;
-	targetList.SetArray();
-	
-
-	StringBuffer  buffer;
-	Writer<StringBuffer> writer(buffer);
-	doc.Accept(writer);
-
-	log("Emit data: %s", buffer.GetString());
-	c->emit("buff_skill", buffer.GetString());
-	c->on("buffskill_end", callback);
-}
-
-
-
-
 void BattleAPI::sendDeadEvent(UserUnitInfo unitData, SocketIOCallback callBack)
 {
 	auto sv = NodeServer::getInstance()->getClient();
@@ -423,7 +388,7 @@ void BattleAPI::sendNeutralTowerAttackEvent(int teamID, int towerIndex, int dire
 	StringBuffer  buffer;
 	Writer<StringBuffer> writer(buffer);
 	doc.Accept(writer);
-	log("Neutral attack send data: %s", buffer.GetString());
+	//log("Neutral attack send data: %s", buffer.GetString());
 	auto sv = NodeServer::getInstance()->getClient();
 
 	if (sv == nullptr) {
@@ -454,6 +419,34 @@ void BattleAPI::sendWarpEvent(int wormIndex, int outGateIndex, SocketIOCallback 
 	sv->emit("warp_begin", buffer.GetString());
 	sv->on("warp_begin_end", callback);
 
+
+}
+
+void BattleAPI::sendNeutralUnitAttackEvent(int team_id, int unitIndex,int direc, SocketIOCallback callback)
+{
+	auto userData = UserModel::getInstance()->getUserInfo();
+
+	Document doc;
+	doc.SetObject();
+	Document::AllocatorType& allo = doc.GetAllocator();
+
+	string uu = UserModel::getInstance()->getUuId().c_str();
+	doc.AddMember("uuid", uu.c_str(), allo);
+	doc.AddMember("index", unitIndex, allo);
+	doc.AddMember("team_id", team_id, allo);
+	doc.AddMember("user_id", userData.user_id, allo);
+	doc.AddMember("direc", direc, allo);
+
+	StringBuffer  buffer;
+	Writer<StringBuffer> writer(buffer);
+	doc.Accept(writer);
+	auto sv = NodeServer::getInstance()->getClient();
+
+	if (sv == nullptr) {
+		return;
+	}
+	sv->emit("attack_neutral_unit", buffer.GetString());
+	sv->on("attack_neutral_unit_end", callback);
 
 }
 

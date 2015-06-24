@@ -229,6 +229,7 @@ private:
 
 
 	vector<Character*> _neutralUnitList;
+	vector<Sprite*> _neutralUnitIconInMiniMap;
 	/************************************************************************/
 	/* FUNCTIONS                                                            */
 	/************************************************************************/
