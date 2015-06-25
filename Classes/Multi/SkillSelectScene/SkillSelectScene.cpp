@@ -166,46 +166,51 @@ void SkillSelectScene::nextButtonCallback(Ref *pSender, Widget::TouchEventType t
 			skills.push_back(_allSkillInfo[var]);
 		}
 
-		auto a = UserModel::getInstance()->getUserInfo();
-		Document doc;
-		doc.SetObject();
-		Document::AllocatorType& allo = doc.GetAllocator();
-
-		doc.AddMember("room_id", a.room_id, allo);
-		doc.AddMember("team_id", a.team_id, allo);
-		doc.AddMember("user_id", a.user_id, allo);
-		doc.AddMember("unit_id", _selectedUnitId, allo);
-		rapidjson::Value listSkill;
-		vector<int> listSkillId;
-		listSkill.SetArray();
-		for (int i = 0; i < skills.size(); i++)
-		{
-			listSkill.PushBack(skills[i].mst_skill_id, allo);
-			listSkillId.push_back(skills[i].mst_skill_id);
-			
-			//targetList.AddMember("target_unique_id", targetsId[i], allo);
+		if (UserDefault::getInstance()->getIntegerForKey("MODE") == SOLO_MODE) {
+			startBattle();
 		}
-		doc.AddMember("player_skill_list", listSkill, allo);
-		string uu = UserModel::getInstance()->getUuId().c_str();
-		doc.AddMember("uuid",uu.c_str() , allo);
+		else {
+			auto a = UserModel::getInstance()->getUserInfo();
+			Document doc;
+			doc.SetObject();
+			Document::AllocatorType& allo = doc.GetAllocator();
 
-		StringBuffer buff;
-		Writer<StringBuffer> wt(buff);
-		doc.Accept(wt);
+			doc.AddMember("room_id", a.room_id, allo);
+			doc.AddMember("team_id", a.team_id, allo);
+			doc.AddMember("user_id", a.user_id, allo);
+			doc.AddMember("unit_id", _selectedUnitId, allo);
+			rapidjson::Value listSkill;
+			vector<int> listSkillId;
+			listSkill.SetArray();
+			for (int i = 0; i < skills.size(); i++)
+			{
+				listSkill.PushBack(skills[i].mst_skill_id, allo);
+				listSkillId.push_back(skills[i].mst_skill_id);
 
-		auto client = NodeServer::getInstance()->getClient();
-		client->emit("connect_select_skill", buff.GetString());
-		_isSentRequest = true;
-		string temp = buff.GetString();
-		BattleModel::getInstance()->setPlayerSkills(listSkillId);
-		client->on("connect_select_skill_end", [&,temp](SIOClient* client, const std::string& data) {
-			log("select skill end data: %s", data.c_str());
-			client->emit("connect_ready", temp.c_str());
-			client->on("connect_ready_end", [&](SIOClient* client, const std::string& data) {
-				log("Connect Ready End event received");
+				//targetList.AddMember("target_unique_id", targetsId[i], allo);
+			}
+			doc.AddMember("player_skill_list", listSkill, allo);
+			string uu = UserModel::getInstance()->getUuId().c_str();
+			doc.AddMember("uuid", uu.c_str(), allo);
+
+			StringBuffer buff;
+			Writer<StringBuffer> wt(buff);
+			doc.Accept(wt);
+
+			auto client = NodeServer::getInstance()->getClient();
+			client->emit("connect_select_skill", buff.GetString());
+			_isSentRequest = true;
+			string temp = buff.GetString();
+			BattleModel::getInstance()->setPlayerSkills(listSkillId);
+			client->on("connect_select_skill_end", [&, temp](SIOClient* client, const std::string& data) {
+				log("select skill end data: %s", data.c_str());
+				client->emit("connect_ready", temp.c_str());
+				client->on("connect_ready_end", [&](SIOClient* client, const std::string& data) {
+					log("Connect Ready End event received");
+				});
+				client->on("room_public_battle_start", CC_CALLBACK_2(SkillSelectScene::startBattleCallback, this));
 			});
-			client->on("room_public_battle_start", CC_CALLBACK_2(SkillSelectScene::startBattleCallback, this));
-		});
+		}
 		break;
 	}
 	case cocos2d::ui::Widget::TouchEventType::CANCELED:
@@ -241,6 +246,9 @@ void SkillSelectScene::onBackButtonClick(Ref *pSender)
 		client->on("re_select_unit_end", [&, pageFlg](SIOClient * client, const string data) {
 			Director::getInstance()->replaceScene(TransitionMoveInL::create(SCREEN_TRANSI_DELAY, MultiUnitSelectScene::createScene(1, pageFlg)));
 		});
+	}
+	else {
+		Director::getInstance()->replaceScene(TransitionMoveInL::create(SCREEN_TRANSI_DELAY, MultiUnitSelectScene::createScene(1, pageFlg)));
 	}
 
 
@@ -539,8 +547,12 @@ void SkillSelectScene::rightArrowClickCallback(Ref *pSender, Widget::TouchEventT
 void SkillSelectScene::startBattleCallback(SIOClient* client, const std::string& data)
 {
 	BattleModel::getInstance()->parserJsonToInitData(data.c_str());
-	Director::getInstance()->replaceScene(TransitionMoveInR::create(SCREEN_TRANSI_DELAY, BattleScene::createScene()));
+	startBattle();
+}
 
+void SkillSelectScene::startBattle()
+{
+	Director::getInstance()->replaceScene(TransitionMoveInR::create(SCREEN_TRANSI_DELAY, BattleScene::createScene()));
 }
 
 SkillSelectScene::~SkillSelectScene()

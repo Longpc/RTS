@@ -203,7 +203,7 @@ void BattleScene::createWormHole()
 		/*Create red wormHole*/
 		auto parentNode1 = Node::create();
 		parentNode1->setScaleY(0.75f);
-		parentNode1->setPosition((Vec2(_myMap->getBoundingBox().size) - Vec2(200, 160))*i + Vec2(100, 80));
+		parentNode1->setPosition((Vec2(_myMap->getBoundingBox().size) - Vec2(1200, 200))*i + Vec2(600, 100));
 		_battleBackround->addChild(parentNode1);
 		auto redHoleSprite = Sprite::createWithTexture(redHole);
 		redHoleSprite->setPosition(Vec2::ZERO);
@@ -225,7 +225,7 @@ void BattleScene::createWormHole()
 		_wormHoleList.push_back(blueHoleSprite);
 		auto parentNode2 = Node::create();
 		parentNode2->setScaleY(0.75f);
-		parentNode2->setPosition(Vec2((i + 1) % 2 * (_myMap->getBoundingBox().size.width - 200) + 100, (i % 2) * (_myMap->getBoundingBox().size.height - 160) + 80));
+		parentNode2->setPosition(Vec2((i + 1) % 2 * (_myMap->getBoundingBox().size.width - 1200) + 600, (i % 2) * (_myMap->getBoundingBox().size.height - 200) + 100));
 		parentNode2->addChild(blueHoleSprite);
 		_battleBackround->addChild(parentNode2);
 	}
@@ -351,8 +351,8 @@ void BattleScene::createNeutralTower()
 			neutralTower1->setPosition(Vec2((1 + ((i - 1) % 2))*_myMap->getBoundingBox().size.width / 3, _myMap->getBoundingBox().size.height *((i / 3) * 4 + 1) / 6));
 		}
 		_battleBackround->addChild(neutralTower1);
-		//auto posCoor = getTitleCoorForPosition(neutralTower1->getPosition());
-		//log("Tower %d in pos: %f, %f", i, posCoor.x, posCoor.y);
+		auto posCoor = getTitleCoorForPosition(neutralTower1->getPosition());
+		log("Tower %d in pos: %f, %f", i, posCoor.x, posCoor.y);
 	}
 
 }
@@ -366,16 +366,19 @@ void BattleScene::createNeutralUnit()
 	for (int i = 0; i < 2; i++)
 	{
 		auto unit = Character::createCharacter(6);
-		auto body = PhysicsBody::createCircle(30, PhysicsMaterial(1, 0, 0));
+		/*auto body = PhysicsBody::createCircle(30, PhysicsMaterial(1, 0, 0));
 		body->setRotationEnable(false);
 		body->setCollisionBitmask(0x00001);
 		body->setContactTestBitmask(0x00001);
 		body->setGravityEnable(false);
-		unit->setPhysicsBody(body);
+		unit->setPhysicsBody(body);*/
 
 		_neutralUnitList.push_back(unit);
 		unit->setScale(IMAGE_SCALE);
-		unit->setPosition(Vec2(_myMap->getBoundingBox().size.width / 2, i*(_myMap->getBoundingBox().size.height - 200) + 100));
+		Vec2 titleCoor = Vec2(_myMap->getMapSize().width / 2, i*(_myMap->getMapSize().height - 16) + 8);
+		Vec2 pos = getPositionForTitleCoord(titleCoor);
+		//unit->setPosition(Vec2(_myMap->getBoundingBox().size.width / 2, i*(_myMap->getBoundingBox().size.height - 200) + 100));
+		unit->setPosition(pos);
 		unit->setName("NEUTRAL");
 		unit->setTag(0);
 		_battleBackround->addChild(unit);
@@ -401,7 +404,7 @@ void BattleScene::createContent()
 	_battleBackround->setAnchorPoint(Vec2::ANCHOR_TOP_RIGHT);
 	parentNode->addChild(_battleBackround);
 	//Load the MTC map
-	string pathFIle = FileUtils::getInstance()->fullPathForFilename("map/map3_1.tmx");
+	string pathFIle = FileUtils::getInstance()->fullPathForFilename("map/test_batgiac.tmx");
 	_myMap = TMXTiledMap::create(pathFIle.c_str());
 
 	if (_myMap != nullptr)
@@ -422,7 +425,10 @@ void BattleScene::createContent()
 		}
 
 		_mapLayer = _myMap->getLayer("main_layer");
-
+		auto ss = _mapLayer->getLayerSize();
+		log("layer size: %f, %f", ss.width, ss.height);
+		_blockLayer = _myMap->getLayer("block_layer");
+		_blockLayer->setVisible(false);
 	}
 	else {
 		log("null");
@@ -1202,12 +1208,13 @@ void BattleScene::createContent()
 		int team_Id = doc["team_id"].GetInt();
 		int x = doc["pos_x"].GetInt();
 		int y = doc["pos_y"].GetInt();
-		if (x < 0 || x > _myMap->getMapSize().width || y < 0 || y > _myMap->getMapSize().height) {
+		if (x < 0 || x > _mapLayer->getLayerSize().width || y < 0 || y > _mapLayer->getLayerSize().height) {
 			log("Invalid title position");
 			return;
 		}
 		Vec2 titleCoor = Vec2(x, y);
 		auto title = _mapLayer->getTileAt(titleCoor);
+		if (title == nullptr) return;
 		if (team_Id == TEAM_FLG_BLUE)
 		{
 			if (title->getColor() != Color3B::GREEN)
@@ -1363,6 +1370,7 @@ void BattleScene::createContent()
 
 	sv->on("neutral_move", [&](SIOClient *client, const string data) {
 		if (_onDestructCalled) return;
+		log("neutral move: %s", data.c_str());
 		Document doc;
 		doc.Parse<0>(data.c_str());
 		if (doc.HasParseError()) {
@@ -1370,18 +1378,21 @@ void BattleScene::createContent()
 			return;
 		}
 		int index = doc["index"].GetInt();
-		Vec2 oldPos = Vec2(doc["pos_x"].GetDouble(), doc["pos_y"].GetDouble());
-		Vec2 newPos = Vec2(doc["new_x"].GetDouble(), doc["new_y"].GetDouble());
+		Vec2 oldPos = getPositionForTitleCoord(Vec2(doc["pos_x"].GetDouble(), doc["pos_y"].GetDouble()));
+		Vec2 newPos = getPositionForTitleCoord(Vec2(doc["new_x"].GetDouble(), doc["new_y"].GetDouble()));
 		Vec2 distanVector = newPos - oldPos;
-		//_neutralUnitList[index]->setPosition(newPos);
-		//_neutralUnitList[index]->runAction(MoveTo::create(1,distanVector));
-		
 		int direc = detectDirectionBaseOnTouchAngle(-distanVector.getAngle()*RAD_DEG + 90);
+		//_neutralUnitList[index]->setPosition(newPos);
+		_neutralUnitList[index]->stopMoveAction();
+		_neutralUnitList[index]->actionMoveCharacter(direc);
+		_neutralUnitList[index]->runAction(MoveTo::create(1,newPos));
+		
+		/*
 		_neutralUnitList[index]->stopMoveAction();
 		_neutralUnitList[index]->getPhysicsBody()->setVelocity(Vec2::ZERO);
 		_neutralUnitList[index]->actionMoveCharacter(direc);
 		Vec2 force = Vec2(150 * cos(distanVector.getAngle()), 150 * sin(distanVector.getAngle()));
-		_neutralUnitList[index]->getPhysicsBody()->setVelocity(force);
+		_neutralUnitList[index]->getPhysicsBody()->setVelocity(force);*/
 
 	});
 
@@ -1509,22 +1520,60 @@ void BattleScene::displaySkillMpInButton(Button *parent, int mp)
 
 void BattleScene::createPhysicBolder()
 {
-	auto bottomB = createHBolder();
+	/*auto bottomB = createHBolder();
 	bottomB->setPosition(Vec2(_myMap->getContentSize().width/2, -50));
 	_battleBackround->addChild(bottomB);
 
 	auto topB = createHBolder();
 	topB->setPosition(Vec2(_myMap->getContentSize().width /2, _myMap->getContentSize().height + 50));
-	_battleBackround->addChild(topB);
+	_battleBackround->addChild(topB);*/
 
-	auto leftB = createVBolder();
+	/*auto leftB = createVBolder();
 	leftB->setPosition(Vec2(-50, _myMap->getContentSize().height /2));
 	_battleBackround->addChild(leftB);
 
 	auto rightB = createVBolder();
 	rightB->setPosition(Vec2(_myMap->getContentSize().width+ 50, _myMap->getContentSize().height/2));
-	_battleBackround->addChild(rightB);
+	_battleBackround->addChild(rightB);*/
 	//createRandomRock();
+
+	/*auto topLeft = createCornerBolder(33.7f);
+	topLeft->setPosition(Vec2(300, _myMap->getBoundingBox().size.height - 200));
+	//topLeft->setRotation(33.7f);
+	_battleBackround->addChild(topLeft);
+
+	auto topRight = createCornerBolder(-56.3f);
+	topRight->setPosition(Vec2(_myMap->getBoundingBox().size.width - 300, _myMap->getBoundingBox().size.height - 200));
+	//topRight->setRotation(-56.3f);
+	_battleBackround->addChild(topRight);
+
+	auto bottomLeft = createCornerBolder(-56.3f);
+	bottomLeft->setPosition(Vec2(300, 200));
+	//bottomLeft->setRotation(-56.3f);
+	_battleBackround->addChild(bottomLeft);
+
+	auto bottomRight = createCornerBolder(-33.7f);
+	bottomRight->setPosition(Vec2(_myMap->getBoundingBox().size.width - 300, 200));
+	//bottomRight->setRotation(-33.7f);
+	_battleBackround->addChild(bottomRight);*/
+
+	Size s = _blockLayer->getLayerSize();
+	for (int x = 0; x < s.width; x++)
+	{
+		for (int y = 0; y < s.height; y++)
+		{
+			auto title = _blockLayer->getTileAt(Vec2(x, y));
+			if (title != nullptr) {
+				auto body = PhysicsBody::createBox(title->getBoundingBox().size, PhysicsMaterial(1, 1, 0));
+				body->setRotationEnable(false);
+				body->setDynamic(false);
+				body->setContactTestBitmask(0x111);
+				body->setCollisionBitmask(0x1111);
+				title->setPhysicsBody(body);
+				title->setTag(BOUND_BORDER_TAG);
+			}
+		}
+	}
 }
 
 Node* BattleScene::createHBolder()
@@ -1558,6 +1607,21 @@ Node* BattleScene::createVBolder()
 
 }
 
+Sprite* BattleScene::createCornerBolder(float angle)
+{
+	auto wallBd = PhysicsBody::createBox(Size(100, 800), PhysicsMaterial(1, 0.95, 0));
+	wallBd->setGravityEnable(false);
+	
+	wallBd->setContactTestBitmask(0x111);
+	wallBd->setCollisionBitmask(0x1111);
+
+	auto node = Sprite::create("mini_icon.png");
+	node->setTag(BOUND_BORDER_TAG);
+	node->setPhysicsBody(wallBd);
+	node->setRotation(angle);
+	wallBd->setDynamic(false);
+	return node;
+}
 
 void BattleScene::onEnter()
 {
@@ -1643,6 +1707,9 @@ void BattleScene::testMoveLogic()
 	//return in nearly tower title case
 	if (checkTitleNearTower(titlePos)) return;
 	auto title = _mapLayer->getTileAt(titlePos);
+	if (title == nullptr) {
+		return;
+	}
 	//return in same title case
 	if (title == _oldTitle) return;
 	
@@ -2109,11 +2176,11 @@ void BattleScene::runRespawnAction(string killerUuid)
 		//saveKillDeadInfo(killerId, 0, _currentEnemyTeamFlg);
 		//string uu = UserModel::getInstance()->getUuId().c_str();
 		//sendKillDead(killerUuid.c_str(), uu.c_str(), nullptr);
-		_alliedTeamTotalDead += 1;
+		/*_alliedTeamTotalDead += 1;
 		if (_alliedTeamTotalDead == 5)
 		{
 			endBattle(_currentEnemyTeamFlg);
-		}
+		}*/
 		auto timeLb = Label::createWithSystemFont("5", JAPANESE_FONT_1_HEAVY, 150);
 		_battleBackround->addChild(timeLb, 1000);
 		timeLb->setPosition(testObject->getPosition());
@@ -4325,10 +4392,11 @@ cocos2d::Vec2 BattleScene::getTitleCoorForPosition(Vec2 location)
 }
 cocos2d::Vec2 BattleScene::getPositionForTitleCoord(Vec2 tileCoord)
 {
-	int x = (tileCoord.x * _myMap->getTileSize().width) + _myMap->getTileSize().width / 2;
+	/*int x = (tileCoord.x * _myMap->getTileSize().width) + _myMap->getTileSize().width / 2;
 	int y = (_myMap->getMapSize().height * _myMap->getTileSize().height) -
 		(tileCoord.y * _myMap->getTileSize().height) - _myMap->getTileSize().height / 2;
-	return Vec2(x, y);
+	return Vec2(x, y);*/
+	return _mapLayer->getTileAt(tileCoord)->getPosition();
 }
 
 vector<Vec2> BattleScene::AStarPathFindingAlgorithm(Vec2 curentPos, Vec2 destinationPos)

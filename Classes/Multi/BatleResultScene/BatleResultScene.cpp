@@ -48,6 +48,8 @@ bool BatleResultScene::init(int winTeam)
 		sv->emit("get_battle_result", "hello");
 		sv->on("battle_result", [&](SIOClient* client, const string data) {
 			log("battle result with data: %s", data.c_str());
+			if (_isReceiveResponse) return;
+			_isReceiveResponse = true;
 			Document doc;
 			doc.Parse<0>(data.c_str());
 			if (doc.HasParseError()) {

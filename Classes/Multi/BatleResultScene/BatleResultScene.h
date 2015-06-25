@@ -30,6 +30,7 @@ private:
 	int _saveYourUnitIndex = 0;
 	int _currentTeam = 0;
 	bool _isSendRequest = false;
+	bool _isReceiveResponse = false;
 
 	///FUNCTIONS///////////////////////////////////////////////////////////////////////
 	virtual void createContent();

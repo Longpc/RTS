@@ -85,6 +85,7 @@ private:
 	virtual void rightArrowClickCallback(Ref *pSender, Widget::TouchEventType type);
 
 	virtual void startBattleCallback(SIOClient* client, const std::string& data);
+	virtual void startBattle();
 
 };
 

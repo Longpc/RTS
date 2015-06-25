@@ -220,6 +220,7 @@ private:
 	/*Titled Map for Path finding and simple background*/
 	TMXTiledMap* _myMap;
 	TMXLayer* _mapLayer;
+	TMXLayer* _blockLayer;
 	Sprite* _oldTitle = nullptr;
 
 	/*Test neutral tower*/
@@ -274,6 +275,8 @@ private:
 	virtual void createPhysicBolder();
 	virtual Node* createHBolder();
 	virtual Node* createVBolder();
+
+	virtual Sprite* createCornerBolder(float angle);
 	/*create rock and tree and put to battle background by random position*/
 	virtual void createRandomRock();
 	/*For physic contact event*/
