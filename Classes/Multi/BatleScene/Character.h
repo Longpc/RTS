@@ -31,7 +31,8 @@ public :
 	CC_SYNTHESIZE(AttackCallback, _attackCallback , AttackCallbackFunction);
 	CC_SYNTHESIZE(bool, _attackDelayFlg, AttackDelayFlag);
 	CC_SYNTHESIZE(bool, _onMoving, OnMovingFlg);
-
+	/*for save neutral unit data in solo mode*/
+	CC_SYNTHESIZE(int, _saveAttackTime, SaveAtttackTime);
 	void moveActionByVector(Vec2 destination);
 	void attackActionByUnitPosition(int direction, int attackTime, AttackCallback oneSecondCallback = nullptr,  AttackCallback attackCallback = nullptr);
 	void respawAction();
@@ -41,6 +42,9 @@ public :
 	virtual void actionMoveCharacter(int directionId);
 	virtual void rotateCharacter(int direc);
 	virtual void changeAnimationImagePathByUnitId(int unitId);
+	CC_SYNTHESIZE(bool, _birdMode, BirdMode);
+	int _birdModeIndex = 0;
+	virtual void birdMode(int index);
 
 	/*
 	 * Character id: 2: Red, 3: Purple, 4: Green, 5: Blue, 6: Black

@@ -41,6 +41,7 @@ bool UserSelect::init()
 
 void UserSelect::onBackButtonClick(Ref *pSender)
 {
+	NodeServer::destroyInstance();
 	Director::getInstance()->replaceScene(TransitionMoveInL::create(SCREEN_TRANSI_DELAY, ModeSelectScene::createScene()));
 }
 
@@ -87,7 +88,7 @@ void UserSelect::userSelectCallback(Ref *pSender, Widget::TouchEventType type)
 		auto bt = (Button*)pSender;
 		UserModel::getInstance()->setUserInfo(_userList[bt->getTag()]);
 		UserModel::getInstance()->setRoomId(1);
-		UserLoginAPI::getInstance()->setLoginCompletedCallback([&](){
+		//UserLoginAPI::getInstance()->setLoginCompletedCallback([&](){
 			log("Login Completed");
 			Document doc;
 			doc.SetObject();
@@ -110,7 +111,7 @@ void UserSelect::userSelectCallback(Ref *pSender, Widget::TouchEventType type)
 				Director::getInstance()->replaceScene(TransitionMoveInR::create(SCREEN_TRANSI_DELAY, MultiTeamSelectScene::createScene(UserModel::getInstance()->getUserInfo().user_id)));
 			});
 
-		});
+		//});
 // 		StartAPI::getInstance()->setStartAPICallback([&,bt]() {
 // 		});
 

@@ -113,7 +113,15 @@ void Character::moveActionByVector(Vec2 destination)
 		{
 			this->getPhysicsBody()->setVelocity(Vect(this->getCharacterMoveSpeed()*SPEED_MULTIPLE * cos(destination.getAngle()), this->getCharacterMoveSpeed()*SPEED_MULTIPLE * sin(destination.getAngle())));
 		}
-		actionMoveCharacter(direct);
+		if (getBirdMode() == false)
+		{
+			actionMoveCharacter(direct);
+		}
+		else {
+			//getPhysicsBody()->setRotationEnable(true);
+			setRotation(destination.getAngle());
+			//getPhysicsBody()->setRotationEnable(false);
+		}
 
 		break;
 	}
@@ -205,6 +213,10 @@ Animation* Character::createAttackAnimationWithDefine(int imageId)
 }
 
 void Character::actionMoveCharacter(int directionId) {
+	if (getBirdMode()) {
+		birdMode(_birdModeIndex);
+		return;
+	}
 	setOnMovingFlg(true);
 	if (this->getNumberOfRunningActions() > 0) {
 		if (this->getActionByTag(directionId) != nullptr) {
@@ -256,4 +268,21 @@ bool Character::caculAvgAngle(int avg, float angle) {
 	if (angle > avg - 22 && angle < avg + 22)
 		return true;
 	return false;
+}
+
+void Character::birdMode(int index)
+{
+	_birdModeIndex = index;
+	char szName[100] = { 0 };
+	sprintf(szName, "bird_0%d.png", index);
+	string p = "image/bird/";
+	p.append(szName);
+
+	Texture2D* text = TextureCache::getInstance()->addImage(p);
+
+	this->setTexture(text);
+	this->setBirdMode(true);
+	
+	/*Rect = text->getContentSize();
+	testObject->setTextureRect()*/
 }

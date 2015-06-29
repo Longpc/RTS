@@ -15,6 +15,8 @@ public:
 	~BatleResultScene();
 	bool init(int winTeam);
 private:
+
+	int _gameMode;
 	///VARIABLES///////////////////////////////////////////////////////////////////////
 	Sprite *_blueTeamTabBackground;
 	Sprite *_redTeamTabBackground;

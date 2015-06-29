@@ -167,6 +167,7 @@ void SkillSelectScene::nextButtonCallback(Ref *pSender, Widget::TouchEventType t
 		}
 
 		if (UserDefault::getInstance()->getIntegerForKey("MODE") == SOLO_MODE) {
+			UserModel::getInstance()->setSelectedSkillList(skills);
 			startBattle();
 		}
 		else {

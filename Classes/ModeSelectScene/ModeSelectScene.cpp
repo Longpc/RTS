@@ -96,9 +96,7 @@ bool ModeSelectScene::init()
 // 	//_client = SocketIO::connect("ws://localhost:8080/", *this);
 // 	//CCLOG("----> on hello");
  	//_client->on("hello", CC_CALLBACK_2(ModeSelectScene::onReceiveEvent, this));
-
-	auto sv = NodeServer::getInstance();
-	sv->startConnectWithHandler("hello", CC_CALLBACK_2(ModeSelectScene::onReceiveEvent, this));
+	//sv->startConnectWithHandler("hello", CC_CALLBACK_2(ModeSelectScene::onReceiveEvent, this));
 
 	return true;
 }
@@ -117,6 +115,7 @@ void ModeSelectScene::multiButtonCallback(Ref *pSender, Widget::TouchEventType t
 	case cocos2d::ui::Widget::TouchEventType::ENDED:
 	{
 		if (checkRoomMember() == true && StartAPI::getInstance()->getServerCallbackFlg()) {
+			auto sv = NodeServer::getInstance();
 			Director::getInstance()->replaceScene(TransitionMoveInR::create(SCREEN_TRANSI_DELAY, UserSelect::createScene()));
 		} 
 		break;
@@ -139,7 +138,13 @@ void ModeSelectScene::soloButtonCallback(Ref *pSender, Widget::TouchEventType ty
 		break;
 	case cocos2d::ui::Widget::TouchEventType::ENDED:
 	{
-		Director::getInstance()->replaceScene(TransitionMoveInR::create(SCREEN_TRANSI_DELAY, MultiUnitSelectScene::createScene(1,SOLO_MODE)));
+		if (StartAPI::getInstance()->getServerCallbackFlg() == true)
+		{
+			Director::getInstance()->replaceScene(TransitionMoveInR::create(SCREEN_TRANSI_DELAY, MultiUnitSelectScene::createScene(1, SOLO_MODE)));
+		}
+		else {
+			log("Waiting for StartAPI callback");
+		}
 		break;
 	}
 	case cocos2d::ui::Widget::TouchEventType::CANCELED:

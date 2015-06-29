@@ -34,7 +34,6 @@ bool MultiUnitSelectScene::init(int roomId,int pageFlg)
 	_roomId = roomId;
 	_pageFlg = pageFlg;
 	_onTouchDisable = false;
-
 	auto a = UserModel::getInstance()->getUserInfo();
 	_userNameLabel->setString(a.name.c_str());
 
@@ -408,28 +407,30 @@ void MultiUnitSelectScene::nextButtonCallback(Ref *pSender, Widget::TouchEventTy
 		UserModel::getInstance()->setSelectedUnitId(_decidedUnitId);
 		auto userData = UserModel::getInstance()->getUserInfo();
 		auto unitData = UserUnitModel::getInstance()->getUnitInfoById(_decidedUnitId);
-		Document doc;
-		doc.SetObject();
-		Document::AllocatorType& allo = doc.GetAllocator();
+		if (_pageFlg == MULTI_MODE)
+		{
+			Document doc;
+			doc.SetObject();
+			Document::AllocatorType& allo = doc.GetAllocator();
 
-		doc.AddMember("room_id", userData.room_id, allo);
-		doc.AddMember("user_id", userData.user_id, allo);
-		doc.AddMember("team_id", userData.team_id, allo);
-		doc.AddMember("unit_id", _decidedUnitId, allo);
-		doc.AddMember("mst_unit", *UserUnitModel::getInstance()->convertFromUserUnitInfoToJson(unitData, allo),allo);
-		string uu = UserModel::getInstance()->getUuId().c_str();
-		doc.AddMember("uuid",uu.c_str() , allo);
-		StringBuffer buff;
-		Writer<StringBuffer> writer(buff);
-		doc.Accept(writer);
+			doc.AddMember("room_id", userData.room_id, allo);
+			doc.AddMember("user_id", userData.user_id, allo);
+			doc.AddMember("team_id", userData.team_id, allo);
+			doc.AddMember("unit_id", _decidedUnitId, allo);
+			doc.AddMember("mst_unit", *UserUnitModel::getInstance()->convertFromUserUnitInfoToJson(unitData, allo), allo);
+			string uu = UserModel::getInstance()->getUuId().c_str();
+			doc.AddMember("uuid", uu.c_str(), allo);
+			StringBuffer buff;
+			Writer<StringBuffer> writer(buff);
+			doc.Accept(writer);
 
-		auto client = NodeServer::getInstance()->getClient();
-		log("Unit Selected End data: %s", buff.GetString());
-		client->emit("connect_select_unit", buff.GetString());
-		client->on("connect_select_unit_end", [&](SIOClient* client, const std::string& data) {
-			log("select unit end data: %s", data.c_str());
-		});
-
+			auto client = NodeServer::getInstance()->getClient();
+			log("Unit Selected End data: %s", buff.GetString());
+			client->emit("connect_select_unit", buff.GetString());
+			client->on("connect_select_unit_end", [&](SIOClient* client, const std::string& data) {
+				log("select unit end data: %s", data.c_str());
+			});
+		}
 		Director::getInstance()->replaceScene(TransitionMoveInR::create(SCREEN_TRANSI_DELAY, SkillSelectScene::createScene()));
 		break;
 	}

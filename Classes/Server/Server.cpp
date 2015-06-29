@@ -27,13 +27,16 @@ NodeServer* NodeServer::getInstance()
 
 void NodeServer::destroyInstance()
 {
+	if (s_sharedTestServer->getClient() != nullptr) {
+		s_sharedTestServer->getClient()->disconnect();
+	}
 	s_sharedTestServer->freeClient();
 	s_sharedTestServer = nullptr;
 }
 
 void NodeServer::freeClient()
 {
-	CC_SAFE_DELETE(_valueDict);
+	//CC_SAFE_DELETE(_valueDict);
 }
 
 bool NodeServer::init()

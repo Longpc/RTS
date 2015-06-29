@@ -26,6 +26,7 @@ bool BatleResultScene::init(int winTeam)
 	if (!LayerBase::init()) {
 		return false;
 	}
+	_gameMode = UserDefault::getInstance()->getIntegerForKey("MODE");
 	_menu->setVisible(false);
 	_currentTeam = UserModel::getInstance()->getUserInfo().team_id;
 	if (winTeam == TEAM_FLG_BLUE)
@@ -42,67 +43,74 @@ bool BatleResultScene::init(int winTeam)
 	homeButton->setTouchEnabled(true);
 	homeButton->addTouchEventListener(CC_CALLBACK_2(BatleResultScene::nextButtonCallback, this));
 	addChild(homeButton, 10);
-	if (_isSendRequest == false) {
-		_isSendRequest = true;
-		auto sv = NodeServer::getInstance()->getClient();
-		sv->emit("get_battle_result", "hello");
-		sv->on("battle_result", [&](SIOClient* client, const string data) {
-			log("battle result with data: %s", data.c_str());
-			if (_isReceiveResponse) return;
-			_isReceiveResponse = true;
-			Document doc;
-			doc.Parse<0>(data.c_str());
-			if (doc.HasParseError()) {
-				log("Parse JSOn error");
-				return;
-			}
-			if (doc.IsArray()) {
+	if (UserDefault::getInstance()->getIntegerForKey("MODE") == MULTI_MODE)
+	{
+		if (_isSendRequest == false) {
+			_isSendRequest = true;
+			auto sv = NodeServer::getInstance()->getClient();
+			sv->emit("get_battle_result", "hello");
+			sv->on("battle_result", [&](SIOClient* client, const string data) {
+				log("battle result with data: %s", data.c_str());
+				if (_isReceiveResponse) return;
+				_isReceiveResponse = true;
+				Document doc;
+				doc.Parse<0>(data.c_str());
+				if (doc.HasParseError()) {
+					log("Parse JSOn error");
+					return;
+				}
+				if (doc.IsArray()) {
 
-				vector<UserBattleInfo> alliedTeam;
-				vector<UserBattleInfo> enemyTeam;
-				for (int i = 0; i < doc.Size(); i++)
-				{
-					int unitID = doc[rapidjson::SizeType(i)]["unit_id"].GetInt();
-					auto unitInfo = UserUnitModel::getInstance()->getUnitInfoById(unitID);
-					UserBattleInfo temp;
-					temp.name = unitInfo.name;
-					temp.unitId = unitID;
-					temp.totalDealDame = doc[rapidjson::SizeType(i)]["totalDealDame"].GetInt();
-					temp.totalReceivedDame = doc[rapidjson::SizeType(i)]["totalReceiveDame"].GetInt();
-					temp.killNum = doc[rapidjson::SizeType(i)]["killNum"].GetInt();
-					temp.deadNum = doc[rapidjson::SizeType(i)]["deadNum"].GetInt();
-					temp.assistNum = doc[rapidjson::SizeType(i)]["assistNum"].GetInt();
-					temp.maxKillCombo = doc[rapidjson::SizeType(i)]["maxKillCombo"].GetInt();
-					temp.longestKillstreak = doc[rapidjson::SizeType(i)]["longestKillStreak"].GetInt();
-
-
-					if (doc[rapidjson::SizeType(i)]["team_id"].GetInt() == _currentTeam)
+					vector<UserBattleInfo> alliedTeam;
+					vector<UserBattleInfo> enemyTeam;
+					for (int i = 0; i < doc.Size(); i++)
 					{
-						alliedTeam.push_back(temp);
-						if (strcmp(doc[rapidjson::SizeType(i)]["uuid"].GetString(), UserModel::getInstance()->getUuId().c_str()) == 0) {
-							_saveYourUnitIndex = alliedTeam.size() - 1;
+						int unitID = doc[rapidjson::SizeType(i)]["unit_id"].GetInt();
+						auto unitInfo = UserUnitModel::getInstance()->getUnitInfoById(unitID);
+						UserBattleInfo temp;
+						temp.name = unitInfo.name;
+						temp.unitId = unitID;
+						temp.totalDealDame = doc[rapidjson::SizeType(i)]["totalDealDame"].GetInt();
+						temp.totalReceivedDame = doc[rapidjson::SizeType(i)]["totalReceiveDame"].GetInt();
+						temp.killNum = doc[rapidjson::SizeType(i)]["killNum"].GetInt();
+						temp.deadNum = doc[rapidjson::SizeType(i)]["deadNum"].GetInt();
+						temp.assistNum = doc[rapidjson::SizeType(i)]["assistNum"].GetInt();
+						temp.maxKillCombo = doc[rapidjson::SizeType(i)]["maxKillCombo"].GetInt();
+						temp.longestKillstreak = doc[rapidjson::SizeType(i)]["longestKillStreak"].GetInt();
+
+
+						if (doc[rapidjson::SizeType(i)]["team_id"].GetInt() == _currentTeam)
+						{
+							alliedTeam.push_back(temp);
+							if (strcmp(doc[rapidjson::SizeType(i)]["uuid"].GetString(), UserModel::getInstance()->getUuId().c_str()) == 0) {
+								_saveYourUnitIndex = alliedTeam.size() - 1;
+							}
 						}
+						else
+						{
+							enemyTeam.push_back(temp);
+						}
+					}
+
+					if (_currentTeam == TEAM_FLG_BLUE)
+					{
+						_blueTeamBattleResult = alliedTeam;
+						_redTeamBattleResult = enemyTeam;
 					}
 					else
 					{
-						enemyTeam.push_back(temp);
+						_blueTeamBattleResult = enemyTeam;
+						_redTeamBattleResult = alliedTeam;
 					}
-				}
 
-				if (_currentTeam == TEAM_FLG_BLUE)
-				{
-					_blueTeamBattleResult = alliedTeam;
-					_redTeamBattleResult = enemyTeam;
+					createContent();
 				}
-				else
-				{
-					_blueTeamBattleResult = enemyTeam;
-					_redTeamBattleResult = alliedTeam;
-				}
-
-				createContent();
-			}
-		});
+			});
+		} //end of check request
+	}//end of check gameMode
+	else
+	{
+		createContent();
 	}
 	
 
@@ -120,9 +128,13 @@ void BatleResultScene::nextButtonCallback(Ref *pSender, Widget::TouchEventType t
 		break;
 	case cocos2d::ui::Widget::TouchEventType::ENDED:
 	{
-		auto sv = NodeServer::getInstance()->getClient();
-		string uu = UserModel::getInstance()->getUuId();
-		sv->emit("clean_battle_result", uu.c_str());
+		if (_gameMode == MULTI_MODE)
+		{
+			auto sv = NodeServer::getInstance()->getClient();
+			string uu = UserModel::getInstance()->getUuId();
+			sv->emit("clean_battle_result", uu.c_str());
+			NodeServer::destroyInstance();
+		}
 		Director::getInstance()->replaceScene(TransitionMoveInL::create(SCREEN_TRANSI_DELAY, ModeSelectScene::createScene()));
 		break; 
 	}

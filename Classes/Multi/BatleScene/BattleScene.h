@@ -83,6 +83,8 @@
 #define BOUND_BORDER_TAG 1905
 #define WORMHOLDROTATE 1245
 
+#define NEUTRAL_MOVE_SPEED 150
+
 using namespace cocostudio;
 class BattleScene : public LayerBase
 {
@@ -97,6 +99,7 @@ public:
 	static Scene* createScene();
 	static BattleScene* create();
 	bool init();
+	int _gameMode;
 private:
 	/************************************************************************/
 	/* VARIABLES                                                            */
@@ -263,7 +266,10 @@ private:
 
 	/*Create neutral tower*/
 	virtual void createNeutralTower();
-	
+
+	/*draw tower area retangle*/
+	virtual void drawTowerArea(Sprite* tower);
+
 	/*Create meutral unit*/
 	virtual void createNeutralUnit();
 
@@ -292,6 +298,10 @@ private:
 
 	///BUTTON CALLBACK///
 	bool _touchEndButton = false;
+
+	int _testBirdIndex = 0;
+	bool _birdMode = false;
+	virtual void birdButtonCallback(Ref *p, Widget::TouchEventType type);
 	virtual void nextButtonCallback(Ref *pSender, Widget::TouchEventType type);
 	virtual void menuButtonCallback(Ref *pSender, Widget::TouchEventType type);
 	virtual void skill1ButtonCallback(Ref *pSender, Widget::TouchEventType type);
@@ -370,14 +380,25 @@ private:
 	/* Function to check the condition and run attack animation by automatic
 	*/
 	virtual void checkForAutoAttack();
+	virtual void attackLogicAndAnimation(Vec2 posDistan, int direc, int i, int dame);
 
 	bool _onWarping = false;
 	/*Checker for warp by move into wormhole*/
 	virtual void checkForWarp();
+
+	virtual void closeWormHole(int ingate, int outgate);
+	virtual void openWormHole(int ingate, int outgate);
+	
+	virtual void characterAttackAnimationLogic(Vec2 distan, int direc, AttackCallback callback = nullptr);
+	/*neutral type: 1 tower, 2 unit*/
+	virtual void chatacterAttackNeutralCallback(int neutralIndex, int neutralType);
+
+	virtual void neutralUnitStatusChange(Character* unit, int team, int index);
+
 	/*check auto atack of tower*/
 	bool _alliedTowerAttackdelay = false;
 	bool _enemyTowerAttackdelay = false;
-	virtual void checkAutoAttackOfTower(Sprite* tower, UserUnitInfo towerData, vector<Sprite*> targetSpritelist, vector<UserUnitInfo> targetDataList, bool &attackDelay, int teamId);
+	virtual void checkAutoAttackOfTower();
 	virtual void removeTowerDelayFlg(Ref * p, bool *delay);
 
 	/*Tower attack animation*/
@@ -388,7 +409,9 @@ private:
 	void update(float delta);
 	float _checkTime = 0; //for test Battle sync
 
-	void testMoveLogic();
+	void neutralUnitMoveInSoloMod();
+
+	void testMoveLogic(Sprite* object, int teamFLg);
 	/*return true if title near neutral tower and cannot get*/
 	virtual bool checkTitleNearTower(Vec2 titleCoor);
 	/*Change tower nearly title color with tower title*/
@@ -434,6 +457,7 @@ private:
 	virtual void showCoolDownTime(Button *parentButton, int cooldownTime);
 
 	virtual void playSkill(UserSkillInfo skillData);
+	virtual void playSkillLogicAndAnimation(Sprite* object, UserSkillInfo skill, int team_id, float randNum, string uuid, int saveIndex, UserUnitInfo unit);
 	/*this function will detect all unit in skill effect area base on @skill info (skill distance, skill area type, skill type...
 	return value is the vector store all unit id which contained by effect area
 	@drawFlg is flag to decide this function will show or not show the skill effect area
