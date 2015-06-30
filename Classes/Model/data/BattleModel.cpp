@@ -86,7 +86,7 @@ Room_User_Unit_Model BattleModel::getUnitInforByUuid(string uuid)
 			return unit;
 		}
 	}
-	log("find error!");
+	//log("find error!");
 }
 
 vector<Room_User_Unit_Model> BattleModel::getTeamUserUnitList(int teamId)

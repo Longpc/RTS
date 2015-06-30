@@ -450,6 +450,64 @@ void BattleAPI::sendNeutralUnitAttackEvent(int team_id, int unitIndex,int direc,
 
 }
 
+void BattleAPI::sendCannonAttackEvent(int team_id, int unitIndex, int direc, SocketIOCallback callback)
+{
+	auto userData = UserModel::getInstance()->getUserInfo();
+
+	Document doc;
+	doc.SetObject();
+	Document::AllocatorType& allo = doc.GetAllocator();
+
+	string uu = UserModel::getInstance()->getUuId().c_str();
+	doc.AddMember("uuid", uu.c_str(), allo);
+	doc.AddMember("index", unitIndex, allo);
+	doc.AddMember("team_id", team_id, allo);
+	doc.AddMember("user_id", userData.user_id, allo);
+	doc.AddMember("direc", direc, allo);
+
+	StringBuffer  buffer;
+	Writer<StringBuffer> writer(buffer);
+	doc.Accept(writer);
+	auto sv = NodeServer::getInstance()->getClient();
+
+	if (sv == nullptr) {
+		return;
+	}
+	sv->emit("attack_cannon", buffer.GetString());
+	sv->on("attack_cannon_end", callback);
+
+}
+
+void BattleAPI::sendCannonLunchEvent(int team_id, int cannonIndex, SocketIOCallback callback) {
+	
+	auto sv = NodeServer::getInstance()->getClient();
+	if (sv == nullptr) {
+		return;
+	}
+	auto userData = UserModel::getInstance()->getUserInfo();
+	string uu = UserModel::getInstance()->getUuId().c_str();
+
+	Document doc;
+	doc.SetObject();
+	Document::AllocatorType& allo = doc.GetAllocator();
+
+
+	doc.AddMember("uuid", uu.c_str(), allo);
+	doc.AddMember("index", cannonIndex, allo);
+	doc.AddMember("team_id", team_id, allo);
+	doc.AddMember("user_id", userData.user_id, allo);
+
+	StringBuffer buffer;
+	Writer<StringBuffer> writer(buffer);
+	doc.Accept(writer);
+
+	sv->emit("cannon_lunch", buffer.GetString());
+	sv->on("cannon_lunch_end", callback);
+	
+}
+
+
+/*Converter*/
 Document::GenericValue* BattleAPI::convertUnitDataToJsonObject(UserUnitInfo unitData, Document::AllocatorType& allo)
 {
 	rapidjson::Value *unitDataValue = new rapidjson::Value()/*(kObjectType)*/;

@@ -58,6 +58,10 @@ public:
 
 	void sendNeutralUnitAttackEvent(int team_id, int unitIndex, int direc, SocketIOCallback callback);
 
+	void sendCannonAttackEvent(int team_id, int unitIndex, int direc, SocketIOCallback callback);
+	
+	void sendCannonLunchEvent(int team_id, int cannonIndex, SocketIOCallback callback);
+
 	bool init();
 private:
 	static BattleAPI *s_BattleAPI;

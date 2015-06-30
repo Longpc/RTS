@@ -160,6 +160,7 @@ xcopy /Y /Q "$(EngineRoot)external\websockets\prebuilt\win32\*.*" "$(OutDir)"</C
     <ClCompile Include="..\Classes\ModeSelectScene\ModeSelectScene.cpp" />
     <ClCompile Include="..\Classes\Multi\BatleResultScene\BatleResultScene.cpp" />
     <ClCompile Include="..\Classes\Multi\BatleScene\BattleScene.cpp" />
+    <ClCompile Include="..\Classes\Multi\BatleScene\Cannon.cpp" />
     <ClCompile Include="..\Classes\Multi\BatleScene\Character.cpp" />
     <ClCompile Include="..\Classes\Multi\BatleScene\Effect.cpp" />
     <ClCompile Include="..\Classes\Multi\BatleScene\OptionDialog.cpp" />
@@ -204,6 +205,7 @@ xcopy /Y /Q "$(EngineRoot)external\websockets\prebuilt\win32\*.*" "$(OutDir)"</C
     <ClInclude Include="..\Classes\ModeSelectScene\ModeSelectScene.h" />
     <ClInclude Include="..\Classes\Multi\BatleResultScene\BatleResultScene.h" />
     <ClInclude Include="..\Classes\Multi\BatleScene\BattleScene.h" />
+    <ClInclude Include="..\Classes\Multi\BatleScene\Cannon.h" />
     <ClInclude Include="..\Classes\Multi\BatleScene\Character.h" />
     <ClInclude Include="..\Classes\Multi\BatleScene\Effect.h" />
     <ClInclude Include="..\Classes\Multi\BatleScene\OptionDialog.h" />

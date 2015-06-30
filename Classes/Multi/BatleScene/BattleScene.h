@@ -10,6 +10,7 @@
 #include "dataController/SkillData/SkillData.h"
 #include "Effect.h"
 #include "Character.h"
+#include "Cannon.h"
 
 #include "Model/data/UserModel.h"
 #include "Model/data/UserSkillModel.h"
@@ -120,7 +121,6 @@ private:
 	Button *_skill4Button;
 
 	Label *_timeViewLabel;
-	Sprite *_miniMap;
 	Sprite *_selectRect;
 	Sprite *_mainCharacterIconInMiniMap;
 
@@ -132,6 +132,8 @@ private:
 	Vec2 _touchStartPoint;
 	Sprite *_touchMoveBeginSprite;
 	Sprite *_touchMoveEndSprite;
+
+	Sprite *_cannonTargetSprite;
 
 	int _moveMode;
 	////PHYSICAL///
@@ -224,7 +226,13 @@ private:
 	TMXTiledMap* _myMap;
 	TMXLayer* _mapLayer;
 	TMXLayer* _blockLayer;
+
+	TMXTiledMap* _miniTMXMap;
+	TMXLayer* _miniLayer;
+
+
 	Sprite* _oldTitle = nullptr;
+	vector<Sprite*> _saveOldTitle;
 
 	/*Test neutral tower*/
 	vector<Tower*> _neutralTowerList;
@@ -233,7 +241,12 @@ private:
 
 
 	vector<Character*> _neutralUnitList;
+
+	vector<Cannon*> _cannonList;
+	CC_SYNTHESIZE(bool, _cannonFlg, CannonFlg);
+
 	vector<Sprite*> _neutralUnitIconInMiniMap;
+	vector<vector<Sprite*>> _saveOldPosOfNeutral;
 	/************************************************************************/
 	/* FUNCTIONS                                                            */
 	/************************************************************************/
@@ -268,10 +281,13 @@ private:
 	virtual void createNeutralTower();
 
 	/*draw tower area retangle*/
-	virtual void drawTowerArea(Sprite* tower);
+	virtual void drawAreaRectangle(Sprite* tower, int offset);
 
 	/*Create meutral unit*/
 	virtual void createNeutralUnit();
+
+	/*create Cannon */
+	virtual void createCannon(int lisSize);
 
 
 	/*Show skill mp cost value in the skill button (@parent);
@@ -279,8 +295,6 @@ private:
 	virtual void displaySkillMpInButton(Button *parent, int mp);
 	/*create battle physic bolder*/
 	virtual void createPhysicBolder();
-	virtual Node* createHBolder();
-	virtual Node* createVBolder();
 
 	virtual Sprite* createCornerBolder(float angle);
 	/*create rock and tree and put to battle background by random position*/
@@ -345,12 +359,9 @@ private:
 
 	/*This function will be call when main character attack animation finished ( 0.5s)*/
 	virtual void characterAttackCallback(int i, int dame);
-	/*This function will ve called when attack delay 1s ended*/
+	/*This function will be called when attack delay 1s ended*/
 	virtual void oneSecondAttackCallback();
 	
-	/*This function was defined for main character attack neutral tower callback*/
-	
-	virtual void neutralTowerAttackCallback(int towerIndex);
 	/*This function will be called when enemy (as pSender) attack animation was finished*/
 	virtual void enemyAttackCallback(Ref *pSEnder, int index);
 	
@@ -382,6 +393,14 @@ private:
 	virtual void checkForAutoAttack();
 	virtual void attackLogicAndAnimation(Vec2 posDistan, int direc, int i, int dame);
 
+	/*Checker for using team cannon*/
+	virtual void checkForUsingCannon();
+
+	virtual void readyForLunch(Cannon * cannon, int cannonIndex);
+	
+	virtual void lunchObject(Touch *touch);
+	
+	
 	bool _onWarping = false;
 	/*Checker for warp by move into wormhole*/
 	virtual void checkForWarp();
@@ -393,13 +412,19 @@ private:
 	/*neutral type: 1 tower, 2 unit*/
 	virtual void chatacterAttackNeutralCallback(int neutralIndex, int neutralType);
 
+	/*character attack cannon calback*/
+	virtual void characterAttackCannonCallback(int cannonIndex);
+
 	virtual void neutralUnitStatusChange(Character* unit, int team, int index);
+
+	int _onLunchCannonIndex;
+
+	virtual void cannonStatusChange(Cannon* cannon, int teamId);
 
 	/*check auto atack of tower*/
 	bool _alliedTowerAttackdelay = false;
 	bool _enemyTowerAttackdelay = false;
 	virtual void checkAutoAttackOfTower();
-	virtual void removeTowerDelayFlg(Ref * p, bool *delay);
 
 	/*Tower attack animation*/
 	virtual void towerAttackLogic(Sprite* towerSprite, UserUnitInfo towerData, vector<Sprite*> targetFindList, vector<UserUnitInfo>* unitDataList, string targetUuid, float randomNum);
@@ -411,11 +436,18 @@ private:
 
 	void neutralUnitMoveInSoloMod();
 
-	void testMoveLogic(Sprite* object, int teamFLg);
+	void testMoveLogic(Sprite* object, int teamFLg, vector<Sprite*> saveOldPosVector);
+	/*Check that position is inside the map or not*/
+	bool checkPositionInsideMap(Vec2 pos) {
+		if (pos.x < 0 || pos.y < 0 || pos.x > _myMap->getContentSize().width || pos.y > _myMap->getContentSize().height) return false;
+
+		return true;
+	}
 	/*return true if title near neutral tower and cannot get*/
-	virtual bool checkTitleNearTower(Vec2 titleCoor);
+	virtual bool checkTitleNearObject(Vec2 titleCoor, vector<Sprite*> ObjectList, int offset);
+
 	/*Change tower nearly title color with tower title*/
-	virtual void changeNeutralTowerNearTitle(int towerIndex, int type);
+	virtual void changeTitlesNearObject(Sprite* object, int color, int offset);
 
 	//TODO
 	///FAKE  Z Order///
@@ -438,11 +470,6 @@ private:
 	************************************************************
 	*/
 	virtual void rt_attackAnimationandLogic(Document& doc, vector<Sprite*> processUnitSprite, vector<UserUnitInfo>* processUnitData, vector<Sprite*> targetSpriteList, vector<UserUnitInfo>* targetDataList);
-
-
-
-
-
 
 	/*this function will call every 5s to restore all unit hp and mp
 	*/

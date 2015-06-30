@@ -60,7 +60,7 @@ void Tower::createEffectObject(Sprite* target)
 
 void Tower::updatePosition(float dt)
 {
-	log("updater %f", dt);
+	//log("updater %f", dt);
 	Vec2 pos1 = _target->getPosition();
 	Vec2 pos2 = ef->getPosition();
 	if ((pos1 - pos2).length() < 50) {
@@ -92,7 +92,7 @@ void Tower::changeTowerType(int type, bool isInit)
 
 	}
 	setTowerType(type);
-	log("Tower type: %d", type);
+	//log("Tower type: %d", type);
 	if (isInit)
 	{
 		Rect rect = Rect::ZERO;

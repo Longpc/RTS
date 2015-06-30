@@ -39,6 +39,7 @@ bool Character::init(int characterId)
 	_characterId = characterId;
 	setAttackDelayFlag(false);
 	setOnMovingFlg(false);
+	setOnCannonLunchFlg(false);
 	changeAnimationImagePathByUnitId(_characterId);
 
 	this->setAnchorPoint(Vec2::ANCHOR_MIDDLE_BOTTOM);
@@ -130,9 +131,7 @@ void Character::moveActionByVector(Vec2 destination)
 void Character::attackActionByUnitPosition(int direction , int attackTime, AttackCallback oneSecondCb, AttackCallback attackCallback)
 {
 	if (getAttackDelayFlag() == false) {
-		setAttackDelayFlag(true);
-		rotateCharacter(direction);
-		auto ani = Animate::create(createAttackAnimationWithDefine(direction));
+		setAttackDelayFlag(true);		
 		auto call1 = CallFuncN::create([& , oneSecondCb](Ref* pSender){
 			setAttackDelayFlag(false);
 			if (oneSecondCb != nullptr)
@@ -141,13 +140,26 @@ void Character::attackActionByUnitPosition(int direction , int attackTime, Attac
 			}
 			
 		});
-		this->runAction(Spawn::create(Sequence::create(DelayTime::create(attackTime), call1, nullptr), Sequence::create(ani, CallFuncN::create([&, attackCallback](Ref* pSender){
+
+		auto call2 = CallFuncN::create([&, attackCallback](Ref* pSender){
 			if (attackCallback != nullptr)
 			{
 				attackCallback();
 			}
 
-		}),nullptr), nullptr));
+		});
+
+		Sequence *cb2Sequence;
+		if (getBirdMode()) {
+			cb2Sequence = Sequence::create(Blink::create(0.5f, 4), call2, nullptr);
+		}
+		else {
+			auto ani = Animate::create(createAttackAnimationWithDefine(direction));
+			cb2Sequence = Sequence::create(ani, call2, nullptr);
+			rotateCharacter(direction);
+		}
+
+		this->runAction(Spawn::create(Sequence::create(DelayTime::create(attackTime), call1, nullptr), cb2Sequence, nullptr));
 	}
 	else {
 		log("Unit on attack delay");
@@ -212,6 +224,7 @@ Animation* Character::createAttackAnimationWithDefine(int imageId)
 	return animation;
 }
 
+
 void Character::actionMoveCharacter(int directionId) {
 	if (getBirdMode()) {
 		birdMode(_birdModeIndex);
@@ -235,6 +248,7 @@ void Character::actionMoveCharacter(int directionId) {
 }
 
 void Character::rotateCharacter(int direc) {
+	if (getBirdMode()) return;
 	char szName[100] = { 0 };
 	sprintf(szName, "unit_00_0%d_%d.png", direc, 1);
 	string p = getMoveImagePath();
@@ -272,7 +286,8 @@ bool Character::caculAvgAngle(int avg, float angle) {
 
 void Character::birdMode(int index)
 {
-	_birdModeIndex = index;
+	stopMoveAction();
+	setBirdModeIndex(index);
 	char szName[100] = { 0 };
 	sprintf(szName, "bird_0%d.png", index);
 	string p = "image/bird/";
@@ -285,4 +300,19 @@ void Character::birdMode(int index)
 	
 	/*Rect = text->getContentSize();
 	testObject->setTextureRect()*/
+}
+
+void Character::runLunchingAction()
+{
+	this->setColor(Color3B::WHITE);
+	/*enable cannon lunch flag. It will be remove after 5 seconds*/
+	this->setOnCannonLunchFlg(true);
+	/*action to disable cannon lunch flag*/
+	auto action = Sequence::create(DelayTime::create(5.0f), CallFuncN::create([&](Ref* p) {
+		Character *cha = (Character*)p;
+		cha->stopAllActionsByTag(1991);
+		cha->setOnCannonLunchFlg(false);
+	}), nullptr);
+	action->setTag(1991);
+	this->runAction(action);
 }
