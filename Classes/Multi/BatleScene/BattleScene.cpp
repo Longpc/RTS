@@ -112,6 +112,9 @@ bool BattleScene::init()
 	_redTeamTowerData.attack_range = 200;
 	_redTeamTowerData.attack_speed = 5;
 	_redTeamTowerData.uuid = "redTower";
+	if (_gameMode == SOLO_MODE) {
+		_redTeamTowerData.attack = 1000;
+	}
 
 	_blueTeamTowerData = UserUnitModel::getInstance()->getUnitInfoById(2);
 
@@ -127,7 +130,7 @@ bool BattleScene::init()
 	birdButton->setTouchEnabled(true);
 	birdButton->addTouchEventListener(CC_CALLBACK_2(BattleScene::birdButtonCallback, this));
 	addChild(birdButton, 10);
-	birdButton->setPosition(Vec2(100, 70));
+	birdButton->setPosition(Vec2(130, _visibleSize.height - 125));
 
 
 
@@ -194,7 +197,7 @@ bool BattleScene::init()
 		enemy.unitId = _allEnemyUnitData[i].mst_unit_id;
 		//_saveBattleInfoEnemyTeam.push_back(enemy);
 	}
-	auto folow = Follow::create(testObject);
+	auto folow = Follow::create(testObject, Rect(FOLLOW_MARGIN,0,_myMap->getContentSize().width - FOLLOW_MARGIN, _myMap->getContentSize().height));
 	folow->setTag(121);
 	_battleBackround->runAction(folow);
 	auto bolder = Node::create();
@@ -212,8 +215,8 @@ bool BattleScene::init()
 
 void BattleScene::createWormHole()
 {
-	auto redHole = TextureCache::getInstance()->addImage("image/screen/battle/wormhole_red.png");
-	auto blueHole = TextureCache::getInstance()->addImage("image/screen/battle/wormhole_blue.png");
+	auto redHole = Director::getInstance()->getTextureCache()->addImage("image/screen/battle/wormhole_red.png");
+	auto blueHole = Director::getInstance()->getTextureCache()->addImage("image/screen/battle/wormhole_blue.png");
 	auto action = RepeatForever::create(RotateBy::create(1, 135));
 	for (int i = 0; i < 2; i++)
 	{
@@ -251,7 +254,7 @@ void BattleScene::createWormHole()
 void BattleScene::createBoudingWall()
 {
 	/*Create bounding wall*/
-	auto wallTexture = TextureCache::getInstance()->addImage("wall.png");
+	auto wallTexture = Director::getInstance()->getTextureCache()->addImage("wall.png");
 	auto wall1 = Sprite::createWithTexture(wallTexture);
 	auto wallBd = PhysicsBody::createBox(wall1->getContentSize(), PhysicsMaterial(1, 1, 0));
 	wallBd->setDynamic(false);
@@ -274,7 +277,7 @@ void BattleScene::createBoudingWall()
 	wall2->setPosition(Vec2(_myMap->getContentSize().width / 2, _myMap->getContentSize().height / 3));
 	_battleBackround->addChild(wall2);
 
-	auto textTureSmall = TextureCache::getInstance()->addImage("wall_s.png");
+	auto textTureSmall = Director::getInstance()->getTextureCache()->addImage("wall_s.png");
 
 	auto wall3 = Sprite::createWithTexture(textTureSmall);
 	auto wallBd3 = PhysicsBody::createBox(wall3->getContentSize(), PhysicsMaterial(1, 1, 0));
@@ -391,9 +394,20 @@ void BattleScene::drawAreaRectangle(Sprite* tower, int offset)
 	_battleBackround->addChild(draw, tower->getLocalZOrder()-1);
 }
 
+void BattleScene::drawRectInMinimap(Vec2 beginTitleCoor, int offset)
+{
+	auto layer = _miniTMXMap->getLayer("layer");
+	Size titleSize = _miniTMXMap->getTileSize();
+	auto pos = layer->getTileAt(beginTitleCoor)->getPosition();
+	Vec2 endPos = pos + offset * titleSize;
+	DrawNode * draw = DrawNode::create();
+	draw->drawRect(pos, endPos, Color4F::GRAY);
+	_miniTMXMap->addChild(draw, 1);
+}
+
 void BattleScene::createNeutralUnit()
 {
-	auto iconTexture = TextureCache::getInstance()->addImage("image/screen/battle/neutral_icon.png");
+	auto iconTexture = Director::getInstance()->getTextureCache()->addImage("image/screen/battle/neutral_icon.png");
 	auto parentNode = Node::create();
 	parentNode->setPosition(Vec2::ZERO);
 	_miniTMXMap->addChild(parentNode);
@@ -426,7 +440,7 @@ void BattleScene::createNeutralUnit()
 		parentNode->addChild(miniIcon);
 		_neutralUnitIconInMiniMap.push_back(miniIcon);
 
-		vector<Sprite*> saveOldPos = {};
+		vector<bool> saveOldPos = {};
 		_saveOldPosOfNeutral.push_back(saveOldPos);
 
 	}
@@ -678,23 +692,33 @@ void BattleScene::createContent()
 	timeViewContainer->setPosition(Vec2(_visibleSize.width - baseMargin, _visibleSize.height - baseMargin));
 	addChild(timeViewContainer);
 
-	string pathFIle2 = FileUtils::getInstance()->fullPathForFilename("map/mini_map.tmx");
+	string pathFIle2 = FileUtils::getInstance()->fullPathForFilename("map/mini_map_white.tmx");
 	_miniTMXMap = TMXTiledMap::create(pathFIle2.c_str());
 	if (_miniTMXMap != nullptr)
 	{
 		_miniLayer = _miniTMXMap->getLayer("layer");
-		addChild(_miniTMXMap);
+		addChild(_miniTMXMap,2);
+		_miniLayer->getTexture()->setAntiAliasTexParameters();
 		_miniTMXMap->setAnchorPoint(Vec2::ANCHOR_TOP_RIGHT);
 		_miniTMXMap->setPosition(timeViewContainer->getPosition() - Vec2(0, 50));
+		drawRectInMinimap(Vec2(42, 13), 8);
+		drawRectInMinimap(Vec2(19, 13), 8);
+		drawRectInMinimap(Vec2(19, 46), 8);
+		drawRectInMinimap(Vec2(31, 30), 8);
+		drawRectInMinimap(Vec2(42, 46), 8);
+		drawRectInMinimap(Vec2(33, 13), 4);
+		drawRectInMinimap(Vec2(33, 43), 4);
 	}
 
 	_selectRect = Sprite::create("image/screen/battle/map_frame.png");
+	_selectRect->getTexture()->setAntiAliasTexParameters();
 	_selectRect->setPosition(Vec2(_miniTMXMap->getContentSize().width / 2, _miniTMXMap->getContentSize().height / 2 + _selectRect->getContentSize().height / 2));
 	_miniTMXMap->addChild(_selectRect, 2);
 
 	_mainCharacterIconInMiniMap = Sprite::create("mini_icon.png");
 	_mainCharacterIconInMiniMap->setPosition(Vec2(_selectRect->getContentSize().width / 2, _selectRect->getContentSize().height / 2));
 	_selectRect->addChild(_mainCharacterIconInMiniMap);
+	_mainCharacterIconInMiniMap->getTexture()->setAntiAliasTexParameters();
 	_mainCharacterIconInMiniMap->setRotation(-(unitData1.angle) + 90);
 
 	_timeViewLabel = Label::createWithSystemFont("00:00:00", "", 25);
@@ -819,6 +843,7 @@ void BattleScene::createContent()
 
 		auto enemyIcon = Sprite::create("image/screen/battle/enemy_icon.png");
 		enemyIcon->setOpacity(255);
+		enemyIcon->getTexture()->setAntiAliasTexParameters();
 		enemyIcon->setPosition(Vec2(sp->getPositionX()*positionXScaleRate, sp->getPositionY()*positionYScaleRate));
 		_allEnemyIconInMinimap.push_back(enemyIcon);
 		node->addChild(_allEnemyIconInMinimap.back(), 1);
@@ -862,6 +887,7 @@ void BattleScene::createContent()
 
 		auto allied = Sprite::create("image/screen/battle/allied_icon.png");
 		allied->setOpacity(255);
+		allied->getTexture()->setAntiAliasTexParameters();
 		allied->setPosition(Vec2(sp1->getPositionX()*positionXScaleRate, sp1->getPositionY()*positionYScaleRate));
 		_allAlliedUnitIconInMiniMap.push_back(allied);
 		node->addChild(_allAlliedUnitIconInMiniMap.back(), 1);
@@ -1197,6 +1223,7 @@ void BattleScene::createContent()
 			int team_Id = doc["team_id"].GetInt();
 			int x = doc["pos_x"].GetInt();
 			int y = doc["pos_y"].GetInt();
+			bool disableFlg = doc["disable"].GetBool();
 			if (x < 0 || x > _mapLayer->getLayerSize().width || y < 0 || y > _mapLayer->getLayerSize().height) {
 				log("Invalid title position");
 				return;
@@ -1206,22 +1233,42 @@ void BattleScene::createContent()
 			if (title == nullptr) return;
 			if (team_Id == TEAM_FLG_BLUE)
 			{
+				if (disableFlg) {
+					//in case of disable title
+					title->setColor(Color3B::BLUE);
+					auto mTittle = _miniLayer->getTileAt(titleCoor);
+					mTittle->setColor(Color3B::BLUE);
+					title->setName("disable");
+					log("disable title :  %d, %d", x, y);
+					return;
+				}
 				if (title->getColor() != Color3B::GREEN)
 				{
 					title->setColor(Color3B::GREEN);
 					auto mTittle = _miniLayer->getTileAt(titleCoor);
 					mTittle->setColor(Color3B::GREEN);
+					title->setName("green");
 	
 				}
 				return;
 			}
 			else
 			{
-				if (title->getColor() != Color3B::RED)
-				{
+				if (disableFlg) {
+					//in case of disable title
 					title->setColor(Color3B::RED);
 					auto mTittle = _miniLayer->getTileAt(titleCoor);
 					mTittle->setColor(Color3B::RED);
+					mTittle->setName("disable");
+					log("disable title :  %d, %d", x, y);
+					return;
+				}
+				if (title->getColor() != Color3B::ORANGE)
+				{
+					title->setColor(Color3B::ORANGE);
+					auto mTittle = _miniLayer->getTileAt(titleCoor);
+					mTittle->setColor(Color3B::ORANGE);
+					mTittle->setName("orange");
 				}
 				return;
 			}
@@ -1528,7 +1575,7 @@ void BattleScene::createPhysicBolder()
 
 Sprite* BattleScene::createCornerBolder(float angle)
 {
-	auto wallBd = PhysicsBody::createBox(Size(100, 800), PhysicsMaterial(1, 0.95, 0));
+	auto wallBd = PhysicsBody::createBox(Size(100, 800), PhysicsMaterial(1, 0.95f, 0));
 	wallBd->setGravityEnable(false);
 	
 	wallBd->setContactTestBitmask(0x111);
@@ -1610,13 +1657,13 @@ void BattleScene::update(float delta)
 
 	fakeZOrder();
 
-	testMoveLogic(testObject, _currentPlayerTeamFlg,_saveOldTitle);
+	testMoveLogic(testObject, _currentPlayerTeamFlg,&_saveOldTitle);
 	if (_gameMode == SOLO_MODE)
 	{
 		for (int i = 0; i < _neutralUnitList.size(); i++)
 		{
 			if (_neutralUnitList[i]->getTag() != 0) {
-				testMoveLogic(_neutralUnitList[i], _neutralUnitList[i]->getTag(), _saveOldPosOfNeutral[i]);
+				testMoveLogic(_neutralUnitList[i], _neutralUnitList[i]->getTag(), &_saveOldPosOfNeutral[i]);
 			}
 		}
 	}
@@ -1644,7 +1691,7 @@ void BattleScene::neutralUnitMoveInSoloMod()
 	}
 }
 
-void BattleScene::testMoveLogic(Sprite* object, int teamFlg, vector<Sprite*> saveOldPos)
+void BattleScene::testMoveLogic(Sprite* object, int teamFlg, vector<bool> *sendingFlg)
 {
 	if (_onRespwanFlg) return;
 	vector<Vec2> savePos;
@@ -1697,68 +1744,56 @@ void BattleScene::testMoveLogic(Sprite* object, int teamFlg, vector<Sprite*> sav
 			temp.push_back(tower);
 		}
 
-		if (checkTitleNearObject(titlePos, temp, 8)) return;
+		if (checkTitleNearObject(titlePos, temp, 8)) continue;;
 		temp.clear();
 		for (auto &cannon : _cannonList)
 		{
 			temp.push_back(cannon);
 		}
-		if (checkTitleNearObject(titlePos, temp, 4)) return;
+		if (checkTitleNearObject(titlePos, temp, 4)) continue;;
 		auto title = _mapLayer->getTileAt(titlePos);
 
 		if (title == nullptr) {
 			continue;
 		}
-
+		if (title->getName() == "disable") continue;
 
 		if (teamFlg == TEAM_FLG_BLUE) {
 			if (title->getColor() != Color3B::GREEN)
-			{
-				Sprite* saveFirst = nullptr;
-				if(saveOldPos.size() > 1) {
-					//erase first
-					saveFirst = saveOldPos.front();
-					saveOldPos.erase(saveOldPos.begin(), saveOldPos.begin() + 1);
-				}
-				saveOldPos.push_back(title);
-
-				if (title == saveFirst) {
-					continue;
-				}
-				
+			{				
 				if (_gameMode == MULTI_MODE)
 				{
+					if (title->getName() == "sending") continue;
+					log("send test move event");
+					//sendingFlg->push_back(true);
+					title->setName("sending");
 					BattleAPI::getInstance()->sendTestMoveLogic(titlePos);
+					continue;
 				}
 				else {
 					title->setColor(Color3B::GREEN);
 					auto mTittle = _miniLayer->getTileAt(titlePos);
 					mTittle->setColor(Color3B::GREEN);
+					continue;
 				}
 			}
 		}
 		else {
-			if (title->getColor() != Color3B::RED)
+			if (title->getColor() != Color3B::ORANGE)
 			{
-				Sprite* saveFirst = nullptr;
-				if (saveOldPos.size() > 1) {
-					//erase first
-					saveFirst = saveOldPos.front();
-					saveOldPos.erase(saveOldPos.begin(), saveOldPos.begin() + 1);
-				}
-				saveOldPos.push_back(title);
-
-				if (title == saveFirst) {
+				if (_gameMode == MULTI_MODE) {
+					if (title->getName() == "sending") continue;
+					log("send test move event");
+					title->setName("sending");
+					//sendingFlg->push_back(true);
+					BattleAPI::getInstance()->sendTestMoveLogic(titlePos);
 					continue;
 				}
-
-				if (_gameMode == MULTI_MODE) {
-					BattleAPI::getInstance()->sendTestMoveLogic(titlePos);
-				}
 				else {
-					title->setColor(Color3B::RED);
+					title->setColor(Color3B::ORANGE);
 					auto mTittle = _miniLayer->getTileAt(titlePos);
-					mTittle->setColor(Color3B::RED);
+					mTittle->setColor(Color3B::ORANGE);
+					continue;
 				}
 			}
 		}
@@ -1798,7 +1833,7 @@ void BattleScene::changeTitlesNearObject(Sprite* object, int type, int offset)
 		color = Color3B::GREEN;
 		break;
 	case 2:
-		color = Color3B::RED;
+		color = Color3B::ORANGE;
 		break;
 	}
 	Vec2 titleSize = _myMap->getTileSize();
@@ -2167,6 +2202,8 @@ void BattleScene::lunchObject(Touch *touch) {
 
 	if (_gameMode = SOLO_MODE) {
 		auto cannon = _cannonList[_onLunchCannonIndex];
+		cannon->setRotation(0);
+		cannon->setFlippedX(false);
 		cannon->disableCannon();
 	}
 }
@@ -2174,15 +2211,15 @@ void BattleScene::lunchObject(Touch *touch) {
 void BattleScene::neutralUnitStatusChange(Character* unit, int team, int index) {
 	Texture2D* texture;
 	if (team == _currentPlayerTeamFlg) {
-		texture = TextureCache::getInstance()->addImage("image/screen/battle/allied_icon.png");
+		texture = Director::getInstance()->getTextureCache()->addImage("image/screen/battle/allied_icon.png");
 	}
 	else {
 		if (team == _currentEnemyTeamFlg)
 		{
-			texture = TextureCache::getInstance()->addImage("image/screen/battle/enemy_icon.png");
+			texture = Director::getInstance()->getTextureCache()->addImage("image/screen/battle/enemy_icon.png");
 		}
 		else {
-			texture = TextureCache::getInstance()->addImage("image/screen/battle/neutral_icon.png");
+			texture = Director::getInstance()->getTextureCache()->addImage("image/screen/battle/neutral_icon.png");
 		}
 	}
 	int type = 6;
@@ -2315,7 +2352,12 @@ void BattleScene::enemyDieAction(int id)
 	if (_gameMode == MULTI_MODE)
 	{
 		string uu = UserModel::getInstance()->getUuId().c_str();
-		sendKillDead(uu.c_str(), _allEnemyUnitData[id].uuid, nullptr);
+		auto titleCoor = getTitleCoorForPosition(_allEnemyUnitSprite[id]->getPosition());
+		sendKillDead(uu.c_str(), _allEnemyUnitData[id].uuid,titleCoor, nullptr);
+	}
+	else {
+		//auto pos = 
+		//change title in local map
 	}
 	_indexOfBeAttackEnemy = -1;
 	testObject->stopActionByTag(_currentAttackActionTag);
@@ -2392,13 +2434,36 @@ void BattleScene::runRespawnAction(string killerUuid)
 	if (_onRespwanFlg) return;
 	_onRespwanFlg = true;
 	//FOR sever fix position
+	auto pos = getTitleCoorForPosition(testObject->getPosition());
 	if (_gameMode == MULTI_MODE)
 	{
-		BattleAPI::getInstance()->sendDeadEvent(_allAlliedUnitData[0], [&](SIOClient* client, const std::string json) {
+		
+		BattleAPI::getInstance()->sendDeadEvent(_allAlliedUnitData[0], pos, [&](SIOClient* client, const std::string json) {
 
 			log("Dead event callback From server with data: %s", json.c_str());
 
 		});
+	}
+	else {
+		//disable title
+		Color3B color = Color3B::WHITE;
+		if (_currentPlayerTeamFlg == TEAM_FLG_BLUE) {
+			color = Color3B::BLUE;
+		}
+		else {
+			color = Color3B::RED;
+		}
+		for (int x = pos.x - 1; x <= pos.x; x++)
+		{
+			for (int y = pos.y; y <= pos.y + 1; y++)
+			{
+				auto title = _mapLayer->getTileAt(Vec2(x, y));
+				title->setColor(color);
+				title->setName("disable");
+				auto mTitle = _miniLayer->getTileAt(Vec2(x, y));
+				mTitle->setColor(color);
+			}
+		}
 	}
 
 		//saveKillDeadInfo(killerId, 0, _currentEnemyTeamFlg);
@@ -2442,6 +2507,17 @@ void BattleScene::runRespawnAction(string killerUuid)
 		auto action2 = CallFuncN::create([&](Ref *pSEnder){
 			Label* lb = dynamic_cast<Label*>(pSEnder);
 			lb->removeFromParent();
+
+			//Zoomout mini Map
+			if (_onZoomMiniMap) {
+				_miniTMXMap->setPosition(Vec2(_visibleSize) - Vec2(15, 65));
+				_miniTMXMap->setScale(1.0f);
+				_onZoomMiniMap = false;
+			}
+
+			if (_selectRect->isVisible() == false) {
+				_selectRect->setVisible(true);
+			}
 			if (_gameMode == MULTI_MODE)
 			{
 				auto unitData = BattleModel::getInstance()->getUnitInforByUuid(UserModel::getInstance()->getUuId());
@@ -2454,7 +2530,7 @@ void BattleScene::runRespawnAction(string killerUuid)
 			}
 			//testObject->setPosition(Vec2(_visibleSize.width, 100)); //need to change to value base on callback from server
 			testObject->setVisible(true);
-			auto follow = Follow::create(testObject);
+			auto follow = Follow::create(testObject, Rect(FOLLOW_MARGIN, 0, _myMap->getContentSize().width - FOLLOW_MARGIN, _myMap->getContentSize().height));
 			follow->setTag(121);
 			_battleBackround->runAction(follow);
 
@@ -2466,6 +2542,13 @@ void BattleScene::runRespawnAction(string killerUuid)
 		});
 		timeLb->runAction(Sequence::create(action, action2, nullptr));
 
+		if (!_onZoomMiniMap) {
+			//zoom in minimap
+			_miniTMXMap->setScale((_visibleSize.width - 150) / _miniTMXMap->getContentSize().width);
+			_miniTMXMap->setPosition(Vec2(_visibleSize.width - 75, _visibleSize.height - 50));
+			_onZoomMiniMap = true;
+			_selectRect->setVisible(false);
+		}
 	
 }
 void BattleScene::removeRespawnFlg()
@@ -2523,14 +2606,31 @@ string BattleScene::makeTimeString(int second) {
 
 bool BattleScene::onTouchBegan(Touch *touch, Event *unused_event)
 {
+	auto touchPoint = touch->getLocation();
+	if (_miniTMXMap->getBoundingBox().containsPoint(touchPoint)) {
+		if (!_onZoomMiniMap) {
+			_miniTMXMap->setScale((_visibleSize.width - 150) / _miniTMXMap->getContentSize().width);
+			_miniTMXMap->setPosition(Vec2(_visibleSize.width - 75, _visibleSize.height -50));
+			_onZoomMiniMap = true;
+		}
+		else
+		{
+			_miniTMXMap->setPosition(Vec2(_visibleSize) - Vec2(15, 65));
+			_miniTMXMap->setScale(1.0f);
+			_onZoomMiniMap = false;
+		}
+
+		return false;
+	}
+
 	if (getCannonFlg()) {
 		_touchMoveBeginSprite->setTexture("image/screen/battle/target.png");
 		_touchMoveBeginSprite->setVisible(true);
-		_touchMoveBeginSprite->setPosition(touch->getLocation());
+		_touchMoveBeginSprite->setPosition(touchPoint);
 		return true;
 	}
 
-	_touchStartPoint = touch->getLocation();
+	_touchStartPoint = touchPoint;
 	auto testPos = _battleBackround->convertToNodeSpace(_touchStartPoint);
 	auto cor = getTitleCoorForPosition(testPos);
 
@@ -2596,6 +2696,19 @@ void BattleScene::onTouchMoved(Touch *touch, Event *unused_event)
 	if (_allAlliedUnitData[0].isStun) return;
 	if (getCannonFlg()) {
 		_touchMoveBeginSprite->setPosition(touch->getLocation());
+		auto cannon = _cannonList[_onLunchCannonIndex];
+		auto distan = _battleBackround->convertToNodeSpace(touch->getLocation()) - testObject->getPosition();
+		float angle = -distan.getAngle() * RAD_DEG;
+		log("Angle: %f", angle);
+		if (angle > 90 || angle < -90) {
+			cannon->setFlippedX(true);
+			angle = 180 + angle;
+		}
+		else {
+			cannon->setFlippedX(false);
+		}
+		cannon->setRotation(angle);
+
 		return;
 	}
 
@@ -2778,7 +2891,7 @@ void BattleScene::onTouchEnded(Touch *touch, Event *unused_event)
 			testObject->setMoveMode(1);
 			testObject->stopMoveAction();
 			testObject->getPhysicsBody()->setVelocity(Vec2::ZERO);
-			auto distanVector = touch->getLocation() - Vec2(_visibleSize / 2);
+			auto distanVector = _battleBackround->convertToNodeSpace(touch->getLocation()) - testObject->getPosition();
 			/*test*/
 			//auto vec = AStarPathFindingAlgorithm(testObject->getPosition(), testObject->getPosition() + distanVector);
 			float time = distanVector.length() / _allAlliedUnitData[0].move_speed;
@@ -3043,7 +3156,7 @@ void BattleScene::onPhysicContactPostSlove(PhysicsContact& contact, const Physic
 		contactWithWall();
 	}
 
-	if ((spriteA->getTag() == TOWER_TAG && spriteB == testObject) || (spriteA == testObject & spriteB->getTag() == TOWER_TAG))
+	if ((spriteA->getTag() == TOWER_TAG && spriteB == testObject) || (spriteA == testObject && spriteB->getTag() == TOWER_TAG))
 	{
 		contactWithTower();
 	}
@@ -3918,7 +4031,6 @@ void BattleScene::skillHelpOne(Sprite* object, UserSkillInfo skillInfo, int team
 		break;
 	}
 
-
 }
 
 void BattleScene::skillAttackAll(Sprite* object, UserSkillInfo skillInfo, UserUnitInfo attacker, int flg, float randNum, vector<Sprite*> &effectUnitSpriteList, vector<UserUnitInfo>* effectUnitList)
@@ -4339,10 +4451,10 @@ void BattleScene::sendDameDeal(int dame, int targetId, SocketIOCallback callback
 	}
 }
 
-void BattleScene::sendKillDead(string killerUuid, string deadUnitUuid, SocketIOCallback callback)
+void BattleScene::sendKillDead(string killerUuid, string deadUnitUuid, Vec2 deadTitleCoor, SocketIOCallback callback)
 {
 	if (_gameMode == MULTI_MODE) {
-		BattleAPI::getInstance()->sendKillEvent(killerUuid.c_str(), deadUnitUuid.c_str(), callback);
+		BattleAPI::getInstance()->sendKillEvent(killerUuid.c_str(), deadUnitUuid.c_str(), deadTitleCoor, callback);
 	}
 }
 

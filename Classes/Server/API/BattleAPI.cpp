@@ -176,7 +176,7 @@ void BattleAPI::sendDameDealEvent(int dame, string targetUuid, SocketIOCallback 
 
 }
 
-void BattleAPI::sendKillEvent(string killerUuid, string targetUnit, SocketIOCallback callback)
+void BattleAPI::sendKillEvent(string killerUuid, string targetUnit,Vec2 deadPos, SocketIOCallback callback)
 {
 	auto sv = NodeServer::getInstance()->getClient();
 	if (sv == nullptr) return;
@@ -195,6 +195,8 @@ void BattleAPI::sendKillEvent(string killerUuid, string targetUnit, SocketIOCall
 	doc.AddMember("uuid", killerUuid.c_str(), allo);
 	doc.AddMember("kill", 1, allo);
 	doc.AddMember("target", targetUnit.c_str(), allo);
+	doc.AddMember("dead_x", deadPos.x, allo);
+	doc.AddMember("dead_y", deadPos.y, allo);
 
 	StringBuffer  buffer;
 	Writer<StringBuffer> writer(buffer);
@@ -205,7 +207,7 @@ void BattleAPI::sendKillEvent(string killerUuid, string targetUnit, SocketIOCall
 }
 
 
-void BattleAPI::sendDeadEvent(UserUnitInfo unitData, SocketIOCallback callBack)
+void BattleAPI::sendDeadEvent(UserUnitInfo unitData, Vec2 deadTitleCoor, SocketIOCallback callBack)
 {
 	auto sv = NodeServer::getInstance()->getClient();
 	if (sv == nullptr) return;
@@ -222,6 +224,8 @@ void BattleAPI::sendDeadEvent(UserUnitInfo unitData, SocketIOCallback callBack)
 	doc.AddMember("unit_id", unit_id, allo);
 	doc.AddMember("user_unit", *convertUnitDataToJsonObject(unitData, allo), allo);
 	doc.AddMember("dead_time", 5, allo);
+	doc.AddMember("dead_x", deadTitleCoor.x, allo);
+	doc.AddMember("dead_y", deadTitleCoor.y, allo);
 	string uu = UserModel::getInstance()->getUuId().c_str();
 	doc.AddMember("uuid", uu.c_str(), allo);
 
@@ -355,8 +359,6 @@ void BattleAPI::sendTestMoveLogic(Vec2 titleCordPost)
 	Writer<StringBuffer> writer(buffer);
 	doc.Accept(writer);
 	sv->emit("get_title", buffer.GetString());
-
-
 }
 
 void BattleAPI::sendCheckMapEvent(SocketIOCallback callBack)

@@ -86,6 +86,8 @@
 
 #define NEUTRAL_MOVE_SPEED 150
 
+#define FOLLOW_MARGIN 150
+
 using namespace cocostudio;
 class BattleScene : public LayerBase
 {
@@ -229,10 +231,10 @@ private:
 
 	TMXTiledMap* _miniTMXMap;
 	TMXLayer* _miniLayer;
-
+	bool _onZoomMiniMap = false;
 
 	Sprite* _oldTitle = nullptr;
-	vector<Sprite*> _saveOldTitle;
+	vector<bool> _saveOldTitle;
 
 	/*Test neutral tower*/
 	vector<Tower*> _neutralTowerList;
@@ -246,7 +248,7 @@ private:
 	CC_SYNTHESIZE(bool, _cannonFlg, CannonFlg);
 
 	vector<Sprite*> _neutralUnitIconInMiniMap;
-	vector<vector<Sprite*>> _saveOldPosOfNeutral;
+	vector<vector<bool>> _saveOldPosOfNeutral;
 	/************************************************************************/
 	/* FUNCTIONS                                                            */
 	/************************************************************************/
@@ -282,6 +284,9 @@ private:
 
 	/*draw tower area retangle*/
 	virtual void drawAreaRectangle(Sprite* tower, int offset);
+
+	/*Draw rectangle in minimap*/
+	virtual void drawRectInMinimap(Vec2 beginTitleCoor, int offset);
 
 	/*Create meutral unit*/
 	virtual void createNeutralUnit();
@@ -436,7 +441,7 @@ private:
 
 	void neutralUnitMoveInSoloMod();
 
-	void testMoveLogic(Sprite* object, int teamFLg, vector<Sprite*> saveOldPosVector);
+	void testMoveLogic(Sprite* object, int teamFLg, vector<bool> *saveOldPosVector);
 	/*Check that position is inside the map or not*/
 	bool checkPositionInsideMap(Vec2 pos) {
 		if (pos.x < 0 || pos.y < 0 || pos.x > _myMap->getContentSize().width || pos.y > _myMap->getContentSize().height) return false;
@@ -554,7 +559,7 @@ private:
 	virtual void saveKillDeadInfo(int killerId, int deadUnitId, int teamFlg);
 
 	/*Send kill dead information to server for sync*/
-	virtual void sendKillDead(string killerUUid, string deadUnitUuid, SocketIOCallback callback);
+	virtual void sendKillDead(string killerUUid, string deadUnitUuid, Vec2 deadTitleCoord, SocketIOCallback callback);
 
 	/*function to show status of unit by animation. (status: buff, poison, stun..*/
 	virtual void displayUnitStatus(Sprite *parent, int statusType, UserSkillInfo skillInfo, int spIndex, vector<vector<string>>* targetImageStatus);

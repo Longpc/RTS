@@ -34,11 +34,11 @@ public:
 	
 	void sendSkillEvent(UserSkillInfo skillData, UserUnitInfo attacker/*, SocketIOCallback callback*/);
 		
-	void sendDeadEvent(UserUnitInfo unitData, SocketIOCallback callback);
+	void sendDeadEvent(UserUnitInfo unitData, Vec2 deadTitleCoor, SocketIOCallback callback);
 
 	void sendDameDealEvent(int dame, string targetUuid, SocketIOCallback callback);
 
-	void sendKillEvent(string killerUuid, string targetUnit, SocketIOCallback callback);
+	void sendKillEvent(string killerUuid, string targetUnit, Vec2 deadPos, SocketIOCallback callback);
 	
 	void sendRepawnEvent(SocketIOCallback callback);
 	
