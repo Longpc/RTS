@@ -39,11 +39,19 @@ bool ModeSelectScene::init()
 		downloadDatabase();
 	}*/
 
-	HttpClientBase::getInstance()->postAPIWithMethodNameAndParam("uuid.php", "uuid", [&](string a){
-		log("UUID: %s", a.c_str());
-		UserModel::getInstance()->setUuId(a.c_str());
+	HttpClientBase::getInstance()->postAPIWithMethodNameAndParam("uuid.php", "uuid", [&](HttpClient *cl, HttpResponse* response){
+		if (response->getResponseCode() != 200) {
+			log("HttpClientBase------>connect failed");
+			HttpClientBase::destroyInstance();
+			return;
+		}
+		std::vector<char>* data = response->getResponseData();
+		std::string result(data->begin(), data->end());
+
+		log("UUID: %s", result.c_str());
+		UserModel::getInstance()->setUuId(result.c_str());
 		auto ifo = UserModel::getInstance()->getUserInfo();
-		ifo._uuid = a.c_str();
+		ifo._uuid = result.c_str();
 		UserModel::getInstance()->setUserInfo(ifo);
 
 		StartAPI::getInstance()->setStartAPICallback([&]() {

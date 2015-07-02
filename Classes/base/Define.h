@@ -10,6 +10,9 @@ _onRoom: Current room where user is playing. Default 0 is idle user
 */
 
 
+#define DESIGN_RESOLUTION_W 960
+#define DESIGN_RESOLUTION_H 680
+
 struct Room_User_Unit_Model
 {
 	string _id = "";

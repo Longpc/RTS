@@ -16,16 +16,18 @@ bool ListUserAPI::init()
 	char data[100];
 	sprintf(data, "app_key=%s&info=%s", APP_KEY, "2354232342KGJSD%'#$");
 	HttpClientBase::getInstance()->postAPIWithMethodNameAndParam("debug/list_user.php", data);
-	HttpClientBase::getInstance()->setAPICallback([&](string a) {
+	HttpClientBase::getInstance()->setAPICallback([&](HttpClient *cl, HttpResponse* response) {
+		std::vector<char>* data = response->getResponseData();
+		std::string result(data->begin(), data->end());
 		rapidjson::Document doc;
-		doc.Parse<0>(a.c_str());
+		doc.Parse<0>(result.c_str());
 		if (doc.HasParseError())
 		{
 			log("error in parse json");
 		}
 		if (doc.IsObject() && doc.HasMember("data")) {
 			if (strcmp(doc["event_name"].GetString(), "list_user") == 0) {
-				log("List user Callback data: %s", a.c_str());
+				log("List user Callback data: %s", result.c_str());
 				for (int i = 0; i < doc["data"].Size(); i++)
 				{
 					RoomUser temp;

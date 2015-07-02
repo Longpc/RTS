@@ -12,7 +12,7 @@ USING_NS_CC;
 using namespace network;
 using namespace std;
 
-typedef std::function<void(string jsonData)> PostCallback;
+typedef std::function<void(HttpClient *cl, HttpResponse* response)> PostCallback;
 class HttpClientBase :public Ref
 {
 public:

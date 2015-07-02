@@ -25,19 +25,7 @@ void HttpClientBase::postAPIWithMethodNameAndParam(string add, string dataParam 
 	string address = addressValue.asString().c_str();
 	httpRequest->setUrl(address.append(add.c_str()).c_str());
 	httpRequest->setRequestType(HttpRequest::Type::POST);
-	httpRequest->setResponseCallback([&](HttpClient *cl, HttpResponse* response) {
-		if (response->getResponseCode() != 200) {
-			log("HttpClientBase------>connect failed");
-			HttpClientBase::destroyInstance();
-			return;
-		}
-		std::vector<char>* data = response->getResponseData();
-		std::string result(data->begin(), data->end());
-		_data = result;
-		if (_callback != nullptr) {
-			_callback(result.c_str());
-		}
-	});
+	httpRequest->setResponseCallback(callBack);
 	httpRequest->setTag("clientBase");
 	log("POSTING DATA: %s", dataParam.c_str());
 	const char* buffer = dataParam.c_str();

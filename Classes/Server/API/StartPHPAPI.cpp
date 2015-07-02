@@ -20,10 +20,11 @@ bool StartAPI::init()
 
 		char data[100];
 		sprintf(data, "app_key=%s&user_id=%d", APP_KEY, UserModel::getInstance()->getUserInfo().user_id);
-		HttpClientBase::getInstance()->postAPIWithMethodNameAndParam("start.php", data, [&](string a) {
-			log("CALL BACK data: %s",a.c_str());
+		HttpClientBase::getInstance()->postAPIWithMethodNameAndParam("start.php", data, [&](HttpClient *cl, HttpResponse* response) {			
+			std::vector<char>* data = response->getResponseData();
+			std::string result(data->begin(), data->end());
 			rapidjson::Document doc;
-			doc.Parse<0>(a.c_str());
+			doc.Parse<0>(result.c_str());
 			if (doc.HasParseError())
 			{
 				log("error in parse json");
