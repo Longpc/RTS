@@ -3,7 +3,7 @@
 
 #include "cocos2d.h"
 #include "base/Define.h"
-
+#include "Model/data/UserUnitModel.h"
 
 USING_NS_CC;
 using namespace std;
@@ -19,8 +19,9 @@ public :
 	static Character* createCharacter(int characterId);
 	virtual bool init(int characterId);
 	// get/set function
-	CC_SYNTHESIZE(string, _moveImagePath, MoveImagePath);
-	CC_SYNTHESIZE(string, _attackImagePath, AttackImagePath);
+
+	//CC_SYNTHESIZE(string, _moveImagePath, MoveImagePath);
+	//CC_SYNTHESIZE(string, _attackImagePath, AttackImagePath);
 	CC_SYNTHESIZE(int, _moveMode, MoveMode);
 	CC_SYNTHESIZE(float, _characterMoveSpeed, CharacterMoveSpeed);
 	CC_SYNTHESIZE(Vec2, _miniCircle, MiniCirclePosition);
@@ -42,7 +43,7 @@ public :
 
 	virtual void actionMoveCharacter(int directionId);
 	virtual void rotateCharacter(int direc);
-	virtual void changeAnimationImagePathByUnitId(int unitId);
+	//virtual void changeAnimationImagePathByUnitId(int unitId);
 
 	/*get/set the flag to decide that this character in bird mode or not*/
 	CC_SYNTHESIZE(bool, _birdMode, BirdMode);
@@ -74,8 +75,8 @@ private :
 	///CHARACTER MOVE ACTION///
 	
 	virtual Animation* createMoveAnimationWithDefine(int imageId);
-	virtual Animation* createAttackAnimationWithDefine(int imageId);
-	
+	//virtual Animation* createAttackAnimationWithDefine(int imageId);
+	virtual void attackActionWithDirec(int direc);
 	
 
 };

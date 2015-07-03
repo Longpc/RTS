@@ -26,10 +26,6 @@
 #include "Server/API/BattleAPI.h"
 #include "Tower.h"
 
-#define MOVE_SPEED 250
-#define IMAGE_SCALE 0.6f
-
-
 #define LOW 1
 #define MID 2
 #define HIGH 3
@@ -175,7 +171,6 @@ private:
 	UserUnitInfo _saveMainStatusData;
 	vector<UserSkillInfo> _mainCharacterSkillData;
 	Character* testObject;
-	Node *_statusContainer;
 
 	int _mainCharacerMaxMp;
 
@@ -346,21 +341,6 @@ private:
 	1--2--3
 	*/
 	virtual int detectDirectionBaseOnTouchAngle(float angle);
-	
-	///CHARACTER MOVE ACTION///
-	/*This function will let the @characterSprite run move animation base on @directionID*/
-	virtual void actionCharacter(int directionId, Sprite *characterSprite);
-	/* copy function for enemy AUTOMOVE TEST*/
-	virtual void actionCharacterCopy(int directionId, Sprite *sprite);
-
-	/* create move animation from list off image base on @imageId as move direction offset and @path as image folder path*/
-	virtual Animation* createMoveAnimationWithDefine(int imageId, string path);
-	
-	/* create attack animation from list off image base on @imageId as attack direction offset and @path as image folder path*/
-	virtual Animation* createAttackAnimationWithDefine(int imageId, string path);
-	
-	/*this function will let the @target sprite run action look as it rotate base on @direc*/
-	virtual void rotateCharacter(Sprite *target, int direc);
 
 	/*This function will be call when main character attack animation finished ( 0.5s)*/
 	virtual void characterAttackCallback(int i, int dame);
@@ -569,7 +549,6 @@ private:
 	
 	virtual Animation*  createStatusAnimation(string imagePath);
 
-	virtual void enemyUnitAutoMoveTest();
 	/*define the function to play effect and logic when player move on fountain area*/
 	virtual void fountainRestoreEffect(Sprite *object, vector<UserUnitInfo>*  unitList, int index);
 	virtual void enemyRespawAction(int index);

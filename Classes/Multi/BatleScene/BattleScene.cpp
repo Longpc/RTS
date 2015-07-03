@@ -125,15 +125,6 @@ bool BattleScene::init()
 
 	changeAnimationImagePathByUnitId(_selectedUnitId);
 
-	auto birdButton = Button::create();
-	birdButton->loadTextureNormal("bird.png");
-	birdButton->setTouchEnabled(true);
-	birdButton->addTouchEventListener(CC_CALLBACK_2(BattleScene::birdButtonCallback, this));
-	addChild(birdButton, 10);
-	birdButton->setPosition(Vec2(130, _visibleSize.height - 125));
-
-
-
 	auto nextButton = Button::create();
 	nextButton->loadTextureNormal("CloseNormal.png");
 	nextButton->setPosition(Vec2(_visibleSize.width - 50, 70));
@@ -186,7 +177,7 @@ bool BattleScene::init()
 		UserBattleInfo info;
 		info.name = _allAlliedUnitData[i].name;
 		info.unitId = _allAlliedUnitData[i].mst_unit_id;
-		info.imagePath = UserUnitModel::getInstance()->getUnitImageById(_allAlliedUnitData[i].mst_unit_id);
+		info.imagePath = UserUnitModel::getInstance()->getUnitImageByMstUnitItD(_allAlliedUnitData[i].mst_unit_id);
 		//_saveBattleInfoAlliedTeam.push_back(info);
 	}
 	/*Size - 1 because we don't save dame dead by tower*/
@@ -413,7 +404,9 @@ void BattleScene::createNeutralUnit()
 	_miniTMXMap->addChild(parentNode);
 	for (int i = 0; i < 2; i++)
 	{
-		auto unit = Character::createCharacter(6);
+
+		auto unit = Character::createCharacter(8);
+		unit->setScale(IMAGE_SCALE);
 		unit->setBirdMode(false);
 		if (_gameMode == SOLO_MODE) 
 		{
@@ -426,7 +419,7 @@ void BattleScene::createNeutralUnit()
 		}
 
 		_neutralUnitList.push_back(unit);
-		unit->setScale(IMAGE_SCALE);
+		
 		Vec2 titleCoor = Vec2(_myMap->getMapSize().width / 2, i*(_myMap->getMapSize().height - 16) + 8);
 		Vec2 pos = getPositionForTitleCoord(titleCoor);
 		//unit->setPosition(Vec2(_myMap->getBoundingBox().size.width / 2, i*(_myMap->getBoundingBox().size.height - 200) + 100));
@@ -610,7 +603,7 @@ void BattleScene::createContent()
 	}
 
 
-	testObject = Character::createCharacter(_selectedUnitId + 1);
+	testObject = Character::createCharacter(_selectedUnitId);
 	testObject->setTag(10);
 	testObject->setBirdMode(false);
 	//testObject->setPosition(_visibleSize);
@@ -627,18 +620,16 @@ void BattleScene::createContent()
 	testObject->getPhysicsBody()->setCollisionBitmask(cTeamContactCollision);
 	testObject->setCharacterMoveSpeed(_allAlliedUnitData[0].move_speed);
 
-	_statusContainer = Node::create();
-	testObject->addChild(_statusContainer);
-	_statusContainer->setPosition(Vec2(testObject->getContentSize().width / 2, testObject->getContentSize().height));
-
 	_mainCharacterMiniHpBar = Slider::create();
 	_mainCharacterMiniHpBar->loadBarTexture("image/screen/battle/mini_hp_base.png");
 	_mainCharacterMiniHpBar->setPercent(100);
 	//_miniHpSlider->loadSlidBallTextureNormal("image/screen/battle/test.png");
 	_mainCharacterMiniHpBar->loadProgressBarTexture("image/screen/battle/mini_hp_gauge.png");
 	//_hpSlider->setContentSize(Size(372, 12));
-	_mainCharacterMiniHpBar->setPosition(Vec2(testObject->getContentSize().width / 2, testObject->getContentSize().height - 10));
+	_mainCharacterMiniHpBar->setScale(1 / (IMAGE_SCALE *1.5f));
 	testObject->addChild(_mainCharacterMiniHpBar);
+	_mainCharacterMiniHpBar->setPosition(Vec2(testObject->getContentSize().width / 2, 20));
+
 
 	_allAlliedUnitHpBar.push_back(_mainCharacterMiniHpBar);
 	_allAlliedUnitSprite.push_back(testObject);
@@ -656,8 +647,8 @@ void BattleScene::createContent()
 	//_hpSlider->loadSlidBallTextureNormal("image/screen/battle/test.png");
 	_mainCharacterHpBar->loadProgressBarTexture("image/screen/battle/hp.png");
 	//_hpSlider->setContentSize(Size(372, 12));
-	_mainCharacterHpBar->setPosition(Vec2(topMenu->getContentSize().width / 2 + 25, _visibleSize.height - 22));
-	addChild(_mainCharacterHpBar);
+	_mainCharacterHpBar->setPosition(Vec2(topMenu->getContentSize().width / 2 + 25, topMenu->getContentSize().height - 22));
+	topMenu->addChild(_mainCharacterHpBar);
 
 	_hpViewLabel = Label::createWithSystemFont(DataUtils::numberToString(_allAlliedUnitData[0].hp), "", 20);
 	_hpViewLabel->setColor(Color3B::GREEN);
@@ -673,9 +664,9 @@ void BattleScene::createContent()
 	mask->setPosition(slotPos);
 	_characterImageViewNode->setStencil(mask);
 
-	auto icon = Sprite::create(UserUnitModel::getInstance()->getUnitImageById(_allAlliedUnitData[0].mst_unit_id));
+	auto icon = Sprite::create(UserUnitModel::getInstance()->getUnitImageByMstUnitItD(_allAlliedUnitData[0].mst_unit_id));
 	icon->setPosition(slotPos + Vec2(0, 0));
-	icon->setScale(1.4f);
+	icon->setScale(4.0f);
 	icon->setTag(ICON);
 	_characterImageViewNode->addChild(icon);
 	topMenu->addChild(_characterImageViewNode);
@@ -683,14 +674,24 @@ void BattleScene::createContent()
 	_menuButton = Button::create();
 	_menuButton->loadTextureNormal("image/screen/battle/menu_btn.png");
 	_menuButton->addTouchEventListener(CC_CALLBACK_2(BattleScene::menuButtonCallback, this));
-	_menuButton->setPosition(Vec2(_menuButton->getContentSize().width / 2 + 10, _visibleSize.height - topMenu->getContentSize().height));
+	_menuButton->setPosition(Vec2(_menuButton->getContentSize().width / 2 + 10, topMenu->getContentSize().height - topMenu->getContentSize().height));
 	_menuButton->setAnchorPoint(Vec2::ANCHOR_MIDDLE_TOP);
-	addChild(_menuButton);
+	topMenu->addChild(_menuButton);
+
+	auto birdButton = Button::create();
+	birdButton->loadTextureNormal("bird.png");
+	birdButton->setTouchEnabled(true);
+	birdButton->addTouchEventListener(CC_CALLBACK_2(BattleScene::birdButtonCallback, this));
+	topMenu->addChild(birdButton, 10);
+	birdButton->setPosition(Vec2(130, topMenu->getContentSize().height - 125));
+
+	topMenu->setRotation(-90.0f);
+	topMenu->setPosition(Vec2(baseMargin, baseMargin));
 
 	Sprite *timeViewContainer = Sprite::create("image/screen/battle/time_parts.png");
-	timeViewContainer->setAnchorPoint(Vec2::ANCHOR_TOP_RIGHT);
-	timeViewContainer->setPosition(Vec2(_visibleSize.width - baseMargin, _visibleSize.height - baseMargin));
-	addChild(timeViewContainer);
+	//timeViewContainer->setAnchorPoint(Vec2::ANCHOR_TOP_RIGHT);
+	timeViewContainer->setPosition(Vec2(topMenu->getContentSize().width*2/5,topMenu->getContentSize().height/2 - 3));
+	topMenu->addChild(timeViewContainer);
 
 	string pathFIle2 = FileUtils::getInstance()->fullPathForFilename("map/mini_map_white.tmx");
 	_miniTMXMap = TMXTiledMap::create(pathFIle2.c_str());
@@ -700,7 +701,8 @@ void BattleScene::createContent()
 		addChild(_miniTMXMap,2);
 		_miniLayer->getTexture()->setAntiAliasTexParameters();
 		_miniTMXMap->setAnchorPoint(Vec2::ANCHOR_TOP_RIGHT);
-		_miniTMXMap->setPosition(timeViewContainer->getPosition() - Vec2(0, 50));
+		//_miniTMXMap->setPosition(timeViewContainer->getPosition() - Vec2(0, 50));
+		_miniTMXMap->setPosition(Vec2(_miniTMXMap->getContentSize().width + baseMargin, _visibleSize.height - baseMargin));
 		drawRectInMinimap(Vec2(42, 13), 8);
 		drawRectInMinimap(Vec2(19, 13), 8);
 		drawRectInMinimap(Vec2(19, 46), 8);
@@ -732,16 +734,20 @@ void BattleScene::createContent()
 	string skill3ImagePath = _playerSkills[0].skill_icon_path;
 	string skill4ImagePath = _playerSkills[1].skill_icon_path;
 
-
-
+	
 	_skill1Button = Button::create();
 	_skill1Button->loadTextureNormal(skill1ImagePath.c_str());
 	_skill1Button->addTouchEventListener(CC_CALLBACK_2(BattleScene::skill1ButtonCallback, this));
 	Size baseSize = _skill1Button->getContentSize();
+
+	auto skillButtonParent = Node::create();
+	skillButtonParent->setPosition(Vec2(_visibleSize.width / 2, baseMargin + baseSize.height / 2));
+	addChild(skillButtonParent);
+
 	_skill1Button->setTag(TAG_SKILL_1);
 	_skill1Button->setSwallowTouches(true);
-	_skill1Button->setPosition(Vec2(_visibleSize.width / 2 - 1.5 * baseSize.width - 20, baseSize.height / 2 + baseMargin));
-	addChild(_skill1Button);
+	_skill1Button->setPosition(Vec2(- 1.5 * baseSize.width - 20, 0));
+	skillButtonParent->addChild(_skill1Button);
 	displaySkillMpInButton(_skill1Button, _mainCharacterSkillData[0].mp_cost);
 
 	_skill2Button = Button::create();
@@ -749,8 +755,8 @@ void BattleScene::createContent()
 	_skill2Button->addTouchEventListener(CC_CALLBACK_2(BattleScene::skill1ButtonCallback, this));
 	_skill2Button->setTag(TAG_SKILL_2);
 	_skill2Button->setSwallowTouches(true);
-	_skill2Button->setPosition(Vec2(_visibleSize.width / 2 - 0.5 *baseSize.width - 10, baseSize.height / 2 + baseMargin));
-	addChild(_skill2Button);
+	_skill2Button->setPosition(Vec2(-0.5 *baseSize.width - 10, 0));
+	skillButtonParent->addChild(_skill2Button);
 	displaySkillMpInButton(_skill2Button, _mainCharacterSkillData[1].mp_cost);
 
 	_skill3Button = Button::create();
@@ -758,8 +764,8 @@ void BattleScene::createContent()
 	_skill3Button->addTouchEventListener(CC_CALLBACK_2(BattleScene::skill1ButtonCallback, this));
 	_skill3Button->setTag(TAG_SKILL_3);
 	_skill3Button->setSwallowTouches(true);
-	_skill3Button->setPosition(Vec2(_visibleSize.width / 2 + 0.5*baseSize.width + 10, baseSize.height / 2 + baseMargin));
-	addChild(_skill3Button);
+	_skill3Button->setPosition(Vec2(0.5*baseSize.width + 10,0));
+	skillButtonParent->addChild(_skill3Button);
 	displaySkillMpInButton(_skill3Button, _playerSkills[0].mp_cost);
 
 	_skill4Button = Button::create();
@@ -767,8 +773,8 @@ void BattleScene::createContent()
 	_skill4Button->addTouchEventListener(CC_CALLBACK_2(BattleScene::skill1ButtonCallback, this));
 	_skill4Button->setTag(TAG_SKILL_4);
 	_skill4Button->setSwallowTouches(true);
-	_skill4Button->setPosition(Vec2(_visibleSize.width / 2 + 1.5 * baseSize.width + 20, baseSize.height / 2 + baseMargin));
-	addChild(_skill4Button);
+	_skill4Button->setPosition(Vec2(1.5 * baseSize.width + 20, 0));
+	skillButtonParent->addChild(_skill4Button);
 	displaySkillMpInButton(_skill4Button, _playerSkills[1].mp_cost);
 
 	_mainCharacterMpBar = Slider::create();
@@ -776,8 +782,12 @@ void BattleScene::createContent()
 	//_manaSlider->loadSlidBallTextureNormal("image/screen/battle/test.png");
 	_mainCharacterMpBar->loadProgressBarTexture("image/screen/battle/mp.png");
 	_mainCharacterMpBar->setPercent(100);
-	_mainCharacterMpBar->setPosition(Vec2(_visibleSize.width / 2, baseSize.height + baseMargin * 2));
-	addChild(_mainCharacterMpBar);
+	_mainCharacterMpBar->setPosition(Vec2(0, baseSize.height /2 + 2*baseMargin));
+	skillButtonParent->addChild(_mainCharacterMpBar);
+
+	skillButtonParent->setPosition(Vec2(_visibleSize.width - baseSize.width/2 - baseMargin, _visibleSize.height / 2));
+	skillButtonParent->setRotation(-90.0f);
+
 
 	_mpViewlabel = Label::createWithSystemFont(DataUtils::numberToString(_allAlliedUnitData[0].mp), "", 20);
 	_mpViewlabel->setColor(Color3B::BLUE);
@@ -816,7 +826,7 @@ void BattleScene::createContent()
 	for (int i = 0; i < _allEnemyUnitData.size(); i++)
 	{
 		auto battleUnitInfo = BattleModel::getInstance()->getUnitInforByUuid(_allEnemyUnitData[i].uuid.c_str());
-		auto sp = Character::createCharacter(_allEnemyUnitData[i].mst_unit_id + 1);
+		auto sp = Character::createCharacter(_allEnemyUnitData[i].mst_unit_id);
 		sp->setBirdMode(false);
 		sp->rotateCharacter(battleUnitInfo.direction);
 		sp->setPosition(Vec2(battleUnitInfo.position_x + (i - 1) * 70, battleUnitInfo.position_y));
@@ -834,7 +844,7 @@ void BattleScene::createContent()
 		//hpB->loadSlidBallTextureNormal("image/screen/battle/test.png");
 		hpB->loadProgressBarTexture("image/screen/battle/mini_hp_gauge.png");
 		//_hpSlider->setContentSize(Size(372, 12));
-		hpB->setPosition(Vec2(sp->getContentSize().width / 2, sp->getContentSize().height - 10));
+		hpB->setPosition(Vec2(sp->getContentSize().width / 2, 20));
 		hpB->setTag(HPBAR_TAG);
 		_allEnemyHpBar.push_back(hpB);
 		sp->addChild(_allEnemyHpBar.back(), 100);
@@ -860,7 +870,7 @@ void BattleScene::createContent()
 	for (int i = 1; i < _allAlliedUnitData.size(); i++)
 	{
 		auto battleUnitInfo1 = BattleModel::getInstance()->getUnitInforByUuid(_allAlliedUnitData[i].uuid.c_str());
-		auto sp1 = Character::createCharacter(_allAlliedUnitData[i].mst_unit_id + 1);
+		auto sp1 = Character::createCharacter(_allAlliedUnitData[i].mst_unit_id);
 		sp1->rotateCharacter(battleUnitInfo1.direction);
 		sp1->setBirdMode(false);
 		sp1->setPosition(Vec2(battleUnitInfo1.position_x + (i - 1) * 70, battleUnitInfo1.position_y));
@@ -878,7 +888,7 @@ void BattleScene::createContent()
 		//hpB->loadSlidBallTextureNormal("image/screen/battle/test.png");
 		hpB1->loadProgressBarTexture("image/screen/battle/mini_hp_gauge.png");
 		//_hpSlider->setContentSize(Size(372, 12));
-		hpB1->setPosition(Vec2(sp1->getContentSize().width / 2, sp1->getContentSize().height - 10));
+		hpB1->setPosition(Vec2(sp1->getContentSize().width / 2, 20));
 		hpB1->setTag(HPBAR_TAG);
 		_allAlliedUnitHpBar.push_back(hpB1);
 		sp1->addChild(_allAlliedUnitHpBar.back(), 100);
@@ -1650,10 +1660,6 @@ void BattleScene::update(float delta)
 			_allEnemyUnitSprite[i]->stopActionByTag(_allEnemyUnitSprite[i]->getTag());
 		}
 	}
-	if (random(1,50) < 2)
-	{
-		//enemyUnitAutoMoveTest();
-	}
 
 	fakeZOrder();
 
@@ -2222,17 +2228,17 @@ void BattleScene::neutralUnitStatusChange(Character* unit, int team, int index) 
 			texture = Director::getInstance()->getTextureCache()->addImage("image/screen/battle/neutral_icon.png");
 		}
 	}
-	int type = 6;
+	int type = 8;
 	switch (team)
 	{
 	case 1:
-		type = 5;
+		type = 7;
 		break;
 	case 2:
 		type = 2;
 		break;
 	default:
-		type = 6;
+		type = 9;
 
 		break;
 	}
@@ -2466,14 +2472,6 @@ void BattleScene::runRespawnAction(string killerUuid)
 		}
 	}
 
-		//saveKillDeadInfo(killerId, 0, _currentEnemyTeamFlg);
-		//string uu = UserModel::getInstance()->getUuId().c_str();
-		//sendKillDead(killerUuid.c_str(), uu.c_str(), nullptr);
-		/*_alliedTeamTotalDead += 1;
-		if (_alliedTeamTotalDead == 5)
-		{
-			endBattle(_currentEnemyTeamFlg);
-		}*/
 		auto timeLb = Label::createWithSystemFont("5", JAPANESE_FONT_1_HEAVY, 150);
 		_battleBackround->addChild(timeLb, 1000);
 		timeLb->setPosition(testObject->getPosition());
@@ -2510,7 +2508,8 @@ void BattleScene::runRespawnAction(string killerUuid)
 
 			//Zoomout mini Map
 			if (_onZoomMiniMap) {
-				_miniTMXMap->setPosition(Vec2(_visibleSize) - Vec2(15, 65));
+				//_miniTMXMap->setPosition(Vec2(_visibleSize) - Vec2(15, 65));
+				_miniTMXMap->setPosition(Vec2(_miniTMXMap->getContentSize().width + 15, _visibleSize.height - 15));
 				_miniTMXMap->setScale(1.0f);
 				_onZoomMiniMap = false;
 			}
@@ -2615,7 +2614,8 @@ bool BattleScene::onTouchBegan(Touch *touch, Event *unused_event)
 		}
 		else
 		{
-			_miniTMXMap->setPosition(Vec2(_visibleSize) - Vec2(15, 65));
+			//_miniTMXMap->setPosition(Vec2(_visibleSize) - Vec2(15, 65));
+			_miniTMXMap->setPosition(Vec2(_miniTMXMap->getContentSize().width + 15, _visibleSize.height - 15));
 			_miniTMXMap->setScale(1.0f);
 			_onZoomMiniMap = false;
 		}
@@ -2785,7 +2785,7 @@ void BattleScene::onTouchMoved(Touch *touch, Event *unused_event)
 
 int BattleScene::detectDirectionBaseOnTouchAngle(float angle)
 {
-	if(caculAvgAngle(0,angle)) return 8;
+	/*if(caculAvgAngle(0,angle)) return 8;
 	if (caculAvgAngle(45,angle)) return 9;
 	if(caculAvgAngle(90,angle)) return 6;
 	if(caculAvgAngle(135,angle)) return 3;
@@ -2796,32 +2796,21 @@ int BattleScene::detectDirectionBaseOnTouchAngle(float angle)
 	{
 		return 7;
 	}
-	return 8;
+	return 8;*/
+	//new direction
+	if (caculAvgAngle(0, angle)) return 1;
+	if (caculAvgAngle(90, angle)) return 4;
+	if (caculAvgAngle(180, angle)) return 7;
+	if (caculAvgAngle(270, angle) || caculAvgAngle(-90, angle)) return 10;
+
+	//default
+	return 7;
+
 }
 bool BattleScene::caculAvgAngle(int avg, float angle)
 {
-	if (angle > avg - 22 && angle < avg + 22) return true;
+	if (angle > avg - 44.9f && angle < avg + 44.9f) return true;
 	return false;
-}
-void BattleScene::actionCharacter(int directionId, Sprite *characterSprite)
-{
-	if (characterSprite->getNumberOfRunningActions() > 0) {
-		if (characterSprite->getActionByTag(directionId) != nullptr) {
-			return;
-		}
-	}
-	characterSprite->stopAllActionsByTag(_currentMoveActionTag);
-	if (characterSprite == _miniUnit) {
-		_miniUnit->stopAllActions();
-	}
-	auto action = Animate::create(createMoveAnimationWithDefine(directionId, _moveImagePath));
-	auto repeat = RepeatForever::create(action);
-	repeat->setTag(directionId);
-	if (characterSprite != _miniUnit) {
-		_currentMoveActionTag = directionId;
-	}
-	characterSprite->runAction(repeat);
-
 }
 void BattleScene::updateMiniMap()
 {
@@ -2889,7 +2878,7 @@ void BattleScene::onTouchEnded(Touch *touch, Event *unused_event)
 		if (_moveMode == MOVE_AUTO)
 		{
 			testObject->setMoveMode(1);
-			testObject->stopMoveAction();
+			//testObject->stopMoveAction();
 			testObject->getPhysicsBody()->setVelocity(Vec2::ZERO);
 			auto distanVector = _battleBackround->convertToNodeSpace(touch->getLocation()) - testObject->getPosition();
 			/*test*/
@@ -2983,43 +2972,6 @@ void BattleScene::menuButtonCallback(Ref *pSender, Widget::TouchEventType type)
 void BattleScene::savePhysicWorld(PhysicsWorld *world)
 {
 	_myWorld = world;
-}
-
-Animation* BattleScene::createMoveAnimationWithDefine(int imageId, string path)
-{
-	auto animation = Animation::create();
-	for (int i = 1; i < 3; i++)
-	{
-		char szName[100] = { 0 };
-		sprintf(szName, "unit_00_0%d_%d.png",imageId, i);
-		string p = path;
-		p.append(szName);
-		//log("%s", p.c_str());
-		animation->addSpriteFrameWithFile(p.c_str());
-	}
-	// should last 2.8 seconds. And there are 14 frames.
-	animation->setDelayPerUnit(ANIMETE_DELAY);
-	animation->setRestoreOriginalFrame(true);
-	animation->setLoops(true);
-	return animation;
-}
-Animation* BattleScene::createAttackAnimationWithDefine(int imageId, string path)
-{
-	auto animation = Animation::create();
-	for (int i = 1; i < 3; i++)
-	{
-		char szName[100] = { 0 };
-		sprintf(szName, "unit_00_0%d_attack_%d.png", imageId, i);
-		string p = path;
-		p.append(szName);
-		//log("%s", p.c_str());
-		animation->addSpriteFrameWithFile(p.c_str());
-	}
-	// should last 2.8 seconds. And there are 14 frames.
-	animation->setDelayPerUnit(ANIMETE_DELAY);
-	animation->setRestoreOriginalFrame(true);
-	animation->setLoops(true);
-	return animation;
 }
 
 /*This function will be change in future with GAF animation file or another unit image
@@ -3187,18 +3139,6 @@ void BattleScene::contactWithTower()
 
 }
 
-void BattleScene::rotateCharacter(Sprite *target, int direc)
-{
-	//log("Rotate direc %d", direc);
-	//auto animation = Animation::create();
-	char szName[100] = { 0 };
-	sprintf(szName, "unit_00_0%d_%d.png", direc, 1);
-	string p = _moveImagePath;
-	p.append(szName);
-	Texture2D *texture = Director::getInstance()->getTextureCache()->addImage(p.c_str());
-	target->setTexture(texture);
-}
-
 void BattleScene::optionDecideCallback(Ref *pSEnder, Widget::TouchEventType type)
 {
 	switch (type)
@@ -3361,21 +3301,21 @@ void BattleScene::birdButtonCallback(Ref *p, Widget::TouchEventType type)
 		if (_testBirdIndex > 8) {
 			_testBirdIndex = 0;
 			testObject->setBirdMode(false);
-			testObject->changeUnitType(_allAlliedUnitData[0].mst_unit_id + 1);
+			testObject->changeUnitType(_allAlliedUnitData[0].mst_unit_id);
 			testObject->setScale(IMAGE_SCALE);
 		}
 		else {
 			//testObject->getPhysicsBody()->setRotationEnable(true);
 			testObject->birdMode(_testBirdIndex);
 			if (_testBirdIndex == 1 || _testBirdIndex == 2) {
-				testObject->setScale(IMAGE_SCALE * 0.7f);
+				//testObject->setScale(IMAGE_SCALE * 0.7f);
 				return;
 			}
 			if (_testBirdIndex >= 3 && _testBirdIndex <= 6) {
-				testObject->setScale(IMAGE_SCALE * 0.8f);
+				//testObject->setScale(IMAGE_SCALE * 0.8f);
 				return;
 			}
-			testObject->setScale(IMAGE_SCALE);
+			//testObject->setScale(IMAGE_SCALE);
 		}
 		
 		break;
@@ -4639,46 +4579,6 @@ void BattleScene::stunEffecAction(Sprite* object, UserSkillInfo skill, int index
 	}), nullptr));
 }
 
-
-
-void BattleScene::enemyUnitAutoMoveTest()
-{
-	for (int i = 0; i < _allEnemyUnitData.size(); i++)
-	{
-		if (!_allEnemyUnitSprite[i]->isVisible())
-		{
-			continue;
-		}
-		auto body = _allEnemyUnitSprite[i]->getPhysicsBody();
-		if (_allEnemyUnitData[i].isStun)
-		{
-			body->setVelocity(Vect::ZERO);
-			_allEnemyUnitSprite[i]->stopActionByTag(_allEnemyUnitSprite[i]->getTag());
-			continue;
-		}
-		float angle = random(-90.0f,270.0f);
-		body->setVelocity(Vect(_allEnemyUnitData[i].move_speed*cos(angle), _allEnemyUnitData[i].move_speed*sin(angle)));
-		int direc = detectDirectionBaseOnTouchAngle(angle);
-		if (direc != 0) actionCharacterCopy(direc,_allEnemyUnitSprite[i]);
-	}
-}
-
-void BattleScene::actionCharacterCopy(int directionId, Sprite *sprite)
-{
-	if (sprite->getNumberOfRunningActions() > 0) {
-		if (sprite->getActionByTag(directionId) != nullptr) {
-			//log("!!!");
-			return;
-		}
-	}
-	sprite->stopActionByTag(sprite->getTag());
-	auto action = Animate::create(createMoveAnimationWithDefine(directionId, "image/unit_new/move/red/"));
-	auto repeat = RepeatForever::create(action);
-	repeat->setTag(directionId);
-	sprite->setTag(directionId);
-	sprite->runAction(repeat);
-}
-
 void BattleScene::fountainRestoreEffect(Sprite *object, vector<UserUnitInfo>* unitList, int index)
 {
 	if (object->getActionByTag(FOUNTAIN_ACTION) != nullptr)
@@ -4841,7 +4741,7 @@ void BattleScene::displayStatusInTime(Sprite* parent, vector<string> allImages)
 	auto animate = Animate::create(animation);
 	auto sprite = Sprite::create("test.png");
 	sprite->setTag(BUFF_STATUS_TAG);
-	sprite->setPosition(Vec2(parent->getContentSize().width / 2, parent->getContentSize().height));
+	sprite->setPosition(Vec2(parent->getContentSize().width / 2, 30));
 	sprite->setScale(1 / IMAGE_SCALE);
 	sprite->runAction(RepeatForever::create(animate));
 	parent->addChild(sprite, -1);
@@ -5163,10 +5063,10 @@ void BattleScene::moveStepAction()
 	int direc = detectDirectionBaseOnTouchAngle(_mainCharacterIconInMiniMap->getRotation());
 	if (direc != 0)
 	{
-		actionCharacter(direc, testObject);
+		testObject->actionMoveCharacter(direc);
 		if (_moveMode == MOVE_CIRCLE)
 		{
-			actionCharacter(direc, _miniUnit);
+			_miniUnit->actionMoveCharacter(direc);
 		}
 
 	}
@@ -5296,7 +5196,7 @@ void BattleScene::createMiniControlUnit(int circleType) {
 	float scaleUnitX = circleX * 1 / 3;
 	float scaleUnitY = circleY * 1 / 3;
 
-	_miniUnit = Character::createCharacter(_selectedUnitId + 1);
+	_miniUnit = Character::createCharacter(_selectedUnitId);
 	_miniUnit->setBirdMode(false);
 	_miniUnit->setScale(float(0.25));
 	addChild(_miniUnit, 100);

@@ -14,9 +14,9 @@ bool Tower::init(int type)
 	if (!Sprite::init()) {
 		return false;
 	}
-	_neutralTexture = TextureCache::getInstance()->addImage(NEUTRAL_IMG_PATH);
-	_blueTexture = TextureCache::getInstance()->addImage(BLUE_IMG_PATH);
-	_redTexture = TextureCache::getInstance()->addImage(RED_IMG_PATH);
+	_neutralTexture = Director::getInstance()->getTextureCache()->addImage(NEUTRAL_IMG_PATH);
+	_blueTexture = Director::getInstance()->getTextureCache()->addImage(BLUE_IMG_PATH);
+	_redTexture = Director::getInstance()->getTextureCache()->addImage(RED_IMG_PATH);
 	changeTowerType(type, true);
 	return true;
 }

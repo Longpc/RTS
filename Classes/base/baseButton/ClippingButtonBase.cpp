@@ -104,6 +104,7 @@ Button* ClipingButtonBase::getClickableButton()
 void ClipingButtonBase::resetClickableButton()
 {
 	_clickableButton->loadTextureNormal("image/screen/unitSelect/slot.png");
+	_clickableButton->setScale(1.0f);
 }
 
 void ClipingButtonBase::setSelected(bool selectedFlg)

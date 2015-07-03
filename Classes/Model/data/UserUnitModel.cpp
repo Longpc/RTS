@@ -40,23 +40,11 @@ vector<UserUnitInfo> UserUnitModel::createUserUnitDataFromJson(rapidjson::Generi
 	return getUserUnitList();
 }
 
-std::string UserUnitModel::getUnitImageById(int id)
+std::string UserUnitModel::getUnitImageByMstUnitItD(int id)
 {
-	switch (id)
-	{
-	case 1:
-		return "image/unit/1.png";
-	case  3:
-		return "image/unit/3.png";
-	case 4:
-		return "image/unit/4.png";
-	case 5:
-		return "image/unit/5.png";
-	case 2:
-		return "image/unit/2.png";
-	default:
-		return "image/unit/1.png";
-	}
+	char szName[100] = { 0 };
+	sprintf(szName, "image/new_unit/unit_0%d_8.png", id);
+	return szName;
 }
 
 UserUnitInfo UserUnitModel::getUnitInfoById(int mst_unit_id)

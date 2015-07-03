@@ -204,6 +204,9 @@
     <ClCompile Include="..\Classes\Multi\BatleScene\Cannon.cpp">
       <Filter>src\Multi\BatleScene</Filter>
     </ClCompile>
+    <ClCompile Include="..\Classes\ModeSelectScene\LoadingSprite.cpp">
+      <Filter>src\ModeSelectScene</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="main.h">
@@ -334,6 +337,9 @@
     </ClInclude>
     <ClInclude Include="..\Classes\Multi\BatleScene\Cannon.h">
       <Filter>src\Multi\BatleScene</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Classes\ModeSelectScene\LoadingSprite.h">
+      <Filter>src\ModeSelectScene</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

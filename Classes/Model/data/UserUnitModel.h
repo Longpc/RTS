@@ -40,7 +40,7 @@ public:
 	vector<UserUnitInfo> createUserUnitDataFromJson(rapidjson::GenericValue<rapidjson::UTF8<char>, rapidjson::MemoryPoolAllocator<rapidjson::CrtAllocator>>& value);
 	CC_SYNTHESIZE(vector<UserUnitInfo>, _userUnits, UserUnitList);
 	UserUnitInfo getUnitInfoById(int mst_unit_id);
-	string getUnitImageById(int id);
+	string getUnitImageByMstUnitItD(int id);
 	Document::GenericValue* convertFromUserUnitInfoToJson(UserUnitInfo unitInfo, Document::AllocatorType& allo);
 
 

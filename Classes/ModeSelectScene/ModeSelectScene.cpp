@@ -28,6 +28,10 @@ bool ModeSelectScene::init()
 	}
 	auto console = Director::getInstance()->getConsole();
 	console->listenOnTCP(1234);
+	//_loadingSp = LoadingSprite::getInstance();
+	//addChild(_loadingSp);
+	//_loadingSp->setPosition(Vec2::ZERO);
+
 
 	auto config = Configuration::getInstance();
 	if (config->getValue("ServerAddress").isNull())
@@ -43,7 +47,9 @@ bool ModeSelectScene::init()
 		if (response->getResponseCode() != 200) {
 			log("HttpClientBase------>connect failed");
 			HttpClientBase::destroyInstance();
+			//LoadingSprite::getInstance()->showLoadingFail();
 			return;
+
 		}
 		std::vector<char>* data = response->getResponseData();
 		std::string result(data->begin(), data->end());
@@ -56,6 +62,7 @@ bool ModeSelectScene::init()
 
 		StartAPI::getInstance()->setStartAPICallback([&]() {
 			log("Start callback");
+			//LoadingSprite::getInstance()->destroyInstance();
 		});
 	});
 

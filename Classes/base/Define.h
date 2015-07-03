@@ -9,9 +9,8 @@ _name: User name
 _onRoom: Current room where user is playing. Default 0 is idle user
 */
 
-
 #define DESIGN_RESOLUTION_W 960
-#define DESIGN_RESOLUTION_H 680
+#define DESIGN_RESOLUTION_H 640
 
 struct Room_User_Unit_Model
 {
@@ -151,7 +150,6 @@ struct UserBattleInfo
 #define TEAM_FLG_RED 2
 #define TEAM_FLG_BLUE 1
 
-#define ANIMETE_DELAY 0.25f
 #define ATTACK_ANIMATION_DELAY 1
 
 enum SKILL_HELP_TYPE
@@ -218,8 +216,8 @@ enum SKILL_RANGE_TYPE
 
 
 #define MOVE_SPEED 250
-#define IMAGE_SCALE 0.6f
-#define ANIMETE_DELAY 0.25f
+#define IMAGE_SCALE 4.0f
+#define ANIMETE_DELAY 0.15f
 #define ATTACK_ANIMATION_DELAY 1
 
 #define UI_SCENE_CREATE_FUNC(UIScene) \

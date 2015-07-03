@@ -157,6 +157,7 @@ xcopy /Y /Q "$(EngineRoot)external\websockets\prebuilt\win32\*.*" "$(OutDir)"</C
     <ClCompile Include="..\Classes\Model\data\UserModel.cpp" />
     <ClCompile Include="..\Classes\Model\data\UserSkillModel.cpp" />
     <ClCompile Include="..\Classes\Model\data\UserUnitModel.cpp" />
+    <ClCompile Include="..\Classes\ModeSelectScene\LoadingSprite.cpp" />
     <ClCompile Include="..\Classes\ModeSelectScene\ModeSelectScene.cpp" />
     <ClCompile Include="..\Classes\Multi\BatleResultScene\BatleResultScene.cpp" />
     <ClCompile Include="..\Classes\Multi\BatleScene\BattleScene.cpp" />
@@ -202,6 +203,7 @@ xcopy /Y /Q "$(EngineRoot)external\websockets\prebuilt\win32\*.*" "$(OutDir)"</C
     <ClInclude Include="..\Classes\Model\data\UserModel.h" />
     <ClInclude Include="..\Classes\Model\data\UserSkillModel.h" />
     <ClInclude Include="..\Classes\Model\data\UserUnitModel.h" />
+    <ClInclude Include="..\Classes\ModeSelectScene\LoadingSprite.h" />
     <ClInclude Include="..\Classes\ModeSelectScene\ModeSelectScene.h" />
     <ClInclude Include="..\Classes\Multi\BatleResultScene\BatleResultScene.h" />
     <ClInclude Include="..\Classes\Multi\BatleScene\BattleScene.h" />

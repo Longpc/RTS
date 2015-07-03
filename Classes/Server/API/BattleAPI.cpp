@@ -3,7 +3,7 @@
 BattleAPI * BattleAPI::s_BattleAPI = nullptr;
 BattleAPI * BattleAPI::getInstance()
 {
-	if (s_BattleAPI)
+	if (!s_BattleAPI)
 	{
 		s_BattleAPI = new (std::nothrow)BattleAPI();
 		s_BattleAPI->init();

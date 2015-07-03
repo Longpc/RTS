@@ -18,9 +18,9 @@ Character* Character::createCharacter(int characterId)
 	if (character)
 	{
 		character->init(characterId);
-		string path = character->getMoveImagePath(); // character->getMoveImagePath = _moveImagePath;
-		path.append("unit_00_08_1.png");
-		character->initWithFile(path);
+		char szName[100] = { 0 };
+		sprintf(szName, "image/new_unit/unit_0%d_8.png", characterId);
+		character->initWithFile(szName);
 		character->autorelease();
 		return character;
 	}
@@ -40,14 +40,14 @@ bool Character::init(int characterId)
 	setAttackDelayFlag(false);
 	setOnMovingFlg(false);
 	setOnCannonLunchFlg(false);
-	changeAnimationImagePathByUnitId(_characterId);
+	//changeAnimationImagePathByUnitId(_characterId);
 
 	this->setAnchorPoint(Vec2::ANCHOR_MIDDLE_BOTTOM);
 
 	return true;
 }
 
-void Character::changeAnimationImagePathByUnitId(int unitId) {
+/*void Character::changeAnimationImagePathByUnitId(int unitId) {
 
 	switch (unitId - 1) {
 	case 1:
@@ -76,13 +76,13 @@ void Character::changeAnimationImagePathByUnitId(int unitId) {
 		break;
 	}
 }
-
+*/
 void Character::changeUnitType(int unitId)
 {
-	changeAnimationImagePathByUnitId(unitId);
-	string path = getMoveImagePath(); // character->getMoveImagePath = _moveImagePath;
-	path.append("unit_00_08_1.png");
-	auto text = TextureCache::getInstance()->addImage(path);
+	//changeAnimationImagePathByUnitId(unitId);
+	_characterId = unitId;
+	string path = UserUnitModel::getInstance()->getUnitImageByMstUnitItD(unitId);
+	auto text = Director::getInstance()->getTextureCache()->addImage(path);
 	this->setTexture(text);
 
 }
@@ -154,8 +154,9 @@ void Character::attackActionByUnitPosition(int direction , int attackTime, Attac
 			cb2Sequence = Sequence::create(Blink::create(0.5f, 4), call2, nullptr);
 		}
 		else {
-			auto ani = Animate::create(createAttackAnimationWithDefine(direction));
-			cb2Sequence = Sequence::create(ani, call2, nullptr);
+			/*auto ani = Animate::create(createAttackAnimationWithDefine(direction));
+			cb2Sequence = Sequence::create(ani, call2, nullptr);*/
+			cb2Sequence = Sequence::create(Blink::create(0.5f, 4), call2, nullptr);
 			rotateCharacter(direction);
 		}
 
@@ -191,15 +192,13 @@ void Character::stopAttackAction()
 
 }
 
-Animation* Character::createMoveAnimationWithDefine(int imageId) {
+Animation* Character::createMoveAnimationWithDefine(int direc) {
 	auto animation = Animation::create();
-	for (int i = 1; i < 3; i++) 
+	for (int i = 0; i < 3; i++) 
 	{
 		char szName[100] = { 0 };
-		sprintf(szName, "unit_00_0%d_%d.png", imageId, i);
-		string p = getMoveImagePath();
-		p.append(szName);
-		animation->addSpriteFrameWithFile(p.c_str());
+		sprintf(szName, "image/new_unit/unit_0%d_%d.png", _characterId, direc+i);
+		animation->addSpriteFrameWithFile(szName);
 	}
 	// should last 2.8 seconds. And there are 14 frames.
 	animation->setDelayPerUnit(ANIMETE_DELAY);
@@ -207,7 +206,7 @@ Animation* Character::createMoveAnimationWithDefine(int imageId) {
 	animation->setLoops(true);
 	return animation;
 }
-Animation* Character::createAttackAnimationWithDefine(int imageId) 
+/*Animation* Character::createAttackAnimationWithDefine(int direc) 
 {
 	auto animation = Animation::create();
 	for (int i = 1; i < 3; i++) {
@@ -222,17 +221,21 @@ Animation* Character::createAttackAnimationWithDefine(int imageId)
 	animation->setRestoreOriginalFrame(true);
 	animation->setLoops(true);
 	return animation;
-}
+}*/
 
+void Character::attackActionWithDirec(int direc)
+{
+
+}
 
 void Character::actionMoveCharacter(int directionId) {
 	if (getBirdMode()) {
 		birdMode(_birdModeIndex);
 		return;
 	}
-	setOnMovingFlg(true);
-	if (this->getNumberOfRunningActions() > 0) {
-		if (this->getActionByTag(directionId) != nullptr) {
+	if (getOnMovingFlg()) {
+		if (_currentMoveActionTag == directionId) {
+			log("same with previous action");
 			return;
 		}
 	}
@@ -244,21 +247,20 @@ void Character::actionMoveCharacter(int directionId) {
 	//_currentMoveActionTag = directionId;
 	this->setCurrentMoveActionTag(directionId);
 	this->runAction(repeat);
-
+	setOnMovingFlg(true);
 }
 
 void Character::rotateCharacter(int direc) {
 	if (getBirdMode()) return;
+	int imgId = direc + 1;
 	char szName[100] = { 0 };
-	sprintf(szName, "unit_00_0%d_%d.png", direc, 1);
-	string p = getMoveImagePath();
-	p.append(szName);
-	Texture2D *text = Director::getInstance()->getTextureCache()->addImage(p.c_str());
+	sprintf(szName, "image/new_unit/unit_0%d_%d.png", _characterId, imgId);
+	Texture2D *text = Director::getInstance()->getTextureCache()->addImage(szName);
 	this->setTexture(text);
 
 }
 int Character::detectDirectionBaseOnTouchAngle(float angle) {
-	if (caculAvgAngle(0, angle))
+	/*if (caculAvgAngle(0, angle))
 		return 8;
 	if (caculAvgAngle(45, angle))
 		return 9;
@@ -275,11 +277,18 @@ int Character::detectDirectionBaseOnTouchAngle(float angle) {
 	if (caculAvgAngle(-45, angle)) {
 		return 7;
 	}
-	return 8;
+	return 8;*/
+	if (caculAvgAngle(0, angle)) return 1;
+	if (caculAvgAngle(90, angle)) return 4;
+	if (caculAvgAngle(180, angle)) return 7;
+	if (caculAvgAngle(270, angle) || caculAvgAngle(-90, angle)) return 10;
+
+	//default
+	return 7;
 }
 
 bool Character::caculAvgAngle(int avg, float angle) {
-	if (angle > avg - 22 && angle < avg + 22)
+	if (angle > avg - 44.9f && angle < avg + 44.9f)
 		return true;
 	return false;
 }

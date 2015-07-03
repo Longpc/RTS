@@ -2,6 +2,7 @@
 #define MODE_SELECT_SCENE_H__
 ///Include scene header here///
 #include "../base/LayerBase.h"
+#include "LoadingSprite.h"
 #include "Multi/MemberFullDialogLayer.h"
 #include "Multi/UnitSelectScene/UnitSelectScene.h"
 
@@ -32,6 +33,7 @@ private:
 	int index;
 	SIOClient* _client;
 	TextField* editBox;
+	LoadingSprite *_loadingSp;
 	// socket.io event‚Ìevent listener
 	void onReceiveEvent(SIOClient* client, const std::string& data);
 	void textFieldEvent(Ref *pSender, TextField::EventType type);

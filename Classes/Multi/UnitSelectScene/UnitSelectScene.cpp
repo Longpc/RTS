@@ -169,7 +169,8 @@ void MultiUnitSelectScene::onSelectUnit(int unitId)
 }
 void MultiUnitSelectScene::displayUnit(Button *parent,Label *textView, int unitId)
 {
-	parent->loadTextureNormal(UserUnitModel::getInstance()->getUnitImageById(_allUnitInfoNew[unitId].mst_unit_id).c_str());
+	parent->loadTextureNormal(UserUnitModel::getInstance()->getUnitImageByMstUnitItD(_allUnitInfoNew[unitId].mst_unit_id).c_str());
+	parent->setScale(4.0f);
 	textView->setString(_allUnitInfoNew[unitId].name);
 
 	if (_onSelectedSlot < 3) {
@@ -261,9 +262,9 @@ void MultiUnitSelectScene::createAllUnitView()
 			if ((j + i * 4-1) < _allUnitInfoNew.size()) {
 				auto sprite = Button::create();
 				sprite->setTag(j + i * 4 - 1);
-				sprite->loadTextureNormal(UserUnitModel::getInstance()->getUnitImageById(_allUnitInfoNew[j+i*4 - 1].mst_unit_id).c_str());
+				sprite->loadTextureNormal(UserUnitModel::getInstance()->getUnitImageByMstUnitItD(_allUnitInfoNew[j+i*4 - 1].mst_unit_id).c_str());
 				sprite->setSwallowTouches(false);
-				sprite->setScale(1.5);
+				sprite->setScale(5.0f);
 				sprite->addTouchEventListener(CC_CALLBACK_2(MultiUnitSelectScene::onTouchUnit, this));
 				int yValue = lay->getContentSize().height / 2 + 20;
 				sprite->setPosition(Vec2(baseX + spaceX *(j-1), yValue));

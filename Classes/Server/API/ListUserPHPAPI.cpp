@@ -15,8 +15,7 @@ bool ListUserAPI::init()
 	_listUser = {};
 	char data[100];
 	sprintf(data, "app_key=%s&info=%s", APP_KEY, "2354232342KGJSD%'#$");
-	HttpClientBase::getInstance()->postAPIWithMethodNameAndParam("debug/list_user.php", data);
-	HttpClientBase::getInstance()->setAPICallback([&](HttpClient *cl, HttpResponse* response) {
+	HttpClientBase::getInstance()->postAPIWithMethodNameAndParam("debug/list_user.php", data,[&](HttpClient *cl, HttpResponse* response) {
 		std::vector<char>* data = response->getResponseData();
 		std::string result(data->begin(), data->end());
 		rapidjson::Document doc;

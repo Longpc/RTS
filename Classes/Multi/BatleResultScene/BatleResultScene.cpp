@@ -300,7 +300,8 @@ void BatleResultScene::updateUnitSlot(vector<UserBattleInfo> info, bool checkFlg
 	for (int i = 0; i < info.size(); i++)
 	{
 		_unitNameLabel[i]->setString(info[i].name);
-		_allSlot[i]->getClickableButton()->loadTextureNormal(UserUnitModel::getInstance()->getUnitImageById(info[i].unitId));
+		_allSlot[i]->getClickableButton()->loadTextureNormal(UserUnitModel::getInstance()->getUnitImageByMstUnitItD(info[i].unitId));
+		_allSlot[i]->getClickableButton()->setScale(4.0f);
 		//update image
 		if (checkFlg && i == _saveYourUnitIndex) {
 			_allSlot[i]->setSelected(true);
