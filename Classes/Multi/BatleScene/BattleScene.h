@@ -133,6 +133,7 @@ private:
 
 	Sprite *_cannonTargetSprite;
 
+	int _screenMode = SCREEN_VERTICAL;
 	int _moveMode;
 	////PHYSICAL///
 	PhysicsWorld *_myWorld;
@@ -143,10 +144,13 @@ private:
 	string _attackImagePath;
 	Sprite *_selectTargetSprite;
 
+	Sprite *_topMenuSprite;
+	Node *_skillButtonParentnode;
+
 
 	///ATTACK LOGIC///
-	Sprite *_autoAttackArea;
-	Sprite *_skillAOEShowSprite;
+	//Sprite *_autoAttackArea;
+	//Sprite *_skillAOEShowSprite;
 	//Sprite *_testAttackTarget;
 	vector<Sprite*> _allEnemyUnitSprite;
 	vector<Sprite*> _allEnemyIconInMinimap;
@@ -244,6 +248,9 @@ private:
 
 	vector<Sprite*> _neutralUnitIconInMiniMap;
 	vector<vector<bool>> _saveOldPosOfNeutral;
+
+	Node *redTowerParentNode;
+	Node *blueTowerParentNode;
 	/************************************************************************/
 	/* FUNCTIONS                                                            */
 	/************************************************************************/

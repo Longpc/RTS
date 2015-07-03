@@ -128,7 +128,7 @@ void Character::moveActionByVector(Vec2 destination)
 	}
 }
 
-void Character::attackActionByUnitPosition(int direction , int attackTime, AttackCallback oneSecondCb, AttackCallback attackCallback)
+void Character::attackActionByTargetPosition(Vec2 direcVector , int attackTime, AttackCallback oneSecondCb, AttackCallback attackCallback)
 {
 	if (getAttackDelayFlag() == false) {
 		setAttackDelayFlag(true);		
@@ -157,7 +157,9 @@ void Character::attackActionByUnitPosition(int direction , int attackTime, Attac
 			/*auto ani = Animate::create(createAttackAnimationWithDefine(direction));
 			cb2Sequence = Sequence::create(ani, call2, nullptr);*/
 			cb2Sequence = Sequence::create(Blink::create(0.5f, 4), call2, nullptr);
-			rotateCharacter(direction);
+			/*auto move = MoveBy::create(0.15f, Vec2(direcVector * 100 / direcVector.length()));
+			auto rvMove = move->reverse();
+			cb2Sequence = Sequence::create(move, rvMove,call2, nullptr);*/
 		}
 
 		this->runAction(Spawn::create(Sequence::create(DelayTime::create(attackTime), call1, nullptr), cb2Sequence, nullptr));

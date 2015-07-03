@@ -30,7 +30,7 @@ public:
 	
 	void sendMoveEndEvent(UserUnitInfo unitdata);
 	
-	void sendAttackEvent(int direction,UserUnitInfo attackerUnit, UserUnitInfo targetData, SocketIOCallback callback);
+	void sendAttackEvent(Vec2 direction,UserUnitInfo attackerUnit, UserUnitInfo targetData, SocketIOCallback callback);
 	
 	void sendSkillEvent(UserSkillInfo skillData, UserUnitInfo attacker/*, SocketIOCallback callback*/);
 		
@@ -52,13 +52,13 @@ public:
 
 	void sendCheckMapEvent(SocketIOCallback callback);
 
-	void sendNeutralTowerAttackEvent(int teamID, int towerIndex, int direction, SocketIOCallback callback);
+	void sendNeutralTowerAttackEvent(int teamID, int towerIndex, Vec2 direc, SocketIOCallback callback);
 
 	void sendWarpEvent(int wormIndex, int outGateIndex, SocketIOCallback callback);
 
-	void sendNeutralUnitAttackEvent(int team_id, int unitIndex, int direc, SocketIOCallback callback);
+	void sendNeutralUnitAttackEvent(int team_id, int unitIndex, Vec2 direc, SocketIOCallback callback);
 
-	void sendCannonAttackEvent(int team_id, int unitIndex, int direc, SocketIOCallback callback);
+	void sendCannonAttackEvent(int team_id, int unitIndex, Vec2 direc, SocketIOCallback callback);
 	
 	void sendCannonLunchEvent(int team_id, int cannonIndex, SocketIOCallback callback);
 

@@ -86,7 +86,7 @@ void BattleAPI::sendMoveEndEvent(UserUnitInfo unitdata)
 	});
 }
 
-void BattleAPI::sendAttackEvent(int direction,UserUnitInfo unit, UserUnitInfo targetUnit, SocketIOCallback callback)
+void BattleAPI::sendAttackEvent(Vec2 direction,UserUnitInfo unit, UserUnitInfo targetUnit, SocketIOCallback callback)
 {
 	auto c = NodeServer::getInstance()->getClient();
 	if (c == nullptr) return;
@@ -106,7 +106,8 @@ void BattleAPI::sendAttackEvent(int direction,UserUnitInfo unit, UserUnitInfo ta
 	doc.AddMember("target", *convertUnitDataToJsonObject(targetUnit, allo), allo);
 	string uu = UserModel::getInstance()->getUuId().c_str();
 	doc.AddMember("uuid", uu.c_str(), allo);	
-	doc.AddMember("direction", direction, allo);
+	doc.AddMember("direction_x", direction.x, allo);
+	doc.AddMember("direction_y", direction.y, allo);
 
 	StringBuffer  buffer;
 	Writer<StringBuffer> writer(buffer);
@@ -372,7 +373,7 @@ void BattleAPI::sendCheckMapEvent(SocketIOCallback callBack)
 	sv->on("check_map_end", callBack);
 }
 
-void BattleAPI::sendNeutralTowerAttackEvent(int teamID, int towerIndex, int direc, SocketIOCallback callBack)
+void BattleAPI::sendNeutralTowerAttackEvent(int teamID, int towerIndex, Vec2 direc, SocketIOCallback callBack)
 {
 	auto userData = UserModel::getInstance()->getUserInfo();
 
@@ -384,7 +385,8 @@ void BattleAPI::sendNeutralTowerAttackEvent(int teamID, int towerIndex, int dire
 	doc.AddMember("uuid", uu.c_str(), allo);
 	doc.AddMember("team_id", teamID, allo);
 	doc.AddMember("user_id", userData.user_id, allo);
-	doc.AddMember("direc", direc, allo);
+	doc.AddMember("direc_x", direc.x, allo);
+	doc.AddMember("direc_y", direc.y, allo);
 	doc.AddMember("index", towerIndex, allo);
 
 	StringBuffer  buffer;
@@ -424,7 +426,7 @@ void BattleAPI::sendWarpEvent(int wormIndex, int outGateIndex, SocketIOCallback 
 
 }
 
-void BattleAPI::sendNeutralUnitAttackEvent(int team_id, int unitIndex,int direc, SocketIOCallback callback)
+void BattleAPI::sendNeutralUnitAttackEvent(int team_id, int unitIndex,Vec2 direc, SocketIOCallback callback)
 {
 	auto userData = UserModel::getInstance()->getUserInfo();
 
@@ -437,7 +439,8 @@ void BattleAPI::sendNeutralUnitAttackEvent(int team_id, int unitIndex,int direc,
 	doc.AddMember("index", unitIndex, allo);
 	doc.AddMember("team_id", team_id, allo);
 	doc.AddMember("user_id", userData.user_id, allo);
-	doc.AddMember("direc", direc, allo);
+	doc.AddMember("direc_x", direc.x, allo);
+	doc.AddMember("direc_y", direc.y, allo);
 
 	StringBuffer  buffer;
 	Writer<StringBuffer> writer(buffer);
@@ -452,7 +455,7 @@ void BattleAPI::sendNeutralUnitAttackEvent(int team_id, int unitIndex,int direc,
 
 }
 
-void BattleAPI::sendCannonAttackEvent(int team_id, int unitIndex, int direc, SocketIOCallback callback)
+void BattleAPI::sendCannonAttackEvent(int team_id, int unitIndex, Vec2 direc, SocketIOCallback callback)
 {
 	auto userData = UserModel::getInstance()->getUserInfo();
 
@@ -465,7 +468,8 @@ void BattleAPI::sendCannonAttackEvent(int team_id, int unitIndex, int direc, Soc
 	doc.AddMember("index", unitIndex, allo);
 	doc.AddMember("team_id", team_id, allo);
 	doc.AddMember("user_id", userData.user_id, allo);
-	doc.AddMember("direc", direc, allo);
+	doc.AddMember("direc_x", direc.x, allo);
+	doc.AddMember("direc_y", direc.y, allo);
 
 	StringBuffer  buffer;
 	Writer<StringBuffer> writer(buffer);

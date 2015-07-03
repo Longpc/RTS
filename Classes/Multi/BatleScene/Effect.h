@@ -2,6 +2,7 @@
 #define _EFFECT_H_
 
 #include "cocos2d.h"
+#include "base/Define.h"
 
 
 #define DELAY_HELP 1.0f // Time life of help effect

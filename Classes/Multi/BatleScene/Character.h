@@ -36,7 +36,7 @@ public :
 	/*for save neutral unit data in solo mode*/
 	CC_SYNTHESIZE(int, _saveAttackTime, SaveAtttackTime);
 	void moveActionByVector(Vec2 destination);
-	void attackActionByUnitPosition(int direction, int attackTime, AttackCallback oneSecondCallback = nullptr,  AttackCallback attackCallback = nullptr);
+	void attackActionByTargetPosition(Vec2 direcVector, int attackTime, AttackCallback oneSecondCallback = nullptr,  AttackCallback attackCallback = nullptr);
 	void respawAction();
 	void stopMoveAction();
 	void stopAttackAction();

@@ -53,8 +53,8 @@ void Tower::createEffectObject(Sprite* target)
 {
 	_target = target;
 	ef = ParticleSystemQuad::create(_plistPath);
-	this->getParent()->addChild(ef,100);
-	ef->setPosition(this->getPosition());
+	this->getParent()->getParent()->addChild(ef,100);
+	ef->setPosition(this->getParent()->getPosition());
 	schedule(SEL_SCHEDULE(&Tower::updatePosition), 0.15f);
 }
 

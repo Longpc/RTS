@@ -192,6 +192,9 @@ enum SKILL_RANGE_TYPE
 ////////////////////////////////////////////////////////////
 // MOVE KEY VALUE
 ////////////////////////////////////////////////////////////
+#define SCREEN_HORIZONTAL 888
+#define SCREEN_VERTICAL 999
+
 #define MOVE_AUTO 1
 #define MOVE_MANUAL 2
 #define MOVE_CIRCLE 3
@@ -207,7 +210,7 @@ enum SKILL_RANGE_TYPE
 
 #define SPEED_MULTIPLE 2
 
-
+#define SCR_ORIEN_K "THEKEY"
 #define MOVE_KEY "MOVE_MODE"
 #define MOVE_CIRCLE_TYPE "MOVE_CIRCLE_TYPE"
 #define NOVE_CIRCLE_PROPERTY "MOVE_CIRCLE_PROPERTY"

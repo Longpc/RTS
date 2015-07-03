@@ -12,9 +12,13 @@ public:
 private:
 	///VARIABLES///////////////////////////////////////////////////////////////////////
 	Sprite *backGround;
+	int _screenOrien;
 	int selectMode;
 	int circleType;
 	int circleProperty;
+	CheckBox * _verticalModeCb;
+	CheckBox *_horizontalModeCb;
+
 	// Auto
 	CheckBox *_mode1;
 	// Manual
@@ -42,6 +46,10 @@ private:
 
 	virtual void decideButtonCallback(Ref *pSender, Widget::TouchEventType type);
 
+	virtual CheckBox* createCheckBox();
+
+	void horizontalModeCbcallbacl(Ref *pSender, CheckBox::EventType type);
+	void verticalModeCbCallback(Ref *pSender, CheckBox::EventType type);
 };
 
 

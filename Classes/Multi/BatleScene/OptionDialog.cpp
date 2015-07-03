@@ -22,22 +22,88 @@ bool OptionDialog::init(MyTouchEvent dCall, MyTouchEvent ccCall)
 	selectMode = UserDefault::getInstance()->getIntegerForKey(MOVE_KEY);
 	circleType = UserDefault::getInstance()->getIntegerForKey(MOVE_CIRCLE_TYPE);
 	circleProperty = UserDefault::getInstance()->getIntegerForKey(NOVE_CIRCLE_PROPERTY);
+	_screenOrien = UserDefault::getInstance()->getIntegerForKey(SCR_ORIEN_K);
+	
 	log("selectMode: %d", selectMode);
 	backGround = getBackGroundSprite();
 	Size size = backGround->getContentSize();
 
+	/*Battle scene mode*/
+	_verticalModeCb = createCheckBox();
+	_verticalModeCb->setPosition(Vec2(size.width * 4 / 6, size.height * 5 / 6));
+	_horizontalModeCb = createCheckBox();
+	_horizontalModeCb->setPosition(_verticalModeCb->getPosition() - Vec2(0, 50));
+	if (_screenOrien == SCREEN_HORIZONTAL) {
+		_horizontalModeCb->setSelected(true);
+	}
+	else {
+		_verticalModeCb->setSelected(true);
+	}
+
+	_verticalModeCb->addEventListener([&](Ref *pSender, CheckBox::EventType type){
+		switch (type)
+		{
+		case cocos2d::ui::CheckBox::EventType::UNSELECTED:
+			break;
+		case cocos2d::ui::CheckBox::EventType::SELECTED:
+		{
+			_screenOrien = SCREEN_VERTICAL;
+			_horizontalModeCb->setTouchEnabled(true);
+			_horizontalModeCb->setSelected(false);
+			_verticalModeCb->setTouchEnabled(false);
+			break;
+		}
+		default:
+			break;
+		}
+	});
+	backGround->addChild(_verticalModeCb);
+
+	auto verText = Label::createWithSystemFont("垂直", JAPANESE_FONT_1_BOLD, 30);
+	verText->setColor(Color3B::BLACK);
+	verText->setAnchorPoint(Vec2::ANCHOR_MIDDLE_LEFT);
+	verText->setHorizontalAlignment(TextHAlignment::LEFT);
+	verText->setPosition(_verticalModeCb->getPosition() + Vec2(50, 0));
+	backGround->addChild(verText);
+
+	
+	_horizontalModeCb->addEventListener([&](Ref *pSender, CheckBox::EventType type) {
+		switch (type)
+		{
+		case cocos2d::ui::CheckBox::EventType::SELECTED:
+		{
+			_screenOrien = SCREEN_HORIZONTAL;
+			_verticalModeCb->setTouchEnabled(true);
+			_verticalModeCb->setSelected(false);
+			_horizontalModeCb->setTouchEnabled(false);
+			
+			break;
+		}
+		case cocos2d::ui::CheckBox::EventType::UNSELECTED:
+			break;
+		default:
+			break;
+		}
+	});
+
+	backGround->addChild(_horizontalModeCb);
+
+	auto hText = Label::createWithSystemFont("水平", JAPANESE_FONT_1_BOLD, 30);
+	hText->setColor(Color3B::BLACK);
+	hText->setAnchorPoint(Vec2::ANCHOR_MIDDLE_LEFT);
+	hText->setHorizontalAlignment(TextHAlignment::LEFT);
+	hText->setPosition(_horizontalModeCb->getPosition() + Vec2(50, 0));
+	backGround->addChild(hText);
+
+
 	////////////////////////////////////////////////////////////////////////////
 	// MOVE_AUTO 
 	////////////////////////////////////////////////////////////////////////////
-	_mode1 = CheckBox::create("image/navigator/checkbox/check_box_normal.png",
-		"image/navigator/checkbox/check_box_normal_press.png",
-		"image/navigator/checkbox/check_box_active.png",
-		"image/navigator/checkbox/check_box_normal_disable.png",
-		"image/navigator/checkbox/check_box_active_disable.png");
+	_mode1 = createCheckBox();
 	_mode1->setPosition(Vec2(size.width * 1 / 6, size.height * 5 / 6)); // 2/3
 	_mode1->addEventListener(CC_CALLBACK_2(OptionDialog::touchMode1Callback, this));
 
-	auto optionText1 = Label::createWithSystemFont("自動敵でタッチ点まで移動する", JAPANESE_FONT_1_BOLD, 30);
+	auto optionText1 = Label::createWithSystemFont("自動移動", JAPANESE_FONT_1_BOLD, 30);
 	optionText1->setColor(Color3B::BLACK);
 	optionText1->setAnchorPoint(Vec2::ANCHOR_MIDDLE_LEFT);
 	optionText1->setHorizontalAlignment(TextHAlignment::LEFT);
@@ -46,15 +112,11 @@ bool OptionDialog::init(MyTouchEvent dCall, MyTouchEvent ccCall)
 	////////////////////////////////////////////////////////////////////////////
 	// MOVE_MANUAL
 	////////////////////////////////////////////////////////////////////////////
-	_mode2 = CheckBox::create("image/navigator/checkbox/check_box_normal.png",
-		"image/navigator/checkbox/check_box_normal_press.png",
-		"image/navigator/checkbox/check_box_active.png",
-		"image/navigator/checkbox/check_box_normal_disable.png",
-		"image/navigator/checkbox/check_box_active_disable.png");
+	_mode2 = createCheckBox();
 	_mode2->setPosition(Vec2(size.width * 1 / 6, size.height * 2 / 3)); // 1/3
 	_mode2->addEventListener(CC_CALLBACK_2(OptionDialog::touchMove2Callback, this));
 
-	auto optionText2 = Label::createWithSystemFont("タッチの方向で移動する", JAPANESE_FONT_1_BOLD, 30);
+	auto optionText2 = Label::createWithSystemFont("手動移動", JAPANESE_FONT_1_BOLD, 30);
 	optionText2->setHorizontalAlignment(TextHAlignment::LEFT);
 	optionText2->setColor(Color3B::BLACK);
 	optionText2->setAnchorPoint(Vec2::ANCHOR_MIDDLE_LEFT);
@@ -63,15 +125,11 @@ bool OptionDialog::init(MyTouchEvent dCall, MyTouchEvent ccCall)
 	////////////////////////////////////////////////////////////////////////////
 	// MOVE_CIRCLE
 	////////////////////////////////////////////////////////////////////////////
-	_mode3 = CheckBox::create("image/navigator/checkbox/check_box_normal.png",
-		"image/navigator/checkbox/check_box_normal_press.png",
-		"image/navigator/checkbox/check_box_active.png",
-		"image/navigator/checkbox/check_box_normal_disable.png",
-		"image/navigator/checkbox/check_box_active_disable.png");
+	_mode3 = createCheckBox();
 	_mode3->setPosition(Vec2(size.width * 1 / 6, size.height * 1 / 2));
 	_mode3->addEventListener(CC_CALLBACK_2(OptionDialog::touchMove3Callback, this));
 
-	auto optionText3 = Label::createWithSystemFont("丸でユニットを移動する", JAPANESE_FONT_1_BOLD, 30);
+	auto optionText3 = Label::createWithSystemFont("丸移動", JAPANESE_FONT_1_BOLD, 30);
 	optionText3->setHorizontalAlignment(TextHAlignment::LEFT);
 	optionText3->setColor(Color3B::BLACK);
 	optionText3->setAnchorPoint(Vec2::ANCHOR_MIDDLE_LEFT);
@@ -80,11 +138,7 @@ bool OptionDialog::init(MyTouchEvent dCall, MyTouchEvent ccCall)
 	//////////////////////
 	// LEFT
 	//////////////////////
-	_mode3Left = CheckBox::create("image/navigator/checkbox/check_box_normal.png",
-		"image/navigator/checkbox/check_box_normal_press.png",
-		"image/navigator/checkbox/check_box_active.png",
-		"image/navigator/checkbox/check_box_normal_disable.png",
-		"image/navigator/checkbox/check_box_active_disable.png");
+	_mode3Left = createCheckBox();
 
 	_mode3Left->setPosition(Vec2(size.width * 1 / 4, size.height * 1 / 3));
 	_mode3Left->addEventListener(CC_CALLBACK_2(OptionDialog::touchMove3LeftCallback, this));
@@ -99,11 +153,7 @@ bool OptionDialog::init(MyTouchEvent dCall, MyTouchEvent ccCall)
 	//////////////////////
 	// RIGHT
 	//////////////////////
-	_mode3Right = CheckBox::create("image/navigator/checkbox/check_box_normal.png",
-		"image/navigator/checkbox/check_box_normal_press.png",
-		"image/navigator/checkbox/check_box_active.png",
-		"image/navigator/checkbox/check_box_normal_disable.png",
-		"image/navigator/checkbox/check_box_active_disable.png");
+	_mode3Right = createCheckBox();
 
 	_mode3Right->setPosition(Vec2(size.width * 1 / 2, size.height * 1 / 3));
 	_mode3Right->addEventListener(CC_CALLBACK_2(OptionDialog::touchMove3RightCallback, this));
@@ -118,11 +168,7 @@ bool OptionDialog::init(MyTouchEvent dCall, MyTouchEvent ccCall)
 	//////////////////////
 	// TIME
 	//////////////////////
-	_mode3Time = CheckBox::create("image/navigator/checkbox/check_box_normal.png",
-		"image/navigator/checkbox/check_box_normal_press.png",
-		"image/navigator/checkbox/check_box_active.png",
-		"image/navigator/checkbox/check_box_normal_disable.png",
-		"image/navigator/checkbox/check_box_active_disable.png");
+	_mode3Time = createCheckBox();
 
 	_mode3Time->setPosition(Vec2(size.width * 1 / 4, size.height * 1 / 6));
 	_mode3Time->addEventListener(CC_CALLBACK_2(OptionDialog::touchMove3TimeCallback, this));
@@ -137,11 +183,7 @@ bool OptionDialog::init(MyTouchEvent dCall, MyTouchEvent ccCall)
 	//////////////////////
 	// DISTANCE
 	//////////////////////
-	_mode3Distance = CheckBox::create("image/navigator/checkbox/check_box_normal.png",
-		"image/navigator/checkbox/check_box_normal_press.png",
-		"image/navigator/checkbox/check_box_active.png",
-		"image/navigator/checkbox/check_box_normal_disable.png",
-		"image/navigator/checkbox/check_box_active_disable.png");
+	_mode3Distance = createCheckBox();
 
 	_mode3Distance->setPosition(Vec2(size.width * 1 / 2, size.height * 1 / 6));
 	_mode3Distance->addEventListener(CC_CALLBACK_2(OptionDialog::touchMove3DistanceCallback, this));
@@ -267,6 +309,17 @@ bool OptionDialog::init(MyTouchEvent dCall, MyTouchEvent ccCall)
 
 	return true;
 }
+
+
+CheckBox* OptionDialog::createCheckBox()
+{
+	return CheckBox::create("image/navigator/checkbox/check_box_normal.png",
+		"image/navigator/checkbox/check_box_normal_press.png",
+		"image/navigator/checkbox/check_box_active.png",
+		"image/navigator/checkbox/check_box_normal_disable.png",
+		"image/navigator/checkbox/check_box_active_disable.png");
+}
+
 
 ////////////////////////////////////////////////////////////////////////////
 // SELECT MOVE_TYPE CALLBACK
@@ -520,6 +573,7 @@ void OptionDialog::decideButtonCallback(Ref *pSender, Widget::TouchEventType typ
 	case cocos2d::ui::Widget::TouchEventType::ENDED:
 	{
 		UserDefault::getInstance()->setIntegerForKey(MOVE_KEY, selectMode);
+		UserDefault::getInstance()->setIntegerForKey(SCR_ORIEN_K, _screenOrien);
 		if (selectMode == MOVE_CIRCLE)
 		{
 			UserDefault::getInstance()->setIntegerForKey(MOVE_CIRCLE_TYPE, circleType);
@@ -534,5 +588,15 @@ void OptionDialog::decideButtonCallback(Ref *pSender, Widget::TouchEventType typ
 	default:
 		break;
 	}
+}
+
+void OptionDialog::horizontalModeCbcallbacl(Ref *pSender, CheckBox::EventType type)
+{
+
+}
+
+void OptionDialog::verticalModeCbCallback(Ref *pSender, CheckBox::EventType type)
+{
+
 }
 
