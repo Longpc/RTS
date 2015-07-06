@@ -4118,10 +4118,13 @@ void BattleScene::showDameAndSkillLogic(Ref *p, int index, int dame, Sprite* obj
 	showAttackDame(dame, target->getPosition() + Vec2(0, 100), 1);
 	effectUnitlist->at(index).hp -= dame;
 	if (object == testObject) {
-		saveDameInfo(dame, 0, index, _currentPlayerTeamFlg);
-		sendDameDeal(dame, index, [&](SIOClient *c, const string data) {
-			log("send dame event in play skill completed");
-		});
+		//saveDameInfo(dame, 0, index, _currentPlayerTeamFlg);
+		if (_gameMode == MULTI_MODE)
+		{
+			sendDameDeal(dame, index, [&](SIOClient *c, const string data) {
+				log("send dame event in play skill completed");
+			});
+		}
 		if (effectUnitlist->at(index).hp <= 0) {
 			enemyDieAction(index);
 		}
@@ -4205,14 +4208,16 @@ void BattleScene::skillTrapAction(Sprite* object, UserSkillInfo skill, int teamI
 	draw->drawCircle(Vec2::ZERO, skill.range_distance, 360.0f, 50, false, Color4F::BLACK);
 	object->getParent()->addChild(draw);
 	draw->setPosition(pos);
-	Sequence* checker;
+	RepeatForever* checker;
 	if (teamId == _currentPlayerTeamFlg)
 	{
-		checker = Sequence::create(DelayTime::create(0.1f), CallFuncN::create(CC_CALLBACK_1(BattleScene::trapSkillChecker, this, object, pos,skill, &_allEnemyUnitData, _allEnemyUnitSprite)), nullptr);
+		log("caster is your team. Check enemy team");
+		checker = RepeatForever::create(Sequence::create(CallFuncN::create(CC_CALLBACK_1(BattleScene::trapSkillChecker, this, object, pos, skill, &_allEnemyUnitData, _allEnemyUnitSprite)), DelayTime::create(0.1f), nullptr));
 	}
 	else 
 	{
-		checker = Sequence::create(DelayTime::create(0.1f), CallFuncN::create(CC_CALLBACK_1(BattleScene::trapSkillChecker, this, object, pos, skill, &_allAlliedUnitData, _allAlliedUnitSprite)), nullptr);
+		log("caster is enemy team. Check your team");
+		checker = RepeatForever::create(Sequence::create(CallFuncN::create(CC_CALLBACK_1(BattleScene::trapSkillChecker, this, object, pos, skill, &_allAlliedUnitData, _allAlliedUnitSprite)), DelayTime::create(0.1f), nullptr));
 	}
 	checker->setTag(TRAP_CHECK_ACTION_TAG);
 
@@ -4220,24 +4225,31 @@ void BattleScene::skillTrapAction(Sprite* object, UserSkillInfo skill, int teamI
 
 	auto sequence = Sequence::create(DelayTime::create(skill.duration), CallFuncN::create([&, draw,checker](Ref *p) {
 		draw->removeFromParent();
-		this->stopAction(checker);
+		((Sprite*)p)->stopAction(checker);
 	}), nullptr);
-	this->runAction(checker);
-	this->runAction(sequence);
+	object->runAction(checker);
+	object->runAction(sequence);
 
 
 }
 
 void BattleScene::trapSkillChecker(Ref* p, Sprite* object, Vec2 basePos, UserSkillInfo skill, vector<UserUnitInfo>* targetUnitList, vector<Sprite*> targetSprite) {
+	auto caster = (Sprite*)p;
+	
 	for (int i = 0; i < targetUnitList->size(); i ++)
 	{
+		if (caster->getActionByTag(TRAP_CHECK_ACTION_TAG) == nullptr) {
+			targetSprite[i]->stopAllActionsByTag(TRAP_DAME_ACTION_TAG);
+			log("trap time end. remove all dame action");
+			continue;
+		}
 		auto distance = targetSprite[i]->getPosition() - basePos;
 		if (distance.getLength() < skill.range_distance) 
 		{
 			//unit trap aoe. check for start trap dame action
 			if (targetSprite[i]->getActionByTag(TRAP_DAME_ACTION_TAG) == nullptr)
 			{
-				auto action = Sequence::create(DelayTime::create(1.0f), CallFuncN::create(CC_CALLBACK_1(BattleScene::showDameAndSkillLogic, this, i, skill.corrett_value, object, targetSprite[i], targetUnitList)), nullptr);
+				auto action = RepeatForever::create(Sequence::create(DelayTime::create(1.0f), CallFuncN::create(CC_CALLBACK_1(BattleScene::showDameAndSkillLogic, this, i, skill.corrett_value, object, targetSprite[i], targetUnitList)), nullptr));
 				action->setTag(TRAP_DAME_ACTION_TAG);
 				targetSprite[i]->runAction(action);
 			}
@@ -4245,7 +4257,9 @@ void BattleScene::trapSkillChecker(Ref* p, Sprite* object, Vec2 basePos, UserSki
 		else {
 			//unit out trap. Check for remove trap dame action
 			targetSprite[i]->stopAllActionsByTag(TRAP_DAME_ACTION_TAG);
+			log("unit out of trap range");
 		}
+
 	}
 }
 
@@ -4271,6 +4285,7 @@ vector<int> BattleScene::detectUnitInAoe(Sprite* mainObj, UserSkillInfo skill, v
 	{
 
 	case SKILL_RANGE_TYPE::RECTANGLE:
+		if (!drawFlg) break;
 		draw->drawRect(Vec2(-skill.range_distance/2,-skill.range_distance/2), Vec2(skill.range_distance/2, skill.range_distance/2), Color4F::RED);
 		draw->setPosition(pos/* - Vec2(skill.aoe / 2, skill.aoe / 2)*/);
 		draw->setTag(DRAW_UNIT);
@@ -4279,6 +4294,7 @@ vector<int> BattleScene::detectUnitInAoe(Sprite* mainObj, UserSkillInfo skill, v
 		vec.push_back(Vec2(-skill.range_distance / 2, -skill.range_distance * 1 / 3));
 		vec.push_back(Vec2(skill.range_distance / 2, -skill.range_distance / 3));
 		vec.push_back(Vec2(0, skill.range_distance * 2 / 3));
+		if (!drawFlg) break;
 		draw->drawPoly(&vec[0], 3, true, Color4F::RED);
 		draw->setPosition(pos);
 		draw->setTag(DRAW_UNIT);
@@ -4293,11 +4309,13 @@ vector<int> BattleScene::detectUnitInAoe(Sprite* mainObj, UserSkillInfo skill, v
 		vec.push_back(Vec2(skill.range_distance / 6, skill.range_distance / 6));
 		vec.push_back(Vec2(0, skill.range_distance / 2));
 		vec.push_back(Vec2(-skill.range_distance / 6, skill.range_distance / 6));
+		if (!drawFlg) break;
 		draw->drawPoly(&vec[0], vec.size(),true, Color4F::MAGENTA);
 		draw->setPosition(pos);
 		draw->setTag(DRAW_UNIT);
 		break;
 	case SKILL_RANGE_TYPE::CAKE:
+		if (!drawFlg) break;
 		drawCakePieSkillAOe((Character*)mainObj, skill);
 
 		break;
@@ -4306,6 +4324,7 @@ vector<int> BattleScene::detectUnitInAoe(Sprite* mainObj, UserSkillInfo skill, v
 		break;
 
 	default:
+		if (!drawFlg) break;
 		draw->drawCircle(Vec2::ZERO, skill.range_distance, 360.0f, 50, false, Color4F(200,0,0,50));
 		draw->setPosition(pos);
 		draw->setTag(DRAW_UNIT);
@@ -4432,7 +4451,7 @@ void BattleScene::longPressAction(Button *pSender,UserSkillInfo skill)
 bool BattleScene::detectUnitInFadeRectangle(Character* object, Sprite* target, UserSkillInfo skill)
 {
 	auto boxSize = object->getBoundingBox().size;
-	auto pos = target->getPosition();
+	auto pos = object->getPosition();
 	auto chaDirec = object->getCharacterCurrentDirec();
 
 	auto size1 = skill.range_distance;
@@ -4474,7 +4493,11 @@ bool BattleScene::detectUnitInFadeRectangle(Character* object, Sprite* target, U
 	{
 		return true;
 	}
-
+	auto draw = DrawNode::create();
+	draw->drawRect(startPoint, startPoint + Vec2(rectWidth, rectHeight), Color4F::RED);
+	draw->setPosition(Vec2::ZERO);
+	draw->setTag(DRAW_UNIT);
+	object->getParent()->addChild(draw);
 
 	return false;
 }

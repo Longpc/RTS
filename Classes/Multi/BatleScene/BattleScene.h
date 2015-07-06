@@ -86,7 +86,6 @@
 
 #define TRAP_CHECK_ACTION_TAG 2212
 #define TRAP_DAME_ACTION_TAG 2122
-
 using namespace cocostudio;
 class BattleScene : public LayerBase
 {
