@@ -547,11 +547,11 @@ void BattleScene::createContent()
 	auto redTower = Tower::createTower(2);
 	redTower->setTag(TOWER_TAG);
 	redTower->setName("RED TOWER");
-	auto redTowerParentNode = Node::create();
-	redTowerParentNode->addChild(redTower);
-	redTowerParentNode->setPosition(Vec2(_myMap->getContentSize().width - 200, _myMap->getContentSize().height / 2));
+	//auto redTowerParentNode = Node::create();
+	//redTowerParentNode->addChild(redTower);
+	redTower->setPosition(Vec2(_myMap->getContentSize().width - 200, _myMap->getContentSize().height / 2));
 	//redTower->setAnchorPoint(Vec2::ANCHOR_MIDDLE_BOTTOM);
-	_battleBackround->addChild(redTowerParentNode);
+	_battleBackround->addChild(redTower);
 	MyBodyParser::getInstance()->parseJsonFile("json/tower.json");
 	PhysicsBody* redTBody = MyBodyParser::getInstance()->bodyFormJson(redTower, "tower");
 	redTBody->setDynamic(false);
@@ -570,15 +570,15 @@ void BattleScene::createContent()
 	redTower->addChild(redTHpBar);
 	redTower->setTag(ENEMY_NUM);
 
-	auto blueTowerParentNode = Node::create();
+	//auto blueTowerParentNode = Node::create();
 	
 	auto blueTower = Tower::createTower(1);
 	blueTower->setTag(TOWER_TAG);
 	blueTower->setName("BLUE TOWER");
-	blueTowerParentNode->setPosition(Vec2(200, _myMap->getContentSize().height / 2));
+	blueTower->setPosition(Vec2(200, _myMap->getContentSize().height / 2));
 	//blueTower->setAnchorPoint(Vec2::ANCHOR_MIDDLE_BOTTOM);
-	_battleBackround->addChild(blueTowerParentNode);
-	blueTowerParentNode->addChild(blueTower);
+	_battleBackround->addChild(blueTower);
+	//blueTowerParentNode->addChild(blueTower);
 	PhysicsBody* blueTBody = MyBodyParser::getInstance()->bodyFormJson(blueTower, "tower");
 	blueTBody->setDynamic(false);
 	blueTBody->setGravityEnable(false);
@@ -603,7 +603,7 @@ void BattleScene::createContent()
 	else {
 		unitData1.position_x = 100;
 		unitData1.position_y = 1500;
-		unitData1.direction = 9;
+		unitData1.direction = 1;
 		unitData1.angle = 0;
 	}
 	// Here is setting position and direction for main unit. But by this way will make error to reference to the UserModel and BattleModel.
@@ -2005,9 +2005,9 @@ void BattleScene::checkForAutoAttack()
 		///Check for main character run attack animation
 
 		auto posDistan = _allEnemyUnitSprite[i]->getPosition() - testObject->getPosition();
-		if (i == _allAlliedUnitSprite.size() - 1) {
+		/*if (i == _allAlliedUnitSprite.size() - 1) {
 			posDistan = _allEnemyUnitSprite[i]->getParent()->getPosition() - testObject->getPosition();
-		}
+		}*/
 		int direc = detectDirectionBaseOnTouchAngle(-posDistan.getAngle()*RAD_DEG + 90);
 		if (posDistan.length() - _allEnemyUnitSprite[i]->getBoundingBox().size.width / 4 < ATTACK_AOE*_allAlliedUnitData[0].attack_range / 100.0f && _allEnemyUnitSprite[i]->isVisible())
 		{
@@ -2278,11 +2278,7 @@ void BattleScene::neutralUnitStatusChange(Character* unit, int team, int index) 
 		type = 7;
 		break;
 	case 2:
-		type = 2;
-		break;
-	default:
 		type = 9;
-
 		break;
 	}
 	/*stop move animation of neutral unit*/
@@ -2742,6 +2738,7 @@ void BattleScene::onTouchMoved(Touch *touch, Event *unused_event)
 		_touchMoveBeginSprite->setPosition(touch->getLocation());
 		auto cannon = _cannonList[_onLunchCannonIndex];
 		auto distan = _battleBackround->convertToNodeSpace(touch->getLocation()) - testObject->getPosition();
+
 		float angle = -distan.getAngle() * RAD_DEG;
 		log("Angle: %f", angle);
 		if (angle > 90 || angle < -90) {
@@ -3122,13 +3119,13 @@ void BattleScene::fakeZOrder()
 
 bool BattleScene::onPhysicContactBegin(const PhysicsContact &contact)
 {
-	auto spriteA = contact.getShapeA()->getBody()->getNode();
+	/*auto spriteA = contact.getShapeA()->getBody()->getNode();
 	auto spriteB = contact.getShapeB()->getBody()->getNode();
 	if ((spriteA->getTag() == BOUND_BORDER_TAG && spriteB == testObject) || (spriteA == testObject && spriteB->getTag() == BOUND_BORDER_TAG))
 	{
-		log("contact begin with wall");
+		//log("contact begin with wall");
 	}
-
+	*/
 
 	return true;
 }
@@ -3645,7 +3642,8 @@ void BattleScene::playSkillLogicAndAnimation(Sprite* playObject, UserSkillInfo s
 	case TYPE_STUN:
 		skillStunAction(playObject, skill, team_id);
 		break;
-	default:
+	case TYPE_TRAP:
+		skillTrapAction(playObject, skill, team_id);
 		break;
 	}
 }
@@ -4135,7 +4133,8 @@ void BattleScene::skillAttackOne(Sprite* object, UserSkillInfo skillInfo,UserUni
 {
 	log("Attack One");
 	/*Need more param for skill attack one in RTS mode: target id*/
-	if (object == testObject) {
+	if (object == testObject) 
+	{
 		int value = 0;
 		switch (skillInfo.correct_type)
 		{
@@ -4195,13 +4194,71 @@ void BattleScene::skillAttackOne(Sprite* object, UserSkillInfo skillInfo,UserUni
 			, RemoveSelf::create(true)
 			, nullptr);
 		attackFire->runAction(attackFireSequence);
-
 		/*}), nullptr); */
-
 	}
+}
+
+void BattleScene::skillTrapAction(Sprite* object, UserSkillInfo skill, int teamId)
+{
+	auto pos = object->getPosition();
+	DrawNode *draw = DrawNode::create();
+	draw->drawCircle(Vec2::ZERO, skill.range_distance, 360.0f, 50, false, Color4F::BLACK);
+	object->getParent()->addChild(draw);
+	draw->setPosition(pos);
+	Sequence* checker;
+	if (teamId == _currentPlayerTeamFlg)
+	{
+		checker = Sequence::create(DelayTime::create(0.1f), CallFuncN::create(CC_CALLBACK_1(BattleScene::trapSkillChecker, this, object, pos,skill, &_allEnemyUnitData, _allEnemyUnitSprite)), nullptr);
+	}
+	else 
+	{
+		checker = Sequence::create(DelayTime::create(0.1f), CallFuncN::create(CC_CALLBACK_1(BattleScene::trapSkillChecker, this, object, pos, skill, &_allAlliedUnitData, _allAlliedUnitSprite)), nullptr);
+	}
+	checker->setTag(TRAP_CHECK_ACTION_TAG);
+
+
+
+	auto sequence = Sequence::create(DelayTime::create(skill.duration), CallFuncN::create([&, draw,checker](Ref *p) {
+		draw->removeFromParent();
+		this->stopAction(checker);
+	}), nullptr);
+	this->runAction(checker);
+	this->runAction(sequence);
+
 
 }
 
+void BattleScene::trapSkillChecker(Ref* p, Sprite* object, Vec2 basePos, UserSkillInfo skill, vector<UserUnitInfo>* targetUnitList, vector<Sprite*> targetSprite) {
+	for (int i = 0; i < targetUnitList->size(); i ++)
+	{
+		auto distance = targetSprite[i]->getPosition() - basePos;
+		if (distance.getLength() < skill.range_distance) 
+		{
+			//unit trap aoe. check for start trap dame action
+			if (targetSprite[i]->getActionByTag(TRAP_DAME_ACTION_TAG) == nullptr)
+			{
+				auto action = Sequence::create(DelayTime::create(1.0f), CallFuncN::create(CC_CALLBACK_1(BattleScene::showDameAndSkillLogic, this, i, skill.corrett_value, object, targetSprite[i], targetUnitList)), nullptr);
+				action->setTag(TRAP_DAME_ACTION_TAG);
+				targetSprite[i]->runAction(action);
+			}
+		}
+		else {
+			//unit out trap. Check for remove trap dame action
+			targetSprite[i]->stopAllActionsByTag(TRAP_DAME_ACTION_TAG);
+		}
+	}
+}
+
+void BattleScene::drawCakePieSkillAOe(Character* object, UserSkillInfo skill) {
+	float angle = 60.0f;
+
+	auto draw = DrawNode::create();
+	draw->drawCircle(Vec2::ZERO, skill.range_distance, 60.0f, 50, true, Color4F::RED);
+	object->getParent()->addChild(draw);
+	draw->setPosition(object->getPosition());
+	draw->setTag(DRAW_UNIT);
+
+}
 
 vector<int> BattleScene::detectUnitInAoe(Sprite* mainObj, UserSkillInfo skill, vector<Sprite*> targetList, bool drawFlg /*= true*/)
 
@@ -4240,12 +4297,22 @@ vector<int> BattleScene::detectUnitInAoe(Sprite* mainObj, UserSkillInfo skill, v
 		draw->setPosition(pos);
 		draw->setTag(DRAW_UNIT);
 		break;
+	case SKILL_RANGE_TYPE::CAKE:
+		drawCakePieSkillAOe((Character*)mainObj, skill);
+
+		break;
+	case SKILL_RANGE_TYPE::FADE_RECTANGLE:
+
+		break;
+
 	default:
 		draw->drawCircle(Vec2::ZERO, skill.range_distance, 360.0f, 50, false, Color4F(200,0,0,50));
 		draw->setPosition(pos);
 		draw->setTag(DRAW_UNIT);
 		break;
 	}
+
+
 // 	bool drawFlg = true;
 	if (skill.multi_effect != 1)
 	{
@@ -4297,10 +4364,22 @@ vector<int> BattleScene::detectUnitInAoe(Sprite* mainObj, UserSkillInfo skill, v
 			}
 
 			break;
+		case SKILL_RANGE_TYPE::CAKE:
+			if (detectUnitInRoundTriangle((Character*)mainObj, targetList[i], skill)) {
+				resultUnitId.push_back(i);
+			}
+			break;
+		case SKILL_RANGE_TYPE::FADE_RECTANGLE:
+			if (detectUnitInFadeRectangle((Character*)mainObj, targetList[i], skill))
+			{
+				resultUnitId.push_back(i);
+			}
+			break;
 		default:
 			//round
 			
 			// 		distan.y = distan.y *SKILL_AOE_Y_SCALE;
+
 			if (distan.length() < skill.range_distance) {
 				resultUnitId.push_back(i);
 			}
@@ -4349,6 +4428,102 @@ void BattleScene::longPressAction(Button *pSender,UserSkillInfo skill)
 		_allEnemyUnitSprite[enemy]->setColor(Color3B::RED);
 	}
 }
+
+bool BattleScene::detectUnitInFadeRectangle(Character* object, Sprite* target, UserSkillInfo skill)
+{
+	auto boxSize = object->getBoundingBox().size;
+	auto pos = target->getPosition();
+	auto chaDirec = object->getCharacterCurrentDirec();
+
+	auto size1 = skill.range_distance;
+	auto size2 = boxSize.height;
+
+	auto rectWidth = 0;
+	auto rectHeight = 0;
+	auto startPoint = object->getPosition();
+
+	switch (chaDirec)
+	{
+	case 1:
+		startPoint = pos + Vec2(-boxSize.width / 2, boxSize.height / 2);
+		rectWidth = size2;
+		rectHeight = size1;
+		break;
+	case 4:
+		startPoint = pos + Vec2(boxSize.width / 2, -boxSize.height / 2);
+		rectWidth = size1;
+		rectHeight = size2;
+		break;
+	case 7:
+		startPoint = pos + Vec2(-boxSize.width / 2, -boxSize.height / 2 - size1);
+		rectWidth = size2;
+		rectHeight = size1;
+		break;
+	case 10:
+		startPoint = pos + Vec2(-boxSize.width / 2 - size1, -boxSize.height / 2);
+		rectWidth = size1;
+		rectHeight = size2;
+		break;
+	default:
+			log("Error by distance in detectUnitInFadeRect");
+		return false;
+	}
+
+	Rect detectRect = Rect(startPoint.x, startPoint.y, rectWidth, rectHeight);
+	if (detectRect.containsPoint(target->getPosition()))
+	{
+		return true;
+	}
+
+
+	return false;
+}
+
+
+bool BattleScene::detectUnitInRoundTriangle(Character* object, Sprite* targetSprite, UserSkillInfo skill)
+{
+	auto chaPos = object->getPosition();
+	auto chaDirec = object->getCharacterCurrentDirec();
+
+	auto distanVector = targetSprite->getPosition() - chaPos;
+	if (distanVector.getLength() > skill.range_distance) {
+		return false;
+	}
+	float angle = -distanVector.getAngle() * RAD_DEG;
+	float baseAngle = 0;
+	switch (chaDirec)
+	{
+	case 1:
+		baseAngle = -90.0f;
+		break;
+	case 4:
+		baseAngle = 0;
+		break;
+	case 7:
+		baseAngle = 90.0f;
+		break;
+	case 10:
+		baseAngle = 180.0f;
+		break;
+	default:
+		log("Error in detectUnitInRoundTriangle 4388");
+		break;
+	}
+	if (angle >= baseAngle - 30 && angle <= baseAngle + 30)
+	{
+		return true;
+	}
+	if (chaDirec == 10)
+	{
+		if (angle >= -180.0f && angle <= -150.0f)
+		{
+			return true;
+		}
+	}
+
+	return false;
+}
+
 
 
 bool BattleScene::detectPointInTriangle(Vec2 point, vector<Vec2> points, Sprite* object)

@@ -135,11 +135,14 @@ struct UserBattleInfo
 // VALUE
 //////////////////////////////////////////////////////////////////////////
 #define ATTACK_AOE 100.0f
+
+//skill.effect_type values range. 
 #define TYPE_BUFF 1
 #define TYPE_RESTORE 2
 #define TYPE_ATTACK 3
 #define TYPE_POISON 4
 #define TYPE_STUN 5
+#define TYPE_TRAP 6
 
 #define TARGET_ALL 1
 #define TARGET_ONE 0
@@ -169,7 +172,9 @@ enum SKILL_RANGE_TYPE
 	CIRCLE = 1,
 	RECTANGLE = 2,
 	TRIANGLE = 3,
-	STAR = 4
+	STAR = 4,
+	CAKE = 5,
+	FADE_RECTANGLE = 6
 };
 
 #define JAPANESE_FONT_1_HEAVY "fonts/AozoraMinchoHeavy.ttf"

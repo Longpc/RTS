@@ -84,6 +84,9 @@
 
 #define FOLLOW_MARGIN 150
 
+#define TRAP_CHECK_ACTION_TAG 2212
+#define TRAP_DAME_ACTION_TAG 2122
+
 using namespace cocostudio;
 class BattleScene : public LayerBase
 {
@@ -483,6 +486,9 @@ private:
 	*/
 	virtual vector<int> detectUnitInAoe(Sprite* mainObj, UserSkillInfo skill, vector<Sprite*> targetList, bool drawFlg = true);
 	
+	virtual void drawCakePieSkillAOe(Character* object, UserSkillInfo skill);
+
+
 	/* run logic and effect of heal skills
 	*/
 	virtual void skillRestoreAction(Sprite* object,  UserSkillInfo skillInfo, int targetUnitIndex, int teamId);
@@ -499,6 +505,11 @@ private:
 	virtual void skillBuffAction(Sprite* object, UserSkillInfo skillInfo, int teamId, int saveIndex);
 	virtual void skillHelpAll(Sprite* object, UserSkillInfo skillInfo, int teamId);
 	virtual void skillHelpOne(Sprite* object, UserSkillInfo skillInfo, int teamId, int saveIndex);
+
+	virtual void skillTrapAction(Sprite* object, UserSkillInfo skill, int teamId);
+
+	virtual void trapSkillChecker(Ref* p,Sprite* object, Vec2 basePos, UserSkillInfo skill, vector<UserUnitInfo>* targetUnitList, vector<Sprite*> targetSpriteList);
+
 
 	/*Run logic and effect of attack skills*/
 	virtual void skillAttackAction(Sprite* object, UserSkillInfo skillInfo, UserUnitInfo attacker, int teamId, float randNum);
@@ -530,6 +541,11 @@ private:
 	*/
 	virtual void longPressAction(Button *pSender, UserSkillInfo skill);
 
+	/*detect unit In fade rectangle. This mean unit in rectangle in front of skill caster*/
+	virtual bool detectUnitInFadeRectangle(Character* object, Sprite* target, UserSkillInfo skill);
+
+	/*detect unit in the round triangle*/
+	virtual bool detectUnitInRoundTriangle(Character* object, Sprite* targetSprite, UserSkillInfo skill);
 	/* this function will calculate for detect a @point is contained in the triangle or not
 	@Return true if point inside the triangle and false for else*/
 	virtual bool detectPointInTriangle(Vec2 point, vector<Vec2> points, Sprite* object);
