@@ -118,7 +118,7 @@ void BattleAPI::sendAttackEvent(Vec2 direction,UserUnitInfo unit, UserUnitInfo t
 	return;
 }
 
-void BattleAPI::sendSkillEvent(UserSkillInfo skillData, UserUnitInfo attacker/*, SocketIOCallback callback*/)
+void BattleAPI::sendSkillEvent(UserSkillInfo skillData, UserUnitInfo attacker, float angle/*, SocketIOCallback callback*/)
 {
 	auto c = NodeServer::getInstance()->getClient();
 	if (c == nullptr) return;
@@ -137,12 +137,13 @@ void BattleAPI::sendSkillEvent(UserSkillInfo skillData, UserUnitInfo attacker/*,
 	doc.AddMember("mst_unit", *u, allo);
 	auto s = convertSkillDataToJsonObject(skillData, allo);
 	doc.AddMember("mst_skill", *s, allo);
+	doc.AddMember("angle", angle, allo);
 
 	StringBuffer  buffer;
 	Writer<StringBuffer> writer(buffer);
 	doc.Accept(writer);
 
-	log("Skill: %s", buffer.GetString());
+	//log("Skill: %s", buffer.GetString());
 	c->emit("play_skill", buffer.GetString());
 	//c->on("play_skill_end", callback);
 }

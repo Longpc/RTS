@@ -1150,7 +1150,7 @@ void BattleScene::createContent()
 		 */
 
 		sv->on("play_skill_end", [&](SIOClient* client, const std::string data) {
-			log("Skill event callback data: %s", data.c_str());
+			//log("Skill event callback data: %s", data.c_str());
 			/*check for battle scene destruct called*/
 			if (_onDestructCalled) return;
 			Document doc;
@@ -1230,8 +1230,9 @@ void BattleScene::createContent()
 				int team_id = doc["team_id"].GetInt();
 				float randNum = doc["random"].GetDouble();
 				string uuid = doc["uuid"].GetString();
+				float angle = doc["angle"].GetDouble();
 				log("team Id: %d", team_id);
-				playSkillLogicAndAnimation(playObject, skill, team_id, randNum, uuid.c_str(), saveIndex, unit);
+				playSkillLogicAndAnimation(playObject, skill, team_id, randNum, uuid.c_str(), saveIndex, unit, angle);
 			}
 		});
 
@@ -1686,7 +1687,11 @@ void BattleScene::update(float delta)
 		{
 			a->setColor(Color3B::WHITE);
 		}
-		vector<int> detectedUnit = detectUnitInAoe(testObject,_onSelectSkillData, _allEnemyUnitSprite, false);
+		while (_battleBackround->getChildByTag(DRAW_UNIT) != nullptr)
+		{
+			_battleBackround->removeChildByTag(DRAW_UNIT);
+		}
+		vector<int> detectedUnit = detectUnitInAoe(testObject,_onSelectSkillData, _allEnemyUnitSprite, _mainCharacterIconInMiniMap->getRotation() - 90 , true);
 		for (auto &c : detectedUnit)
 		{
 			_allEnemyUnitSprite[c]->setColor(Color3B::RED);
@@ -3600,18 +3605,20 @@ void BattleScene::showCoolDownTime(Button *parentButton, int time)
 /************************************************************************/
 void BattleScene::playSkill(UserSkillInfo skillData)
 {
+	float angle = _mainCharacterIconInMiniMap->getRotation() - 90;
+	log("cast skill angle: %f", angle);
 	if (_gameMode == MULTI_MODE)
 	{
-		BattleAPI::getInstance()->sendSkillEvent(skillData, _allAlliedUnitData[0]);
+		BattleAPI::getInstance()->sendSkillEvent(skillData, _allAlliedUnitData[0], angle);
 	}
 	else {
 		string uu = UserModel::getInstance()->getUuId().c_str();
-		playSkillLogicAndAnimation(testObject, skillData, _currentPlayerTeamFlg, random(0.85f, 1.0f), uu.c_str(), 0, _allAlliedUnitData[0]);
+		playSkillLogicAndAnimation(testObject, skillData, _currentPlayerTeamFlg, random(0.85f, 1.0f), uu.c_str(), 0, _allAlliedUnitData[0], angle);
 	}
 
 }
 
-void BattleScene::playSkillLogicAndAnimation(Sprite* playObject, UserSkillInfo skill, int team_id, float randNum, string uuid, int saveIndex, UserUnitInfo unit)
+void BattleScene::playSkillLogicAndAnimation(Sprite* playObject, UserSkillInfo skill, int team_id, float randNum, string uuid, int saveIndex, UserUnitInfo unit, float angle)
 {
 	if (playObject == testObject) {
 		for (auto& e : _allEnemyUnitSprite)
@@ -3634,7 +3641,7 @@ void BattleScene::playSkillLogicAndAnimation(Sprite* playObject, UserSkillInfo s
 		skillRestoreAction(playObject, skill, saveIndex, team_id);
 		break;
 	case TYPE_ATTACK:
-		skillAttackAction(playObject, skill, unit, team_id, randNum);
+		skillAttackAction(playObject, skill, unit, team_id, randNum,angle);
 		break;
 	case TYPE_POISON:
 		skillPoisonAction(playObject, skill, team_id, uuid.c_str());
@@ -3644,6 +3651,9 @@ void BattleScene::playSkillLogicAndAnimation(Sprite* playObject, UserSkillInfo s
 		break;
 	case TYPE_TRAP:
 		skillTrapAction(playObject, skill, team_id);
+		break;
+	case TYPE_SUMMON:
+		summonSKillAction(playObject, skill, team_id);
 		break;
 	}
 }
@@ -3689,7 +3699,7 @@ void BattleScene::skillBuffAction(Sprite* object, UserSkillInfo skillInfo, int t
 	}
 }
 
-void BattleScene::skillAttackAction(Sprite* object, UserSkillInfo skillInfo,UserUnitInfo attacker,  int teamId, float randNum)
+void BattleScene::skillAttackAction(Sprite* object, UserSkillInfo skillInfo,UserUnitInfo attacker,  int teamId, float randNum, float angle)
 {
 	switch (skillInfo.multi_effect)
 	{
@@ -3699,10 +3709,10 @@ void BattleScene::skillAttackAction(Sprite* object, UserSkillInfo skillInfo,User
 		vector<UserUnitInfo> effectUnitList;
 		vector<Sprite*> effectUnitSpriteList;
 		if (teamId == _currentEnemyTeamFlg) {
-			skillAttackAll(object, skillInfo, attacker, ALLIED_FLAG, randNum,_allAlliedUnitSprite,&_allAlliedUnitData );
+			skillAttackAll(object, skillInfo, attacker, ALLIED_FLAG, randNum, angle,_allAlliedUnitSprite,&_allAlliedUnitData );
 		}
 		else {
-			skillAttackAll(object, skillInfo, attacker, ENEMY_FLAG, randNum, _allEnemyUnitSprite, &_allEnemyUnitData);
+			skillAttackAll(object, skillInfo, attacker, ENEMY_FLAG, randNum, angle, _allEnemyUnitSprite, &_allEnemyUnitData);
 		}
 	}
 		
@@ -3731,7 +3741,7 @@ void BattleScene::skillRestoreAll(Sprite* object,UserSkillInfo skillInfo, int te
 		if (skillInfo.range_distance > 0)
 		{
 
-			vector<int> allUnitIndex = detectUnitInAoe(object, skillInfo, _allAlliedUnitSprite, false);
+			vector<int> allUnitIndex = detectUnitInAoe(object, skillInfo, _allAlliedUnitSprite, 1, false);
 
 			for (int &index : allUnitIndex)
 			{
@@ -3780,7 +3790,7 @@ void BattleScene::restoreAllActionLogic(Sprite* object, UserSkillInfo skillInfo,
 {
 	if (skillInfo.range_distance > 0)
 	{
-		vector<int> a = detectUnitInAoe(object, skillInfo, targetUnitList, false);
+		vector<int> a = detectUnitInAoe(object, skillInfo, targetUnitList, 1, false);
 		//TODO
 	}
 }
@@ -4048,7 +4058,7 @@ void BattleScene::skillHelpOne(Sprite* object, UserSkillInfo skillInfo, int team
 
 }
 
-void BattleScene::skillAttackAll(Sprite* object, UserSkillInfo skillInfo, UserUnitInfo attacker, int flg, float randNum, vector<Sprite*> &effectUnitSpriteList, vector<UserUnitInfo>* effectUnitList)
+void BattleScene::skillAttackAll(Sprite* object, UserSkillInfo skillInfo, UserUnitInfo attacker, int flg, float randNum, float angle, vector<Sprite*> &effectUnitSpriteList, vector<UserUnitInfo>* effectUnitList)
 {
 	int value = 0;
 	switch (skillInfo.correct_type)
@@ -4065,7 +4075,7 @@ void BattleScene::skillAttackAll(Sprite* object, UserSkillInfo skillInfo, UserUn
 	vector<int> unitIndex;
 	if (skillInfo.range_distance > 0) {
 		
-		unitIndex = detectUnitInAoe(object, skillInfo, effectUnitSpriteList, false);
+		unitIndex = detectUnitInAoe(object, skillInfo, effectUnitSpriteList,angle, false);
 	}
 	else 
 	{
@@ -4225,7 +4235,11 @@ void BattleScene::skillTrapAction(Sprite* object, UserSkillInfo skill, int teamI
 
 	auto sequence = Sequence::create(DelayTime::create(skill.duration), CallFuncN::create([&, draw,checker](Ref *p) {
 		draw->removeFromParent();
+		log("stop trap checker loop");
 		((Sprite*)p)->stopAction(checker);
+		if (((Sprite*)p)->getActionByTag(TRAP_CHECK_ACTION_TAG) != nullptr) {
+			log("remove but not null");
+		}
 	}), nullptr);
 	object->runAction(checker);
 	object->runAction(sequence);
@@ -4238,18 +4252,13 @@ void BattleScene::trapSkillChecker(Ref* p, Sprite* object, Vec2 basePos, UserSki
 	
 	for (int i = 0; i < targetUnitList->size(); i ++)
 	{
-		if (caster->getActionByTag(TRAP_CHECK_ACTION_TAG) == nullptr) {
-			targetSprite[i]->stopAllActionsByTag(TRAP_DAME_ACTION_TAG);
-			log("trap time end. remove all dame action");
-			continue;
-		}
 		auto distance = targetSprite[i]->getPosition() - basePos;
 		if (distance.getLength() < skill.range_distance) 
 		{
 			//unit trap aoe. check for start trap dame action
 			if (targetSprite[i]->getActionByTag(TRAP_DAME_ACTION_TAG) == nullptr)
 			{
-				auto action = RepeatForever::create(Sequence::create(DelayTime::create(1.0f), CallFuncN::create(CC_CALLBACK_1(BattleScene::showDameAndSkillLogic, this, i, skill.corrett_value, object, targetSprite[i], targetUnitList)), nullptr));
+				auto action = RepeatForever::create(Sequence::create(DelayTime::create(1.0f), CallFuncN::create(CC_CALLBACK_1(BattleScene::trapSkillCallback, this, i, skill.corrett_value, object, targetSprite[i], targetUnitList)), nullptr));
 				action->setTag(TRAP_DAME_ACTION_TAG);
 				targetSprite[i]->runAction(action);
 			}
@@ -4257,30 +4266,84 @@ void BattleScene::trapSkillChecker(Ref* p, Sprite* object, Vec2 basePos, UserSki
 		else {
 			//unit out trap. Check for remove trap dame action
 			targetSprite[i]->stopAllActionsByTag(TRAP_DAME_ACTION_TAG);
-			log("unit out of trap range");
 		}
 
 	}
 }
 
-void BattleScene::drawCakePieSkillAOe(Character* object, UserSkillInfo skill) {
-	float angle = 60.0f;
+void BattleScene::trapSkillCallback(Ref * p, int index, int dame, Sprite* object, Sprite* target, vector<UserUnitInfo>* effectUnitlist)
+{
+	if (object->getActionByTag(TRAP_CHECK_ACTION_TAG) == nullptr) {
+		target->stopAllActionsByTag(TRAP_DAME_ACTION_TAG);
+		log("trap time end. remove all dame action");
+		return;
+	}
+	showDameAndSkillLogic(p, index, dame, object, target, effectUnitlist);
+}
+
+
+void BattleScene::drawCakePieSkillAOe(Character* object, UserSkillInfo skill, float angle) {
+	vector<Vec2> vec = {};
+	float angleLow = CC_DEGREES_TO_RADIANS(-angle - 30);
+	float angleHeight = CC_DEGREES_TO_RADIANS(-angle + 30);
+
+	vec.push_back(Vec2::ZERO);
+	vec.push_back(Vec2(skill.range_distance * cos(angleLow), skill.range_distance* sin(angleLow)));
+	vec.push_back(Vec2(skill.range_distance * cos(angleHeight), skill.range_distance * sin(angleHeight)));
 
 	auto draw = DrawNode::create();
-	draw->drawCircle(Vec2::ZERO, skill.range_distance, 60.0f, 50, true, Color4F::RED);
+	draw->drawPoly(&vec[0], 3,true,Color4F::RED);
 	object->getParent()->addChild(draw);
 	draw->setPosition(object->getPosition());
 	draw->setTag(DRAW_UNIT);
 
 }
 
-vector<int> BattleScene::detectUnitInAoe(Sprite* mainObj, UserSkillInfo skill, vector<Sprite*> targetList, bool drawFlg /*= true*/)
+void BattleScene::summonSKillAction(Sprite* object, UserSkillInfo skill, int teamId)
+{
+	auto parentofparent = Node::create();
+	object->addChild(parentofparent, -1);
+	parentofparent->setPosition(0, 40);
+	auto parent = Node::create();
+	parentofparent->addChild(parent);
+	parentofparent->setScaleX(1 / IMAGE_SCALE);
+	parentofparent->setScaleY(0.5f *(1/IMAGE_SCALE));
+	parent->runAction(RepeatForever::create(RotateBy::create(1, 45.0f)));
+	parent->setTag(MINION_PARENT_TAG);
+
+	auto red = Sprite::create("image/mini/Red.png");
+	auto green = Sprite::create("image/mini/Green.png");
+	auto yellow = Sprite::create("image/mini/Yellow.png");
+	auto purple = Sprite::create("image/mini/Purple.png");
+
+	red->setPosition(Vec2(25, 0));
+	green->setPosition(Vec2(0, 25));
+	yellow->setPosition(Vec2(-25, 0));
+	purple->setPosition(Vec2(0, -25));
+
+	parent->addChild(red, -1);
+	parent->addChild(green, -1);
+	parent->addChild(yellow, -1);
+	parent->addChild(purple, -1);
+
+	parent->runAction(Sequence::create(DelayTime::create(skill.duration), CallFuncN::create([&](Ref* p) {
+		((Node*)p)->getParent()->removeFromParentAndCleanup(true);
+	}), nullptr));
+
+}
+
+
+
+
+vector<int> BattleScene::detectUnitInAoe(Sprite* mainObj, UserSkillInfo skill, vector<Sprite*> targetList, float angle, bool drawFlg /*= true*/)
 
 {
 	vector<int> resultUnitId;
 	auto pos = mainObj->getPosition();
 	vector<Vec2> vec;
 	DrawNode *draw = DrawNode::create();
+	Vec2 startPoint = Vec2(mainObj->getBoundingBox().size.width / 2, -mainObj->getBoundingBox().size.height);
+
 	switch (skill.range_type)
 	{
 
@@ -4316,10 +4379,16 @@ vector<int> BattleScene::detectUnitInAoe(Sprite* mainObj, UserSkillInfo skill, v
 		break;
 	case SKILL_RANGE_TYPE::CAKE:
 		if (!drawFlg) break;
-		drawCakePieSkillAOe((Character*)mainObj, skill);
+		drawCakePieSkillAOe((Character*)mainObj, skill ,angle);
 
 		break;
 	case SKILL_RANGE_TYPE::FADE_RECTANGLE:
+		if (!drawFlg) break;
+		draw->setAnchorPoint(Vec2(0,0.5));
+		draw->drawRect(startPoint, startPoint + Vec2(skill.range_distance, mainObj->getBoundingBox().size.height*2), Color4F::YELLOW);
+		draw->setPosition(mainObj->getPosition());
+		draw->setTag(DRAW_UNIT);
+		draw->setRotation(angle);
 
 		break;
 
@@ -4384,12 +4453,12 @@ vector<int> BattleScene::detectUnitInAoe(Sprite* mainObj, UserSkillInfo skill, v
 
 			break;
 		case SKILL_RANGE_TYPE::CAKE:
-			if (detectUnitInRoundTriangle((Character*)mainObj, targetList[i], skill)) {
+			if (detectUnitInRoundTriangle((Character*)mainObj, targetList[i], skill, angle)) {
 				resultUnitId.push_back(i);
 			}
 			break;
 		case SKILL_RANGE_TYPE::FADE_RECTANGLE:
-			if (detectUnitInFadeRectangle((Character*)mainObj, targetList[i], skill))
+			if (detectUnitInFadeRectangle((Character*)mainObj, targetList[i], skill, angle))
 			{
 				resultUnitId.push_back(i);
 			}
@@ -4440,7 +4509,8 @@ float BattleScene::caculDameRate(int mainC, int enemy)
 
 void BattleScene::longPressAction(Button *pSender,UserSkillInfo skill)
 {
-	auto a = detectUnitInAoe(testObject,skill, _allEnemyUnitSprite);
+	
+	auto a = detectUnitInAoe(testObject,skill, _allEnemyUnitSprite, _mainCharacterIconInMiniMap->getRotation() - 90);
 	_onSelectSkillData = skill;
 	for (auto& enemy : a)
 	{
@@ -4448,62 +4518,36 @@ void BattleScene::longPressAction(Button *pSender,UserSkillInfo skill)
 	}
 }
 
-bool BattleScene::detectUnitInFadeRectangle(Character* object, Sprite* target, UserSkillInfo skill)
+bool BattleScene::detectUnitInFadeRectangle(Character* object, Sprite* target, UserSkillInfo skill, float angle)
 {
+	Vec2 startPoint = Vec2(object->getBoundingBox().size.width / 2, -object->getBoundingBox().size.height);
 	auto boxSize = object->getBoundingBox().size;
 	auto pos = object->getPosition();
-	auto chaDirec = object->getCharacterCurrentDirec();
+	auto targetPos = target->getPosition();
+	//auto chaDirec = object->getCharacterCurrentDirec();
 
-	auto size1 = skill.range_distance;
-	auto size2 = boxSize.height;
+	auto rectWidth = skill.range_distance;
+	auto rectHeight = boxSize.height * 2;
+	auto detectRecct = Rect(startPoint.x, startPoint.y, rectWidth, rectHeight);
+	Vec2 distanVector = targetPos - pos;
 
-	auto rectWidth = 0;
-	auto rectHeight = 0;
-	auto startPoint = object->getPosition();
+	//rotate angle + when clockwhile and = for other. But real angle was not
+	auto angle2 = CC_DEGREES_TO_RADIANS(angle);
 
-	switch (chaDirec)
-	{
-	case 1:
-		startPoint = pos + Vec2(-boxSize.width / 2, boxSize.height / 2);
-		rectWidth = size2;
-		rectHeight = size1;
-		break;
-	case 4:
-		startPoint = pos + Vec2(boxSize.width / 2, -boxSize.height / 2);
-		rectWidth = size1;
-		rectHeight = size2;
-		break;
-	case 7:
-		startPoint = pos + Vec2(-boxSize.width / 2, -boxSize.height / 2 - size1);
-		rectWidth = size2;
-		rectHeight = size1;
-		break;
-	case 10:
-		startPoint = pos + Vec2(-boxSize.width / 2 - size1, -boxSize.height / 2);
-		rectWidth = size1;
-		rectHeight = size2;
-		break;
-	default:
-			log("Error by distance in detectUnitInFadeRect");
-		return false;
-	}
+	auto rotateVect = Vec2(distanVector.x*cos(angle2) - distanVector.y* sin(angle2), distanVector.x* sin(angle2) + distanVector.y* cos(angle2));
 
-	Rect detectRect = Rect(startPoint.x, startPoint.y, rectWidth, rectHeight);
-	if (detectRect.containsPoint(target->getPosition()))
+	auto countVect = rotateVect + pos;
+
+	if (detectRecct.containsPoint(rotateVect))
 	{
 		return true;
 	}
-	auto draw = DrawNode::create();
-	draw->drawRect(startPoint, startPoint + Vec2(rectWidth, rectHeight), Color4F::RED);
-	draw->setPosition(Vec2::ZERO);
-	draw->setTag(DRAW_UNIT);
-	object->getParent()->addChild(draw);
 
 	return false;
 }
 
 
-bool BattleScene::detectUnitInRoundTriangle(Character* object, Sprite* targetSprite, UserSkillInfo skill)
+bool BattleScene::detectUnitInRoundTriangle(Character* object, Sprite* targetSprite, UserSkillInfo skill, float baseAngle)
 {
 	auto chaPos = object->getPosition();
 	auto chaDirec = object->getCharacterCurrentDirec();
@@ -4513,35 +4557,9 @@ bool BattleScene::detectUnitInRoundTriangle(Character* object, Sprite* targetSpr
 		return false;
 	}
 	float angle = -distanVector.getAngle() * RAD_DEG;
-	float baseAngle = 0;
-	switch (chaDirec)
-	{
-	case 1:
-		baseAngle = -90.0f;
-		break;
-	case 4:
-		baseAngle = 0;
-		break;
-	case 7:
-		baseAngle = 90.0f;
-		break;
-	case 10:
-		baseAngle = 180.0f;
-		break;
-	default:
-		log("Error in detectUnitInRoundTriangle 4388");
-		break;
-	}
 	if (angle >= baseAngle - 30 && angle <= baseAngle + 30)
 	{
 		return true;
-	}
-	if (chaDirec == 10)
-	{
-		if (angle >= -180.0f && angle <= -150.0f)
-		{
-			return true;
-		}
 	}
 
 	return false;
@@ -4781,7 +4799,7 @@ void BattleScene::skillPoisonAction(Sprite* object, UserSkillInfo skillInfo, int
 
 void BattleScene::poisonEffectAction(Sprite* object, UserSkillInfo skill, vector<UserUnitInfo>* unitList, vector<Sprite*> targetSprite, int teamId, const string casterUuid)
 {
-	vector<int> unitIds = detectUnitInAoe(object, skill, targetSprite, false);
+	vector<int> unitIds = detectUnitInAoe(object, skill, targetSprite, 1, false);
 
 	for (auto &index : unitIds)
 	{
@@ -4829,7 +4847,7 @@ void BattleScene::skillStunAction(Sprite* object, UserSkillInfo skillInfo, int t
 	else {
 		effectedUnitSprite = _allAlliedUnitSprite;
 	}
-	vector<int> units = detectUnitInAoe(object,skillInfo,effectedUnitSprite, false);
+	vector<int> units = detectUnitInAoe(object,skillInfo,effectedUnitSprite, 1, false);
 
 	for (auto& i : units)
 	{

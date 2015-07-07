@@ -143,6 +143,7 @@ struct UserBattleInfo
 #define TYPE_POISON 4
 #define TYPE_STUN 5
 #define TYPE_TRAP 6
+#define TYPE_SUMMON 7
 
 #define TARGET_ALL 1
 #define TARGET_ONE 0

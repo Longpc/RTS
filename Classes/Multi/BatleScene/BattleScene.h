@@ -77,6 +77,8 @@
 
 #define HPBAR_TAG 1232
 
+#define MINION_PARENT_TAG 21241
+
 #define BOUND_BORDER_TAG 1905
 #define WORMHOLDROTATE 1245
 
@@ -478,14 +480,14 @@ private:
 	virtual void showCoolDownTime(Button *parentButton, int cooldownTime);
 
 	virtual void playSkill(UserSkillInfo skillData);
-	virtual void playSkillLogicAndAnimation(Sprite* object, UserSkillInfo skill, int team_id, float randNum, string uuid, int saveIndex, UserUnitInfo unit);
+	virtual void playSkillLogicAndAnimation(Sprite* object, UserSkillInfo skill, int team_id, float randNum, string uuid, int saveIndex, UserUnitInfo unit, float angle);
 	/*this function will detect all unit in skill effect area base on @skill info (skill distance, skill area type, skill type...
 	return value is the vector store all unit id which contained by effect area
 	@drawFlg is flag to decide this function will show or not show the skill effect area
 	*/
-	virtual vector<int> detectUnitInAoe(Sprite* mainObj, UserSkillInfo skill, vector<Sprite*> targetList, bool drawFlg = true);
+	virtual vector<int> detectUnitInAoe(Sprite* mainObj, UserSkillInfo skill, vector<Sprite*> targetList, float angle, bool drawFlg = true);
 	
-	virtual void drawCakePieSkillAOe(Character* object, UserSkillInfo skill);
+	virtual void drawCakePieSkillAOe(Character* object, UserSkillInfo skill, float angle);
 
 
 	/* run logic and effect of heal skills
@@ -509,10 +511,14 @@ private:
 
 	virtual void trapSkillChecker(Ref* p,Sprite* object, Vec2 basePos, UserSkillInfo skill, vector<UserUnitInfo>* targetUnitList, vector<Sprite*> targetSpriteList);
 
+	virtual void trapSkillCallback(Ref * p, int index, int dame, Sprite* object, Sprite* target, vector<UserUnitInfo>* effectUnitlist);
+
+	virtual void summonSKillAction(Sprite* object, UserSkillInfo skill, int teamId);
+
 
 	/*Run logic and effect of attack skills*/
-	virtual void skillAttackAction(Sprite* object, UserSkillInfo skillInfo, UserUnitInfo attacker, int teamId, float randNum);
-	virtual void skillAttackAll(Sprite* object, UserSkillInfo skillInfo, UserUnitInfo attacker, int flg, float randNum, vector<Sprite*> &effectUnitSpriteList, vector<UserUnitInfo>* effectUnitlist);	
+	virtual void skillAttackAction(Sprite* object, UserSkillInfo skillInfo, UserUnitInfo attacker, int teamId, float randNum, float angle);
+	virtual void skillAttackAll(Sprite* object, UserSkillInfo skillInfo, UserUnitInfo attacker, int flg, float randNum, float angle, vector<Sprite*> &effectUnitSpriteList, vector<UserUnitInfo>* effectUnitlist);	
 	virtual void showDameAndSkillLogic(Ref *p, int index, int dame, Sprite* object, Sprite* target, vector<UserUnitInfo>* effectUnitlist);
 	
 	virtual void skillAttackOne(Sprite* object, UserSkillInfo skillInfo, UserUnitInfo attacker, int teamId, float randNum);
@@ -541,10 +547,10 @@ private:
 	virtual void longPressAction(Button *pSender, UserSkillInfo skill);
 
 	/*detect unit In fade rectangle. This mean unit in rectangle in front of skill caster*/
-	virtual bool detectUnitInFadeRectangle(Character* object, Sprite* target, UserSkillInfo skill);
+	virtual bool detectUnitInFadeRectangle(Character* object, Sprite* target, UserSkillInfo skill, float angle);
 
 	/*detect unit in the round triangle*/
-	virtual bool detectUnitInRoundTriangle(Character* object, Sprite* targetSprite, UserSkillInfo skill);
+	virtual bool detectUnitInRoundTriangle(Character* object, Sprite* targetSprite, UserSkillInfo skill, float angle);
 	/* this function will calculate for detect a @point is contained in the triangle or not
 	@Return true if point inside the triangle and false for else*/
 	virtual bool detectPointInTriangle(Vec2 point, vector<Vec2> points, Sprite* object);

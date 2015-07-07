@@ -32,7 +32,7 @@ public:
 	
 	void sendAttackEvent(Vec2 direction,UserUnitInfo attackerUnit, UserUnitInfo targetData, SocketIOCallback callback);
 	
-	void sendSkillEvent(UserSkillInfo skillData, UserUnitInfo attacker/*, SocketIOCallback callback*/);
+	void sendSkillEvent(UserSkillInfo skillData, UserUnitInfo attacker, float angle/*, SocketIOCallback callback*/);
 		
 	void sendDeadEvent(UserUnitInfo unitData, Vec2 deadTitleCoor, SocketIOCallback callback);
 
