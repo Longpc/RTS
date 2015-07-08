@@ -1122,7 +1122,7 @@ void BattleScene::createContent()
 		 *  to display another player attack animation
 		 */
 		sv->on("attack", [&](SIOClient *client, const string data) {
-			log("Another attacks: %s", data.c_str());
+			//log("Another attacks: %s", data.c_str());
 			/*check for battle destruct called*/
 			if (_onDestructCalled) return;
 
@@ -1815,7 +1815,7 @@ void BattleScene::testMoveLogic(Sprite* object, int teamFlg, vector<bool> *sendi
 				if (_gameMode == MULTI_MODE)
 				{
 					if (title->getName() == "sending") continue;
-					log("send test move event");
+					//log("send test move event");
 					//sendingFlg->push_back(true);
 					title->setName("sending");
 					BattleAPI::getInstance()->sendTestMoveLogic(titlePos);
@@ -2031,7 +2031,7 @@ void BattleScene::checkForAutoAttack()
 					BattleAPI::getInstance()->sendAttackEvent(posDistan, _allAlliedUnitData[0], _allEnemyUnitData[i], [&, i, direc, posDistan](SIOClient *client, const string data)
 					{
 						if (_onDestructCalled) return;
-						log("Battle attack callback with data: %s", data.c_str());
+						//log("Battle attack callback with data: %s", data.c_str());
 						Document doc;
 						doc.Parse<0>(data.c_str());
 						if (doc.HasParseError()) {
@@ -2329,6 +2329,10 @@ void BattleScene::characterAttackCallback(int  i, int dame)
 		if (dame <= 0) {
 			dame = 1;
 		}
+		if (_allEnemyUnitSprite[i]->getChildByTag(MINION_PARENT_TAG) != nullptr) {
+			log("main character attack unit with summon protech");
+		}
+
 		//show hp lost = final attack dame
 		showAttackDame(dame, _allEnemyUnitSprite[i]->getPosition() + Vec2(0, 100), 1);
 
@@ -2491,7 +2495,7 @@ void BattleScene::runRespawnAction(string killerUuid)
 		
 		BattleAPI::getInstance()->sendDeadEvent(_allAlliedUnitData[0], pos, [&](SIOClient* client, const std::string json) {
 
-			log("Dead event callback From server with data: %s", json.c_str());
+			//log("Dead event callback From server with data: %s", json.c_str());
 
 		});
 	}
@@ -3653,7 +3657,16 @@ void BattleScene::playSkillLogicAndAnimation(Sprite* playObject, UserSkillInfo s
 		skillTrapAction(playObject, skill, team_id);
 		break;
 	case TYPE_SUMMON:
-		summonSKillAction(playObject, skill, team_id);
+		if (team_id == _currentPlayerTeamFlg) {
+			summonSKillAction(playObject, skill, &_allAlliedUnitData[saveIndex]);
+		}
+		else 
+		{
+			summonSKillAction(playObject, skill, &_allEnemyUnitData[saveIndex]);
+		}
+		break;
+	case TYPE_PET:
+		//skillPetAction
 		break;
 	}
 }
@@ -4299,41 +4312,58 @@ void BattleScene::drawCakePieSkillAOe(Character* object, UserSkillInfo skill, fl
 
 }
 
-void BattleScene::summonSKillAction(Sprite* object, UserSkillInfo skill, int teamId)
+void BattleScene::summonSKillAction(Sprite* object, UserSkillInfo skill, UserUnitInfo* unitData)
 {
 	auto parentofparent = Node::create();
 	object->addChild(parentofparent, -1);
-	parentofparent->setPosition(0, 40);
+	parentofparent->setPosition(8, 3);
+	parentofparent->setTag(MINION_PARENT_TAG);
 	auto parent = Node::create();
 	parentofparent->addChild(parent);
-	parentofparent->setScaleX(1 / IMAGE_SCALE);
-	parentofparent->setScaleY(0.5f *(1/IMAGE_SCALE));
-	parent->runAction(RepeatForever::create(RotateBy::create(1, 45.0f)));
+	parentofparent->setScaleY(0.5f);
+	parent->runAction(RepeatForever::create(RotateBy::create(1, 75.0f)));
 	parent->setTag(MINION_PARENT_TAG);
+	parent->setScale(2 / IMAGE_SCALE);
 
 	auto red = Sprite::create("image/mini/Red.png");
+	red->setTag(MINIONS_TAG);
 	auto green = Sprite::create("image/mini/Green.png");
+	green->setTag(MINIONS_TAG);
 	auto yellow = Sprite::create("image/mini/Yellow.png");
+	yellow->setTag(MINIONS_TAG);
 	auto purple = Sprite::create("image/mini/Purple.png");
+	purple->setTag(MINIONS_TAG);
 
-	red->setPosition(Vec2(25, 0));
-	green->setPosition(Vec2(0, 25));
-	yellow->setPosition(Vec2(-25, 0));
-	purple->setPosition(Vec2(0, -25));
+	red->setPosition(Vec2(35, 0));
+	green->setPosition(Vec2(0, 35));
+	yellow->setPosition(Vec2(-35, 0));
+	purple->setPosition(Vec2(0, -35));
 
 	parent->addChild(red, -1);
 	parent->addChild(green, -1);
 	parent->addChild(yellow, -1);
 	parent->addChild(purple, -1);
 
-	parent->runAction(Sequence::create(DelayTime::create(skill.duration), CallFuncN::create([&](Ref* p) {
+
+	int minionHP = unitData->hp*0.01f;
+	int minionATK = unitData->attack* 0.03f;
+
+	unitData->attack += minionATK * 4;
+
+	auto cha = (Character*)object;
+	cha->setMinionTotalHp(minionHP * 4);
+
+	auto action = Sequence::create(DelayTime::create(skill.duration), CallFuncN::create([&, unitData, minionATK, minionHP](Ref* p) {
 		((Node*)p)->getParent()->removeFromParentAndCleanup(true);
-	}), nullptr));
+		unitData->hp -= minionHP;
+		unitData->attack -= minionATK;
+		log("remove minion effect");
+	}), nullptr);
+	action->setTag(MINION_PARENT_ACTION_TAG);
+
+	parent->runAction(action);
 
 }
-
-
-
 
 vector<int> BattleScene::detectUnitInAoe(Sprite* mainObj, UserSkillInfo skill, vector<Sprite*> targetList, float angle, bool drawFlg /*= true*/)
 
@@ -5497,22 +5527,22 @@ void BattleScene::createMiniControlUnit(int circleType) {
 
 void BattleScene::rt_attackAnimationandLogic(Document& doc, vector<Sprite*> processUnitSprite, vector<UserUnitInfo>* processUnitData, vector<Sprite*> targetSpriteList, vector<UserUnitInfo>* targetDataList)
 {
-	log(">>>>RT_ATTACK =================================================");
+	//log(">>>>RT_ATTACK =================================================");
 	for (int i = 0; i < processUnitData->size(); i++)
 	{
 		/*Battle can have several atacker at the same time
 		 * But this function was called for only one player
 		 */
 		if (strcmp(processUnitData->at(i).uuid.c_str(), doc["uuid"].GetString()) == 0) {
-			log("**** ATTACKER FOUND ****");
+			//log("**** ATTACKER FOUND ****");
 			Character* cha = (Character*)processUnitSprite[i];
 			//bellow code for detect be attacked unit and sync data:
 			Sprite* target;
 			int saveTargetIndex = -1;
 			for (int j = 0; j < targetDataList->size(); j++)
 			{
-				if (strcmp(doc["target"]["uuid"].GetString(), targetDataList->at(j).uuid.c_str()) == 0) {
-					log("**** TARGET FOUND ****");
+				if (strcmp(doc["target"]["uuid"].GetString(), targetDataList->at(j).uuid.c_str()) == 0)																												{
+					//log("**** TARGET FOUND ****");
 					target = targetSpriteList[j];
 					targetDataList->at(j).hp = doc["target"]["hp"].GetInt(); //sync unit HP
 					saveTargetIndex = j;
@@ -5521,17 +5551,54 @@ void BattleScene::rt_attackAnimationandLogic(Document& doc, vector<Sprite*> proc
 					if (dame <= 0) {
 						dame = 1;
 					}
-					log("attack dame: %d", dame);
+					//log("attack dame: %d", dame);
 
 					cha->attackActionByTargetPosition(Vec2(doc["direction_x"].GetDouble(), doc["direction_y"].GetDouble()), doc["user_unit"]["attack_speed"].GetInt(), nullptr, [&, i, target, dame, saveTargetIndex, targetDataList]() {
+						
 						if (target == testObject)
 						{
+							bool _onMinionHelp = true;
+							if (target->getChildByTag(MINION_PARENT_TAG) != nullptr) {
+								//need logic for target using minion
+								log("TARGET USING MINION PROTECT SKILL");
+								auto miniOnNum = target->getChildByTag(MINION_PARENT_TAG)->getChildByTag(MINION_PARENT_TAG)->getChildren().size();
+								log("miniOn num: %d", miniOnNum);
+								int miniOnHP = _allAlliedUnitData[0].hp * 0.01f;
+								int miniOnAtk = _allAlliedUnitData[0].attack * 0.03f;
+								auto tarCharacter = (Character*)target;
+								auto ttHp = tarCharacter->getMinionTotalHp();
+								ttHp -= dame;
+								if (ttHp / miniOnHP > miniOnNum - 1) {
+									tarCharacter->setMinionTotalHp(ttHp);
+								}
+								else {
+									target->getChildByTag(MINION_PARENT_TAG)->getChildByTag(MINION_PARENT_TAG)->removeChildByTag(MINIONS_TAG);
+									miniOnNum -= 1;
+									_allAlliedUnitData[0].attack -= miniOnAtk;
+									
+								}
+								if (miniOnNum <= 0) {
+									//remove summon skill effect
+									target->getChildByTag(MINION_PARENT_TAG)->removeAllChildrenWithCleanup(true);
+									target->removeChildByTag(MINION_PARENT_TAG);
+									_onMinionHelp = false;
+								}
+								else {
+
+								}
+								
+
+							}
+
 							showAttackDame(dame, target->getPosition() + Vec2(0, 100), 1);
-							_allAlliedUnitData[0].hp -= dame;
-							updateHpAndMpViewLabel();
-							saveDameInfo(dame, i, 0, _currentEnemyTeamFlg);
-							if (_allAlliedUnitData[0].hp <= 0) {
-								runRespawnAction(_allEnemyUnitData[i].uuid.c_str());
+							if (!_onMinionHelp)
+							{
+								_allAlliedUnitData[0].hp -= dame;
+								updateHpAndMpViewLabel();
+								saveDameInfo(dame, i, 0, _currentEnemyTeamFlg);
+								if (_allAlliedUnitData[0].hp <= 0) {
+									runRespawnAction(_allEnemyUnitData[i].uuid.c_str());
+								}
 							}
 						}
 						else {
@@ -5542,16 +5609,16 @@ void BattleScene::rt_attackAnimationandLogic(Document& doc, vector<Sprite*> proc
 							//Unit dead process
 						}
 						updateSlider();
-						log(">>>>RT ATTACK END===========================================");
+						//log(">>>>RT ATTACK END===========================================");
 					});
 					break;
 				}
 			}
-			log("Attack end");
+			//log("Attack end");
 			return;
 		}
 	}
-	log("ERROR: RT ATTACKER NOT FOUND");
+	//log("ERROR: RT ATTACKER NOT FOUND");
 }
 
 

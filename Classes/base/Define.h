@@ -144,6 +144,7 @@ struct UserBattleInfo
 #define TYPE_STUN 5
 #define TYPE_TRAP 6
 #define TYPE_SUMMON 7
+#define TYPE_PET 8
 
 #define TARGET_ALL 1
 #define TARGET_ONE 0

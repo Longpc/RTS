@@ -37,6 +37,9 @@ public :
 	CC_SYNTHESIZE(int, _saveAttackTime, SaveAtttackTime);
 	CC_SYNTHESIZE(int, _currentDirec, CharacterCurrentDirec);
 
+	/*for minion skill logic*/
+	CC_SYNTHESIZE(int, _minionTotalHp, MinionTotalHp);
+
 	void moveActionByVector(Vec2 destination);
 	void attackActionByTargetPosition(Vec2 direcVector, int attackTime, AttackCallback oneSecondCallback = nullptr,  AttackCallback attackCallback = nullptr);
 	void respawAction();

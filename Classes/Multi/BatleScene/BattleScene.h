@@ -78,6 +78,7 @@
 #define HPBAR_TAG 1232
 
 #define MINION_PARENT_TAG 21241
+#define MINIONS_TAG 2176
 
 #define BOUND_BORDER_TAG 1905
 #define WORMHOLDROTATE 1245
@@ -88,6 +89,8 @@
 
 #define TRAP_CHECK_ACTION_TAG 2212
 #define TRAP_DAME_ACTION_TAG 2122
+
+#define MINION_PARENT_ACTION_TAG 2787
 using namespace cocostudio;
 class BattleScene : public LayerBase
 {
@@ -513,7 +516,7 @@ private:
 
 	virtual void trapSkillCallback(Ref * p, int index, int dame, Sprite* object, Sprite* target, vector<UserUnitInfo>* effectUnitlist);
 
-	virtual void summonSKillAction(Sprite* object, UserSkillInfo skill, int teamId);
+	virtual void summonSKillAction(Sprite* object, UserSkillInfo skill, UserUnitInfo* unitData);
 
 
 	/*Run logic and effect of attack skills*/

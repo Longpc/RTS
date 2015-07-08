@@ -93,7 +93,7 @@ void BattleAPI::sendAttackEvent(Vec2 direction,UserUnitInfo unit, UserUnitInfo t
 	auto userData = UserModel::getInstance()->getUserInfo();
 	int unitId = UserModel::getInstance()->getSelectedUnitId();
 	
-	log("target uuid: %s", targetUnit.uuid.c_str());
+	//log("target uuid: %s", targetUnit.uuid.c_str());
 	Document doc;
 	doc.SetObject();
 	Document::AllocatorType& allo = doc.GetAllocator();
@@ -112,7 +112,7 @@ void BattleAPI::sendAttackEvent(Vec2 direction,UserUnitInfo unit, UserUnitInfo t
 	StringBuffer  buffer;
 	Writer<StringBuffer> writer(buffer);
 	doc.Accept(writer);
-	log("Attack send data: %s", buffer.GetString());
+	//log("Attack send data: %s", buffer.GetString());
 	c->emit("attack", buffer.GetString());
 	c->on("attack_end", callback);
 	return;
@@ -173,7 +173,7 @@ void BattleAPI::sendDameDealEvent(int dame, string targetUuid, SocketIOCallback 
 	Writer<StringBuffer> writer(buffer);
 	doc.Accept(writer);
 
-	log("send dame Event data : %s", buffer.GetString());
+	//log("send dame Event data : %s", buffer.GetString());
 	sv->emit("dame_deal", buffer.GetString());
 
 }
@@ -235,7 +235,7 @@ void BattleAPI::sendDeadEvent(UserUnitInfo unitData, Vec2 deadTitleCoor, SocketI
 	Writer<StringBuffer> writer(buffer);
 	doc.Accept(writer);
 
-	log("dead json: %s", buffer.GetString());
+	//log("dead json: %s", buffer.GetString());
 
 	
 	sv->emit("dead", buffer.GetString());
