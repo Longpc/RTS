@@ -26,8 +26,8 @@ bool ModeSelectScene::init()
 	if (!LayerBase::init()) {
 		return false;
 	}
-	auto console = Director::getInstance()->getConsole();
-	console->listenOnTCP(1234);
+	/*auto console = Director::getInstance()->getConsole();
+	console->listenOnTCP(1234);*/
 	//_loadingSp = LoadingSprite::getInstance();
 	//addChild(_loadingSp);
 	//_loadingSp->setPosition(Vec2::ZERO);

@@ -26,6 +26,9 @@
 #include "Server/API/BattleAPI.h"
 #include "Tower.h"
 
+#include "SummonPet.h"
+#include "Map.h"
+
 #define LOW 1
 #define MID 2
 #define HIGH 3
@@ -129,7 +132,7 @@ private:
 	Sprite *_selectRect;
 	Sprite *_mainCharacterIconInMiniMap;
 
-	Node *_battleBackround;
+	Node *_battleBackground;
 
 	ClippingNode *_characterImageViewNode;
 
@@ -231,16 +234,15 @@ private:
 	vector<vector<string>> _alliedStatusImagePath;
 
 	/*Titled Map for Path finding and simple background*/
-	TMXTiledMap* _myMap;
+	MyMap* _myMap;
 	TMXLayer* _mapLayer;
 	TMXLayer* _blockLayer;
 
-	TMXTiledMap* _miniTMXMap;
+	MyMap* _miniTMXMap;
 	TMXLayer* _miniLayer;
 	bool _onZoomMiniMap = false;
 
 	Sprite* _oldTitle = nullptr;
-	vector<bool> _saveOldTitle;
 
 	/*Test neutral tower*/
 	vector<Tower*> _neutralTowerList;
@@ -254,7 +256,6 @@ private:
 	CC_SYNTHESIZE(bool, _cannonFlg, CannonFlg);
 
 	vector<Sprite*> _neutralUnitIconInMiniMap;
-	vector<vector<bool>> _saveOldPosOfNeutral;
 
 	Node *redTowerParentNode;
 	Node *blueTowerParentNode;
@@ -435,13 +436,13 @@ private:
 
 	void neutralUnitMoveInSoloMod();
 
-	void testMoveLogic(Sprite* object, int teamFLg, vector<bool> *saveOldPosVector);
+	void testMoveLogic(Sprite* object, int teamFLg);
 	/*Check that position is inside the map or not*/
-	bool checkPositionInsideMap(Vec2 pos) {
+	/*bool checkPositionInsideMap(Vec2 pos) {
 		if (pos.x < 0 || pos.y < 0 || pos.x > _myMap->getContentSize().width || pos.y > _myMap->getContentSize().height) return false;
 
 		return true;
-	}
+	}*/
 	/*return true if title near neutral tower and cannot get*/
 	virtual bool checkTitleNearObject(Vec2 titleCoor, vector<Sprite*> ObjectList, int offset);
 
@@ -516,7 +517,9 @@ private:
 
 	virtual void trapSkillCallback(Ref * p, int index, int dame, Sprite* object, Sprite* target, vector<UserUnitInfo>* effectUnitlist);
 
-	virtual void summonSKillAction(Sprite* object, UserSkillInfo skill, UserUnitInfo* unitData);
+	virtual void skillSummonAction(Sprite* object, UserSkillInfo skill, UserUnitInfo* unitData);
+
+	virtual void skillPetAction(Sprite* casterSprite, UserSkillInfo skill, UserUnitInfo* casterInfo, int teamFlg);
 
 
 	/*Run logic and effect of attack skills*/
@@ -588,7 +591,6 @@ private:
 	/////////ECLIPSE ROTATE EFFECT
 
 	virtual void createSorceryEffect(Sprite* spriteUnit, std::string eclipseFilePath);
-	virtual void removeSorceryEclipse(Ref* pSender);
 	/*For calculate and display effect status*/
 	virtual void pushStatusImagePath(string imagepath, vector<string> &allImages);
 	virtual void removeStatusImagePath(string imagepath, vector<string> &allImages);
@@ -598,10 +600,10 @@ private:
 	virtual int findIndexOfString(vector<string> v, string element);
 
 	/*get the tilecoord( title index in the titled map) by the title position*/
-	virtual Vec2 getTitleCoorForPosition(Vec2 location);
+	//virtual Vec2 getTitleCoorForPosition(Vec2 location);
 	
 	/*get the position of the title cell*/
-	virtual Vec2 getPositionForTitleCoord(Vec2 titleCoord);
+	//virtual Vec2 getPositionForTitleCoord(Vec2 titleCoord);
 	/*Logic for A start path finding function*/
 	virtual vector<Vec2> AStarPathFindingAlgorithm(Vec2 curentPos, Vec2 destinationPos);
 	virtual bool isValidTileCoord(Vec2 &titleCoord);

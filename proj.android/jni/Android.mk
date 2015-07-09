@@ -49,7 +49,9 @@ LOCAL_SRC_FILES := hellocpp/main.cpp \
 				   ../../Classes/Model/data/BattleModel.cpp \
 				   ../../Classes/Multi/BatleScene/Tower.cpp \
 				   ../../Classes/Multi/BatleScene/Cannon.cpp \
-				   ../../Classes/ModeSelectScene/LoadingSprite.cpp
+				   ../../Classes/ModeSelectScene/LoadingSprite.cpp \
+				   ../../Classes/Multi/BatleScene/Map.cpp \
+				   ../../Classes/Multi/BatleScene/SummonPet.cpp
 
 LOCAL_C_INCLUDES := $(LOCAL_PATH)/../../Classes
 

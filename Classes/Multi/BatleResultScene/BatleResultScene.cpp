@@ -134,6 +134,7 @@ void BatleResultScene::nextButtonCallback(Ref *pSender, Widget::TouchEventType t
 			string uu = UserModel::getInstance()->getUuId();
 			sv->emit("clean_battle_result", uu.c_str());
 			NodeServer::destroyInstance();
+			RoomUserModel::destroyInstance();
 		}
 		Director::getInstance()->replaceScene(TransitionMoveInL::create(SCREEN_TRANSI_DELAY, ModeSelectScene::createScene()));
 		break; 

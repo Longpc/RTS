@@ -141,6 +141,7 @@ void Effect::createEffectHeal(std::string plistEffectPath, int effectColor)
 {
 	ParticleSystemQuad* skillHealEffect = ParticleSystemQuad::create(plistEffectPath);
 	skillHealEffect->setPosition(Vec2::ZERO);
+	skillHealEffect->retain();
 	setColorEffect(skillHealEffect, effectColor);
 	this->addChild(skillHealEffect);
 }
@@ -155,6 +156,7 @@ void Effect::createEffectHelp(std::string plistEffectPath, int effectColor)
 	ParticleSystemQuad* skillHelpEffect = ParticleSystemQuad::create(plistEffectPath);
 	skillHelpEffect->setDuration(DELAY_HELP);
 	skillHelpEffect->setPosition(Vec2::ZERO);
+	skillHelpEffect->retain();
 	setColorEffect(skillHelpEffect, effectColor);
 
 	this->addChild(skillHelpEffect);
@@ -174,6 +176,7 @@ void Effect::createEffectHelpDefence(std::string plistEffectPath, int effectColo
 
 	ParticleSystemQuad* defenceTop = ParticleSystemQuad::create(plistEffectPath);
 	defenceTop->setDuration(DELAY_HELP);
+	defenceTop->retain();
 	setColorEffect(defenceTop, effectColor);
 	this->addChild(defenceTop);
 	defenceTop->setPosition(posTop);
@@ -188,6 +191,7 @@ void Effect::createEffectHelpDefence(std::string plistEffectPath, int effectColo
 	ParticleSystemQuad* defenceRight = ParticleSystemQuad::create(plistEffectPath);
 	defenceRight->setScaleX(0.2f);
 	defenceRight->setDuration(DELAY_HELP);
+	defenceRight->retain();
 	setColorEffect(defenceRight, effectColor);
 	this->addChild(defenceRight);
 	defenceRight->setPosition(posRight);
@@ -201,6 +205,7 @@ void Effect::createEffectHelpDefence(std::string plistEffectPath, int effectColo
 
 	ParticleSystemQuad* defenceBottom = ParticleSystemQuad::create(plistEffectPath);
 	defenceBottom->setDuration(DELAY_HELP);
+	defenceBottom->retain();
 	setColorEffect(defenceBottom, effectColor);
 	this->addChild(defenceBottom);
 	defenceBottom->setPosition(posBottom);
@@ -214,6 +219,7 @@ void Effect::createEffectHelpDefence(std::string plistEffectPath, int effectColo
 
 	ParticleSystemQuad* defenceLeft = ParticleSystemQuad::create(plistEffectPath);
 	defenceLeft->setScaleX(0.2f);
+	defenceLeft->retain();
 	defenceLeft->setDuration(DELAY_HELP);
 	setColorEffect(defenceLeft, effectColor);
 	this->addChild(defenceLeft);
@@ -232,6 +238,7 @@ void Effect::createEffectAttackFire(std::string plistEffectPath, int effectColor
 	ParticleSystemQuad* skillAttackFire = ParticleSystemQuad::create(plistEffectPath); //_1s
 	skillAttackFire->setDuration(20);
 	skillAttackFire->setScale(0.6f);
+	skillAttackFire->retain();
 	setColorEffect(skillAttackFire , effectColor);
 
 	this->addChild(skillAttackFire, 100);
@@ -244,7 +251,7 @@ void Effect::createEffectAttackFire(std::string plistEffectPath, int effectColor
 void Effect::createEffectAttackThunder(std::string plistEffectPath, int effectColor , Vec2 attackPositon)
 {
 	ParticleSystemQuad* skillAttackThunder = ParticleSystemQuad::create(plistEffectPath);
-	
+	skillAttackThunder->retain();
 	setColorEffect(skillAttackThunder , effectColor);
 	this->addChild(skillAttackThunder , 100);
 	skillAttackThunder->setPosition(attackPositon);

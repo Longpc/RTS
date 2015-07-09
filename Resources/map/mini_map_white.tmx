@@ -3,7 +3,7 @@
  <tileset firstgid="1" name="minimap" tilewidth="3" tileheight="3">
   <image source="minimap.png" trans="ff00ff" width="35" height="35"/>
  </tileset>
- <layer name="layer" width="70" height="50">
+ <layer name="main_layer" width="70" height="50">
   <data>
    <tile gid="0"/>
    <tile gid="0"/>

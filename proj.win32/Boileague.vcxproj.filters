@@ -207,6 +207,12 @@
     <ClCompile Include="..\Classes\ModeSelectScene\LoadingSprite.cpp">
       <Filter>src\ModeSelectScene</Filter>
     </ClCompile>
+    <ClCompile Include="..\Classes\Multi\BatleScene\SummonPet.cpp">
+      <Filter>src\Multi\BatleScene</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Classes\Multi\BatleScene\Map.cpp">
+      <Filter>src\Multi\BatleScene</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="main.h">
@@ -340,6 +346,12 @@
     </ClInclude>
     <ClInclude Include="..\Classes\ModeSelectScene\LoadingSprite.h">
       <Filter>src\ModeSelectScene</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Classes\Multi\BatleScene\SummonPet.h">
+      <Filter>src\Multi\BatleScene</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Classes\Multi\BatleScene\Map.h">
+      <Filter>src\Multi\BatleScene</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

@@ -35,6 +35,9 @@ class MYCLASS_DECLSPEC RoomUserModel :public Ref
 {
 public:
 	static RoomUserModel * getInstance();
+	static void destroyInstance() {
+		s_RoomModel = nullptr;
+	};
 	bool init();
 
 	CC_SYNTHESIZE(int, _roomId, RoomId);
