@@ -143,7 +143,7 @@ private:
 
 	Sprite *_cannonTargetSprite;
 
-	int _screenMode = SCREEN_VERTICAL;
+	int _screenMode = 0;
 	int _moveMode;
 	////PHYSICAL///
 	PhysicsWorld *_myWorld;
@@ -271,7 +271,6 @@ private:
 	//Set Unit Status with value: 1:通常　2:死亡中　3:帰陣中　
 	CC_SYNTHESIZE(int, _unitStatus, UnitStatus);
 	virtual void sendMoveBeginEvent(float angle);
-	virtual void sendMoveEvent(int direction, float angle, bool onMovingFlg = false);
 	virtual void sendMoveEndEvent();
 	
 	///LAYOUT BASE///
@@ -283,6 +282,13 @@ private:
 	*/
 	virtual void createContent();
 
+	virtual void changeScreenOrient();
+
+	virtual void createNodeSVHandler();
+
+	bool _onReconnect = false;
+	virtual void reconnectToNodeServer();
+
 	/*create wormhole UI*/
 	virtual void createWormHole();
 
@@ -291,12 +297,6 @@ private:
 
 	/*Create neutral tower*/
 	virtual void createNeutralTower();
-
-	/*draw tower area retangle*/
-	virtual void drawAreaRectangle(Sprite* tower, int offset);
-
-	/*Draw rectangle in minimap*/
-	virtual void drawRectInMinimap(Vec2 beginTitleCoor, int offset);
 
 	/*Create meutral unit*/
 	virtual void createNeutralUnit();
@@ -433,18 +433,10 @@ private:
 	
 	void update(float delta);
 	float _checkTime = 0; //for test Battle sync
-
+	Vec2 _checkPos = Vec2::ZERO;
 	void neutralUnitMoveInSoloMod();
 
 	void testMoveLogic(Sprite* object, int teamFLg);
-	/*Check that position is inside the map or not*/
-	/*bool checkPositionInsideMap(Vec2 pos) {
-		if (pos.x < 0 || pos.y < 0 || pos.x > _myMap->getContentSize().width || pos.y > _myMap->getContentSize().height) return false;
-
-		return true;
-	}*/
-	/*return true if title near neutral tower and cannot get*/
-	virtual bool checkTitleNearObject(Vec2 titleCoor, vector<Sprite*> ObjectList, int offset);
 
 	/*Change tower nearly title color with tower title*/
 	virtual void changeTitlesNearObject(Sprite* object, int color, int offset);

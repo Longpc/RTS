@@ -17,7 +17,7 @@ public:
 
 private:
 	///VARIABLES///////////////////////////////////////////////////////////////////////
-	Label *statusLabel;
+	Node *_statusNode;
 	Node *skillLabel;
 
 	Button *statusButton;

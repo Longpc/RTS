@@ -98,13 +98,35 @@ void UnitDetailDialog::displayUnitInfo(Sprite *parent)
 	}
 
 
-	std::stringstream info;
-	info << "名前:   " << _unitInfo.name << "\nHP:   " << _unitInfo.hp << "\nHP 回復:   " << _unitInfo.hp_heal << "\nMP:   " << _unitInfo.mp  <<"\nMP回復: "<<_unitInfo.mp_heal<< "\n攻撃力:   " << _unitInfo.attack << "\n防御力:   " << _unitInfo.defence;
-	info << "\n攻撃範囲:   " << _unitInfo.attack_range << "\n移動スピード: " << _unitInfo.move_speed << "\n属性: " << dameType << "\nタイプ: " << _unitInfo.element;
-	statusLabel = Label::create(info.str().c_str(), JAPANESE_FONT_1_BOLD, 25);
-	statusLabel->setColor(Color3B::BLACK);
-	statusLabel->setHorizontalAlignment(TextHAlignment::LEFT);
+	std::stringstream labeltext;
+	labeltext << _unitInfo.name << "\nHP \nHP 回復 \nMP \nMP回復 \n攻撃力 \n防御力 \n攻撃範囲 \n移動スピード \n属性 \nタイプ";
 	
+	stringstream colon;
+	for (int i = 1; i < 11; i ++)
+	{
+		colon << "\n:";
+	}
+
+	auto colonLB = Label::createWithSystemFont(colon.str().c_str(), JAPANESE_FONT_1_BOLD, 25);
+	colonLB->setColor(Color3B::BLACK);
+	colonLB->setHorizontalAlignment(TextHAlignment::LEFT);
+	colonLB->setAnchorPoint(Vec2::ANCHOR_TOP_LEFT);
+	stringstream content;
+	content << "\n";
+	content << _unitInfo.hp << "\n" << _unitInfo.hp_heal << "\n" << _unitInfo.mp << "\n" << _unitInfo.mp_heal <<"\n";
+	content << _unitInfo.attack << "\n" << _unitInfo.defence << "\n" << _unitInfo.attack_range << "\n";
+	content << _unitInfo.move_speed << "\n" << dameType << "\n" << _unitInfo.element;
+
+	auto contentLb = Label::createWithSystemFont(content.str().c_str(), JAPANESE_FONT_1_BOLD, 25);
+	contentLb->setColor(Color3B::BLACK);
+	contentLb->setHorizontalAlignment(TextHAlignment::RIGHT);
+	contentLb->setAnchorPoint(Vec2::ANCHOR_TOP_LEFT);
+
+	auto label = Label::createWithSystemFont(labeltext.str().c_str(), JAPANESE_FONT_1_BOLD, 25);
+	label->setColor(Color3B::BLACK);
+	label->setHorizontalAlignment(TextHAlignment::LEFT);
+	label->setAnchorPoint(Vec2::ANCHOR_TOP_LEFT);
+
 	skillLabel = Node::create();
 	skillLabel->setVisible(false);
 
@@ -118,16 +140,25 @@ void UnitDetailDialog::displayUnitInfo(Sprite *parent)
 		sp->setPosition(pos);
 		skillLabel->addChild(sp);
 		string content = _allUnitSkill[i].name.append("\n").append(_allUnitSkill[i].skill_des);
-		auto lb = Label::create(content.c_str(), JAPANESE_FONT_1_BOLD, 25,Size(400,100));
+		auto lb = Label::createWithSystemFont(content.c_str(), JAPANESE_FONT_1_BOLD, 25,Size(400,100));
 		lb->setColor(Color3B::BLACK);
 		lb->setPosition(pos + Vec2(50, -10));
 		lb->setAnchorPoint(Vec2::ANCHOR_MIDDLE_LEFT);
 		skillLabel->addChild(lb);
 	}
 
+
+	colonLB->setPosition(Vec2(150, 0));
+	contentLb->setPosition(Vec2(250, 0));
+	label->setPosition(0, 0);
+	_statusNode = Node::create();
+	_statusNode->addChild(colonLB);
+	_statusNode->addChild(contentLb);
+	_statusNode->addChild(label);
 	
 
-	if (statusLabel->getContentSize().height > backGroundSize.height-150)
+
+	if (label->getContentSize().height > backGroundSize.height-150)
 	{
 
 		auto scroll = extension::ScrollView::create();
@@ -141,16 +172,15 @@ void UnitDetailDialog::displayUnitInfo(Sprite *parent)
 		parent->addChild(scroll);
 		auto layer = Layer::create();
 		layer->setAnchorPoint(Vec2::ANCHOR_TOP_LEFT);
-		layer->setContentSize(Size(backGroundSize.width / 2, statusLabel->getContentSize().height + 50));
+		layer->setContentSize(Size(backGroundSize.width / 2, label->getContentSize().height + 50));
 		layer->setPosition(Vec2(0, -layer->getContentSize().height / 2));
 
 		auto height = layer->getContentSize().height;
 
 		scroll->setContainer(layer);
 		scroll->setContentOffset(scroll->minContainerOffset());
-		statusLabel->setAnchorPoint(Vec2::ANCHOR_TOP_LEFT);
-		statusLabel->setPosition(Vec2(0, height));
-		layer->addChild(statusLabel);
+		_statusNode->setPosition(Vec2(0, height));
+		layer->addChild(_statusNode);
 		/*skillLabel->setAnchorPoint(Vec2::ANCHOR_TOP_LEFT);
 		
 		
@@ -158,11 +188,9 @@ void UnitDetailDialog::displayUnitInfo(Sprite *parent)
 		layer->addChild(skillLabel); */
 	}
 	else {
-		statusLabel->setPosition(Vec2(parent->getContentSize().width / 2 - 70, parent->getContentSize().height - 100));
-		statusLabel->setAnchorPoint(Vec2::ANCHOR_TOP_LEFT);
+		_statusNode->setPosition(Vec2(parent->getContentSize().width / 2 - 70, parent->getContentSize().height - 100));
 
-		parent->addChild(statusLabel);
-		
+		parent->addChild(_statusNode);		
 	}
 	
 
@@ -203,7 +231,7 @@ void UnitDetailDialog::statusButtonCallback(Ref *pSender, Widget::TouchEventType
 		break;
 	case cocos2d::ui::Widget::TouchEventType::ENDED:
 	{
-		statusLabel->setVisible(true);
+		_statusNode->setVisible(true);
 		skillLabel->setVisible(false);
 		statusButton->loadTextureNormal("image/dialog/unitDetail/status_s.png");
 		skillButton->loadTextureNormal("image/dialog/unitDetail/skill.png");
@@ -226,7 +254,7 @@ void UnitDetailDialog::skillButonCallback(Ref *pSEnder, Widget::TouchEventType t
 		break;
 	case cocos2d::ui::Widget::TouchEventType::ENDED:
 	{
-		statusLabel->setVisible(false);
+		_statusNode->setVisible(false);
 		skillLabel->setVisible(true);
 		statusButton->loadTextureNormal("image/dialog/unitDetail/status.png");
 		skillButton->loadTextureNormal("image/dialog/unitDetail/skill_s.png");

@@ -29,36 +29,35 @@ bool BattleAPI::init()
 
 */
 /************************************************************************/
-void BattleAPI::sendMoveEvent(UserUnitInfo unitdata, int moveDirection,float angle, Vec2 position, int statusId, bool onMovingFlg)
+void BattleAPI::sendMoveEvent(Vec2 position, Vec2 veloc)
 {
-	auto a = NodeServer::getInstance()->getClient();
-	if (a == nullptr) return;
+	
 	Document doc;
 	doc.SetObject();
-	auto userData = UserModel::getInstance()->getUserInfo();
 	Document::AllocatorType& allo = doc.GetAllocator();
-	doc.AddMember("user_id", userData.user_id, allo);
-	doc.AddMember("room_id", userData.room_id, allo);
-	doc.AddMember("user_unit", *convertUnitDataToJsonObject(unitdata, allo), allo);
-	doc.AddMember("direction", moveDirection, allo);
-	doc.AddMember("angle", angle, allo);
+	string uu = UserModel::getInstance()->getUuId().c_str();
+	doc.AddMember("uuid", uu.c_str(), allo);
+	auto userData = UserModel::getInstance()->getUserInfo();
+	doc.AddMember("team_id", userData.team_id, allo);
+	//auto unitdata = BattleModel::getInstance()->getUnitInforByUuid(uu.c_str());
+	/*doc.AddMember("hp", unitdata.hp, allo);
+	doc.AddMember("mp", unitdata.mp, allo);
+	doc.AddMember("attack", unitdata.)*/
 	doc.AddMember("position_x", position.x, allo);
 	doc.AddMember("position_y", position.y, allo);
-	doc.AddMember("status", statusId, allo);
-	doc.AddMember("moving", onMovingFlg, allo);
-	string uu = UserModel::getInstance()->getUuId().c_str();
-	doc.AddMember("uuid",uu.c_str(),allo);
+	doc.AddMember("veloc_x", veloc.x, allo);
+	doc.AddMember("veloc_y", veloc.y, allo);
+	
 
 	StringBuffer  buffer;
 	Writer<StringBuffer> writer(buffer);
 	doc.Accept(writer);
 
 	//log("send move data: %s", buffer.GetString());
+	auto a = NodeServer::getInstance()->getClient();
+	if (a == nullptr) return;
+
 	a->emit("move", buffer.GetString());
-	a->on("move_end", [&](SIOClient* client, const std::string& data)
-	{
-		log("move callback: %s", data.c_str());
-	});
 }
 void BattleAPI::sendMoveEndEvent(UserUnitInfo unitdata)
 {
@@ -114,7 +113,7 @@ void BattleAPI::sendAttackEvent(Vec2 direction,UserUnitInfo unit, UserUnitInfo t
 	doc.Accept(writer);
 	//log("Attack send data: %s", buffer.GetString());
 	c->emit("attack", buffer.GetString());
-	c->on("attack_end", callback);
+	//c->on("attack_end", callback);
 	return;
 }
 
@@ -338,11 +337,7 @@ void BattleAPI::sendBattleEndEvent(int winTeamId)
 
 void BattleAPI::sendTestMoveLogic(Vec2 titleCordPost)
 {
-	auto sv = NodeServer::getInstance()->getClient();
-
-	if (sv == nullptr) {
-		return;
-	}
+	
 
 	auto userData = UserModel::getInstance()->getUserInfo();
 
@@ -360,10 +355,16 @@ void BattleAPI::sendTestMoveLogic(Vec2 titleCordPost)
 	StringBuffer  buffer;
 	Writer<StringBuffer> writer(buffer);
 	doc.Accept(writer);
+	auto sv = NodeServer::getInstance()->getClient();
+
+	if (sv == nullptr) {
+		return;
+	}
 	sv->emit("get_title", buffer.GetString());
 }
 
 void BattleAPI::sendCheckMapEvent(SocketIOCallback callBack)
+
 {
 	auto sv = NodeServer::getInstance()->getClient();
 
@@ -513,6 +514,29 @@ void BattleAPI::sendCannonLunchEvent(int team_id, int cannonIndex, SocketIOCallb
 	
 }
 
+void BattleAPI::sendMiniOnMoveEvent(int team_id, int minionIndex, string parentUuid, Vec2 pos, Vec2 veloc)
+{
+	auto sv = NodeServer::getInstance()->getClient();
+	if (sv == nullptr) {
+		return;
+	}
+	Document doc;
+	doc.SetObject();
+	Document::AllocatorType& allo = doc.GetAllocator();
+	doc.AddMember("uuid", parentUuid.c_str(), allo);
+	doc.AddMember("index", minionIndex, allo);
+	doc.AddMember("team_id", team_id, allo);
+	doc.AddMember("pos_x", pos.x, allo);
+	doc.AddMember("pos_y", pos.y, allo);
+	doc.AddMember("veloc_x", veloc.x, allo);
+	doc.AddMember("veloc_y", veloc.y, allo);
+
+	StringBuffer buffer;
+	Writer<StringBuffer> writer(buffer);
+	doc.Accept(writer);
+
+	sv->emit("minion_move", buffer.GetString());
+}
 
 /*Converter*/
 Document::GenericValue* BattleAPI::convertUnitDataToJsonObject(UserUnitInfo unitData, Document::AllocatorType& allo)
@@ -562,13 +586,3 @@ Document::GenericValue* BattleAPI::convertSkillDataToJsonObject(UserSkillInfo sk
 
 	return skillDataValue;
 }
-
-
-
-
-
-
-
-
-
-

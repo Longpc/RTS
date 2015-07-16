@@ -27,6 +27,7 @@ public:
 	UI_SCENE_CREATE_FUNC(ModeSelectScene);
 	CREATE_FUNC(ModeSelectScene);
 	bool init();
+	virtual void testDisConnect(Button* bt);
 protected:
 
 private:
@@ -35,7 +36,7 @@ private:
 	TextField* editBox;
 	LoadingSprite *_loadingSp;
 	// socket.io event‚Ìevent listener
-	void onReceiveEvent(SIOClient* client, const std::string& data);
+	/*void onReceiveEvent(SIOClient* client, const std::string& data);
 	void textFieldEvent(Ref *pSender, TextField::EventType type);
 	void addTalkPlayer(const std::string& str);
 	void addTalkOther(const std::string& str);
@@ -68,8 +69,10 @@ private:
 	/*virtual void testDialog(Ref *pSender, Widget::TouchEventType type);*/
 
 	/*Create data base*/
-	virtual void downloadDatabase();
-	virtual void serverCallback(HttpClient* client, HttpResponse* response);
+	/*virtual void downloadDatabase();
+	virtual void serverCallback(HttpClient* client, HttpResponse* response);*/
+
+	
 };
 
 #endif

@@ -131,10 +131,13 @@ void BatleResultScene::nextButtonCallback(Ref *pSender, Widget::TouchEventType t
 		if (_gameMode == MULTI_MODE)
 		{
 			auto sv = NodeServer::getInstance()->getClient();
-			string uu = UserModel::getInstance()->getUuId();
-			sv->emit("clean_battle_result", uu.c_str());
-			NodeServer::destroyInstance();
-			RoomUserModel::destroyInstance();
+			if (sv != nullptr)
+			{
+				string uu = UserModel::getInstance()->getUuId();
+				sv->emit("clean_battle_result", uu.c_str());
+				NodeServer::destroyInstance();
+				RoomUserModel::destroyInstance();
+			}
 		}
 		Director::getInstance()->replaceScene(TransitionMoveInL::create(SCREEN_TRANSI_DELAY, ModeSelectScene::createScene()));
 		break; 

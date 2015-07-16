@@ -5,23 +5,29 @@
 
 NodeServer* NodeServer::s_sharedTestServer = nullptr;
 
-NodeServer::NodeServer()
+NodeServer::NodeServer() : _connectedFlg(false)
 {
 }
 
 NodeServer::~NodeServer()
 {
+	_disConnectCallback = nullptr;
+	_onConnectCallback = nullptr;
+	_valueDict = nullptr;
 }
-
-NodeServer* NodeServer::getInstance()
+void NodeServer::createInstance(SocketIOCallback connectedCallback /* = nullptr */)
 {
 	if (!s_sharedTestServer)
 	{
 		log("create new");
 		s_sharedTestServer = new (std::nothrow) NodeServer();
-		s_sharedTestServer->init();
+		s_sharedTestServer->init(connectedCallback);
 	}
+}
 
+NodeServer* NodeServer::getInstance()
+{
+	
 	return s_sharedTestServer;
 }
 
@@ -30,25 +36,22 @@ void NodeServer::destroyInstance()
 	if (s_sharedTestServer->getClient() != nullptr) {
 		s_sharedTestServer->getClient()->disconnect();
 	}
-	s_sharedTestServer->freeClient();
-	s_sharedTestServer = nullptr;
+	//s_sharedTestServer->freeClient();
+	CC_SAFE_DELETE(s_sharedTestServer);
 }
 
 void NodeServer::freeClient()
 {
 	//CC_SAFE_DELETE(_valueDict);
+	_valueDict = nullptr;
 }
 
-bool NodeServer::init()
+bool NodeServer::init(SocketIOCallback cb)
 {
 	_valueDict = SocketIO::connect(Configuration::getInstance()->getValue("NodeJSServer").asString().c_str(), *this);
 	CCASSERT(_valueDict, "Error cannot create Socket IO");
 	log("Connect to NodeJs server: %s", Configuration::getInstance()->getValue("NodeJSServer").asString().c_str());
-	_valueDict->on("disconnect", [&](SIOClient*, const std::string&) {
-		log("try reconnect");
-		this->destroyInstance();
-		_valueDict = this->getInstance()->getClient();
-	});
+	_valueDict->on("connect", cb);
 	
 	return true;
 }
@@ -98,6 +101,10 @@ void NodeServer::sendMessageWithName(string name, string message)
 void NodeServer::onConnect(SIOClient* client)
 {
 	log("----->onConnect");
+	if (_onConnectCallback)
+	{
+		_onConnectCallback();
+	}
 }
 
 void NodeServer::onMessage(SIOClient* client, const std::string& data)
@@ -108,8 +115,17 @@ void NodeServer::onMessage(SIOClient* client, const std::string& data)
 
 void NodeServer::onClose(SIOClient* client)
 {
-	log("----->onClose");
-	//destroyInstance();
+	if (client == _valueDict)
+	{
+		_valueDict = nullptr;
+	}
+	setConnectedFlg(false);
+	log("Node Server: ----->onClose. We need disconnect callback here for reconnect in battle scene");
+	if (_disConnectCallback) {
+		_disConnectCallback();
+	}
+	//this->release();
+	destroyInstance();
 }
 
 void NodeServer::onError(SIOClient* client, const std::string& data)
@@ -121,6 +137,16 @@ void NodeServer::onError(SIOClient* client, const std::string& data)
 std::string NodeServer::getString()
 {
 	return _name;
+}
+
+void NodeServer::setDisconnectCallback(const SVCallback& callback)
+{
+	this->_disConnectCallback = callback;
+}
+
+void NodeServer::setConnectCallback(const SVCallback& callback)
+{
+	this->_onConnectCallback = callback;
 }
 
 

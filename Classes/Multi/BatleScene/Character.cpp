@@ -4,6 +4,12 @@ USING_NS_CC;
 using namespace std;
 
 Character::Character()
+	: _unitUUid(""),
+	_characterId(0),
+	_moveMode(0),
+	_characterMoveSpeed(0),
+	_currentAttackActionTag(0),
+	_currentMoveActionTag(0)
 {
 	//Contructor
 }
@@ -94,6 +100,11 @@ void Character::moveActionByVector(Vec2 destination)
 	switch (this->getMoveMode())
 	{
 	case 1: // MOVE_AUTO
+		actionMoveCharacter(direct);
+		if (this->getPhysicsBody() != nullptr)
+		{
+			this->getPhysicsBody()->setVelocity(Vect(this->getCharacterMoveSpeed()*SPEED_MULTIPLE * cos(destination.getAngle()), this->getCharacterMoveSpeed()*SPEED_MULTIPLE * sin(destination.getAngle())));
+		}
 		break;
 	case 2: // MOVE_MANUAL
 	case 3: // MOVE_CIRCLE_MANUAL
@@ -126,6 +137,11 @@ void Character::moveActionByVector(Vec2 destination)
 
 		break;
 	}
+	/*if (BattleModel::getInstance()->getGameMode() == MULTI_MODE && this->getPhysicsBody() != nullptr)
+	{
+		BattleAPI::getInstance()->sendMoveEvent(this->getPosition(), this->getPhysicsBody()->getVelocity());
+	}*/
+
 }
 
 void Character::attackActionByTargetPosition(Vec2 direcVector , int attackTime, AttackCallback oneSecondCb, AttackCallback attackCallback)

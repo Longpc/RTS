@@ -41,7 +41,10 @@ bool UserSelect::init()
 
 void UserSelect::onBackButtonClick(Ref *pSender)
 {
-	NodeServer::destroyInstance();
+	if (NodeServer::getInstance())
+	{
+		NodeServer::destroyInstance();
+	}
 	Director::getInstance()->replaceScene(TransitionMoveInL::create(SCREEN_TRANSI_DELAY, ModeSelectScene::createScene()));
 }
 
@@ -89,7 +92,6 @@ void UserSelect::userSelectCallback(Ref *pSender, Widget::TouchEventType type)
 		UserModel::getInstance()->setUserInfo(_userList[bt->getTag()]);
 		UserModel::getInstance()->setRoomId(1);
 		//UserLoginAPI::getInstance()->setLoginCompletedCallback([&](){
-			log("Login Completed");
 			Document doc;
 			doc.SetObject();
 			Document::AllocatorType& allo = doc.GetAllocator();
@@ -102,6 +104,7 @@ void UserSelect::userSelectCallback(Ref *pSender, Widget::TouchEventType type)
 			Writer<StringBuffer> wt(buff);
 			doc.Accept(wt);
 
+			//log("emit data: %s", buff.GetString());
 			auto client = NodeServer::getInstance()->getClient();
 			client->emit("connect_begin", buff.GetString());
 			int roomId = uif.room_id;

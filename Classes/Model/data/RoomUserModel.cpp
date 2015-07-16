@@ -35,7 +35,7 @@ bool RoomUserModel::init()
 		rapidjson::Document doc;
 		doc.Parse<0>(data.c_str());
 		if (doc.HasParseError()) {
-			log("error parser Json in room_public_connect");
+			log("error parser Json in room_public_select_team_end");
 			return;
 		}
 		if (doc.IsObject()) {

@@ -22,21 +22,29 @@ using namespace std;
 # define MYCLASS_DECLSPEC CC_DLL
 #endif
 
+typedef std::function<void()> SVCallback;
+typedef std::function<void(SIOClient* client, const std::string data)> SocketIOCallback;
+
 class MYCLASS_DECLSPEC NodeServer : public Ref,public SocketIO::SIODelegate
 {
 public:
 
 	/** returns a shared instance of TestServer */
+	static void createInstance(SocketIOCallback connectedCallback = nullptr);
 	static NodeServer *getInstance();
 
 	/** purge the shared instance of TestServer */
 	static void destroyInstance();
 
+	void setDisconnectCallback(const SVCallback& callback);
+
+	void setConnectCallback(const SVCallback& callback);
 
 public:
+	NodeServer();
 	virtual ~NodeServer();
 
-	bool init();
+	bool init(SocketIOCallback cb);
 
 	SIOClient* getClient();
 	void freeClient();
@@ -44,10 +52,13 @@ public:
 	void startConnectWithHandler(string name, SIOEvent event);
 	void sendMessageWithName(string name, string message);
 	string getString();
+	CC_SYNTHESIZE(bool, _connectedFlg, ConnectedFlg);
 private:
-	NodeServer(void);
 	static NodeServer    *s_sharedTestServer;
 	static std::string		s_configfile;
+
+	SVCallback _onConnectCallback;
+	SVCallback _disConnectCallback;
 
 	virtual void onConnect(SIOClient* client);
 	virtual void onMessage(SIOClient* client, const std::string& data);

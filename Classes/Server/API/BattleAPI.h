@@ -5,6 +5,7 @@
 #include "Server/Server.h"
 #include "Model/data/UserModel.h"
 #include "Model/data/UserUnitModel.h"
+#include "Model/data/BattleModel.h"
 #include "base/database/DataUtils.h"
 
 #include <string>
@@ -13,7 +14,7 @@
 #include "json/writer.h"
 #include "json/stringbuffer.h"
 
-typedef std::function<void(SIOClient* client, const std::string data)> SocketIOCallback;
+
 
 using namespace std;
 USING_NS_CC;
@@ -26,7 +27,7 @@ public:
 
 	static void destroyInstance();
 
-	void sendMoveEvent(UserUnitInfo unitdata, int moveDirection,float angle, Vec2 position, int statusId, bool onMovingFlg);
+	void sendMoveEvent(Vec2 position, Vec2 veloc);
 	
 	void sendMoveEndEvent(UserUnitInfo unitdata);
 	
@@ -61,6 +62,8 @@ public:
 	void sendCannonAttackEvent(int team_id, int unitIndex, Vec2 direc, SocketIOCallback callback);
 	
 	void sendCannonLunchEvent(int team_id, int cannonIndex, SocketIOCallback callback);
+
+	void sendMiniOnMoveEvent(int team_id, int minionIndex, string parentUuid, Vec2 pos, Vec2 veloc);
 
 	bool init();
 private:

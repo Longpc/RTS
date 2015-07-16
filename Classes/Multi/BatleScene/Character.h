@@ -4,6 +4,7 @@
 #include "cocos2d.h"
 #include "base/Define.h"
 #include "Model/data/UserUnitModel.h"
+//#include "Server/API/BattleAPI.h"
 
 USING_NS_CC;
 using namespace std;
@@ -22,6 +23,7 @@ public :
 
 	//CC_SYNTHESIZE(string, _moveImagePath, MoveImagePath);
 	//CC_SYNTHESIZE(string, _attackImagePath, AttackImagePath);
+	CC_SYNTHESIZE(string, _unitUUid, UnitUUID);
 	CC_SYNTHESIZE(int, _moveMode, MoveMode);
 	CC_SYNTHESIZE(float, _characterMoveSpeed, CharacterMoveSpeed);
 	CC_SYNTHESIZE(Vec2, _miniCircle, MiniCirclePosition);

@@ -324,8 +324,10 @@ void MultiTeamSelectScene::onBackButtonClick(Ref *pSender)
 	StringBuffer buff;
 	Writer<StringBuffer> wt(buff);
 	doc.Accept(wt);
-	auto client = NodeServer::getInstance()->getClient();
-	client->emit("reconnect", buff.GetString());
+	if (NodeServer::getInstance())
+	{
+		NodeServer::getInstance()->getClient()->emit("reconnect", buff.GetString());
+	}
 
 	Director::getInstance()->replaceScene(TransitionMoveInL::create(SCREEN_TRANSI_DELAY, UserSelect::createScene()));
 }

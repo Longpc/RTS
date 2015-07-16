@@ -426,6 +426,7 @@ void MultiUnitSelectScene::nextButtonCallback(Ref *pSender, Widget::TouchEventTy
 			doc.Accept(writer);
 
 			auto client = NodeServer::getInstance()->getClient();
+			if (client == nullptr) return;
 			log("Unit Selected End data: %s", buff.GetString());
 			client->emit("connect_select_unit", buff.GetString());
 			client->on("connect_select_unit_end", [&](SIOClient* client, const std::string& data) {

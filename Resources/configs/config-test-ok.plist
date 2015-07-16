@@ -18,6 +18,8 @@
 		<string>http://52.68.104.55/RTSAPI/</string>
 		<key>NodeJSServer</key>
 		<string>ws://52.68.104.55:8222/</string>
+		<key>NodeJSServer2</key>
+		<string>ws://52.68.104.55:8000/</string>
 	</dict>
 	<key>metadata</key>
 	<dict>

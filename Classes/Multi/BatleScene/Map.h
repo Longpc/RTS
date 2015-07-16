@@ -13,8 +13,13 @@ public:
 	Vec2 getTitleCoorForPosition(Vec2 pos);
 	Sprite* getTitleAt(Vec2 titleCoor);
 	bool checkPosInsizeMap(Vec2 pos);
+	bool checkTitleCantGet(Vec2 pos);
 private:
-
+	bool checkTitleNearObject(vector<Vec2> vec, int offset, Vec2 pos);
+	/*Draw rectangle in map*/
+	virtual void drawRectInMap(Vec2 beginTitleCoor, int offset);
+	vector<Vec2> _towerCoor;
+	vector<Vec2> _cannonCoor;
 };
 
 

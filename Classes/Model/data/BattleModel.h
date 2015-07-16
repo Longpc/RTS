@@ -40,9 +40,11 @@ public:
 	CC_SYNTHESIZE(vector<int>, _playerSkills, PlayerSkills);
 	CC_SYNTHESIZE(vector < Room_User_Model>, _roomUserList, RoomUserList);
 	CC_SYNTHESIZE(vector<Room_User_Unit_Model>, _roomUserUnitList, RoomUserUnitList);
+	CC_SYNTHESIZE(int, _gameMode, GameMode);
 	Room_User_Unit_Model getUnitInforByUuid(string uuid);
 	vector<Room_User_Unit_Model> getTeamUserUnitList(int teamId);
 	void updateUserUnit(Room_User_Unit_Model unitData);
+
 
 private:
 	static BattleModel * s_BattleModel;

@@ -13,9 +13,9 @@ SummonPet* SummonPet::createPet(int chatacterId, MyMap* map, MyMap* miniMap,int 
 		pet->init(chatacterId);
 		pet->setBattleMap(map);
 		pet->setBattleMiniMap(miniMap);
-		sprintf(szName, "image/new_unit/unit_0%d_8.png", chatacterId);
-		pet->initWithFile(szName);
 		pet->setMoveFlg(moveEnable);
+		sprintf(szName, "image/new_unit/unit_0%d_8.png", chatacterId);
+		pet->initWithFile(szName);	
 		pet->autorelease();
 		
 		return pet;
@@ -46,17 +46,28 @@ void SummonPet::onEnterTransitionDidFinish()
 		sp->getPhysicsBody()->setVelocity(Vec2::ZERO);
 		Vec2 force = Vec2(150 * cos(vec.getAngle()), 150 * sin(vec.getAngle()));
 		sp->getPhysicsBody()->setVelocity(force);
+		if (!getMoveFlg()) return;
+
+		if (getGameMode() == MULTI_MODE)
+		{
+			BattleAPI::getInstance()->sendMiniOnMoveEvent(getTeamFlag(), getIndexOffset(), getParentUuid().c_str(), getPosition(), force);
+		}
 
 	}), DelayTime::create(1.0f), nullptr)));
 
 }
 void SummonPet::update(float dt)
 {
+	if (!getMoveFlg()) return;
+
+	if (getTeamFlag() < 1 || getTeamFlag() > 2) return;
 	auto pos = this->getPosition();
 	if (getBattleMap()->checkPosInsizeMap(pos) == false) return;
 	
 	auto titleC = getBattleMap()->getTitleCoorForPosition(pos);
 	//need check nearly object title
+
+	if (getBattleMap()->checkTitleCantGet(titleC)) return;
 
 	auto title = getBattleMap()->getTitleAt(titleC);
 	if (title == nullptr) {
@@ -88,7 +99,7 @@ void SummonPet::update(float dt)
 		{
 			if (_gameMode == MULTI_MODE) {
 				if (title->getName() == "sending") return;
-				log("send test move event");
+				//log("send test move event");
 				title->setName("sending");
 				//sendingFlg->push_back(true);
 				BattleAPI::getInstance()->sendTestMoveLogic(titleC);
@@ -102,7 +113,6 @@ void SummonPet::update(float dt)
 			}
 		}
 	}
-
 }
 
 SummonPet::~SummonPet()
