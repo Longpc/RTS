@@ -36,7 +36,7 @@ void NodeServer::destroyInstance()
 	if (s_sharedTestServer->getClient() != nullptr) {
 		s_sharedTestServer->getClient()->disconnect();
 	}
-	//s_sharedTestServer->freeClient();
+	s_sharedTestServer->freeClient();
 	CC_SAFE_DELETE(s_sharedTestServer);
 }
 
@@ -52,6 +52,9 @@ bool NodeServer::init(SocketIOCallback cb)
 	CCASSERT(_valueDict, "Error cannot create Socket IO");
 	log("Connect to NodeJs server: %s", Configuration::getInstance()->getValue("NodeJSServer").asString().c_str());
 	_valueDict->on("connect", cb);
+	_valueDict->on("error", [&](SIOClient* c, const string& data) {
+		log("In error event : %s", data.c_str());
+	});
 	
 	return true;
 }
@@ -115,23 +118,25 @@ void NodeServer::onMessage(SIOClient* client, const std::string& data)
 
 void NodeServer::onClose(SIOClient* client)
 {
-	if (client == _valueDict)
+	/*if (client == _valueDict)
 	{
 		_valueDict = nullptr;
-	}
+	}*/
 	setConnectedFlg(false);
 	log("Node Server: ----->onClose. We need disconnect callback here for reconnect in battle scene");
 	if (_disConnectCallback) {
 		_disConnectCallback();
 	}
 	//this->release();
-	destroyInstance();
 }
 
 void NodeServer::onError(SIOClient* client, const std::string& data)
 {
 	log("----->onError");
 	log("with error: %s", data.c_str());
+	setConnectedFlg(false);
+	//_valueDict->disconnect();
+	//this->release();
 }
 
 std::string NodeServer::getString()

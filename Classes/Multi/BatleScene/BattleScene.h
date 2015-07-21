@@ -369,7 +369,7 @@ private:
 	virtual void showAttackDame(int dameValue, Vec2 pos, int colorType);
 
 	/**/
-	virtual void unitDieAction(Sprite* unitSprite, vector<UserUnitInfo>* processUnitList, int index);
+	virtual void unitDieAction(vector<Sprite*> unitSprite, vector<UserUnitInfo>* processUnitList, string uuid);
 
 	/*Battle RT Unit respwan action*/
 	virtual void unitRespwanAction(Ref* pSender, Sprite* unitSprite, vector<UserUnitInfo>* processUnitList, int index);
@@ -399,7 +399,7 @@ private:
 	virtual void readyForLunch(Cannon * cannon, int cannonIndex);
 	
 	virtual void lunchObject(Touch *touch);
-	
+	virtual void lunchObjectAction(Character* object, Vec2 lunchVector, int objectMoveSpeed);
 	
 	bool _onWarping = false;
 	/*Checker for warp by move into wormhole*/
@@ -499,9 +499,9 @@ private:
 	virtual void healEffectWithObject(Sprite* obj);
 
 	/*Run logic and effect of buff skills*/
-	virtual void skillBuffAction(Sprite* object, UserSkillInfo skillInfo, int teamId, int saveIndex);
+	virtual void skillBuffAction(Sprite* object, UserUnitInfo* unit, UserSkillInfo skillInfo, int teamId, int saveIndex);
 	virtual void skillHelpAll(Sprite* object, UserSkillInfo skillInfo, int teamId);
-	virtual void skillHelpOne(Sprite* object, UserSkillInfo skillInfo, int teamId, int saveIndex);
+	virtual void skillHelpOne(Sprite* object, UserUnitInfo* unit, UserSkillInfo skillInfo, int teamId, int saveIndex);
 
 	virtual void skillTrapAction(Sprite* object, UserSkillInfo skill, int teamId);
 

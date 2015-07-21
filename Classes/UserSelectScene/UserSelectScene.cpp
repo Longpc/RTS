@@ -44,6 +44,7 @@ void UserSelect::onBackButtonClick(Ref *pSender)
 	if (NodeServer::getInstance())
 	{
 		NodeServer::destroyInstance();
+		RoomUserModel::destroyInstance();
 	}
 	Director::getInstance()->replaceScene(TransitionMoveInL::create(SCREEN_TRANSI_DELAY, ModeSelectScene::createScene()));
 }

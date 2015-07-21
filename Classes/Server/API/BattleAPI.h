@@ -27,7 +27,7 @@ public:
 
 	static void destroyInstance();
 
-	void sendMoveEvent(Vec2 position, Vec2 veloc);
+	void sendMoveEvent(UserUnitInfo unitData, Vec2 position, int direction, bool movingFlg);
 	
 	void sendMoveEndEvent(UserUnitInfo unitdata);
 	
@@ -61,7 +61,7 @@ public:
 
 	void sendCannonAttackEvent(int team_id, int unitIndex, Vec2 direc, SocketIOCallback callback);
 	
-	void sendCannonLunchEvent(int team_id, int cannonIndex, SocketIOCallback callback);
+	void sendCannonLunchEvent(int team_id, int cannonIndex, Vec2 lunchVector);
 
 	void sendMiniOnMoveEvent(int team_id, int minionIndex, string parentUuid, Vec2 pos, Vec2 veloc);
 

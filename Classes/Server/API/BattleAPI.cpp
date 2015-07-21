@@ -29,34 +29,30 @@ bool BattleAPI::init()
 
 */
 /************************************************************************/
-void BattleAPI::sendMoveEvent(Vec2 position, Vec2 veloc)
+void BattleAPI::sendMoveEvent(UserUnitInfo unitdata, Vec2 position, int direction, bool movingFlg)
 {
 	
+	auto a = NodeServer::getInstance()->getClient();
+	if (a == nullptr) return;
 	Document doc;
 	doc.SetObject();
-	Document::AllocatorType& allo = doc.GetAllocator();
-	string uu = UserModel::getInstance()->getUuId().c_str();
-	doc.AddMember("uuid", uu.c_str(), allo);
 	auto userData = UserModel::getInstance()->getUserInfo();
-	doc.AddMember("team_id", userData.team_id, allo);
-	//auto unitdata = BattleModel::getInstance()->getUnitInforByUuid(uu.c_str());
-	/*doc.AddMember("hp", unitdata.hp, allo);
-	doc.AddMember("mp", unitdata.mp, allo);
-	doc.AddMember("attack", unitdata.)*/
+	Document::AllocatorType& allo = doc.GetAllocator();
+	doc.AddMember("user_id", userData.user_id, allo);
+	doc.AddMember("room_id", userData.room_id, allo);
+	doc.AddMember("user_unit", *convertUnitDataToJsonObject(unitdata, allo), allo);
 	doc.AddMember("position_x", position.x, allo);
 	doc.AddMember("position_y", position.y, allo);
-	doc.AddMember("veloc_x", veloc.x, allo);
-	doc.AddMember("veloc_y", veloc.y, allo);
-	
+	string uu = UserModel::getInstance()->getUuId().c_str();
+	doc.AddMember("uuid", uu.c_str(), allo);
+	doc.AddMember("direction", direction, allo);
+	doc.AddMember("moving", movingFlg, allo);
 
 	StringBuffer  buffer;
 	Writer<StringBuffer> writer(buffer);
 	doc.Accept(writer);
 
 	//log("send move data: %s", buffer.GetString());
-	auto a = NodeServer::getInstance()->getClient();
-	if (a == nullptr) return;
-
 	a->emit("move", buffer.GetString());
 }
 void BattleAPI::sendMoveEndEvent(UserUnitInfo unitdata)
@@ -486,7 +482,7 @@ void BattleAPI::sendCannonAttackEvent(int team_id, int unitIndex, Vec2 direc, So
 
 }
 
-void BattleAPI::sendCannonLunchEvent(int team_id, int cannonIndex, SocketIOCallback callback) {
+void BattleAPI::sendCannonLunchEvent(int team_id, int cannonIndex, Vec2 lunchVector) {
 	
 	auto sv = NodeServer::getInstance()->getClient();
 	if (sv == nullptr) {
@@ -499,19 +495,18 @@ void BattleAPI::sendCannonLunchEvent(int team_id, int cannonIndex, SocketIOCallb
 	doc.SetObject();
 	Document::AllocatorType& allo = doc.GetAllocator();
 
-
 	doc.AddMember("uuid", uu.c_str(), allo);
 	doc.AddMember("index", cannonIndex, allo);
 	doc.AddMember("team_id", team_id, allo);
 	doc.AddMember("user_id", userData.user_id, allo);
+	doc.AddMember("vec_x", lunchVector.x, allo);
+	doc.AddMember("vec_y", lunchVector.y, allo);
 
 	StringBuffer buffer;
 	Writer<StringBuffer> writer(buffer);
 	doc.Accept(writer);
 
-	sv->emit("cannon_lunch", buffer.GetString());
-	sv->on("cannon_lunch_end", callback);
-	
+	sv->emit("cannon_lunch", buffer.GetString());	
 }
 
 void BattleAPI::sendMiniOnMoveEvent(int team_id, int minionIndex, string parentUuid, Vec2 pos, Vec2 veloc)

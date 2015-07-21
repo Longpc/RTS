@@ -1118,6 +1118,8 @@ void BattleScene::reconnectToNodeServer()
 {
 	log("call reconnect");
 	_onReconnect = true;
+	testObject->stopMoveAction();
+	testObject->getPhysicsBody()->setVelocity(Vec2::ZERO);
 	_eventDispatcher->pauseEventListenersForTarget(this);
 	//NodeServer::getInstance()->getClient()->disconnect();
 	//NodeServer::destroyInstance();
@@ -1135,10 +1137,35 @@ void BattleScene::reconnectToNodeServer()
 			break;
 		case cocos2d::ui::Widget::TouchEventType::ENDED:
 		{
-			_onReconnect = false;
+			NodeServer::destroyInstance();
+			log("after destroy instance");
 			NodeServer::createInstance([&, bt](SIOClient *c, const string data){
+				_eventDispatcher->resumeEventListenersForTarget(this);
 				bt->removeFromParentAndCleanup(true);
+				Document doc;
+				doc.SetObject();
+				Document::AllocatorType& allo = doc.GetAllocator();
+				auto uif = UserModel::getInstance()->getUserInfo();
+				doc.AddMember("user_id", uif.user_id, allo);
+				doc.AddMember("room_id", uif.room_id, allo);
+				string uu = UserModel::getInstance()->getUuId().c_str();
+				doc.AddMember("uuid", uu.c_str(), allo);
+				StringBuffer buff;
+				Writer<StringBuffer> wt(buff);
+				doc.Accept(wt);
+
+				//log("emit data: %s", buff.GetString());
+				auto client = NodeServer::getInstance()->getClient();
+				client->emit("connect_begin", buff.GetString());
+				client->on("connect_begin_end", [&](SIOClient* client, const std::string& data) {
+					_onReconnect = false;
+					log("connect begin end data: %s", data.c_str());
+					NodeServer::getInstance()->setDisconnectCallback(CC_CALLBACK_0(BattleScene::reconnectToNodeServer, this));
+					createNodeSVHandler();
+				});
+				
 			});
+			log("after create new");
 			bt->runAction(RepeatForever::create(RotateBy::create(2.0f, 90)));
 			break;
 		}
@@ -1188,7 +1215,7 @@ void BattleScene::createNodeSVHandler()
 				//log("!EEEE");
 				Room_User_Unit_Model tempUnit;
 				tempUnit._id = doc["user_unit"][rapidjson::SizeType(i)]["_id"].GetString();
-				tempUnit.status = doc["user_unit"][rapidjson::SizeType(i)]["status"].GetInt();
+				//tempUnit.status = doc["user_unit"][rapidjson::SizeType(i)]["status"].GetInt();
 				tempUnit.mp = doc["user_unit"][rapidjson::SizeType(i)]["mp"].GetInt();
 				tempUnit.hp = doc["user_unit"][rapidjson::SizeType(i)]["hp"].GetInt();
 				tempUnit.position_x = doc["user_unit"][rapidjson::SizeType(i)]["position_x"].GetDouble();
@@ -1199,47 +1226,43 @@ void BattleScene::createNodeSVHandler()
 				tempUnit.user_id = doc["user_unit"][rapidjson::SizeType(i)]["user_id"].GetInt();
 				tempUnit.mst_unit_id = doc["user_unit"][rapidjson::SizeType(i)]["mst_unit_id"].GetInt();
 				tempUnit.uuid = doc["user_unit"][rapidjson::SizeType(i)]["uuid"].GetString();
-				tempUnit.angle = doc["user_unit"][rapidjson::SizeType(i)]["angle"].GetDouble();
+				//tempUnit.angle = doc["user_unit"][rapidjson::SizeType(i)]["angle"].GetDouble();
 				tempUnit.moving = doc["user_unit"][rapidjson::SizeType(i)]["moving"].GetBool();
 
 				BattleModel::getInstance()->updateUserUnit(tempUnit);
-				/*string sv_uuid = doc["user_unit"][rapidjson::SizeType(i)]["uuid"].GetString();
+				string sv_uuid = doc["user_unit"][rapidjson::SizeType(i)]["uuid"].GetString();
 				if (strcmp(sv_uuid.c_str(), uuid.c_str()) == 0) {
-				//log("this is my unit");
-				continue;
+					//log("this is my unit");
+					continue;
 				}
-				int teamId = UserModel::getInstance()->getUserInfo().team_id;
-
 				//bellow code for sync position and move Animation
 				vector<Sprite*> processUnitSprite = {};
-				vector<UserUnitInfo> processUnitData = {};
-				if (doc["user_unit"][rapidjson::SizeType(i)]["team_id"].GetInt() == teamId) {
-				processUnitSprite = _allAlliedUnitSprite;
-				processUnitData = _allAlliedUnitData;
+				if (doc["user_unit"][rapidjson::SizeType(i)]["team_id"].GetInt() == _currentPlayerTeamFlg) {
+					processUnitSprite = _allAlliedUnitSprite;
 				}
 				else {
-				processUnitSprite = _allEnemyUnitSprite;
-				processUnitData = _allEnemyUnitData;
+					processUnitSprite = _allEnemyUnitSprite;
 				}
-				for (int j = 0; j < processUnitSprite.size(); j++)
+				for (int j = 0; j < processUnitSprite.size() -1; j++)
 				{
-				if (processUnitSprite[j]->getTag() == TOWER_TAG) {
-				continue;
+					if (processUnitSprite[j]->getTag() == TOWER_TAG) {
+						continue;
+					}
+					Character* cha = (Character*)processUnitSprite[j];
+					if (strcmp(cha->getUnitUUID().c_str(), sv_uuid.c_str()) == 0)
+					{
+						
+						cha->setPosition(Vec2(doc["user_unit"][rapidjson::SizeType(i)]["position_x"].GetDouble(), doc["user_unit"][rapidjson::SizeType(i)]["position_y"].GetDouble()));
+						if (doc["user_unit"][rapidjson::SizeType(i)]["moving"].GetBool())
+						{
+							cha->actionMoveCharacter(doc["user_unit"][rapidjson::SizeType(i)]["direction"].GetInt());
+						}
+						else {
+							cha->stopMoveAction();
+							cha->getPhysicsBody()->setVelocity(Vec2::ZERO);
+						}
+					}
 				}
-				if (strcmp(processUnitData[j].uuid.c_str(), sv_uuid.c_str()) == 0)
-				{
-				Character* cha = (Character*)processUnitSprite[j];
-				cha->setPosition(Vec2(doc["user_unit"][rapidjson::SizeType(i)]["position_x"].GetDouble(), doc["user_unit"][rapidjson::SizeType(i)]["position_y"].GetDouble()));
-				if (doc["user_unit"][rapidjson::SizeType(i)]["moving"].GetBool())
-				{
-				cha->actionMoveCharacter(doc["user_unit"][rapidjson::SizeType(i)]["direction"].GetInt());
-				}
-				else {
-				cha->stopMoveAction();
-				cha->getPhysicsBody()->setVelocity(Vec2::ZERO);
-				}
-				}
-				}*/
 			}
 		}
 		else {
@@ -1249,7 +1272,7 @@ void BattleScene::createNodeSVHandler()
 
 	/*Unit move event public event*/
 
-	sv->on("unit_move", [&](SIOClient* client, const string& data) {
+	/*sv->on("unit_move", [&](SIOClient* client, const string& data) {
 		log("unit move event with data: %s", data.c_str());
 		if (_onDestructCalled) return;
 		Document doc;
@@ -1290,7 +1313,7 @@ void BattleScene::createNodeSVHandler()
 		}
 
 
-	});
+	});*/
 	//not using yet
 	//sv->on("unit_move_end", [&](SIOClient* client, const string& data) {
 		//log("Unit_move_end data: %s", data.c_str());
@@ -1327,10 +1350,40 @@ void BattleScene::createNodeSVHandler()
 
 		}
 	});
+	/**
+	* Handler for unit dead event
+	*/
+	sv->on("unit_dead", [&](SIOClient * client, const string& data) {
+		if (_onDestructCalled) return;
+		Document doc;
+		doc.Parse<0>(data.c_str());
+		if (doc.HasParseError()) 
+		{
+			log("Parse JSOn error");
+			return;
+		}
+		if (doc.IsObject()) 
+		{
+			int teamId = doc["team_id"].GetInt();
+			string uuid = doc["uuid"].GetString();
+
+			if (teamId == _currentPlayerTeamFlg)
+			{
+				unitDieAction(_allAlliedUnitSprite, &_allAlliedUnitData, uuid);
+			}
+			else
+			{
+				unitDieAction(_allEnemyUnitSprite, &_allEnemyUnitData, uuid);
+			}
+		}
+		
+
+	});
+
 	/** Handler for battle public skill event
 	*  To display all skill animation and logic
 	*/
-
+	
 	sv->on("play_skill_end", [&](SIOClient* client, const std::string data) {
 		//log("Skill event callback data: %s", data.c_str());
 		/*check for battle scene destruct called*/
@@ -1445,6 +1498,7 @@ void BattleScene::createNodeSVHandler()
 	});
 
 	sv->on("set_title", [&](SIOClient* client, const string data) {
+		log("set_title");
 		if (_onDestructCalled) return;
 		Document doc;
 		doc.Parse<0>(data.c_str());
@@ -1673,6 +1727,48 @@ void BattleScene::createNodeSVHandler()
 		Cannon* cannon = _cannonList[doc["index"].GetInt()];
 		cannonStatusChange(cannon, doc["team_id"].GetInt());
 	});
+	/*Cannon lunch event handler*/
+	sv->on("cannon_lunch_object", [&](SIOClient *c, const string data) {
+		if (_onDestructCalled) return;
+		Document doc;
+		doc.Parse<0>(data.c_str());
+		if(doc.HasParseError()) {
+			log("cannon_lunch_object parse json error");
+			return;
+		}
+		Vec2 lunchVector = Vec2(doc["vec_x"].GetDouble(), doc["vec_y"].GetDouble());
+		int teamId = doc["team_id"].GetInt();
+		string uuid = doc["uuid"].GetString();
+		int lunchSpeed = 0;
+		Character* object;
+		if (teamId == _currentPlayerTeamFlg)
+		{
+			for (int i = 0; i < _allAlliedUnitData.size() - 1; i++)
+			{
+				if (_allAlliedUnitData[i].uuid == uuid)
+				{
+					lunchSpeed = _allAlliedUnitData[i].move_speed;
+					object = (Character*)_allAlliedUnitSprite[i];
+					break;
+				}
+			}
+		}
+		else
+		{
+			for (int i = 0; i < _allEnemyUnitData.size() - 1; i++)
+			{
+				if (_allEnemyUnitData[i].uuid == uuid)
+				{
+					lunchSpeed = _allEnemyUnitData[i].move_speed;
+					object = (Character*)_allEnemyUnitSprite[i];
+					break;
+				}
+			}
+		}
+
+		lunchObjectAction(object, lunchVector, lunchSpeed);
+
+	});
 
 	/*Handler for cannon on/ off event*/
 	sv->on("cannon_onoff", [&](SIOClient *client, const string data) {
@@ -1785,7 +1881,7 @@ void BattleScene::towerAttackCallback(Ref *p, UserUnitInfo towerData, Sprite* ta
 		}
 	}
 	if (unitDataList->at(targetIndex).hp <= 0) {
-		unitDieAction(target, unitDataList, targetIndex);
+		//unitDieAction(target, unitDataList, targetIndex);
 	}
 	updateSlider();
 }
@@ -1894,8 +1990,10 @@ void BattleScene::update(float delta)
 	_checkTime += delta;
 	//TODO: uncomment to send unit status every 0.07 second - > (100/0.07) update frame per second
 	auto disVtr = testObject->getPosition() - _checkPos;
-	if (_checkTime >= 0.5 && disVtr.length() > 20.0f && _gameMode == MULTI_MODE && _onRespwanFlg == false && _onReconnect == false) {
-		BattleAPI::getInstance()->sendMoveEvent(testObject->getPosition(), testObject->getPhysicsBody()->getVelocity());
+	if (_checkTime >= 0.07 && disVtr.length() > 20.0f && _gameMode == MULTI_MODE && _onRespwanFlg == false && _onReconnect == false) {
+		float angle = _mainCharacterIconInMiniMap->getRotation();
+		int direc = detectDirectionBaseOnTouchAngle(angle);
+		BattleAPI::getInstance()->sendMoveEvent(_allAlliedUnitData[0],testObject->getPosition(), direc, testObject->getOnMovingFlg());
 		_checkPos = testObject->getPosition();
 		_checkTime = 0;
 	}
@@ -2054,6 +2152,7 @@ void BattleScene::testMoveLogic(Sprite* object, int teamFlg)
 					title->setName("sending");
 					if (_onReconnect == false)
 					{
+						log("send");
 						BattleAPI::getInstance()->sendTestMoveLogic(titlePos);
 					}
 					continue;
@@ -2075,6 +2174,7 @@ void BattleScene::testMoveLogic(Sprite* object, int teamFlg)
 					title->setName("sending");
 					//sendingFlg->push_back(true);
 					if (_onReconnect == false) {
+						log("send");
 						BattleAPI::getInstance()->sendTestMoveLogic(titlePos);
 					}
 					continue;
@@ -2382,7 +2482,7 @@ void BattleScene::checkForAutoAttack()
 				if (_onReconnect == false)
 				{
 					BattleAPI::getInstance()->sendCannonAttackEvent(_currentPlayerTeamFlg, i, distan, [&, i, direc, distan](SIOClient *client, const string data) {
-						characterAttackAnimationLogic(distan, direc, CC_CALLBACK_0(BattleScene::characterAttackCannonCallback, this, i));
+						characterAttackAnimationLogic(distan, direc);
 					});
 				}
 			}
@@ -2475,30 +2575,32 @@ void BattleScene::readyForLunch(Cannon * cannon, int cannonIndex) {
 }
 
 void BattleScene::lunchObject(Touch *touch) {
+	Vec2 desPos = _battleBackground->convertToNodeSpace(touch->getLocation());
+	/*calculate distan*/
+	Vec2 distan = desPos - testObject->getPosition();
 	/*send data to server in multi mode*/
 	if (_gameMode == MULTI_MODE)
 	{
 		if (_onReconnect == false)
 		{
-			BattleAPI::getInstance()->sendCannonLunchEvent(_currentPlayerTeamFlg, _onLunchCannonIndex, [&](SIOClient * client, const string data) {
-				log("cannon lunch data");
-			});
+			BattleAPI::getInstance()->sendCannonLunchEvent(_currentPlayerTeamFlg, _onLunchCannonIndex, distan);
 		}
 	}
-	Vec2 desPos = _battleBackground->convertToNodeSpace(touch->getLocation());
-	/*calculate distan*/
-	Vec2 distan = desPos - testObject->getPosition();
-	/*apply velocity*/
-	testObject->getPhysicsBody()->setVelocity(Vec2(cos(distan.getAngle())* _allAlliedUnitData[0].move_speed * 3, sin(distan.getAngle()) * _allAlliedUnitData[0].move_speed * 3));
-	setCannonFlg(false);
-	testObject->runLunchingAction();
-
-	if (_gameMode = SOLO_MODE) {
-		auto cannon = _cannonList[_onLunchCannonIndex];
-		cannon->setRotation(0);
-		cannon->setFlippedX(false);
-		cannon->disableCannon();
+	else {
+		lunchObjectAction(testObject, distan, _allAlliedUnitData[0].move_speed);
 	}
+	auto cannon = _cannonList[_onLunchCannonIndex];
+	cannon->setRotation(0);
+	cannon->setFlippedX(false);
+	cannon->disableCannon();
+}
+void BattleScene::lunchObjectAction(Character* object, Vec2 lunchVector, int objectMoveSpeed)
+{
+
+	/*apply velocity*/
+	object->getPhysicsBody()->setVelocity(Vec2(cos(lunchVector.getAngle())* objectMoveSpeed * 3, sin(lunchVector.getAngle()) * objectMoveSpeed * 3));
+	if(object == testObject) setCannonFlg(false);
+	object->runLunchingAction();
 }
 
 void BattleScene::neutralUnitStatusChange(Character* unit, int team, int index) {
@@ -2604,17 +2706,30 @@ void BattleScene::oneSecondAttackCallback()
 	_onDelayAttackFlg = false;
 }
 
-void BattleScene::unitDieAction(Sprite* unitSprite, vector<UserUnitInfo>* processUnitList, int index)
+void BattleScene::unitDieAction(vector<Sprite*> allunitSprite, vector<UserUnitInfo>* processUnitList, string uuid)
 {
 	//unitSprite->stopAllActions();
+	Sprite* unitSprite;
+	int saveIndex = 0;
+	for (int i = 0; i < processUnitList->size(); i++)
+	{
+		if (processUnitList->at(i).uuid == uuid.c_str())
+		{
+			unitSprite = allunitSprite[i];
+
+			saveIndex = i;
+			break;
+		}
+	}
+
 	while (unitSprite->getChildByTag(BUFF_STATUS_TAG) != nullptr)
 	{
 		unitSprite->removeChildByTag(BUFF_STATUS_TAG);
 	}
-	processUnitList->at(index).isStun = false;
+	processUnitList->at(saveIndex).isStun = false;
 	unitSprite->setVisible(false);
 
-	auto action = Sequence::create(DelayTime::create(5), CallFuncN::create(CC_CALLBACK_1(BattleScene::unitRespwanAction, this, unitSprite, processUnitList, index)), nullptr);
+	auto action = Sequence::create(DelayTime::create(5), CallFuncN::create(CC_CALLBACK_1(BattleScene::unitRespwanAction, this, unitSprite, processUnitList, saveIndex)), nullptr);
 	action->setTag(ENEMY_RESPAW_ACTION_TAG);
 	unitSprite->runAction(action);
 
@@ -2958,7 +3073,6 @@ bool BattleScene::onTouchBegan(Touch *touch, Event *unused_event)
 
 				testObject->setMoveMode(4);
 				testObject->moveActionByVector(touch->getLocation() - _miniCircle->getPosition());
-				if (_gameMode == MULTI_MODE && _onReconnect == false) BattleAPI::getInstance()->sendMoveEvent(testObject->getPosition(), testObject->getPhysicsBody()->getVelocity());
 				_checkOneTapMoveFlg = true;
 				_checkLongTapMoveFlg = true;
 
@@ -3060,7 +3174,6 @@ void BattleScene::onTouchMoved(Touch *touch, Event *unused_event)
 		_checkOneTapMoveFlg = true;
 		testObject->setMoveMode(_moveMode);
 		testObject->moveActionByVector(distanVector);
-		if (_gameMode == MULTI_MODE && _onReconnect == false) BattleAPI::getInstance()->sendMoveEvent(testObject->getPosition(), testObject->getPhysicsBody()->getVelocity());
 		_mainCharacterIconInMiniMap->setRotation(-(distanVector.getAngle() * RAD_DEG) + 90);
 		int direc = detectDirectionBaseOnTouchAngle(_mainCharacterIconInMiniMap->getRotation());
 		if (direc != 0)
@@ -3181,8 +3294,9 @@ void BattleScene::onTouchEnded(Touch *touch, Event *unused_event)
 			auto distanVector = _battleBackground->convertToNodeSpace(touch->getLocation()) - testObject->getPosition();
 			/*test*/
 			//auto vec = AStarPathFindingAlgorithm(testObject->getPosition(), testObject->getPosition() + distanVector);
+
 			testObject->moveActionByVector(distanVector);
-			if(_gameMode == MULTI_MODE && _onReconnect == false) BattleAPI::getInstance()->sendMoveEvent(testObject->getPosition(), testObject->getPhysicsBody()->getVelocity());
+			_mainCharacterIconInMiniMap->setRotation(-(distanVector.getAngle() * RAD_DEG) + 90);
 			return;
 
 		}
@@ -3211,7 +3325,6 @@ void BattleScene::onTouchEnded(Touch *touch, Event *unused_event)
 				_mainCharacterIconInMiniMap->setRotation(-(space.getAngle() * RAD_DEG) + 90);
 
 				testObject->moveActionByVector(space);
-				if (_gameMode == MULTI_MODE && _onReconnect == false) BattleAPI::getInstance()->sendMoveEvent(testObject->getPosition(), testObject->getPhysicsBody()->getVelocity());
 				_miniUnit->moveActionByVector(space);
 
 			}
@@ -3413,7 +3526,6 @@ void BattleScene::contactWithWall()
 		}
 	}*/
 	testObject->moveActionByVector(veloc);
-	if (_gameMode == MULTI_MODE && _onReconnect == false) BattleAPI::getInstance()->sendMoveEvent(testObject->getPosition(), testObject->getPhysicsBody()->getVelocity());
 }
 
 void BattleScene::contactWithTower()
@@ -3526,6 +3638,7 @@ void BattleScene::checkMapTestButtonClick(Ref *pSender, Widget::TouchEventType t
 	case cocos2d::ui::Widget::TouchEventType::ENDED:
 	{
 		//changeAnimationImagePathByUnitId();
+		if (_gameMode != MULTI_MODE) return;
 		if (_isCheckMapCallback) {
 			_isCheckMapCallback = false;
 			BattleAPI::getInstance()->sendCheckMapEvent([&](SIOClient *client, const string data) {
@@ -3839,7 +3952,13 @@ void BattleScene::playSkillLogicAndAnimation(Sprite* playObject, UserSkillInfo s
 	switch (skill.effect_type)
 	{
 	case TYPE_BUFF:
-		skillBuffAction(playObject, skill, team_id, saveIndex);
+		if (team_id == _currentPlayerTeamFlg) {
+			skillBuffAction(playObject, &_allAlliedUnitData[saveIndex], skill, team_id, saveIndex);
+		}
+		else
+		{
+			skillBuffAction(playObject, &_allEnemyUnitData[saveIndex], skill, team_id, saveIndex);
+		}
 		break;
 	case TYPE_RESTORE:
 
@@ -3905,7 +4024,7 @@ void BattleScene::skillRestoreAction(Sprite* object, UserSkillInfo skillInfo, in
 
 }
 
-void BattleScene::skillBuffAction(Sprite* object, UserSkillInfo skillInfo, int teamId, int saveIndex)
+void BattleScene::skillBuffAction(Sprite* object, UserUnitInfo* unit, UserSkillInfo skillInfo, int teamId, int saveIndex)
 {
 	switch (skillInfo.multi_effect)
 	{
@@ -3913,7 +4032,7 @@ void BattleScene::skillBuffAction(Sprite* object, UserSkillInfo skillInfo, int t
 		skillHelpAll(object,skillInfo, teamId);
 		break;
 	case TARGET_ONE:
-		skillHelpOne(object,skillInfo, teamId, saveIndex);
+		skillHelpOne(object, unit, skillInfo, teamId, saveIndex);
 		break;
 	default:
 		break;
@@ -4069,13 +4188,14 @@ void BattleScene::skillHelpAll(Sprite* object, UserSkillInfo skillInfo, int team
 	int value = 0;
 }
 
-void BattleScene::skillHelpOne(Sprite* object, UserSkillInfo skillInfo, int teamId, int saveIndex)
+void BattleScene::skillHelpOne(Sprite* object, UserUnitInfo *unit, UserSkillInfo skillInfo, int teamId, int saveIndex)
 {
 	//TODO
 	float value = 1.0f;
 	int pureValue = 0;
+	auto baseUnitData = UserUnitModel::getInstance()->getUnitInfoById(unit->mst_unit_id);
 	/*Only run logic if object is current player unit*/
-	if (object == testObject) {
+// 	if (object == testObject) {
 		switch (skillInfo.correct_type)
 		{
 		case DAME_TYPE_PERCENT:
@@ -4087,7 +4207,7 @@ void BattleScene::skillHelpOne(Sprite* object, UserSkillInfo skillInfo, int team
 		default:
 			break;
 		}
-	}
+// 	}
 	int saveValue = 0;
 
 	Effect* effect = new Effect();
@@ -4097,14 +4217,14 @@ void BattleScene::skillHelpOne(Sprite* object, UserSkillInfo skillInfo, int team
 	case SKILL_HELP_TYPE::HP:
 	{
 		log("help HP");
-		if (object == testObject) {
-			saveValue = 1.0f*_saveMainStatusData.hp*(value - 1.0f) + pureValue;
-			_allAlliedUnitData[0].hp += saveValue;
+// 		if (object == testObject) {
+			saveValue = 1.0f*baseUnitData.hp*(value - 1.0f) + pureValue;
+			unit->hp += saveValue;
 			//BattleAPI::getInstance()->battleSyncEvent(_allAlliedUnitData[0]);
-			runAction(Sequence::create(DelayTime::create(skillInfo.duration), CallFuncN::create([&, saveValue](Ref *pSEnder){
-				_allAlliedUnitData[0].hp -= saveValue;
+			runAction(Sequence::create(DelayTime::create(skillInfo.duration), CallFuncN::create([&, saveValue, unit](Ref *pSEnder){
+				unit->hp -= saveValue;
 			}), nullptr));
-		}
+		/*}*/
 		/////////////////////////////////////////
 		///////////RUN EFFECT HP RESTORE
 		createSorceryEffect(object, SORCERY_GREEN);
@@ -4123,14 +4243,14 @@ void BattleScene::skillHelpOne(Sprite* object, UserSkillInfo skillInfo, int team
 	}
 	case SKILL_HELP_TYPE::HP_RESTORE:
 	{
-		if (object == testObject) {
-			saveValue = 1.0f*_saveMainStatusData.hp_heal*(value - 1.0f) + pureValue;
-			_allAlliedUnitData[0].hp_heal += saveValue;
+// 		if (object == testObject) {
+			saveValue = 1.0f*baseUnitData.hp_heal*(value - 1.0f) + pureValue;
+			unit->hp_heal += saveValue;
 			//BattleAPI::getInstance()->battleSyncEvent(_allAlliedUnitData[0]);
-			runAction(Sequence::create(DelayTime::create(skillInfo.duration), CallFuncN::create([&, saveValue](Ref *pSEnder){
-				_allAlliedUnitData[0].hp_heal -= saveValue;
+			runAction(Sequence::create(DelayTime::create(skillInfo.duration), CallFuncN::create([&, saveValue, unit](Ref *pSEnder){
+				unit->hp_heal -= saveValue;
 			}), nullptr));
-		}
+// 		}
 		/////////////////////////////////////////
 		///////////RUN EFFECT HP RESTORE
 		createSorceryEffect(object, SORCERY_GREEN);
@@ -4149,39 +4269,39 @@ void BattleScene::skillHelpOne(Sprite* object, UserSkillInfo skillInfo, int team
 		break;
 	}
 	case SKILL_HELP_TYPE::MP:
-		if (object == testObject) {
-			saveValue = 1.0f*_saveMainStatusData.mp*(value - 1.0f) + pureValue;
-			_allAlliedUnitData[0].mp += saveValue;
+// 		if (object == testObject) {
+			saveValue = 1.0f*baseUnitData.mp*(value - 1.0f) + pureValue;
+			unit->mp += saveValue;
 			//BattleAPI::getInstance()->battleSyncEvent(_allAlliedUnitData[0]);
-			runAction(Sequence::create(DelayTime::create(skillInfo.duration), CallFuncN::create([&, saveValue](Ref *pSEnder){
-				_allAlliedUnitData[0].mp -= saveValue;
+			runAction(Sequence::create(DelayTime::create(skillInfo.duration), CallFuncN::create([&, saveValue, unit](Ref *pSEnder){
+				unit->mp -= saveValue;
 			}), nullptr));
-		}
+// 		}
 		break;
 	case SKILL_HELP_TYPE::MP_RESTORE:
-		if (object == testObject)
-		{
-			saveValue = 1.0f*_saveMainStatusData.mp_heal*(value - 1.0f) + pureValue;
-			_allAlliedUnitData[0].mp_heal += saveValue;
+// 		if (object == testObject)
+// 		{
+			saveValue = 1.0f*baseUnitData.mp_heal*(value - 1.0f) + pureValue;
+			unit->mp_heal += saveValue;
 			//BattleAPI::getInstance()->battleSyncEvent(_allAlliedUnitData[0]);
-			runAction(Sequence::create(DelayTime::create(skillInfo.duration), CallFuncN::create([&, saveValue](Ref *pSEnder){
-				_allAlliedUnitData[0].mp_heal -= saveValue;
+			runAction(Sequence::create(DelayTime::create(skillInfo.duration), CallFuncN::create([&, saveValue, unit](Ref *pSEnder){
+				unit->mp_heal -= saveValue;
 			}), nullptr));
-		}
+		/*}*/
 		break;
 	case SKILL_HELP_TYPE::ATTACK_DAME:
 	{
-		if (object == testObject)
+// 		if (object == testObject)
 		{
-			saveValue = 1.0f*_saveMainStatusData.attack*(value - 1.0f) + pureValue;
-			_allAlliedUnitData[0].attack += saveValue;
+			saveValue = 1.0f*baseUnitData.attack*(value - 1.0f) + pureValue;
+			unit->attack += saveValue;
 			//BattleAPI::getInstance()->battleSyncEvent(_allAlliedUnitData[0]);
 			log("increase attack by %d", saveValue);
-			runAction(Sequence::create(DelayTime::create(skillInfo.duration), CallFuncN::create([&, saveValue](Ref *pSEnder){
-				_allAlliedUnitData[0].attack -= saveValue;
+			runAction(Sequence::create(DelayTime::create(skillInfo.duration), CallFuncN::create([&, saveValue, unit](Ref *pSEnder){
+				unit->attack-= saveValue;
 				log("remove attack buff %d", saveValue);
 			}), nullptr));
-		}
+		/*}*/
 		if (teamId == _currentPlayerTeamFlg) {
 			displayUnitStatus(object, BUFF_ATTACK, skillInfo, saveIndex, &_alliedStatusImagePath);
 		}
@@ -4192,20 +4312,20 @@ void BattleScene::skillHelpOne(Sprite* object, UserSkillInfo skillInfo, int team
 	}
 	case SKILL_HELP_TYPE::DEFENCE:
 	{
-		if (object == testObject) {
-			saveValue = 1.0f*_saveMainStatusData.defence*(value - 1.0f) + pureValue;
+// 		if (object == testObject) {
+			saveValue = 1.0f*baseUnitData.defence*(value - 1.0f) + pureValue;
 			log("increase defence by %d", saveValue);
-			_allAlliedUnitData[0].defence += saveValue;
+			unit->defence += saveValue;
 			//BattleAPI::getInstance()->battleSyncEvent(_allAlliedUnitData[0]);
 			
-			runAction(Sequence::create(DelayTime::create(skillInfo.duration), CallFuncN::create([&, saveValue](Ref *pSEnder){
+			runAction(Sequence::create(DelayTime::create(skillInfo.duration), CallFuncN::create([&, saveValue, unit](Ref *pSEnder){
 				if (saveValue > 0) {
-					_allAlliedUnitData[0].defence -= saveValue;
+					unit->defence -= saveValue;
 				}
 
 				log("remove defence buff %d", saveValue);
 			}), nullptr));
-		}
+// 		}
 		//displayUnitStatus(object, BUFF_DEFENCE, skillInfo);
 
 		if (teamId == _currentPlayerTeamFlg) {
@@ -4234,28 +4354,28 @@ void BattleScene::skillHelpOne(Sprite* object, UserSkillInfo skillInfo, int team
 	}
 	case SKILL_HELP_TYPE::ATTACK_RANGE:
 	{
-		if (object = testObject)
-		{
-			saveValue = 1.0f*_saveMainStatusData.attack_range*(value - 1.0f) + pureValue;
-			_allAlliedUnitData[0].attack_range += saveValue;
+// 		if (object == testObject)
+// 		{
+			saveValue = 1.0f*baseUnitData.attack_range*(value - 1.0f) + pureValue;
+			unit->attack_range += saveValue;
 			//BattleAPI::getInstance()->battleSyncEvent(_allAlliedUnitData[0]);
-			runAction(Sequence::create(DelayTime::create(skillInfo.duration), CallFuncN::create([&, saveValue](Ref *pSEnder){
-				_allAlliedUnitData[0].attack_range -= saveValue;
+			runAction(Sequence::create(DelayTime::create(skillInfo.duration), CallFuncN::create([&, saveValue, unit](Ref *pSEnder){
+				unit->attack_range -= saveValue;
 			}), nullptr));
-		}
+		/*}*/
 		break;
 	}
 	case SKILL_HELP_TYPE::MOVESPEED:
-	{
-		if (object = testObject)
-		{
-			saveValue = 1.0f* _saveMainStatusData.move_speed *(value - 1.0f) + pureValue;
-			_allAlliedUnitData[0].move_speed += saveValue;
+// 	{
+// 		if (object == testObject)
+// 		{
+			saveValue = 1.0f* baseUnitData.move_speed *(value - 1.0f) + pureValue;
+			unit->move_speed += saveValue;
 			//BattleAPI::getInstance()->battleSyncEvent(_allAlliedUnitData[0]);
-			runAction(Sequence::create(DelayTime::create(skillInfo.duration), CallFuncN::create([&, saveValue](Ref *pSEnder){
-				_allAlliedUnitData[0].move_speed -= saveValue;
+			runAction(Sequence::create(DelayTime::create(skillInfo.duration), CallFuncN::create([&, saveValue, unit](Ref *pSEnder){
+				unit->move_speed -= saveValue;
 			}), nullptr));
-		}
+		/*}*/
 		/////////////////////////////////////////
 		///////////RUN EFFECT HELP MOVE SPEED
 		createSorceryEffect(object, SORCERY_BLUE);
@@ -5075,7 +5195,7 @@ void BattleScene::poisonEffectAction(Sprite* object, UserSkillInfo skill, vector
 				}
 				else
 				{
-					unitDieAction(targetSprite[index], unitList, index);
+					//unitDieAction(targetSprite[index], unitList, index);
 				}
 				
 			}
