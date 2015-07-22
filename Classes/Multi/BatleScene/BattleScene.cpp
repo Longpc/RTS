@@ -771,10 +771,29 @@ void BattleScene::createContent()
 	birdButton->setPosition(Vec2(130, _topMenuSprite->getContentSize().height - 125));
 
 	*/
+	_blueTeamTitleNumLabel = Label::createWithSystemFont("00", "", 28);
+	_blueTeamTitleNumLabel->setColor(Color3B::BLUE);
+	_blueTeamTitleNumLabel->setAnchorPoint(Vec2::ANCHOR_MIDDLE_RIGHT);
+	_blueTeamTitleNumLabel->setHorizontalAlignment(TextHAlignment::RIGHT);
+	_blueTeamTitleNumLabel->setPosition(Vec2(_topMenuSprite->getContentSize().width * 2 / 5 - 30, _topMenuSprite->getContentSize().height / 2 - 3));
+	_topMenuSprite->addChild(_blueTeamTitleNumLabel);
+
+	auto slashLB = Label::createWithSystemFont("/", "", 30);
+	slashLB->setHorizontalAlignment(TextHAlignment::CENTER);
+	slashLB->setPosition(Vec2(_topMenuSprite->getContentSize().width * 2 / 5 - 12.5, _topMenuSprite->getContentSize().height / 2 - 3));
+	_topMenuSprite->addChild(slashLB);
+
+	_redTeamTitleNumLabel = Label::createWithSystemFont("00", "", 28);
+	_redTeamTitleNumLabel->setColor(Color3B::RED);
+	_redTeamTitleNumLabel->setAnchorPoint(Vec2::ANCHOR_MIDDLE_LEFT);
+	_redTeamTitleNumLabel->setHorizontalAlignment(TextHAlignment::LEFT);
+	_redTeamTitleNumLabel->setPosition(Vec2(_topMenuSprite->getContentSize().width * 2 / 5 + 5, _topMenuSprite->getContentSize().height / 2 - 3));
+	_topMenuSprite->addChild(_redTeamTitleNumLabel);
+
 
 	Sprite *timeViewContainer = Sprite::create("image/screen/battle/time_parts.png");
 	//timeViewContainer->setAnchorPoint(Vec2::ANCHOR_TOP_RIGHT);
-	timeViewContainer->setPosition(Vec2(_topMenuSprite->getContentSize().width*2/5,_topMenuSprite->getContentSize().height/2 - 3));
+	timeViewContainer->setPosition(Vec2(_topMenuSprite->getContentSize().width*2/5 -10,-15));
 	_topMenuSprite->addChild(timeViewContainer);
 
 	string pathFIle2 = FileUtils::getInstance()->fullPathForFilename("map/mini_map_white.tmx");
@@ -1211,6 +1230,14 @@ void BattleScene::createNodeSVHandler()
 			return;
 		}
 		if (doc.IsObject()) {
+			auto blueTitleNum = doc["blue"].GetInt();
+			stringstream blueLb;
+			blueLb << blueTitleNum;
+			_blueTeamTitleNumLabel->setString(blueLb.str().c_str());
+			auto redTitleNum = doc["red"].GetInt();
+			stringstream redLb;
+			redLb << redTitleNum;
+			_redTeamTitleNumLabel->setString(redLb.str().c_str());
 			for (int i = 0; i < doc["user_unit"].Size(); i++) {
 				//log("!EEEE");
 				Room_User_Unit_Model tempUnit;
@@ -1498,7 +1525,7 @@ void BattleScene::createNodeSVHandler()
 	});
 
 	sv->on("set_title", [&](SIOClient* client, const string data) {
-		log("set_title");
+		//log("set_title");
 		if (_onDestructCalled) return;
 		Document doc;
 		doc.Parse<0>(data.c_str());
@@ -1567,7 +1594,7 @@ void BattleScene::createNodeSVHandler()
 	*JSON: uuid, team_id, user_id, direc, index
 	*/
 	sv->on("neutral_tower_attack", [&](SIOClient *client, const string data) {
-		log("neutral attack receive: %s", data.c_str());
+		//log("neutral attack receive: %s", data.c_str());
 		if (_onDestructCalled) return;
 
 		Document doc;
@@ -1993,7 +2020,7 @@ void BattleScene::update(float delta)
 	if (_checkTime >= 0.07 && disVtr.length() > 20.0f && _gameMode == MULTI_MODE && _onRespwanFlg == false && _onReconnect == false) {
 		float angle = _mainCharacterIconInMiniMap->getRotation();
 		int direc = detectDirectionBaseOnTouchAngle(angle);
-		BattleAPI::getInstance()->sendMoveEvent(_allAlliedUnitData[0],testObject->getPosition(), direc, testObject->getOnMovingFlg());
+		BattleAPI::getInstance()->sendMoveEvent(_allAlliedUnitData[0],testObject->getPosition(), direc, testObject->getOnMovingFlg(), testObject->getOnCannonLunchFlg());
 		_checkPos = testObject->getPosition();
 		_checkTime = 0;
 	}
@@ -2076,7 +2103,7 @@ void BattleScene::testMoveLogic(Sprite* object, int teamFlg)
 	vector<Vec2> savePos;
 	auto pos = object->getPosition();
 	//return in wrong position title case
-	if (!_myMap->checkPosInsizeMap(pos)) return;
+	if (!_myMap->checkPosInsideMap(pos)) return;
 	savePos.push_back(pos);
 	savePos.push_back(pos - Vec2(0, _myMap->getTileSize().height));
 	auto cha = (Character*)object;
@@ -2085,7 +2112,7 @@ void BattleScene::testMoveLogic(Sprite* object, int teamFlg)
 		auto birdMode = cha->getBirdModeIndex();
 		if (birdMode <= 6) {
 			auto nearPos = pos - Vec2(0, _myMap->getTileSize().height);
-			if (_myMap->checkPosInsizeMap(nearPos))
+			if (_myMap->checkPosInsideMap(nearPos))
 			{
 				savePos.push_back(nearPos);
 			}
@@ -2102,11 +2129,11 @@ void BattleScene::testMoveLogic(Sprite* object, int teamFlg)
 		while (i <= s)
 		{
 			Vec2 exPos1 = Vec2(first.x, first.y - i*titleSize.height);
-			if (_myMap->checkPosInsizeMap(exPos1)) {
+			if (_myMap->checkPosInsideMap(exPos1)) {
 				savePos.push_back(exPos1);
 			}
 			Vec2 exPos2 = Vec2(last.x, last.y + i* titleSize.height);
-			if (_myMap->checkPosInsizeMap(exPos2))
+			if (_myMap->checkPosInsideMap(exPos2))
 				savePos.push_back(exPos2);
 			i++;
 		}
@@ -2152,17 +2179,17 @@ void BattleScene::testMoveLogic(Sprite* object, int teamFlg)
 					title->setName("sending");
 					if (_onReconnect == false)
 					{
-						log("send");
+						//log("send");
 						BattleAPI::getInstance()->sendTestMoveLogic(titlePos);
 					}
-					continue;
+					//continue;
 				}
-				else {
+				//else {
 					title->setColor(Color3B::GREEN);
 					auto mTittle = _miniLayer->getTileAt(titlePos);
 					mTittle->setColor(Color3B::GREEN);
 					continue;
-				}
+				//}
 			}
 		}
 		else {
@@ -2174,17 +2201,17 @@ void BattleScene::testMoveLogic(Sprite* object, int teamFlg)
 					title->setName("sending");
 					//sendingFlg->push_back(true);
 					if (_onReconnect == false) {
-						log("send");
+						//log("send");
 						BattleAPI::getInstance()->sendTestMoveLogic(titlePos);
 					}
-					continue;
+					//continue;
 				}
-				else {
+				//else {
 					title->setColor(Color3B::ORANGE);
 					auto mTittle = _miniLayer->getTileAt(titlePos);
 					mTittle->setColor(Color3B::ORANGE);
 					continue;
-				}
+				//}
 			}
 		}
 	}

@@ -156,7 +156,8 @@ private:
 
 	Sprite *_topMenuSprite;
 	Node *_skillButtonParentnode;
-
+	Label *_blueTeamTitleNumLabel;
+	Label *_redTeamTitleNumLabel;
 
 	///ATTACK LOGIC///
 	//Sprite *_autoAttackArea;

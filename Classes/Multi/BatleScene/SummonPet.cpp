@@ -62,7 +62,7 @@ void SummonPet::update(float dt)
 
 	if (getTeamFlag() < 1 || getTeamFlag() > 2) return;
 	auto pos = this->getPosition();
-	if (getBattleMap()->checkPosInsizeMap(pos) == false) return;
+	if (getBattleMap()->checkPosInsideMap(pos) == false) return;
 	
 	auto titleC = getBattleMap()->getTitleCoorForPosition(pos);
 	//need check nearly object title
@@ -84,14 +84,14 @@ void SummonPet::update(float dt)
 				//sendingFlg->push_back(true);
 				title->setName("sending");
 				BattleAPI::getInstance()->sendTestMoveLogic(titleC);
-				return;
+				//return;
 			}
-			else {
+			//else {
 				title->setColor(Color3B::GREEN);
 				auto mTittle = getBattleMiniMap()->getTitleAt(titleC);
 				mTittle->setColor(Color3B::GREEN);
 				return;
-			}
+			//}
 		}
 	}
 	else {
@@ -103,14 +103,14 @@ void SummonPet::update(float dt)
 				title->setName("sending");
 				//sendingFlg->push_back(true);
 				BattleAPI::getInstance()->sendTestMoveLogic(titleC);
-				return;
+				//return;
 			}
-			else {
+			//else {
 				title->setColor(Color3B::ORANGE);
 				auto mTittle = getBattleMiniMap()->getTitleAt(titleC);
 				mTittle->setColor(Color3B::ORANGE);
 				return;
-			}
+			//}
 		}
 	}
 }

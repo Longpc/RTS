@@ -29,7 +29,7 @@ bool BattleAPI::init()
 
 */
 /************************************************************************/
-void BattleAPI::sendMoveEvent(UserUnitInfo unitdata, Vec2 position, int direction, bool movingFlg)
+void BattleAPI::sendMoveEvent(UserUnitInfo unitdata, Vec2 position, int direction, bool movingFlg, bool cannonFlg)
 {
 	
 	auto a = NodeServer::getInstance()->getClient();
@@ -47,6 +47,8 @@ void BattleAPI::sendMoveEvent(UserUnitInfo unitdata, Vec2 position, int directio
 	doc.AddMember("uuid", uu.c_str(), allo);
 	doc.AddMember("direction", direction, allo);
 	doc.AddMember("moving", movingFlg, allo);
+	doc.AddMember("cannon", cannonFlg, allo);
+	doc.AddMember("team_id", userData.team_id, allo);
 
 	StringBuffer  buffer;
 	Writer<StringBuffer> writer(buffer);
@@ -346,7 +348,6 @@ void BattleAPI::sendTestMoveLogic(Vec2 titleCordPost)
 	doc.AddMember("pos_x", titleCordPost.x, allo);
 	doc.AddMember("pos_y", titleCordPost.y, allo);
 	doc.AddMember("team_id", userData.team_id, allo);
-	doc.AddMember("user_id", userData.user_id, allo);
 
 	StringBuffer  buffer;
 	Writer<StringBuffer> writer(buffer);

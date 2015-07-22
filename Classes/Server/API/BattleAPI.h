@@ -27,7 +27,7 @@ public:
 
 	static void destroyInstance();
 
-	void sendMoveEvent(UserUnitInfo unitData, Vec2 position, int direction, bool movingFlg);
+	void sendMoveEvent(UserUnitInfo unitData, Vec2 position, int direction, bool movingFlg, bool cannonFlg);
 	
 	void sendMoveEndEvent(UserUnitInfo unitdata);
 	
