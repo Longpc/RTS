@@ -35,7 +35,7 @@ public:
 	
 	void sendSkillEvent(UserSkillInfo skillData, UserUnitInfo attacker, float angle/*, SocketIOCallback callback*/);
 		
-	void sendDeadEvent(UserUnitInfo unitData, Vec2 deadTitleCoor, SocketIOCallback callback);
+	void sendDeadEvent(UserUnitInfo unitData, string killerUuid, Vec2 deadTitleCoor, SocketIOCallback callback);
 
 	void sendDameDealEvent(int dame, string targetUuid, SocketIOCallback callback);
 

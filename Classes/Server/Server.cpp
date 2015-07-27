@@ -52,10 +52,6 @@ bool NodeServer::init(SocketIOCallback cb)
 	CCASSERT(_valueDict, "Error cannot create Socket IO");
 	log("Connect to NodeJs server: %s", Configuration::getInstance()->getValue("NodeJSServer").asString().c_str());
 	_valueDict->on("connect", cb);
-	_valueDict->on("error", [&](SIOClient* c, const string& data) {
-		log("In error event : %s", data.c_str());
-	});
-	
 	return true;
 }
 
@@ -64,12 +60,13 @@ bool NodeServer::init(SocketIOCallback cb)
 //
 SIOClient* NodeServer::getClient()
 {
-	if (_valueDict)
+	/*if (_valueDict)
 	{
 		return _valueDict;
 	}
 	log("Return null in getClient");
-	return nullptr;
+	return nullptr;*/
+	return _valueDict;
 }
 
 //

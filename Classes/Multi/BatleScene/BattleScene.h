@@ -3,6 +3,7 @@
 #include "base/LayerBase.h"
 #include "base/Define.h"
 #include "base/MyBodyParser.h"
+#include "ModeSelectScene/ModeSelectScene.h"
 #include "Multi/BatleResultScene/BatleResultScene.h"
 #include "base/font/LabelShow.h"
 #include "OptionDialog.h"
@@ -47,6 +48,7 @@
 
 #define ENEMY_FLAG 1
 #define ALLIED_FLAG 2
+
 
 #define TAG_MP_LABEL 1
 #define TAG_SKILL_AOE 111
@@ -114,7 +116,12 @@ private:
 	/* VARIABLES                                                            */
 	/************************************************************************/
 	bool _onDestructCalled = false;
+	bool _stopVelocFlg = false;
 	Size _fakeVisibleSize;
+
+	string _enemyTeamHpBarImg = "image/screen/battle/red_mini_hp_gauge.png";
+	string _curentTeamHpBarImg = "image/screen/battle/mini_hp_gauge.png";
+
 
 	struct tm day;
 	time_t timer;

@@ -134,7 +134,7 @@ struct UserBattleInfo
 //////////////////////////////////////////////////////////////////////////
 // VALUE
 //////////////////////////////////////////////////////////////////////////
-#define ATTACK_AOE 100.0f
+#define ATTACK_AOE 110.0f
 
 //skill.effect_type values range. 
 #define TYPE_BUFF 1
@@ -226,7 +226,7 @@ enum SKILL_RANGE_TYPE
 
 
 #define MOVE_SPEED 250
-#define IMAGE_SCALE 4.0f
+#define IMAGE_SCALE 5.325f
 #define ANIMETE_DELAY 0.15f
 #define ATTACK_ANIMATION_DELAY 1
 

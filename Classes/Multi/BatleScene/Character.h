@@ -43,7 +43,7 @@ public :
 	CC_SYNTHESIZE(int, _minionTotalHp, MinionTotalHp);
 
 	void moveActionByVector(Vec2 destination);
-	void attackActionByTargetPosition(Vec2 direcVector, int attackTime, AttackCallback oneSecondCallback = nullptr,  AttackCallback attackCallback = nullptr);
+	void attackActionByTargetPosition(Vec2 direcVector, int attackTime, AttackCallback oneSecondCallback = nullptr,  AttackCallback attackCallback = nullptr, bool removeFollowActionFlg = false);
 	void respawAction();
 	void stopMoveAction();
 	void stopAttackAction();

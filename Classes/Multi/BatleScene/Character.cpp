@@ -144,40 +144,57 @@ void Character::moveActionByVector(Vec2 destination)
 
 }
 
-void Character::attackActionByTargetPosition(Vec2 direcVector , int attackTime, AttackCallback oneSecondCb, AttackCallback attackCallback)
+void Character::attackActionByTargetPosition(Vec2 direcVector , int attackTime, AttackCallback attackDelayCallback, AttackCallback attackCallback, bool removeActionFlg)
 {
+
+	auto vec = direcVector * 40 / direcVector.getLength();
 	if (getAttackDelayFlag() == false) {
+		auto savePos = this->getPosition();
 		setAttackDelayFlag(true);		
-		auto call1 = CallFuncN::create([& , oneSecondCb](Ref* pSender){
+		auto call1 = CallFuncN::create([& , attackDelayCallback](Ref* pSender){
 			setAttackDelayFlag(false);
-			if (oneSecondCb != nullptr)
+			if (attackDelayCallback != nullptr)
 			{
-				oneSecondCb();
+				attackDelayCallback();
 			}
 			
 		});
 
-		auto call2 = CallFuncN::create([&, attackCallback](Ref* pSender){
+		auto call2 = CallFuncN::create([&, attackCallback, removeActionFlg, savePos](Ref* pSender){
+			if (removeActionFlg)
+			{
+				this->setPosition(savePos);
+				auto folow = Follow::create(this, Rect(150, 0, 4050, 2000));
+				folow->setTag(121);
+				this->getParent()->runAction(folow);
+			}
 			if (attackCallback != nullptr)
 			{
 				attackCallback();
 			}
-
 		});
 
 		Sequence *cb2Sequence;
+		CallFuncN *removeFollow = nullptr;
+		if (removeActionFlg) {
+			removeFollow = CallFuncN::create([&](Ref *p){
+				this->getParent()->stopActionByTag(121);
+			});
+		}
 		if (getBirdMode()) {
 			cb2Sequence = Sequence::create(Blink::create(0.5f, 4), call2, nullptr);
 		}
 		else {
 			/*auto ani = Animate::create(createAttackAnimationWithDefine(direction));
 			cb2Sequence = Sequence::create(ani, call2, nullptr);*/
-			cb2Sequence = Sequence::create(Blink::create(0.5f, 4), call2, nullptr);
+			auto sCl = getScale();
+			auto move =  MoveBy::create(0.1f, vec);
+			cb2Sequence = Sequence::create(Spawn::create(move, ScaleTo::create(0.1f, sCl * 1.25f),removeFollow, nullptr), Spawn::create(move->reverse(), ScaleTo::create(0.1f, sCl), nullptr), call2, nullptr);
 			/*auto move = MoveBy::create(0.15f, Vec2(direcVector * 100 / direcVector.length()));
 			auto rvMove = move->reverse();
 			cb2Sequence = Sequence::create(move, rvMove,call2, nullptr);*/
 		}
-
+		cb2Sequence->setTag(34543);
 		this->runAction(Spawn::create(Sequence::create(DelayTime::create(attackTime), call1, nullptr), cb2Sequence, nullptr));
 	}
 	else {

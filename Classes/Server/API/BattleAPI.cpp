@@ -206,7 +206,7 @@ void BattleAPI::sendKillEvent(string killerUuid, string targetUnit,Vec2 deadPos,
 }
 
 
-void BattleAPI::sendDeadEvent(UserUnitInfo unitData, Vec2 deadTitleCoor, SocketIOCallback callBack)
+void BattleAPI::sendDeadEvent(UserUnitInfo unitData,string killerUuid, Vec2 deadTitleCoor, SocketIOCallback callBack)
 {
 	auto sv = NodeServer::getInstance()->getClient();
 	if (sv == nullptr) return;
@@ -225,6 +225,7 @@ void BattleAPI::sendDeadEvent(UserUnitInfo unitData, Vec2 deadTitleCoor, SocketI
 	doc.AddMember("dead_time", 5, allo);
 	doc.AddMember("dead_x", deadTitleCoor.x, allo);
 	doc.AddMember("dead_y", deadTitleCoor.y, allo);
+	doc.AddMember("killer", killerUuid.c_str(), allo);
 	string uu = UserModel::getInstance()->getUuId().c_str();
 	doc.AddMember("uuid", uu.c_str(), allo);
 
@@ -419,6 +420,7 @@ void BattleAPI::sendWarpEvent(int wormIndex, int outGateIndex, SocketIOCallback 
 	if (sv == nullptr) {
 		return;
 	}
+	log("send warp event: %s", buffer.GetString());
 	sv->emit("warp_begin", buffer.GetString());
 	sv->on("warp_begin_end", callback);
 
