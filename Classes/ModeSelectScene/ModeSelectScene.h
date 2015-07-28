@@ -27,7 +27,6 @@ public:
 	UI_SCENE_CREATE_FUNC(ModeSelectScene);
 	CREATE_FUNC(ModeSelectScene);
 	bool init();
-	virtual void testDisConnect(Button* bt);
 protected:
 
 private:

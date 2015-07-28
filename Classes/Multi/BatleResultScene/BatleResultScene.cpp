@@ -28,6 +28,8 @@ bool BatleResultScene::init(int winTeam)
 	}
 	_gameMode = UserDefault::getInstance()->getIntegerForKey("MODE");
 	_menu->setVisible(false);
+	auto a = UserModel::getInstance()->getUserInfo();
+	_userNameLabel->setString(a.name.c_str());
 	_currentTeam = UserModel::getInstance()->getUserInfo().team_id;
 	if (winTeam == TEAM_FLG_BLUE)
 	{

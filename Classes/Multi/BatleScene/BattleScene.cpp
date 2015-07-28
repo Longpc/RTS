@@ -30,6 +30,7 @@ bool BattleScene::init()
 		return false;
 	}
 	NotificationCenter::getInstance()->addObserver(this, CC_CALLFUNCO_SELECTOR(BattleScene::reconnectToNodeServer), DISCONNECT_MSG, nullptr);
+	NotificationCenter::getInstance()->addObserver(this, CC_CALLFUNCO_SELECTOR(BattleScene::serverConnectedNoti), CONNECTED_MSG, nullptr);
 	_gameMode = UserDefault::getInstance()->getIntegerForKey("MODE");
 	BattleModel::getInstance()->setGameMode(_gameMode);
 	_menu->setVisible(false);
@@ -1222,6 +1223,38 @@ void BattleScene::changeScreenOrient()
 	}
 }
 
+void BattleScene::serverConnectedNoti(Ref *p)
+{
+	log("Battle scene: Server connected notification received");
+	_onReconnect = false;
+	createNodeSVHandler();
+	//do something like
+	if (_reconnectButton != nullptr) {
+		_reconnectButton->removeFromParentAndCleanup(true);
+	}
+	_eventDispatcher->resumeEventListenersForTarget(this);
+	Document doc;
+	doc.SetObject();
+	Document::AllocatorType& allo = doc.GetAllocator();
+	auto uif = UserModel::getInstance()->getUserInfo();
+	doc.AddMember("user_id", uif.user_id, allo);
+	doc.AddMember("room_id", uif.room_id, allo);
+	string uu = UserModel::getInstance()->getUuId().c_str();
+	doc.AddMember("uuid", uu.c_str(), allo);
+	doc.AddMember("reconnect", _onDestructCalled, allo);
+	StringBuffer buff;
+	Writer<StringBuffer> wt(buff);
+	doc.Accept(wt);
+
+	//log("emit data: %s", buff.GetString());
+	auto client = NodeServer::getInstance()->getClient();
+	client->emit("connect_begin", buff.GetString());
+	client->on("connect_begin_end", [&](SIOClient* client, const std::string& data) {
+		
+		log("connect begin end data: %s", data.c_str());
+		//NodeServer::getInstance()->setDisconnectCallback(CC_CALLBACK_0(BattleScene::reconnectToNodeServer, this));
+	});
+}
 void BattleScene::reconnectToNodeServer(Ref *p)
 {
 	log("call reconnect");
@@ -1231,11 +1264,11 @@ void BattleScene::reconnectToNodeServer(Ref *p)
 	_eventDispatcher->pauseEventListenersForTarget(this);
 	//NodeServer::getInstance()->getClient()->disconnect();
 	//NodeServer::destroyInstance();
-	auto button = Button::create();
-	button->loadTextureNormal("reload.png");
-	button->setPosition(_visibleSize / 2);
-	addChild(button, 1000);
-	button->addTouchEventListener([&](Ref *p, Widget::TouchEventType type) {
+	_reconnectButton = Button::create();
+	_reconnectButton->loadTextureNormal("reload.png");
+	_reconnectButton->setPosition(_visibleSize / 2);
+	addChild(_reconnectButton, 1000);
+	_reconnectButton->addTouchEventListener([&](Ref *p, Widget::TouchEventType type) {
 		auto bt = (Button*)p;
 		switch (type)
 		{
@@ -1249,7 +1282,7 @@ void BattleScene::reconnectToNodeServer(Ref *p)
 			bt->setTouchEnabled(false);
 			NodeServer::destroyInstance();
 			log("after destroy instance");
-			NodeServer::createInstance([&, bt](SIOClient *c, const string data){
+			NodeServer::createInstance(/*[&, bt](SIOClient *c, const string data){
 				_eventDispatcher->resumeEventListenersForTarget(this);
 				bt->removeFromParentAndCleanup(true);
 				Document doc;
@@ -1275,7 +1308,7 @@ void BattleScene::reconnectToNodeServer(Ref *p)
 					createNodeSVHandler();
 				});
 				
-			});
+			}*/);
 			log("after create new");
 			
 			break;
@@ -1307,6 +1340,33 @@ void BattleScene::createNodeSVHandler()
 	/* HANDLERS FOR BATTLE BROADCAST EVENTS                                                                     */
 	/************************************************************************/
 	/*Battle update event*/
+	sv->on("update_score", [&](SIOClient *client, const string& data) {
+		if (_onDestructCalled) return;
+
+		Document doc;
+		doc.Parse<0>(data.c_str());
+		if (doc.HasParseError())
+		{
+			log("update score parser JSON error");
+			return;
+		}
+		if (doc.IsObject())
+		{
+			auto blueTitleNum = doc["blue"].GetInt();
+			stringstream blueLb;
+			blueLb << blueTitleNum;
+			_blueTeamTitleNumLabel->setString(blueLb.str().c_str());
+			auto redTitleNum = doc["red"].GetInt();
+			stringstream redLb;
+			redLb << redTitleNum;
+			_redTeamTitleNumLabel->setString(redLb.str().c_str());
+			return;
+		}
+		else
+		{
+			log("score update error in doc type");
+		}
+	});
 	sv->on("battle_update", [&](SIOClient* client, const std::string data){
 		//log("BATTLE UPDATE data: %s", data.c_str());
 		//same data with battle sync but change for detect unit by uuid
@@ -1322,14 +1382,6 @@ void BattleScene::createNodeSVHandler()
 			return;
 		}
 		if (doc.IsObject()) {
-			auto blueTitleNum = doc["blue"].GetInt();
-			stringstream blueLb;
-			blueLb << blueTitleNum;
-			_blueTeamTitleNumLabel->setString(blueLb.str().c_str());
-			auto redTitleNum = doc["red"].GetInt();
-			stringstream redLb;
-			redLb << redTitleNum;
-			_redTeamTitleNumLabel->setString(redLb.str().c_str());
 			for (int i = 0; i < doc["user_unit"].Size(); i++) {
 				string sv_uuid = doc["user_unit"][rapidjson::SizeType(i)]["uuid"].GetString();
 				//log("!EEEE");
@@ -5165,6 +5217,7 @@ BattleScene::~BattleScene()
 {
 	Director::getInstance()->getScheduler()->unschedule(schedule_selector(BattleScene::update), this);
 	NotificationCenter::getInstance()->removeObserver(this, DISCONNECT_MSG);
+	NotificationCenter::getInstance()->removeObserver(this, CONNECTED_MSG);
 	_allAlliedUnitData = {};
 	_allAlliedUnitSprite = {};
 	_allAlliedUnitHpBar = {};
@@ -5334,7 +5387,7 @@ void BattleScene::poisonEffectAction(Sprite* object, UserSkillInfo skill, vector
 			unitList->at(index).hp -= dame;
 			updateSlider();
 			if (unitList->at(index).hp <= 0) {
-				auto unit = BattleModel::getInstance()->getUnitInforByUuid(casterUuid);
+				//auto unit = BattleModel::getInstance()->getUnitInforByUuid(casterUuid);
 				if (targetSprite[index] == testObject) {
 					runRespawnAction(casterUuid.c_str());
 				}

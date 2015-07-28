@@ -36,9 +36,9 @@ public:
 	/** purge the shared instance of TestServer */
 	static void destroyInstance();
 
-	void setDisconnectCallback(const SVCallback& callback);
+	/*void setDisconnectCallback(const SVCallback& callback);
 
-	void setConnectCallback(const SVCallback& callback);
+	void setConnectCallback(const SVCallback& callback);*/
 
 public:
 	NodeServer();

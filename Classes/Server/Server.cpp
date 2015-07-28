@@ -101,10 +101,11 @@ void NodeServer::sendMessageWithName(string name, string message)
 void NodeServer::onConnect(SIOClient* client)
 {
 	log("Node Server-->onConnect");
-	if (_onConnectCallback)
+	/*if (_onConnectCallback)
 	{
 		_onConnectCallback();
-	}
+	}*/
+	NotificationCenter::getInstance()->postNotification(CONNECTED_MSG, (Ref*)(intptr_t)1);
 }
 
 void NodeServer::onMessage(SIOClient* client, const std::string& data)
@@ -121,9 +122,9 @@ void NodeServer::onClose(SIOClient* client)
 	}*/
 	setConnectedFlg(false);
 	log("Node Server: ----->onClose. We need disconnect callback here for reconnect in battle scene");
-	if (_disConnectCallback) {
+	/*if (_disConnectCallback) {
 		_disConnectCallback();
-	}
+	}*/
 	NotificationCenter::getInstance()->postNotification(DISCONNECT_MSG, (Ref*)(intptr_t)1);
 	//this->release();
 }
@@ -142,7 +143,7 @@ std::string NodeServer::getString()
 	return _name;
 }
 
-void NodeServer::setDisconnectCallback(const SVCallback& callback)
+/*void NodeServer::setDisconnectCallback(const SVCallback& callback)
 {
 	this->_disConnectCallback = callback;
 }
@@ -151,5 +152,5 @@ void NodeServer::setConnectCallback(const SVCallback& callback)
 {
 	this->_onConnectCallback = callback;
 }
-
+*/
 

@@ -295,7 +295,9 @@ private:
 	virtual void createNodeSVHandler();
 
 	bool _onReconnect = false;
+	Button * _reconnectButton;
 	virtual void reconnectToNodeServer(Ref *p);
+	virtual void serverConnectedNoti(Ref *p);
 
 	/*create wormhole UI*/
 	virtual void createWormHole();

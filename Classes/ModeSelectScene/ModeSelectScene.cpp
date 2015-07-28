@@ -92,7 +92,7 @@ bool ModeSelectScene::init()
 	soloButton->setPosition(Vec2(_visibleSize.width * 3 / 4, _visibleSize.height *1/ 3));
 	addChild(soloButton);
 
-	auto nextButton = Button::create();
+	/*auto nextButton = Button::create();
 	nextButton->loadTextureNormal("CloseNormal.png");
 	nextButton->setPosition(Vec2(_visibleSize.width - 50, 70));
 	nextButton->setTouchEnabled(true);
@@ -112,7 +112,6 @@ bool ModeSelectScene::init()
 				
 			}), DelayTime::create(0.01), nullptr)));
 
-			NodeServer::getInstance()->setDisconnectCallback(CC_CALLBACK_0(ModeSelectScene::testDisConnect, this, bt));
 			break;
 		}
 		case cocos2d::ui::Widget::TouchEventType::CANCELED:
@@ -121,7 +120,7 @@ bool ModeSelectScene::init()
 			break;
 		}
 	});
-	addChild(nextButton, 10);
+	addChild(nextButton, 10);*/
 
 
 
@@ -235,10 +234,3 @@ bool ModeSelectScene::checkRoomMember()
 	}
 }*/
 
-void ModeSelectScene::testDisConnect(Button* bt)
-{
-	bt->stopAllActions();
-	NodeServer::destroyInstance();
-	NodeServer::getInstance();
-	NodeServer::getInstance()->getClient()->emit("test", "this is reconnect data");
-}

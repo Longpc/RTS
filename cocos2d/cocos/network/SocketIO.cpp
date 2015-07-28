@@ -1026,6 +1026,7 @@ namespace network {
 	void SIOClient::onConnect()
 	{
 		_connected = true;
+		_delegate->onConnect(this);
 	}
 
 	void SIOClient::send(std::string s)
