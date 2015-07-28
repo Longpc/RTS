@@ -29,6 +29,7 @@ bool BattleScene::init()
 	if (!LayerBase::init()) {
 		return false;
 	}
+	NotificationCenter::getInstance()->addObserver(this, CC_CALLFUNCO_SELECTOR(BattleScene::reconnectToNodeServer), DISCONNECT_MSG, nullptr);
 	_gameMode = UserDefault::getInstance()->getIntegerForKey("MODE");
 	BattleModel::getInstance()->setGameMode(_gameMode);
 	_menu->setVisible(false);
@@ -1179,7 +1180,7 @@ void BattleScene::createContent()
 	//TODO HERE IS THE CODE TO TEST BATTLE MOVE SYNC FUNCTION
 	if (_gameMode == MULTI_MODE)
 	{
-		NodeServer::getInstance()->setDisconnectCallback(CC_CALLBACK_0(BattleScene::reconnectToNodeServer, this));
+		//NodeServer::getInstance()->setDisconnectCallback(CC_CALLBACK_0(BattleScene::reconnectToNodeServer, this));
 		createNodeSVHandler();
 	}
 	else
@@ -1221,7 +1222,7 @@ void BattleScene::changeScreenOrient()
 	}
 }
 
-void BattleScene::reconnectToNodeServer()
+void BattleScene::reconnectToNodeServer(Ref *p)
 {
 	log("call reconnect");
 	_onReconnect = true;
@@ -1270,7 +1271,7 @@ void BattleScene::reconnectToNodeServer()
 				client->on("connect_begin_end", [&](SIOClient* client, const std::string& data) {
 					_onReconnect = false;
 					log("connect begin end data: %s", data.c_str());
-					NodeServer::getInstance()->setDisconnectCallback(CC_CALLBACK_0(BattleScene::reconnectToNodeServer, this));
+					//NodeServer::getInstance()->setDisconnectCallback(CC_CALLBACK_0(BattleScene::reconnectToNodeServer, this));
 					createNodeSVHandler();
 				});
 				
@@ -5163,6 +5164,7 @@ BattleScene::BattleScene() :
 BattleScene::~BattleScene()
 {
 	Director::getInstance()->getScheduler()->unschedule(schedule_selector(BattleScene::update), this);
+	NotificationCenter::getInstance()->removeObserver(this, DISCONNECT_MSG);
 	_allAlliedUnitData = {};
 	_allAlliedUnitSprite = {};
 	_allAlliedUnitHpBar = {};

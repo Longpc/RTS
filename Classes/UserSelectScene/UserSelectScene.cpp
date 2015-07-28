@@ -77,8 +77,15 @@ void UserSelect::createContent()
 // 		nameLabel->setPosition(backGround->getPosition());
 // 		addChild(nameLabel);
 	}
+
+	NotificationCenter::getInstance()->addObserver(this, CC_CALLFUNCO_SELECTOR(UserSelect::switchButton), "switchUserButton", nullptr);
 }
 
+void UserSelect::switchButton(Ref *p) 
+{
+
+	log("Notify cation event received: %d");
+}
 void UserSelect::userSelectCallback(Ref *pSender, Widget::TouchEventType type)
 {
 	switch (type)
@@ -126,4 +133,9 @@ void UserSelect::userSelectCallback(Ref *pSender, Widget::TouchEventType type)
 	default:
 		break;
 	}
+}
+
+UserSelect::~UserSelect()
+{
+	NotificationCenter::getInstance()->removeObserver(this, "switchUserButton");
 }

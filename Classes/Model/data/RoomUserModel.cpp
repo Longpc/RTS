@@ -45,12 +45,11 @@ bool RoomUserModel::init()
 
 			setTeamForUserByUserId(room_id, user_id, team_id);
 			log("data updated");
+			NotificationCenter::getInstance()->postNotification("update_team", (Ref*)(intptr_t)user_id);
 		}
 		else {
 			log("something wrong: %d", doc.GetType());
 		}
-
-
 	});
 
 	//handler for another player selected unit event
@@ -115,21 +114,22 @@ void RoomUserModel::initDataWhenJoinRoom(string jsonData)
 		log("error parser Json");
 		return;
 	}
-	if (doc.IsArray()) {
+	if (doc.IsObject()) {
 		vector<RoomUser> tempList = {};
-		log("Data size: %d", doc.Size());
-		for (int i = 0; i < doc.Size(); i++)
+		log("Data size: %d", doc["data"].Size());
+		for (int i = 0; i < doc["data"].Size(); i++)
 		{
 			RoomUser temp; 
-			temp.room_id = doc[i]["room_id"].GetInt();
-			temp.state = doc[i]["state"].GetInt();
-			temp.team_id = doc[i]["team_id"].GetInt();
-			temp.user_id = doc[i]["user_id"].GetInt();
-			temp._uuid = doc[i]["room_user_id"].GetString();
+			temp.room_id = doc["data"][i]["room_id"].GetInt();
+			temp.state = doc["data"][i]["state"].GetInt();
+			temp.team_id = doc["data"][i]["team_id"].GetInt();
+			temp.user_id = doc["data"][i]["user_id"].GetInt();
+			temp._uuid = doc["data"][i]["room_user_id"].GetString();
 			tempList.push_back(temp);
 		}
 		setRoomUserList(tempList);
 		log("init data when connected completed");
+		NotificationCenter::getInstance()->postNotification("switchUserButton", (Ref*)(intptr_t)doc["selectedId"].GetInt());
 	}
 	else {
 		log("Data type: %d", doc.GetType());

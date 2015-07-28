@@ -82,7 +82,8 @@ bool MultiTeamSelectScene::init()
 
 
 
-	scheduleUpdate();
+	//scheduleUpdate();
+	NotificationCenter::getInstance()->addObserver(this, CC_CALLFUNCO_SELECTOR(MultiTeamSelectScene::updateView), "update_team", nullptr);
 	return true;
 }
 
@@ -374,18 +375,16 @@ Label* MultiTeamSelectScene::createLabelWithStringandPosition(string text, Vec2 
 	return lb;
 }
 
-void MultiTeamSelectScene::update(float delta)
+void MultiTeamSelectScene::updateView(Ref *p)
 {
-	//update team user list
-	_tempCount += delta;
-	//log("Delta Time: %f", _tempCount);
-	if (_tempCount > 1)
-	{
 		getRoomInfo(_curRoomId);
 		getAndShowTeamInfo(TEAM_FLG_BLUE, _blueTeamBg);
 		getAndShowTeamInfo(TEAM_FLG_RED, _redTeamBg);
-		_tempCount = 0;
-	}
+}
+
+MultiTeamSelectScene::~MultiTeamSelectScene()
+{
+	NotificationCenter::getInstance()->removeObserver(this, "update_team");
 }
 
 

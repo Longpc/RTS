@@ -2,10 +2,10 @@
 #define __CCTestServer_H__
 
 #include <string>
-
 #include "cocos2d.h"
 #include "network/SocketIO.h"
 
+#include "base/Define.h"
 USING_NS_CC;
 using namespace cocos2d::network;
 using namespace std;

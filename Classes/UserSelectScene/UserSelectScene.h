@@ -23,6 +23,7 @@ public:
 	//static Scene *createScene();
 	UI_SCENE_CREATE_FUNC(UserSelect);
 	CREATE_FUNC(UserSelect);
+	~UserSelect();
 	//static UserSelect* create();
 	bool init();
 private:
@@ -31,6 +32,7 @@ private:
 	virtual void onBackButtonClick(Ref *pSender);
 	virtual void createContent();
 	virtual void userSelectCallback(Ref *pSender, Widget::TouchEventType type);
+	virtual void switchButton(Ref *p);
 };
 
 

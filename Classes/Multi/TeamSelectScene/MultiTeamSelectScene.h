@@ -24,6 +24,7 @@ class MultiTeamSelectScene :public LayerBase
 public:
 	static Scene *createScene(int userId);
 	CREATE_FUNC(MultiTeamSelectScene);
+	~MultiTeamSelectScene();
 	bool init();
 protected:
 private:
@@ -48,7 +49,7 @@ private:
 	float _tempCount = 0;
 
 	///FUNCTIONS///////////////////////////////////////////////////////////////////////
-	void update(float delta);
+	void updateView(Ref *p);
 	
 	virtual void onBackButtonClick(Ref *pSender);
 

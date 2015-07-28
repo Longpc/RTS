@@ -100,7 +100,7 @@ void NodeServer::sendMessageWithName(string name, string message)
 
 void NodeServer::onConnect(SIOClient* client)
 {
-	log("----->onConnect");
+	log("Node Server-->onConnect");
 	if (_onConnectCallback)
 	{
 		_onConnectCallback();
@@ -124,6 +124,7 @@ void NodeServer::onClose(SIOClient* client)
 	if (_disConnectCallback) {
 		_disConnectCallback();
 	}
+	NotificationCenter::getInstance()->postNotification(DISCONNECT_MSG, (Ref*)(intptr_t)1);
 	//this->release();
 }
 
