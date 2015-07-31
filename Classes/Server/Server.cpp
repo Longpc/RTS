@@ -19,7 +19,7 @@ void NodeServer::createInstance(SocketIOCallback connectedCallback /* = nullptr 
 {
 	if (!s_sharedTestServer)
 	{
-		log("create new");
+		log("create new instance of node server");
 		s_sharedTestServer = new (std::nothrow) NodeServer();
 		s_sharedTestServer->init(connectedCallback);
 	}

@@ -31,7 +31,7 @@ public:
 	
 	void sendMoveEndEvent(UserUnitInfo unitdata);
 	
-	void sendAttackEvent(Vec2 direction,UserUnitInfo attackerUnit, UserUnitInfo targetData, SocketIOCallback callback);
+	void sendAttackEvent(Vec2 direction,int dame, string targetUuid, SocketIOCallback callback);
 	
 	void sendSkillEvent(UserSkillInfo skillData, UserUnitInfo attacker, float angle/*, SocketIOCallback callback*/);
 		

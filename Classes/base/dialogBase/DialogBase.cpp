@@ -104,7 +104,7 @@ bool DialogBase::onTouchBegan(Touch *touch, Event *unused_event)
 	}
 
 	closeDialog();
-	return false;
+	return true;
 }
 
 Sprite* DialogBase::getBackGroundSprite()

@@ -12,7 +12,9 @@ public:
 	Vec2 getPostionForTitleCoor(Vec2 titleCoor);
 	Vec2 getTitleCoorForPosition(Vec2 pos);
 	Sprite* getTitleAt(Vec2 titleCoor);
+
 	bool checkPosInsideMap(Vec2 pos);
+
 	bool checkTitleCantGet(Vec2 pos);
 private:
 	bool checkTitleNearObject(vector<Vec2> vec, int offset, Vec2 pos);

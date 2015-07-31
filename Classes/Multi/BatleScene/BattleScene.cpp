@@ -29,8 +29,8 @@ bool BattleScene::init()
 	if (!LayerBase::init()) {
 		return false;
 	}
-	NotificationCenter::getInstance()->addObserver(this, CC_CALLFUNCO_SELECTOR(BattleScene::reconnectToNodeServer), DISCONNECT_MSG, nullptr);
-	NotificationCenter::getInstance()->addObserver(this, CC_CALLFUNCO_SELECTOR(BattleScene::serverConnectedNoti), CONNECTED_MSG, nullptr);
+	NotificationCenter::getInstance()->addObserver(this, CC_CALLFUNCO_SELECTOR(BattleScene::serverDisconnectedNotifyReceivedCallback), DISCONNECT_MSG, nullptr);
+	NotificationCenter::getInstance()->addObserver(this, CC_CALLFUNCO_SELECTOR(BattleScene::serverConnectedNotifyReceivedCallback), CONNECTED_MSG, nullptr);
 	_gameMode = UserDefault::getInstance()->getIntegerForKey("MODE");
 	BattleModel::getInstance()->setGameMode(_gameMode);
 	_menu->setVisible(false);
@@ -862,7 +862,7 @@ void BattleScene::createContent()
 	});
 
 	_blueTeamTitleNumLabel = Label::createWithSystemFont("00", "", 28);
-	_blueTeamTitleNumLabel->setColor(Color3B::BLUE);
+	_blueTeamTitleNumLabel->setColor(Color3B::GREEN);
 	_blueTeamTitleNumLabel->setAnchorPoint(Vec2::ANCHOR_MIDDLE_RIGHT);
 	_blueTeamTitleNumLabel->setHorizontalAlignment(TextHAlignment::RIGHT);
 	_blueTeamTitleNumLabel->setPosition(Vec2(_topMenuSprite->getContentSize().width * 2 / 5 - 30, _topMenuSprite->getContentSize().height / 2 - 3));
@@ -1006,10 +1006,10 @@ void BattleScene::createContent()
 	addChild(_touchMoveEndSprite);
 	_touchMoveEndSprite->runAction(RepeatForever::create(action->clone()));
 
-	_selectTargetSprite = Sprite::create("image/screen/battle/select.png");
+	/*_selectTargetSprite = Sprite::create("image/screen/battle/select.png");
 	_selectTargetSprite->setVisible(false);
 	_battleBackground->addChild(_selectTargetSprite);
-
+	*/
 	float positionXScaleRate = _miniTMXMap->getContentSize().width / (_myMap->getContentSize().width);
 	float positionYScaleRate = _miniTMXMap->getContentSize().height / (_myMap->getContentSize().height);
 
@@ -1223,11 +1223,11 @@ void BattleScene::changeScreenOrient()
 	}
 }
 
-void BattleScene::serverConnectedNoti(Ref *p)
+void BattleScene::serverConnectedNotifyReceivedCallback(Ref *p)
 {
-	log("Battle scene: Server connected notification received");
+	log("Battle scene: CONNECTED NOTIFY RECEIVED");
 	_onReconnect = false;
-	createNodeSVHandler();
+	
 	//do something like
 	if (_reconnectButton != nullptr) {
 		_reconnectButton->removeFromParentAndCleanup(true);
@@ -1254,10 +1254,11 @@ void BattleScene::serverConnectedNoti(Ref *p)
 		log("connect begin end data: %s", data.c_str());
 		//NodeServer::getInstance()->setDisconnectCallback(CC_CALLBACK_0(BattleScene::reconnectToNodeServer, this));
 	});
+	createNodeSVHandler();
 }
-void BattleScene::reconnectToNodeServer(Ref *p)
+void BattleScene::serverDisconnectedNotifyReceivedCallback(Ref *p)
 {
-	log("call reconnect");
+	log("RECONNECT FUNTION CALLED");
 	_onReconnect = true;
 	testObject->stopMoveAction();
 	testObject->getPhysicsBody()->setVelocity(Vec2::ZERO);
@@ -1281,7 +1282,6 @@ void BattleScene::reconnectToNodeServer(Ref *p)
 			bt->runAction(RepeatForever::create(RotateBy::create(1.0f, 90)));
 			bt->setTouchEnabled(false);
 			NodeServer::destroyInstance();
-			log("after destroy instance");
 			NodeServer::createInstance(/*[&, bt](SIOClient *c, const string data){
 				_eventDispatcher->resumeEventListenersForTarget(this);
 				bt->removeFromParentAndCleanup(true);
@@ -1308,9 +1308,7 @@ void BattleScene::reconnectToNodeServer(Ref *p)
 					createNodeSVHandler();
 				});
 				
-			}*/);
-			log("after create new");
-			
+			}*/);			
 			break;
 		}
 		case cocos2d::ui::Widget::TouchEventType::CANCELED:
@@ -1341,6 +1339,7 @@ void BattleScene::createNodeSVHandler()
 	/************************************************************************/
 	/*Battle update event*/
 	sv->on("update_score", [&](SIOClient *client, const string& data) {
+		CC_UNUSED_PARAM(client);
 		if (_onDestructCalled) return;
 
 		Document doc;
@@ -1353,13 +1352,13 @@ void BattleScene::createNodeSVHandler()
 		if (doc.IsObject())
 		{
 			auto blueTitleNum = doc["blue"].GetInt();
-			stringstream blueLb;
-			blueLb << blueTitleNum;
-			_blueTeamTitleNumLabel->setString(blueLb.str().c_str());
+			char blueLb[5] = { 0 };
+			sprintf(blueLb, "%d", blueTitleNum);
+			_blueTeamTitleNumLabel->setString(blueLb);
 			auto redTitleNum = doc["red"].GetInt();
-			stringstream redLb;
-			redLb << redTitleNum;
-			_redTeamTitleNumLabel->setString(redLb.str().c_str());
+			char redLb[5] = { 0 };
+			sprintf(redLb, "%d",redTitleNum);
+			_redTeamTitleNumLabel->setString(redLb);
 			return;
 		}
 		else
@@ -1367,11 +1366,10 @@ void BattleScene::createNodeSVHandler()
 			log("score update error in doc type");
 		}
 	});
-	sv->on("battle_update", [&](SIOClient* client, const std::string data){
+	/*sv->on("battle_update", [&](SIOClient* client, const std::string data){
 		//log("BATTLE UPDATE data: %s", data.c_str());
 		//same data with battle sync but change for detect unit by uuid
-
-		/*Check for battle destruct called*/
+		CC_UNUSED_PARAM(client);
 		if (_onDestructCalled) return;
 
 		auto uuid = UserModel::getInstance()->getUuId();
@@ -1385,7 +1383,7 @@ void BattleScene::createNodeSVHandler()
 			for (int i = 0; i < doc["user_unit"].Size(); i++) {
 				string sv_uuid = doc["user_unit"][rapidjson::SizeType(i)]["uuid"].GetString();
 				//log("!EEEE");
-				/*Room_User_Unit_Model tempUnit;
+				Room_User_Unit_Model tempUnit;
 				tempUnit._id = doc["user_unit"][rapidjson::SizeType(i)]["_id"].GetString();
 				//tempUnit.status = doc["user_unit"][rapidjson::SizeType(i)]["status"].GetInt();
 				tempUnit.mp = doc["user_unit"][rapidjson::SizeType(i)]["mp"].GetInt();
@@ -1402,7 +1400,6 @@ void BattleScene::createNodeSVHandler()
 				tempUnit.moving = doc["user_unit"][rapidjson::SizeType(i)]["moving"].GetBool();
 
 				BattleModel::getInstance()->updateUserUnit(tempUnit);
-				*/
 				if (strcmp(sv_uuid.c_str(), uuid.c_str()) == 0) {
 					//log("this is my unit");
 					continue;
@@ -1433,6 +1430,7 @@ void BattleScene::createNodeSVHandler()
 							cha->stopMoveAction();
 							cha->getPhysicsBody()->setVelocity(Vec2::ZERO);
 						}
+						continue;
 					}
 				}
 			}
@@ -1440,12 +1438,12 @@ void BattleScene::createNodeSVHandler()
 		else {
 			log("Error in JSON Object. Type: %d", doc.GetType());
 		}
-	});
+	});*/
 
 	/*Unit move event public event*/
 
-	/*sv->on("unit_move", [&](SIOClient* client, const string& data) {
-		log("unit move event with data: %s", data.c_str());
+	sv->on("unit_move", [&](SIOClient* client, const string& data) {
+		CC_UNUSED_PARAM(client);
 		if (_onDestructCalled) return;
 		Document doc;
 		doc.Parse<0>(data.c_str());
@@ -1459,7 +1457,8 @@ void BattleScene::createNodeSVHandler()
 			int teamId = doc["team_id"].GetInt();
 			string uuid = doc["uuid"].GetString();
 			Vec2 pos = Vec2(doc["position_x"].GetDouble(), doc["position_y"].GetDouble());
-			Vec2 veloc = Vec2(doc["veloc_x"].GetDouble(), doc["veloc_y"].GetDouble());
+			int  direc = doc["direction"].GetInt();
+			float moving = doc["moving"].GetBool();
 			if (teamId == _currentPlayerTeamFlg)
 			{
 				findList = _allAlliedUnitSprite;
@@ -1475,17 +1474,20 @@ void BattleScene::createNodeSVHandler()
 				if (strcmp(cha->getUnitUUID().c_str(), uuid.c_str()) ==0)
 				{
 					cha->setPosition(pos);
-					cha->getPhysicsBody()->setVelocity(veloc);
-					auto direc = detectDirectionBaseOnTouchAngle(-(veloc.getAngle() *RAD_DEG) + 90);
-					cha->actionMoveCharacter(direc);
-					log("move unit");
-					return;
+					if (moving)
+					{
+						cha->actionMoveCharacter(direc);
+					}
+					else {
+						cha->stopMoveAction();
+						cha->getPhysicsBody()->setVelocity(Vec2::ZERO);
+					}
 				}
 			}
 		}
 
 
-	});*/
+	});
 	//not using yet
 	//sv->on("unit_move_end", [&](SIOClient* client, const string& data) {
 		//log("Unit_move_end data: %s", data.c_str());
@@ -1499,10 +1501,11 @@ void BattleScene::createNodeSVHandler()
 	*  to display another player attack animation
 	*/
 	sv->on("attack", [&](SIOClient *client, const string data) {
+		CC_UNUSED_PARAM(client);
 		//log("Another attacks: %s", data.c_str());
 		/*check for battle destruct called*/
 		if (_onDestructCalled) return;
-
+		log("received attack event");
 		auto uuid = UserModel::getInstance()->getUuId();
 		Document doc;
 		doc.Parse<0>(data.c_str());
@@ -1526,6 +1529,7 @@ void BattleScene::createNodeSVHandler()
 	* Handler for unit dead event
 	*/
 	sv->on("unit_dead", [&](SIOClient * client, const string& data) {
+		CC_UNUSED_PARAM(client);
 		if (_onDestructCalled) return;
 		Document doc;
 		doc.Parse<0>(data.c_str());
@@ -1557,6 +1561,7 @@ void BattleScene::createNodeSVHandler()
 	*/
 	
 	sv->on("play_skill_end", [&](SIOClient* client, const std::string data) {
+		CC_UNUSED_PARAM(client);
 		//log("Skill event callback data: %s", data.c_str());
 		/*check for battle scene destruct called*/
 		if (_onDestructCalled) return;
@@ -1605,45 +1610,42 @@ void BattleScene::createNodeSVHandler()
 			/************************************************************************/
 			/* Bellow code to detect unit that play skill in the local data       */
 			/************************************************************************/
-			Sprite* playObject;
-			bool found = false;
-			int playObjectTeam = 0;
-			int saveIndex = -1;
-			for (int i = 0; i < _allAlliedUnitData.size(); i++)
-			{
-				if (strcmp(_allAlliedUnitData[i].uuid.c_str(), doc["uuid"].GetString()) == 0) {
-					playObject = _allAlliedUnitSprite[i];
-					found = true;
-					playObjectTeam = 1;
-					saveIndex = i;
-					log("Object in allied[%d]", i);
-					break;
-				}
-			}
-			if (!found)
-			{
-				for (int j = 0; j < _allEnemyUnitData.size(); j++)
-				{
-					if (strcmp(_allEnemyUnitData[j].uuid.c_str(), doc["uuid"].GetString()) == 0) {
-						playObject = _allEnemyUnitSprite[j];
-						found = true;
-						playObjectTeam = 2;
-						saveIndex = j;
-						log("Object in enemy[%d]", j);
-						break;
-					}
-				}
-			}
 			int team_id = doc["team_id"].GetInt();
 			float randNum = doc["random"].GetDouble();
 			string uuid = doc["uuid"].GetString();
-			float angle = doc["angle"].GetDouble();
-			log("team Id: %d", team_id);
-			playSkillLogicAndAnimation(playObject, skill, team_id, randNum, uuid.c_str(), saveIndex, unit, angle);
+			Sprite* playObject;
+			vector<Sprite*> findList;
+			bool found = false;
+			int playObjectTeam = 0;
+			int saveIndex = -1;
+			if (team_id == _currentPlayerTeamFlg) 
+			{
+				findList = _allAlliedUnitSprite;
+			}
+			else
+			{
+				findList = _allEnemyUnitSprite;
+			}
+			for (int i = 0; i < findList.size() - 1; i++)
+			{
+				auto cha = (Character*)findList[i];
+				if (strcmp(cha->getUnitUUID().c_str(), uuid.c_str()) == 0) {
+					playObject = cha;
+					found = true;
+					saveIndex = i;
+					log("Object found");
+					float angle = doc["angle"].GetDouble();
+					playSkillLogicAndAnimation(playObject, skill, team_id, randNum, uuid.c_str(), saveIndex, unit, angle);
+					return;
+				}
+			}
+			log("Cast skill object not Found");
+			
 		}
 	});
 
 	sv->on("tower_attack", [&](SIOClient *client, const string data) {
+		CC_UNUSED_PARAM(client);
 		if (_onDestructCalled) return;
 		Document doc;
 		doc.Parse<0>(data.c_str());
@@ -1670,6 +1672,7 @@ void BattleScene::createNodeSVHandler()
 	});
 
 	sv->on("set_title", [&](SIOClient* client, const string data) {
+		CC_UNUSED_PARAM(client);
 		//log("set_title");
 		if (_onDestructCalled) return;
 		Document doc;
@@ -1718,7 +1721,7 @@ void BattleScene::createNodeSVHandler()
 				title->setColor(Color3B::RED);
 				auto mTittle = _miniLayer->getTileAt(titleCoor);
 				mTittle->setColor(Color3B::RED);
-				mTittle->setName("disable");
+				title->setName("disable");
 				log("disable title :  %d, %d", x, y);
 				return;
 			}
@@ -1739,6 +1742,7 @@ void BattleScene::createNodeSVHandler()
 	*JSON: uuid, team_id, user_id, direc, index
 	*/
 	sv->on("neutral_tower_attack", [&](SIOClient *client, const string data) {
+		CC_UNUSED_PARAM(client);
 		//log("neutral attack receive: %s", data.c_str());
 		if (_onDestructCalled) return;
 
@@ -1773,6 +1777,7 @@ void BattleScene::createNodeSVHandler()
 	/*Listener for neutral tower status change event*/
 	/*JSON: index, team_id*/
 	sv->on("neutral_status_change", [&](SIOClient *client, const string data) {
+		CC_UNUSED_PARAM(client);
 		if (_onDestructCalled) return;
 		Document doc;
 		doc.Parse<0>(data.c_str());
@@ -1822,6 +1827,7 @@ void BattleScene::createNodeSVHandler()
 
 	/*Listener for neutral unit type change event*/
 	sv->on("neutral_unit_status_change", [&](SIOClient *client, const string data) {
+		CC_UNUSED_PARAM(client);
 		if (_onDestructCalled) return;
 		Document doc;
 		doc.Parse<0>(data.c_str());
@@ -1835,6 +1841,7 @@ void BattleScene::createNodeSVHandler()
 	});
 
 	sv->on("neutral_move", [&](SIOClient *client, const string data) {
+		CC_UNUSED_PARAM(client);
 		if (_onDestructCalled) return;
 		Document doc;
 		doc.Parse<0>(data.c_str());
@@ -1855,6 +1862,7 @@ void BattleScene::createNodeSVHandler()
 	});
 	/*base on another unit attack funtion. Same with tower attack and neutral unit attack*/
 	sv->on("attack_cannon", [&](SIOClient *client, const string data) {
+		CC_UNUSED_PARAM(client);
 
 		if (_onDestructCalled) return;
 
@@ -1889,6 +1897,7 @@ void BattleScene::createNodeSVHandler()
 
 	/*Handler for cannon change team status event*/
 	sv->on("cannon_change", [&](SIOClient *client, const string data) {
+		CC_UNUSED_PARAM(client);
 		if (_onDestructCalled) return;
 		Document doc;
 		doc.Parse<0>(data.c_str());
@@ -1901,6 +1910,7 @@ void BattleScene::createNodeSVHandler()
 	});
 	/*Cannon lunch event handler*/
 	sv->on("cannon_lunch_object", [&](SIOClient *c, const string data) {
+		CC_UNUSED_PARAM(c);
 		if (_onDestructCalled) return;
 		Document doc;
 		doc.Parse<0>(data.c_str());
@@ -1944,6 +1954,7 @@ void BattleScene::createNodeSVHandler()
 
 	/*Handler for cannon on/ off event*/
 	sv->on("cannon_onoff", [&](SIOClient *client, const string data) {
+		CC_UNUSED_PARAM(client);
 		if (_onDestructCalled) return;
 		Document doc;
 		doc.Parse<0>(data.c_str());
@@ -1957,6 +1968,7 @@ void BattleScene::createNodeSVHandler()
 
 	/*Handler for wormhole enable/ disable event*/
 	sv->on("wormhole_status_change", [&](SIOClient *client, const string data) {
+		CC_UNUSED_PARAM(client);
 		if (_onDestructCalled) return;
 		Document doc;
 		doc.Parse<0>(data.c_str());
@@ -1977,6 +1989,7 @@ void BattleScene::createNodeSVHandler()
 	});
 	/*Listener for another player pet move event*/
 	sv->on("minion_move", [&](SIOClient* client, const string data) {
+		CC_UNUSED_PARAM(client);
 		if (_onDestructCalled) return;
 		Document doc;
 		doc.Parse<0>(data.c_str());
@@ -1999,7 +2012,7 @@ void BattleScene::createNodeSVHandler()
 
 	/*Listener for battle end event*/
 	sv->on("battle_public_battle_end", [&](SIOClient *client, const string data) {
-
+		CC_UNUSED_PARAM(client);
 		if (_onDestructCalled) return;
 		Document doc;
 		doc.Parse<0>(data.c_str());
@@ -2034,6 +2047,7 @@ void BattleScene::towerAttackLogic(Sprite* towerSprite,UserUnitInfo towerData, v
 
 void BattleScene::towerAttackCallback(Ref *p, UserUnitInfo towerData, Sprite* target, vector<UserUnitInfo>* unitDataList, int targetIndex, float randomNum)
 {
+	CC_UNUSED_PARAM(p);
 	int dame = (towerData.attack - unitDataList->at(targetIndex).defence) * caculDameRate(towerData.element, unitDataList->at(targetIndex).element)*randomNum;
 	if (dame <= 1)
 	{
@@ -2162,7 +2176,7 @@ void BattleScene::update(float delta)
 	_checkTime += delta;
 	//TODO: uncomment to send unit status every 0.07 second - > (100/0.07) update frame per second
 	auto disVtr = testObject->getPosition() - _checkPos;
-	if (_checkTime >= 0.04 && disVtr.length() > 20.0f && _gameMode == MULTI_MODE && _onRespwanFlg == false && _onReconnect == false) {
+	if (_checkTime >= 0.06 && disVtr.length() > 20.0f && _gameMode == MULTI_MODE && _onRespwanFlg == false && _onReconnect == false) {
 		float angle = _mainCharacterIconInMiniMap->getRotation();
 		int direc = detectDirectionBaseOnTouchAngle(angle);
 		BattleAPI::getInstance()->sendMoveEvent(_allAlliedUnitData[0],testObject->getPosition(), direc, testObject->getOnMovingFlg(), testObject->getOnCannonLunchFlg());
@@ -2252,7 +2266,7 @@ void BattleScene::testMoveLogic(Sprite* object, int teamFlg)
 	savePos.push_back(pos);
 	savePos.push_back(pos - Vec2(0, _myMap->getTileSize().height));
 	auto cha = (Character*)object;
-	if (cha->getBirdMode() == true)
+	/*if (cha->getBirdMode() == true)
 	{
 		auto birdMode = cha->getBirdModeIndex();
 		if (birdMode <= 6) {
@@ -2264,14 +2278,14 @@ void BattleScene::testMoveLogic(Sprite* object, int teamFlg)
 		}
 
 	}
-
+	*/
 	if (cha->getOnCannonLunchFlg()) {
 		int s = savePos.size();
 		Size titleSize = _myMap->getTileSize();
 		Vec2 first = savePos.front();
 		Vec2 last = savePos.back();
 		int i = 1;
-		while (i <= s)
+		while (i <= 2)
 		{
 			Vec2 exPos1 = Vec2(first.x, first.y - i*titleSize.height);
 			if (_myMap->checkPosInsideMap(exPos1)) {
@@ -2311,14 +2325,12 @@ void BattleScene::testMoveLogic(Sprite* object, int teamFlg)
 		if (title == nullptr) {
 			continue;
 		}
-		if (title->getName() == "disable") continue;
-
 		if (teamFlg == TEAM_FLG_BLUE) {
-			if (title->getColor() != Color3B::GREEN)
+			if (title->getColor() != Color3B::GREEN && strcmp(title->getName().c_str(), "disable") != 0)
 			{				
 				if (_gameMode == MULTI_MODE)
 				{
-					if (title->getName() == "sending") continue;
+					if (strcmp(title->getName().c_str(),"sending")== 0) continue;
 					//log("send test move event");
 					//sendingFlg->push_back(true);
 					title->setName("sending");
@@ -2338,10 +2350,10 @@ void BattleScene::testMoveLogic(Sprite* object, int teamFlg)
 			}
 		}
 		else {
-			if (title->getColor() != Color3B::ORANGE)
+			if (title->getColor() != Color3B::ORANGE && strcmp(title->getName().c_str(), "disable") != 0)
 			{
 				if (_gameMode == MULTI_MODE) {
-					if (title->getName() == "sending") continue;
+					if (strcmp(title->getName().c_str(),"sending") == 0) continue;
 					//log("send test move event");
 					title->setName("sending");
 					//sendingFlg->push_back(true);
@@ -2488,64 +2500,10 @@ void BattleScene::attackLogicAndAnimation(Vec2 posDistan, int direc, int i, int 
 
 void BattleScene::checkForAutoAttack()
 {
-
-	/************************************************************************/
-	/* CHECK AUTO ATTACK OF MAIN UNIT                                       */
-	/************************************************************************/
-	/*Dead or stunning unit cannot attack*/
-	if (_onRespwanFlg || _allAlliedUnitData[0].isStun || getCannonFlg()) return;
-	//float area = IMAGE_SCALE*_autoAttackArea->getContentSize().width / 2 + 25;
-	//Check for main character attack
-	for (int i = 0; i < _allEnemyUnitSprite.size(); i++)
-	{
-		///Check for main character run attack animation
-
-		auto posDistan = _allEnemyUnitSprite[i]->getPosition() - testObject->getPosition();
-		/*if (i == _allAlliedUnitSprite.size() - 1) {
-			posDistan = _allEnemyUnitSprite[i]->getParent()->getPosition() - testObject->getPosition();
-		}*/
-		int direc = detectDirectionBaseOnTouchAngle(-posDistan.getAngle()*RAD_DEG + 90);
-		if (posDistan.length() - _allEnemyUnitSprite[i]->getBoundingBox().size.width / 4 < ATTACK_AOE*_allAlliedUnitData[0].attack_range / 100.0f && _allEnemyUnitSprite[i]->isVisible())
-		{
-
-			if (/*testObject->getActionByTag(testObject->getCurrentAttackActionTag()) == nullptr && */_onDelayAttackFlg == false)
-			{
-				//auto call1 = CallFuncN::create(CC_CALLBACK_0(BattleScene::characterAttackCallback, this));
-				_onDelayAttackFlg = true;
-				testObject->getPhysicsBody()->setVelocity(Vec2::ZERO);
-				testObject->stopMoveAction();
-				if (_moveMode == MOVE_CIRCLE) {
-					_miniUnit->stopMoveAction();
-				}
-				if (_gameMode == MULTI_MODE)
-				{
-					if (_onReconnect) return;
-					BattleAPI::getInstance()->sendAttackEvent(posDistan, _allAlliedUnitData[0], _allEnemyUnitData[i],nullptr /*[&, i, direc, posDistan](SIOClient *client, const string data)
-					{
-						//it was no longer has callback
-						if (_onDestructCalled) return;
-						//log("Battle attack callback with data: %s", data.c_str());
-						Document doc;
-						doc.Parse<0>(data.c_str());
-						if (doc.HasParseError()) {
-							log("ATTACK: Parse JSOn error");
-							return;
-						}
-						attackLogicAndAnimation(posDistan, direc, i, doc["dame"].GetInt());
-					}*/);
-				}
-				else {
-					int dame = caculDameRate(_allAlliedUnitData[0].element, _allEnemyUnitData[i].element)*random(0.85f, 1.0f) *(_allAlliedUnitData[0].attack - _allEnemyUnitData[i].defence);
-					attackLogicAndAnimation(posDistan, direc, i, dame);
-				}
-			}
-			break;
-		}
-
-	}
-	/*this effect not active in tower
+	/* Auto restore effect
+	* this effect not active in tower
 	*/
-	for (int i = 0; i < _allAlliedUnitData.size()-1; i ++)
+	for (int i = 0; i < _allAlliedUnitData.size() - 1; i++)
 	{
 		float len = (_allAlliedUnitSprite[i]->getPosition() - _allAlliedUnitSprite.back()->getPosition()).length();
 		if (len < 260)
@@ -2578,6 +2536,66 @@ void BattleScene::checkForAutoAttack()
 		}
 	}
 
+	/************************************************************************/
+	/* CHECK AUTO ATTACK OF MAIN UNIT                                       */
+	/************************************************************************/
+	if (testObject->getAttackDelayFlag() || _onDelayAttackFlg) 
+	{ 
+		return;
+	}
+	/*Dead or stunning unit cannot attack*/
+	if (_onRespwanFlg || _allAlliedUnitData[0].isStun || getCannonFlg()) return;
+	//float area = IMAGE_SCALE*_autoAttackArea->getContentSize().width / 2 + 25;
+	//Check for main character attack
+	for (int i = 0; i < _allEnemyUnitSprite.size(); i++)
+	{
+		///Check for main character run attack animation
+
+		auto posDistan = _allEnemyUnitSprite[i]->getPosition() - testObject->getPosition();
+		/*if (i == _allAlliedUnitSprite.size() - 1) {
+			posDistan = _allEnemyUnitSprite[i]->getParent()->getPosition() - testObject->getPosition();
+		}*/
+		int direc = detectDirectionBaseOnTouchAngle(-posDistan.getAngle()*RAD_DEG + 90);
+		if (posDistan.length() - _allEnemyUnitSprite[i]->getBoundingBox().size.width / 4 < ATTACK_AOE*_allAlliedUnitData[0].attack_range / 100.0f && _allEnemyUnitSprite[i]->isVisible() && !testObject->getAttackDelayFlag() && !_onDelayAttackFlg)
+		{
+
+			//if (/*testObject->getActionByTag(testObject->getCurrentAttackActionTag()) == nullptr && */_onDelayAttackFlg == false)
+			{
+				//auto call1 = CallFuncN::create(CC_CALLBACK_0(BattleScene::characterAttackCallback, this));
+				_onDelayAttackFlg = true;
+				testObject->getPhysicsBody()->setVelocity(Vec2::ZERO);
+				testObject->stopMoveAction();
+				if (_moveMode == MOVE_CIRCLE) {
+					_miniUnit->stopMoveAction();
+				}
+				int dame = caculDameRate(_allAlliedUnitData[0].element, _allEnemyUnitData[i].element)*random(0.85f, 1.0f) *(_allAlliedUnitData[0].attack - _allEnemyUnitData[i].defence);
+				if (_gameMode == MULTI_MODE)
+				{
+					if (_onReconnect) return;
+					BattleAPI::getInstance()->sendAttackEvent(posDistan, dame, _allEnemyUnitData[i].uuid,nullptr /*[&, i, direc, posDistan](SIOClient *client, const string data)
+					{
+						//it was no longer has callback
+						if (_onDestructCalled) return;
+						//log("Battle attack callback with data: %s", data.c_str());
+						Document doc;
+						doc.Parse<0>(data.c_str());
+						if (doc.HasParseError()) {
+							log("ATTACK: Parse JSOn error");
+							return;
+						}
+						attackLogicAndAnimation(posDistan, direc, i, doc["dame"].GetInt());
+					}*/);
+				}
+				else {
+					
+					attackLogicAndAnimation(posDistan, direc, i, dame);
+				}
+			}
+			break;
+		}
+
+	}
+	
 	/*Check for attack and get neutral tower*/
 	for (int i = 0; i < _neutralTowerList.size(); i++)
 	{
@@ -2585,7 +2603,7 @@ void BattleScene::checkForAutoAttack()
 		int towerType = _neutralTowerList[i]->getTowerType();
 		Vec2 towerPos = _neutralTowerList[i]->getParent()->getPosition() - Vec2(0, _neutralTowerList[i]->getBoundingBox().size.height /4);
 		Vec2 distan = towerPos - testObject->getPosition();
-		if ( towerType != _currentPlayerTeamFlg && !_onDelayAttackFlg && distan.length() - _neutralTowerList[i]->getBoundingBox().size.width / 4 < _allAlliedUnitData[0].attack_range) {
+		if ( towerType != _currentPlayerTeamFlg && !_onDelayAttackFlg && distan.length() - _neutralTowerList[i]->getBoundingBox().size.width / 4 < _allAlliedUnitData[0].attack_range && !testObject->getAttackDelayFlag()) {
 			_onDelayAttackFlg = true;
 			testObject->getPhysicsBody()->setVelocity(Vec2::ZERO);
 			testObject->stopMoveAction();
@@ -2619,7 +2637,7 @@ void BattleScene::checkForAutoAttack()
 		int unitType = _neutralUnitList[i]->getTag();
 		Vec2 unitPos = _neutralUnitList[i]->getPosition();
 		Vec2 distan = unitPos - testObject->getPosition();
-		if (unitType != _currentPlayerTeamFlg && !_onDelayAttackFlg && distan.length() - _neutralUnitList[i]->getBoundingBox().size.width / 4 < _allAlliedUnitData[0].attack_range)
+		if (unitType != _currentPlayerTeamFlg && !_onDelayAttackFlg && distan.length() - _neutralUnitList[i]->getBoundingBox().size.width / 4 < _allAlliedUnitData[0].attack_range && !testObject->getAttackDelayFlag())
 		{
 			_onDelayAttackFlg = true;
 			testObject->getPhysicsBody()->setVelocity(Vec2::ZERO);
@@ -2650,7 +2668,7 @@ void BattleScene::checkForAutoAttack()
 		int cannonTeam = _cannonList[i]->getCurrentTeamId();
 		Vec2 cannonPos = _cannonList[i]->getParent()->getPosition();
 		Vec2 distan = cannonPos - testObject->getPosition();
-		if (cannonTeam != _currentPlayerTeamFlg && !_onDelayAttackFlg && distan.length() - 30 < _allAlliedUnitData[0].attack_range)
+		if (cannonTeam != _currentPlayerTeamFlg && !_onDelayAttackFlg && distan.length() - 30 < _allAlliedUnitData[0].attack_range && !testObject->getAttackDelayFlag())
 		{
 			_onDelayAttackFlg = true;
 			testObject->getPhysicsBody()->setVelocity(Vec2::ZERO);
@@ -3028,7 +3046,6 @@ void BattleScene::runRespawnAction(string killerUuid)
 	if (_gameMode == MULTI_MODE)
 	{
 		if (_onReconnect == false)
-
 		{
 			BattleAPI::getInstance()->sendDeadEvent(_allAlliedUnitData[0],killerUuid, pos, [&](SIOClient* client, const std::string json) {
 
@@ -3037,7 +3054,8 @@ void BattleScene::runRespawnAction(string killerUuid)
 			});
 		}
 	}
-	else {
+	else 
+	{
 		//disable title
 		Color3B color = Color3B::WHITE;
 		if (_currentPlayerTeamFlg == TEAM_FLG_BLUE) {
@@ -3077,9 +3095,8 @@ void BattleScene::runRespawnAction(string killerUuid)
 		_mainCharacterMiniHpBar->setPercent(100);
 		_mainCharacterHpBar->setPercent(100);
 		_mainCharacterMpBar->setPercent(100);
-		_allAlliedUnitData[0].hp = _allAlliedUnitMaxHp[0];
-		_allAlliedUnitData[0].mp = _mainCharacerMaxMp;
-
+		_allAlliedUnitData[0] = UserUnitModel::getInstance()->getUnitInfoById(_allAlliedUnitData[0].mst_unit_id);
+		_allAlliedUnitData[0].uuid = UserModel::getInstance()->getUuId().c_str();
 		_battleBackground->stopActionByTag(121);
 		testObject->setVisible(false);
 		testObject->getPhysicsBody()->setVelocity(Vec2::ZERO);
@@ -3143,6 +3160,8 @@ void BattleScene::removeRespawnFlg()
 {
 	testObject->setVisible(true);
 	_onRespwanFlg = false;
+	_onDelayAttackFlg = false;
+	testObject->setAttackDelayFlag(false);
 }
 
 void BattleScene::updateTime()
@@ -3162,33 +3181,36 @@ void BattleScene::updateTime()
 
 }
 string BattleScene::makeTimeString(int second) {
-	stringstream timeString;
 	int remainSecond = second % 60;
 	int hous = (second / 3600);
 	int minus = ((second - (hous*3600)) / 60);
-	
+	char h[10] = { 0 };
+	char m[10] = { 0 };
+	char s[10] = { 0 };
+
+
 	if (hous >= 10) {
-		timeString << hous << ":";
+		sprintf(h, "%d:", hous);
 	}
 	else {
-		timeString << "0" << hous << ":";
+		sprintf(h, "0%d:", hous);
 	}
 
 	if (minus >= 10) {
-		timeString << minus << ":";
+		sprintf(m, "%d:", minus);
 	}
 	else {
-		timeString << "0" << minus << ":";
+		sprintf(m, "0%d:", minus);
 	}
-
 	if (remainSecond >= 10) {
-		timeString << remainSecond;
+		sprintf(s, "%d", remainSecond);
 	}
 	else {
-		timeString << "0" << remainSecond;
+		sprintf(s, "0%d", remainSecond);
 	}
-
-	return timeString.str().c_str();
+	string a(h);
+	a.append(string(m)).append(string(s));
+	return a.c_str();
 }
 
 
@@ -6020,23 +6042,21 @@ void BattleScene::createMiniControlUnit(int circleType) {
 void BattleScene::rt_attackAnimationandLogic(Document& doc, vector<Sprite*> processUnitSprite, vector<UserUnitInfo>* processUnitData, vector<Sprite*> targetSpriteList, vector<UserUnitInfo>* targetDataList)
 {
 	//log(">>>>RT_ATTACK =================================================");
-	for (int i = 0; i < processUnitData->size(); i++)
+	for (int i = 0; i < processUnitSprite.size() - 1; i++)
 	{
 		/*Battle can have several atacker at the same time
-		 * But this function was called for only one player
+		 * But this function was called for only one player at this time
 		 */
-		if (strcmp(processUnitData->at(i).uuid.c_str(), doc["uuid"].GetString()) == 0) {
-			Character* cha = (Character*)processUnitSprite[i];
+		Character* cha = (Character*)processUnitSprite[i];
+		if (strcmp(cha->getUnitUUID().c_str(), doc["uuid"].GetString()) == 0) {
 			//bellow code for detect be attacked unit and sync data:
 			Sprite* target;
-			int saveTargetIndex = -1;
 			for (int j = 0; j < targetDataList->size(); j++)
 			{
-				if (strcmp(doc["target"]["uuid"].GetString(), targetDataList->at(j).uuid.c_str()) == 0)																												{
+				if (strcmp(doc["target"].GetString(), targetDataList->at(j).uuid.c_str()) == 0)	
+				{
 					target = targetSpriteList[j];
-					targetDataList->at(j).hp = doc["target"]["hp"].GetInt(); //sync unit HP
-					saveTargetIndex = j;
-
+					//targetDataList->at(j).hp = doc["target"]["hp"].GetInt(); //sync unit HP
 					int dame = doc["dame"].GetInt();
 					if (dame <= 0) {
 						dame = 1;
@@ -6048,9 +6068,8 @@ void BattleScene::rt_attackAnimationandLogic(Document& doc, vector<Sprite*> proc
 						oneS = CC_CALLBACK_0(BattleScene::oneSecondAttackCallback, this);
 						removeFollowFLg = true;
 					}
-
-					cha->attackActionByTargetPosition(Vec2(doc["direction_x"].GetDouble(), doc["direction_y"].GetDouble()), doc["user_unit"]["attack_speed"].GetInt(), oneS, [&, j, i, target, dame, saveTargetIndex, targetDataList, cha]() {
-						
+					cha->attackActionByTargetPosition(Vec2(doc["direction_x"].GetDouble(), doc["direction_y"].GetDouble()), processUnitData->at(i).attack_speed, oneS, [&, j, i, target, dame, targetDataList, cha]() {
+						//begin of animation callback
 						bool _onMinionHelp = true;
 						if (target->getChildByTag(MINION_PARENT_TAG) != nullptr) {
 							//need logic for target using minion
@@ -6091,7 +6110,6 @@ void BattleScene::rt_attackAnimationandLogic(Document& doc, vector<Sprite*> proc
 							if (_allEnemyUnitData[j].hp <= 0)
 							{
 								enemyDieAction(j);
-								return;
 							}
 						}
 
@@ -6110,6 +6128,7 @@ void BattleScene::rt_attackAnimationandLogic(Document& doc, vector<Sprite*> proc
 						}
 						updateSlider();
 					},removeFollowFLg);
+					//end of animation callback
 					break;
 				}
 			}

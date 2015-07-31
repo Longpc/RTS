@@ -9,7 +9,8 @@ Character::Character()
 	_moveMode(0),
 	_characterMoveSpeed(0),
 	_currentAttackActionTag(0),
-	_currentMoveActionTag(0)
+	_currentMoveActionTag(0),
+	_attackDelayFlg(false)
 {
 	//Contructor
 }
@@ -148,11 +149,13 @@ void Character::attackActionByTargetPosition(Vec2 direcVector , int attackTime, 
 {
 
 	auto vec = direcVector * 40 / direcVector.getLength();
-	if (getAttackDelayFlag() == false) {
+	if (this->getAttackDelayFlag() == false) {
 		auto savePos = this->getPosition();
-		setAttackDelayFlag(true);		
+		this->setAttackDelayFlag(true);	
+		log("set attack delay");
 		auto call1 = CallFuncN::create([& , attackDelayCallback](Ref* pSender){
-			setAttackDelayFlag(false);
+			this->setAttackDelayFlag(false);
+			log("remove attack delay");
 			if (attackDelayCallback != nullptr)
 			{
 				attackDelayCallback();
@@ -189,7 +192,7 @@ void Character::attackActionByTargetPosition(Vec2 direcVector , int attackTime, 
 			cb2Sequence = Sequence::create(ani, call2, nullptr);*/
 			auto sCl = getScale();
 			auto move =  MoveBy::create(0.1f, vec);
-			cb2Sequence = Sequence::create(Spawn::create(move, ScaleTo::create(0.1f, sCl * 1.25f),removeFollow, nullptr), Spawn::create(move->reverse(), ScaleTo::create(0.1f, sCl), nullptr), call2, nullptr);
+			cb2Sequence = Sequence::create(Spawn::create(move, ScaleTo::create(0.1f, sCl * 1.25f, sCl * 1.25f), removeFollow, nullptr), Spawn::create(move->reverse(), ScaleTo::create(0.1f, sCl, sCl), nullptr), call2, nullptr);
 			/*auto move = MoveBy::create(0.15f, Vec2(direcVector * 100 / direcVector.length()));
 			auto rvMove = move->reverse();
 			cb2Sequence = Sequence::create(move, rvMove,call2, nullptr);*/

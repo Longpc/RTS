@@ -33,7 +33,11 @@ void BattleAPI::sendMoveEvent(UserUnitInfo unitdata, Vec2 position, int directio
 {
 	
 	auto a = NodeServer::getInstance()->getClient();
-	if (a == nullptr) return;
+	if (a == nullptr)
+	{ 
+		log("client null in send move event");
+		return;
+	}
 	Document doc;
 	doc.SetObject();
 	auto userData = UserModel::getInstance()->getUserInfo();
@@ -56,11 +60,17 @@ void BattleAPI::sendMoveEvent(UserUnitInfo unitdata, Vec2 position, int directio
 
 	//log("send move data: %s", buffer.GetString());
 	a->emit("move", buffer.GetString());
+	buffer.Clear();
+	return;
 }
 void BattleAPI::sendMoveEndEvent(UserUnitInfo unitdata)
 {
 	auto a = NodeServer::getInstance()->getClient();
-	if (a == nullptr) return;
+	if (a == nullptr) 
+	{
+		log("client null in send move end event");
+		return;
+	}
 	Document doc;
 	doc.SetObject();
 	auto userData = UserModel::getInstance()->getUserInfo();
@@ -81,12 +91,19 @@ void BattleAPI::sendMoveEndEvent(UserUnitInfo unitdata)
 	{
 		log("move end callback: %s", data.c_str());
 	});
+	buffer.Clear();
+	return;
 }
 
-void BattleAPI::sendAttackEvent(Vec2 direction,UserUnitInfo unit, UserUnitInfo targetUnit, SocketIOCallback callback)
+void BattleAPI::sendAttackEvent(Vec2 direction, int dame, string targetUuid, SocketIOCallback callback)
 {
 	auto c = NodeServer::getInstance()->getClient();
-	if (c == nullptr) return;
+	if (c == nullptr)
+	{
+		log("client null in send Attack event");
+		return;
+	}
+	log("send attack event");
 	auto userData = UserModel::getInstance()->getUserInfo();
 	int unitId = UserModel::getInstance()->getSelectedUnitId();
 	
@@ -99,8 +116,8 @@ void BattleAPI::sendAttackEvent(Vec2 direction,UserUnitInfo unit, UserUnitInfo t
 	doc.AddMember("room_id", userData.room_id, allo);
 	doc.AddMember("unit_id", unitId, allo);
 	doc.AddMember("team_id", userData.team_id, allo);
-	doc.AddMember("user_unit", *convertUnitDataToJsonObject(unit, allo), allo);
-	doc.AddMember("target", *convertUnitDataToJsonObject(targetUnit, allo), allo);
+	doc.AddMember("dame", dame, allo);
+	doc.AddMember("target", targetUuid.c_str(), allo);
 	string uu = UserModel::getInstance()->getUuId().c_str();
 	doc.AddMember("uuid", uu.c_str(), allo);	
 	doc.AddMember("direction_x", direction.x, allo);
@@ -112,13 +129,18 @@ void BattleAPI::sendAttackEvent(Vec2 direction,UserUnitInfo unit, UserUnitInfo t
 	//log("Attack send data: %s", buffer.GetString());
 	c->emit("attack", buffer.GetString());
 	//c->on("attack_end", callback);
+	buffer.Clear();
 	return;
 }
 
 void BattleAPI::sendSkillEvent(UserSkillInfo skillData, UserUnitInfo attacker, float angle/*, SocketIOCallback callback*/)
 {
 	auto c = NodeServer::getInstance()->getClient();
-	if (c == nullptr) return;
+	if (c == nullptr)
+	{
+		log("client null in send Skill event");
+		return;
+	}
 	auto userData = UserModel::getInstance()->getUserInfo();
 	int unitId = UserModel::getInstance()->getSelectedUnitId();
 	Document doc;
@@ -135,6 +157,7 @@ void BattleAPI::sendSkillEvent(UserSkillInfo skillData, UserUnitInfo attacker, f
 	auto s = convertSkillDataToJsonObject(skillData, allo);
 	doc.AddMember("mst_skill", *s, allo);
 	doc.AddMember("angle", angle, allo);
+	doc.AddMember("random", random(0.85f, 1.0f), allo);
 
 	StringBuffer  buffer;
 	Writer<StringBuffer> writer(buffer);
@@ -143,12 +166,18 @@ void BattleAPI::sendSkillEvent(UserSkillInfo skillData, UserUnitInfo attacker, f
 	//log("Skill: %s", buffer.GetString());
 	c->emit("play_skill", buffer.GetString());
 	//c->on("play_skill_end", callback);
+	buffer.Clear();
+	return;
 }
 
 void BattleAPI::sendDameDealEvent(int dame, string targetUuid, SocketIOCallback callback)
 {
 	auto sv = NodeServer::getInstance()->getClient();
-	if (sv == nullptr) return;
+	if (sv == nullptr)
+	{
+		log("client null in send dame deal function");
+		return;
+	}
 
 	auto userData = UserModel::getInstance()->getUserInfo();
 	int unitId = UserModel::getInstance()->getSelectedUnitId();
@@ -172,7 +201,8 @@ void BattleAPI::sendDameDealEvent(int dame, string targetUuid, SocketIOCallback 
 
 	//log("send dame Event data : %s", buffer.GetString());
 	sv->emit("dame_deal", buffer.GetString());
-
+	buffer.Clear();
+	return;
 }
 
 void BattleAPI::sendKillEvent(string killerUuid, string targetUnit,Vec2 deadPos, SocketIOCallback callback)
@@ -203,6 +233,8 @@ void BattleAPI::sendKillEvent(string killerUuid, string targetUnit,Vec2 deadPos,
 
 	log("Send kill event data : %s", buffer.GetString());
 	sv->emit("kill_unit", buffer.GetString());
+	buffer.Clear();
+	return;
 }
 
 
@@ -238,23 +270,13 @@ void BattleAPI::sendDeadEvent(UserUnitInfo unitData,string killerUuid, Vec2 dead
 	
 	sv->emit("dead", buffer.GetString());
 	sv->on("dead_end", callBack);
+	buffer.Clear();
+	return;
 }
 
 void BattleAPI::sendRepawnEvent(SocketIOCallback callback)
 {
-	auto c = NodeServer::getInstance()->getClient();
-	if (c == nullptr) return;
-	auto userData = UserModel::getInstance()->getUserInfo();
-	int unit_id = UserModel::getInstance()->getSelectedUnitId();
-
-	Document doc;
-	doc.SetObject();
-	Document::AllocatorType& allo = doc.GetAllocator();
-
-
-
-	c->emit("respawn", "{\"data\": \"test respwan\"}");
-	c->on("respawn_end", callback);
+	
 }
 
 void BattleAPI::sendTowerAttackEvent(string towerUuid, string targetUuid, int direction, int teamId)
@@ -278,6 +300,8 @@ void BattleAPI::sendTowerAttackEvent(string towerUuid, string targetUuid, int di
 
 
 	sv->emit("tower_attack", buffer.GetString());
+	buffer.Clear();
+	return;
 }
 
 void BattleAPI::battleSyncEvent(UserUnitInfo unitData)
@@ -309,7 +333,8 @@ void BattleAPI::battleSyncEvent(UserUnitInfo unitData)
 	
 
 	//TEST
-	
+	buffer.Clear();
+	return;
 }
 
 void BattleAPI::sendBattleEndEvent(int winTeamId)
@@ -332,12 +357,12 @@ void BattleAPI::sendBattleEndEvent(int winTeamId)
 	Writer<StringBuffer> writer(buffer);
 	doc.Accept(writer);
 	sv->emit("battle_end", buffer.GetString());
+	buffer.Clear();
+	return;
 }
 
 void BattleAPI::sendTestMoveLogic(Vec2 titleCordPost)
 {
-	
-
 	auto userData = UserModel::getInstance()->getUserInfo();
 
 	Document doc;
@@ -359,6 +384,8 @@ void BattleAPI::sendTestMoveLogic(Vec2 titleCordPost)
 		return;
 	}
 	sv->emit("get_title", buffer.GetString());
+	buffer.Clear();
+	return;
 }
 
 void BattleAPI::sendCheckMapEvent(SocketIOCallback callBack)
@@ -400,6 +427,8 @@ void BattleAPI::sendNeutralTowerAttackEvent(int teamID, int towerIndex, Vec2 dir
 	}
 	sv->emit("attack_neutral_tower", buffer.GetString());
 	sv->on("attack_neutral_tower_end", callBack);
+	buffer.Clear();
+	return;
 }
 
 void BattleAPI::sendWarpEvent(int wormIndex, int outGateIndex, SocketIOCallback callback)
@@ -423,7 +452,8 @@ void BattleAPI::sendWarpEvent(int wormIndex, int outGateIndex, SocketIOCallback 
 	log("send warp event: %s", buffer.GetString());
 	sv->emit("warp_begin", buffer.GetString());
 	sv->on("warp_begin_end", callback);
-
+	buffer.Clear();
+	return;
 
 }
 
@@ -453,7 +483,8 @@ void BattleAPI::sendNeutralUnitAttackEvent(int team_id, int unitIndex,Vec2 direc
 	}
 	sv->emit("attack_neutral_unit", buffer.GetString());
 	sv->on("attack_neutral_unit_end", callback);
-
+	buffer.Clear(); 
+	return;
 }
 
 void BattleAPI::sendCannonAttackEvent(int team_id, int unitIndex, Vec2 direc, SocketIOCallback callback)
@@ -478,11 +509,12 @@ void BattleAPI::sendCannonAttackEvent(int team_id, int unitIndex, Vec2 direc, So
 	auto sv = NodeServer::getInstance()->getClient();
 
 	if (sv == nullptr) {
+		buffer.Clear();
 		return;
 	}
 	sv->emit("attack_cannon", buffer.GetString());
 	sv->on("attack_cannon_end", callback);
-
+	buffer.Clear();
 }
 
 void BattleAPI::sendCannonLunchEvent(int team_id, int cannonIndex, Vec2 lunchVector) {
@@ -510,6 +542,8 @@ void BattleAPI::sendCannonLunchEvent(int team_id, int cannonIndex, Vec2 lunchVec
 	doc.Accept(writer);
 
 	sv->emit("cannon_lunch", buffer.GetString());	
+	buffer.Clear();
+	return;
 }
 
 void BattleAPI::sendMiniOnMoveEvent(int team_id, int minionIndex, string parentUuid, Vec2 pos, Vec2 veloc)
@@ -534,6 +568,8 @@ void BattleAPI::sendMiniOnMoveEvent(int team_id, int minionIndex, string parentU
 	doc.Accept(writer);
 
 	sv->emit("minion_move", buffer.GetString());
+	buffer.Clear();
+	return;
 }
 
 /*Converter*/

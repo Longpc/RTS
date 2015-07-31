@@ -296,8 +296,8 @@ private:
 
 	bool _onReconnect = false;
 	Button * _reconnectButton;
-	virtual void reconnectToNodeServer(Ref *p);
-	virtual void serverConnectedNoti(Ref *p);
+	virtual void serverDisconnectedNotifyReceivedCallback(Ref *p);
+	virtual void serverConnectedNotifyReceivedCallback(Ref *p);
 
 	/*create wormhole UI*/
 	virtual void createWormHole();
