@@ -60,12 +60,12 @@ bool SkillSelectScene::init()
 	_skill2NameLabel = createUniNameLabel(Vec2(baseX, baseY));
 	_slot2BackGroundButton->addChild(_skill2NameLabel);
 
-	auto nextButton = Button::create();
-	nextButton->loadTextureNormal("image/button/new/button_decide.png");
-	nextButton->setPosition(Vec2(_visibleSize.width - 50, _visibleSize.height-100));
-	nextButton->setTouchEnabled(true);
-	nextButton->addTouchEventListener(CC_CALLBACK_2(SkillSelectScene::nextButtonCallback, this));
-	addChild(nextButton, 10);
+	_decideButton = Button::create();
+	_decideButton->loadTextureNormal("image/button/new/button_decide.png");
+	_decideButton->setPosition(Vec2(_visibleSize.width - 50, _visibleSize.height-100));
+	_decideButton->setTouchEnabled(false);
+	_decideButton->addTouchEventListener(CC_CALLBACK_2(SkillSelectScene::nextButtonCallback, this));
+	addChild(_decideButton, 10);
 
 	createAllUnitView();
 
@@ -134,10 +134,10 @@ void SkillSelectScene::onTouchUnitSlot2(Ref *pSender, Widget::TouchEventType typ
 	setSelectedSlot(3);
 }
 */
-void SkillSelectScene::displayUnit(Button *parent, Label *label, int unitId)
+void SkillSelectScene::showSkill(Button *parent, Label *label, int skillIndex)
 {
-	parent->loadTextureNormal(_allSkillInfo[unitId].skill_icon_path);
-	label->setString(_allSkillInfo[unitId].name);
+	parent->loadTextureNormal(_allSkillInfo[skillIndex].skill_icon_path);
+	label->setString(_allSkillInfo[skillIndex].name);
 	//parent->setScale(0.3);
 	if (_onSelectedSlot < SLOT_NUMBER) {
 		_onSelectedSlot++;
@@ -205,10 +205,8 @@ void SkillSelectScene::nextButtonCallback(Ref *pSender, Widget::TouchEventType t
 			BattleModel::getInstance()->setPlayerSkills(listSkillId);
 			client->on("connect_select_skill_end", [&, temp](SIOClient* client, const std::string& data) {
 				log("select skill end data: %s", data.c_str());
+				RoomUserModel::getInstance()->parseTeamData(data);
 				client->emit("connect_ready", temp.c_str());
-				client->on("connect_ready_end", [&](SIOClient* client, const std::string& data) {
-					log("Connect Ready End event received");
-				});
 				client->on("room_public_battle_start", CC_CALLBACK_2(SkillSelectScene::startBattleCallback, this));
 			});
 		}
@@ -242,11 +240,11 @@ void SkillSelectScene::onBackButtonClick(Ref *pSender)
 		Writer<StringBuffer> wt(buff);
 		doc.Accept(wt);
 
-		auto client = NodeServer::getInstance()->getClient();
+		/*auto client = NodeServer::getInstance()->getClient();
 		client->emit("re_select_unit", buff.GetString());
-		client->on("re_select_unit_end", [&, pageFlg](SIOClient * client, const string data) {
+		client->on("re_select_unit_end", [&, pageFlg](SIOClient * client, const string data) {*/
 			Director::getInstance()->replaceScene(TransitionMoveInL::create(SCREEN_TRANSI_DELAY, MultiUnitSelectScene::createScene(1, pageFlg)));
-		});
+		//});
 	}
 	else {
 		Director::getInstance()->replaceScene(TransitionMoveInL::create(SCREEN_TRANSI_DELAY, MultiUnitSelectScene::createScene(1, pageFlg)));
@@ -262,7 +260,7 @@ void SkillSelectScene::decideCallBack(Ref *pSender, Widget::TouchEventType type)
 	{
 	case cocos2d::ui::Widget::TouchEventType::BEGAN:
 	{
-		onSelectUnit(_onSelectSkillTag);
+		setSelectedSkillINfo(_onSelectSkillTag);
 		_onTouchDisable = false;
 		_isSentRequest = false;
 		break;
@@ -306,6 +304,7 @@ void SkillSelectScene::onTouchUnit(Ref *pSender, Widget::TouchEventType type)
 		_onTouchDisable = true;
 		auto dialod = SkillDetailDialog::create(_allSkillInfo[tag], CC_CALLBACK_2(SkillSelectScene::decideCallBack, this), CC_CALLBACK_2(SkillSelectScene::cancelCallBack, this));
 		getParent()->addChild(dialod);
+		_decideButton->setTouchEnabled(false);
 		break;
 	}
 	case cocos2d::ui::Widget::TouchEventType::CANCELED:
@@ -316,20 +315,20 @@ void SkillSelectScene::onTouchUnit(Ref *pSender, Widget::TouchEventType type)
 
 }
 
-void SkillSelectScene::onSelectUnit(int unitId)
+void SkillSelectScene::setSelectedSkillINfo(int skillindex)
 {
 	switch (_onSelectedSlot)
 	{
 	case 1:
 	{
-		displayUnit(_skillSlot1->getClickableButton(),_skill1NameLabel, unitId);
-		_allSelectedSkilId[0] = unitId;
+		showSkill(_skillSlot1->getClickableButton(),_skill1NameLabel, skillindex);
+		_allSelectedSkilId[0] = skillindex;
 		break;
 	}
 	case 2:
 	{
-		displayUnit(_skillSlot2->getClickableButton(),_skill2NameLabel, unitId);
-		_allSelectedSkilId[1] = unitId;
+		showSkill(_skillSlot2->getClickableButton(),_skill2NameLabel, skillindex);
+		_allSelectedSkilId[1] = skillindex;
 		break;
 	}
 	/*case 3:
@@ -339,6 +338,63 @@ void SkillSelectScene::onSelectUnit(int unitId)
 	}*/
 	default:
 		break;
+	}
+	sendSelectedSkillList();
+}
+
+void SkillSelectScene::sendSelectedSkillList()
+{
+	vector<UserSkillInfo> skills;
+	for (auto &var : _allSelectedSkilId)
+	{
+		if (var < 0)
+		{
+			return;
+		}
+		skills.push_back(_allSkillInfo[var]);
+	}
+
+	if (UserDefault::getInstance()->getIntegerForKey("MODE") == SOLO_MODE) {
+		UserModel::getInstance()->setSelectedSkillList(skills);
+	}
+	else {
+		auto a = UserModel::getInstance()->getUserInfo();
+		Document doc;
+		doc.SetObject();
+		Document::AllocatorType& allo = doc.GetAllocator();
+
+		doc.AddMember("room_id", a.room_id, allo);
+		doc.AddMember("team_id", a.team_id, allo);
+		doc.AddMember("user_id", a.user_id, allo);
+		doc.AddMember("unit_id", _selectedUnitId, allo);
+		rapidjson::Value listSkill;
+		vector<int> listSkillId;
+		listSkill.SetArray();
+		for (int i = 0; i < skills.size(); i++)
+		{
+			listSkill.PushBack(skills[i].mst_skill_id, allo);
+			listSkillId.push_back(skills[i].mst_skill_id);
+
+			//targetList.AddMember("target_unique_id", targetsId[i], allo);
+		}
+		doc.AddMember("player_skill_list", listSkill, allo);
+		string uu = UserModel::getInstance()->getUuId().c_str();
+		doc.AddMember("uuid", uu.c_str(), allo);
+
+		StringBuffer buff;
+		Writer<StringBuffer> wt(buff);
+		doc.Accept(wt);
+
+		auto client = NodeServer::getInstance()->getClient();
+		log("send select skills data: %s", buff.GetString());
+		client->emit("connect_select_skill", buff.GetString());
+		_isSentRequest = true;
+		string temp = buff.GetString();
+		BattleModel::getInstance()->setPlayerSkills(listSkillId);
+		client->on("connect_select_skill_end", [&, temp](SIOClient* client, const std::string& data) {
+			log("select skill end data: %s", data.c_str());
+			_decideButton->setTouchEnabled(true);
+		});
 	}
 }
 

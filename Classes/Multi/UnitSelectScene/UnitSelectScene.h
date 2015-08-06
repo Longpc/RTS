@@ -9,6 +9,7 @@
 #include "Multi/SkillSelectScene/SkillSelectScene.h"
 #include "ModeSelectScene/ModeSelectScene.h"
 #include "base/baseButton/ClippingButtonBase.h"
+#include "base/UnitSkillInfoButtonGroup/UnitInfoGroup.h"
 
 #include "Model/data/UserModel.h"
 
@@ -31,6 +32,7 @@ public:
 	static Scene *createScene(int roomId,int pageFlg);
 	static MultiUnitSelectScene *create(int roomId, int pageFlg);
 	bool init(int roomId, int pageFlg);
+	~MultiUnitSelectScene();
 protected:
 private:
 	///VARIABLES///////////////////////////////////////////////////////////////////////
@@ -42,6 +44,11 @@ private:
 	int _pageFlg;
 
 	Layer *layer;
+	vector<UnitInfoGroup*> _allUnitGroup;
+
+	UnitInfoGroup *_unitGroup1;
+	UnitInfoGroup *_unitGroup2;
+	UnitInfoGroup *_unitGroup3;
 
 	ClipingButtonBase* _buttonSlot1;
 	ClipingButtonBase* _buttonSlot2;
@@ -69,6 +76,9 @@ private:
 	virtual void getDataFromDataBase();
 	virtual void onEnter();
 	virtual void update(float delta);
+
+	virtual void updateContent(Ref *p);
+
 	bool onTouchBegan(Touch *touch, Event *unused_event);
 	void onTouchEnded(Touch *touch, Event *unused_event);
 	void onTouchMoved(Touch *touch, Event *unused_event);
@@ -98,6 +108,11 @@ private:
 
 	virtual void leftArrowClickCallback(Ref *pSender, Widget::TouchEventType type);
 	virtual void rightArrowClickCallback(Ref *pSender, Widget::TouchEventType type);
+
+	virtual void sendSelectUnitInfo();
+	virtual void sendSElectSkillInfo();
+
+
 
 };
 

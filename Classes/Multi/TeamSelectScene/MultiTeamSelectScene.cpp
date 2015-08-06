@@ -189,25 +189,6 @@ void MultiTeamSelectScene::getRoomInfo(int roomId)
 		layer->addChild(userName);
 	}
 	*/
-	auto roomUserList = RoomUserModel::getInstance()->getRoomUserList();
-	vector<RoomUser> tempList1;
-	vector<RoomUser> tempList2;
-	for (int i = 0; i < roomUserList.size(); i++)
-	{
-		if (roomUserList[i].team_id == TEAM_FLG_BLUE)
-		{
-			roomUserList[i].name = ListUserAPI::getInstance()->getUserNameByUserId(roomUserList[i].user_id);
-			tempList1.push_back(roomUserList[i]);
-			continue;
-		}
-		if (roomUserList[i].team_id == TEAM_FLG_RED) {
-			roomUserList[i].name = ListUserAPI::getInstance()->getUserNameByUserId(roomUserList[i].user_id);
-			tempList2.push_back(roomUserList[i]);
-			continue;
-		}
-	}
-	RoomUserModel::getInstance()->setBlueTeamUserList(tempList1);
-	RoomUserModel::getInstance()->setRedTeamUserList(tempList2);
 
 }
 void MultiTeamSelectScene::getAndShowTeamInfo(int teamId,Sprite *parent)
@@ -307,6 +288,7 @@ void MultiTeamSelectScene::enterTeam(int teamId)
 	client->emit("connect_select_team", buff.GetString());
 	client->on("connect_select_team_end", [&,teamId](SIOClient* client, const std::string& data) {
 		log("select team end data: %s", data.c_str());
+		RoomUserModel::getInstance()->parseTeamData(data);
 		UserModel::getInstance()->setTeamId(teamId);
 		Director::getInstance()->replaceScene(TransitionMoveInR::create(SCREEN_TRANSI_DELAY, MultiUnitSelectScene::createScene(teamId, MULTI_MODE)));
 	});
@@ -377,9 +359,11 @@ Label* MultiTeamSelectScene::createLabelWithStringandPosition(string text, Vec2 
 
 void MultiTeamSelectScene::updateView(Ref *p)
 {
-		getRoomInfo(_curRoomId);
-		getAndShowTeamInfo(TEAM_FLG_BLUE, _blueTeamBg);
-		getAndShowTeamInfo(TEAM_FLG_RED, _redTeamBg);
+	CC_UNUSED_PARAM(p);
+	log("update View called");
+	getRoomInfo(_curRoomId);
+	getAndShowTeamInfo(TEAM_FLG_BLUE, _blueTeamBg);
+	getAndShowTeamInfo(TEAM_FLG_RED, _redTeamBg);
 }
 
 MultiTeamSelectScene::~MultiTeamSelectScene()

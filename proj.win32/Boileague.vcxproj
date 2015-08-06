@@ -149,6 +149,7 @@ xcopy /Y /Q "$(EngineRoot)external\websockets\prebuilt\win32\*.*" "$(OutDir)"</C
     <ClCompile Include="..\Classes\base\LayerBase.cpp" />
     <ClCompile Include="..\Classes\base\MyBodyParser.cpp" />
     <ClCompile Include="..\Classes\base\pageViewBase\PageViewBase.cpp" />
+    <ClCompile Include="..\Classes\base\UnitSkillInfoButtonGroup\UnitInfoGroup.cpp" />
     <ClCompile Include="..\Classes\dataController\SkillData\SkillData.cpp" />
     <ClCompile Include="..\Classes\dataController\UnitData\UnitData.cpp" />
     <ClCompile Include="..\Classes\HelloWorldScene.cpp" />
@@ -179,6 +180,8 @@ xcopy /Y /Q "$(EngineRoot)external\websockets\prebuilt\win32\*.*" "$(OutDir)"</C
     <ClCompile Include="..\Classes\Server\API\ListUserPHPAPI.cpp" />
     <ClCompile Include="..\Classes\Server\API\StartPHPAPI.cpp" />
     <ClCompile Include="..\Classes\Server\API\UserLoginPHPAPI.cpp" />
+    <ClCompile Include="..\Classes\Server\MapServer.cpp" />
+    <ClCompile Include="..\Classes\Server\MoveServer.cpp" />
     <ClCompile Include="..\Classes\Server\Server.cpp" />
     <ClCompile Include="..\Classes\UserSelectScene\UserSelectScene.cpp" />
     <ClCompile Include="main.cpp" />
@@ -197,6 +200,7 @@ xcopy /Y /Q "$(EngineRoot)external\websockets\prebuilt\win32\*.*" "$(OutDir)"</C
     <ClInclude Include="..\Classes\base\LayerBase.h" />
     <ClInclude Include="..\Classes\base\MyBodyParser.h" />
     <ClInclude Include="..\Classes\base\pageViewBase\PageViewBase.h" />
+    <ClInclude Include="..\Classes\base\UnitSkillInfoButtonGroup\UnitInfoGroup.h" />
     <ClInclude Include="..\Classes\dataController\SkillData\SkillData.h" />
     <ClInclude Include="..\Classes\dataController\UnitData\UnitData.h" />
     <ClInclude Include="..\Classes\HelloWorldScene.h" />
@@ -227,6 +231,8 @@ xcopy /Y /Q "$(EngineRoot)external\websockets\prebuilt\win32\*.*" "$(OutDir)"</C
     <ClInclude Include="..\Classes\Server\API\UserLoginPHPAPI.h" />
     <ClInclude Include="..\Classes\Server\API\HttpClientBase.h" />
     <ClInclude Include="..\Classes\Server\API\ListUserPHPAPI.h" />
+    <ClInclude Include="..\Classes\Server\MapServer.h" />
+    <ClInclude Include="..\Classes\Server\MoveServer.h" />
     <ClInclude Include="..\Classes\Server\Server.h" />
     <ClInclude Include="..\Classes\UserSelectScene\UserSelectScene.h" />
     <ClInclude Include="main.h" />

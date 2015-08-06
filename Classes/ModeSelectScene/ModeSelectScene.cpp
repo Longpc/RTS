@@ -142,6 +142,8 @@ void ModeSelectScene::multiButtonCallback(Ref *pSender, Widget::TouchEventType t
 	{
 		if (checkRoomMember() == true && StartAPI::getInstance()->getServerCallbackFlg()) {
 			NodeServer::createInstance();
+			MapServer::createInstance();
+			MoveServer::createInstace();
 			Director::getInstance()->replaceScene(TransitionMoveInR::create(SCREEN_TRANSI_DELAY, UserSelect::createScene()));
 		} 
 		break;

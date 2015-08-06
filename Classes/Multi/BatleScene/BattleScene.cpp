@@ -31,6 +31,10 @@ bool BattleScene::init()
 	}
 	NotificationCenter::getInstance()->addObserver(this, CC_CALLFUNCO_SELECTOR(BattleScene::serverDisconnectedNotifyReceivedCallback), DISCONNECT_MSG, nullptr);
 	NotificationCenter::getInstance()->addObserver(this, CC_CALLFUNCO_SELECTOR(BattleScene::serverConnectedNotifyReceivedCallback), CONNECTED_MSG, nullptr);
+	NotificationCenter::getInstance()->addObserver(this, CC_CALLFUNCO_SELECTOR(BattleScene::moveSVCOnnectedNotifyReceivedCallback), MOVESV_CONNECTED_MSG, nullptr);
+	NotificationCenter::getInstance()->addObserver(this, CC_CALLFUNCO_SELECTOR(BattleScene::moveSVDisconnectedNotifyReceivedCallback), MOVESV_DISCONNECTED_MSG, nullptr);
+	NotificationCenter::getInstance()->addObserver(this, CC_CALLFUNCO_SELECTOR(BattleScene::mapSErverConnectedNotifyReceivedCallback), MAPSV_CONNECTED_MSG, nullptr);
+	NotificationCenter::getInstance()->addObserver(this, CC_CALLFUNCO_SELECTOR(BattleScene::mapServerDisconnectNotifyReceivedCallback), MAPSV_DISCONNECTED_MSG, nullptr);
 	_gameMode = UserDefault::getInstance()->getIntegerForKey("MODE");
 	BattleModel::getInstance()->setGameMode(_gameMode);
 	_menu->setVisible(false);
@@ -197,19 +201,7 @@ bool BattleScene::init()
 		enemy.unitId = _allEnemyUnitData[i].mst_unit_id;
 		//_saveBattleInfoEnemyTeam.push_back(enemy);
 	}
-	auto folow = Follow::create(testObject, Rect(FOLLOW_MARGIN,0,_myMap->getContentSize().width - FOLLOW_MARGIN, _myMap->getContentSize().height));
-	folow->setTag(121);
-	_battleBackground->runAction(folow);
-	auto bolder = Node::create();
-	/*Scene main schedule update init*/
-	//setScale(0.75f);
 	
-	scheduleUpdate();
-	resume();
-
-	if (_gameMode == SOLO_MODE) {
-		runAction(RepeatForever::create(Sequence::create(DelayTime::create(1.0f), CallFuncN::create(CC_CALLBACK_0(BattleScene::neutralUnitMoveInSoloMod,this)),nullptr)));
-	}
 
 	return true;
 }
@@ -444,9 +436,7 @@ void BattleScene::createBoudingWall()
 }
 
 void BattleScene::createNeutralTower()
-{
-	
-	/*Create test neutral tower*/
+{	/*Create test neutral tower*/
 	for (int i = 0; i < 3; i++)
 	{
 		auto node = Node::create();
@@ -1183,6 +1173,8 @@ void BattleScene::createContent()
 	{
 		//NodeServer::getInstance()->setDisconnectCallback(CC_CALLBACK_0(BattleScene::reconnectToNodeServer, this));
 		createNodeSVHandler();
+		createMoveSVHandler();
+		createMapSVHandler();
 	}
 	else
 	{
@@ -1258,6 +1250,7 @@ void BattleScene::serverConnectedNotifyReceivedCallback(Ref *p)
 }
 void BattleScene::serverDisconnectedNotifyReceivedCallback(Ref *p)
 {
+	if (_onReconnect) return;
 	log("RECONNECT FUNTION CALLED");
 	_onReconnect = true;
 	testObject->stopMoveAction();
@@ -1327,6 +1320,114 @@ void BattleScene::serverDisconnectedNotifyReceivedCallback(Ref *p)
 	
 }
 
+void BattleScene::mapSErverConnectedNotifyReceivedCallback(Ref *p)
+{
+	log("map server connected");
+	createMapSVHandler();
+}
+
+void BattleScene::mapServerDisconnectNotifyReceivedCallback(Ref *p)
+{
+	log("map server disconnected");
+	MapServer::destroyInstace();
+	this->runAction(Sequence::create(DelayTime::create(RECONNECT_DELAY), CallFuncN::create([&](Ref* p) {
+		MapServer::createInstance();
+	}),nullptr));
+	
+}
+
+void BattleScene::moveSVCOnnectedNotifyReceivedCallback(Ref *p)
+{
+	log("move server connected");
+	createMoveSVHandler();
+}
+void BattleScene::moveSVDisconnectedNotifyReceivedCallback(Ref *p)
+{
+	log("Map server disconnected");
+	MoveServer::destroyInstance();
+	this->runAction(Sequence::create(DelayTime::create(RECONNECT_DELAY), CallFuncN::create([&](Ref* p) {
+		MoveServer::createInstace();
+	}), nullptr));
+	
+
+}
+void BattleScene::networkChecker(float dt)
+{
+	CC_UNUSED_PARAM(dt);
+	if (_receivedUpdateMsg == false)
+	{
+		log("Not receive update msg from server");
+		NotificationCenter::getInstance()->postNotification(DISCONNECT_MSG, (Ref*)(intptr_t)1);
+		Director::getInstance()->getScheduler()->unschedule(schedule_selector(BattleScene::networkChecker), this);
+		_networkCheckerCreated = false;
+	}
+	_receivedUpdateMsg = false;
+}
+void BattleScene::createMapSVHandler()
+{
+	auto mapSV = MapServer::getInstance()->getClient();
+	if (!mapSV) return;
+	mapSV->on("set_title", [&](SIOClient * cl, const string& data) {
+		CC_UNUSED_PARAM(cl);
+		if (_onDestructCalled) return;
+		setTitle(data);
+	});
+}
+
+void BattleScene::createMoveSVHandler()
+{
+	auto moveSV = MoveServer::getInstance()->getClient();
+	if (!moveSV) return;
+	moveSV->on("unit_move", [&](SIOClient* client, const string& data) {
+		CC_UNUSED_PARAM(client);
+		//log("move event");
+		if (_onDestructCalled) return;
+		Document doc;
+		doc.Parse<0>(data.c_str());
+		if (doc.HasParseError()) {
+			log("Parse JSOn error");
+			return;
+		}
+		if (doc.IsObject())
+		{
+			vector<Sprite*> findList;
+			int teamId = doc["team_id"].GetInt();
+			string uuid = doc["uuid"].GetString();
+			Vec2 pos = Vec2(doc["position_x"].GetDouble(), doc["position_y"].GetDouble());
+			int  direc = doc["direction"].GetInt();
+			float moving = doc["moving"].GetBool();
+
+			if (teamId == _currentPlayerTeamFlg)
+			{
+				findList = _allAlliedUnitSprite;
+			}
+			else
+			{
+				findList = _allEnemyUnitSprite;
+			}
+
+			for (int i = 0; i < findList.size() - 1; i++)
+			{
+				auto cha = (Character*)findList[i];
+				if (strcmp(cha->getUnitUUID().c_str(), uuid.c_str()) == 0)
+				{
+					cha->setPosition(pos);
+					if (moving)
+					{
+						cha->actionMoveCharacter(direc);
+					}
+					else {
+						cha->stopMoveAction();
+						cha->getPhysicsBody()->setVelocity(Vec2::ZERO);
+					}
+				}
+			}
+		}
+
+
+	});
+}
+
 void BattleScene::createNodeSVHandler()
 {
 	auto sv = NodeServer::getInstance()->getClient();
@@ -1340,6 +1441,12 @@ void BattleScene::createNodeSVHandler()
 	/*Battle update event*/
 	sv->on("update_score", [&](SIOClient *client, const string& data) {
 		CC_UNUSED_PARAM(client);
+		_receivedUpdateMsg = true;
+		if (!_networkCheckerCreated)
+		{
+			_networkCheckerCreated = true;
+			this->schedule(schedule_selector(BattleScene::networkChecker), 0.5f);
+		}
 		if (_onDestructCalled) return;
 
 		Document doc;
@@ -1365,6 +1472,7 @@ void BattleScene::createNodeSVHandler()
 		{
 			log("score update error in doc type");
 		}
+		
 	});
 	/*sv->on("battle_update", [&](SIOClient* client, const std::string data){
 		//log("BATTLE UPDATE data: %s", data.c_str());
@@ -1412,7 +1520,7 @@ void BattleScene::createNodeSVHandler()
 				else {
 					processUnitSprite = _allEnemyUnitSprite;
 				}
-				for (int j = 0; j < processUnitSprite.size() -1; j++)
+ 				for (int j = 0; j < processUnitSprite.size() -1; j++)
 				{
 					if (processUnitSprite[j]->getTag() == TOWER_TAG) {
 						continue;
@@ -1441,53 +1549,7 @@ void BattleScene::createNodeSVHandler()
 	});*/
 
 	/*Unit move event public event*/
-
-	sv->on("unit_move", [&](SIOClient* client, const string& data) {
-		CC_UNUSED_PARAM(client);
-		if (_onDestructCalled) return;
-		Document doc;
-		doc.Parse<0>(data.c_str());
-		if (doc.HasParseError()) {
-			log("Parse JSOn error");
-			return;
-		}
-		if (doc.IsObject()) 
-		{
-			vector<Sprite*> findList;
-			int teamId = doc["team_id"].GetInt();
-			string uuid = doc["uuid"].GetString();
-			Vec2 pos = Vec2(doc["position_x"].GetDouble(), doc["position_y"].GetDouble());
-			int  direc = doc["direction"].GetInt();
-			float moving = doc["moving"].GetBool();
-			if (teamId == _currentPlayerTeamFlg)
-			{
-				findList = _allAlliedUnitSprite;
-			}
-			else
-			{
-				findList = _allEnemyUnitSprite;
-			}
-
-			for (int i = 0; i < findList.size() - 1; i ++)
-			{
-				auto cha = (Character*)findList[i];
-				if (strcmp(cha->getUnitUUID().c_str(), uuid.c_str()) ==0)
-				{
-					cha->setPosition(pos);
-					if (moving)
-					{
-						cha->actionMoveCharacter(direc);
-					}
-					else {
-						cha->stopMoveAction();
-						cha->getPhysicsBody()->setVelocity(Vec2::ZERO);
-					}
-				}
-			}
-		}
-
-
-	});
+	
 	//not using yet
 	//sv->on("unit_move_end", [&](SIOClient* client, const string& data) {
 		//log("Unit_move_end data: %s", data.c_str());
@@ -1670,71 +1732,10 @@ void BattleScene::createNodeSVHandler()
 			}
 		}
 	});
-
-	sv->on("set_title", [&](SIOClient* client, const string data) {
-		CC_UNUSED_PARAM(client);
-		//log("set_title");
+	sv->on("set_title", [&](SIOClient *c, const string& data){
+		CC_UNUSED_PARAM(c);
 		if (_onDestructCalled) return;
-		Document doc;
-		doc.Parse<0>(data.c_str());
-		if (doc.HasParseError()) {
-			log("on: set_title Parse JSOn error");
-			return;
-		}
-
-		int team_Id = doc["team_id"].GetInt();
-		int x = doc["pos_x"].GetInt();
-		int y = doc["pos_y"].GetInt();
-		bool disableFlg = doc["disable"].GetBool();
-		if (x < 0 || x > _mapLayer->getLayerSize().width || y < 0 || y > _mapLayer->getLayerSize().height) {
-			log("Invalid title position");
-			return;
-		}
-		Vec2 titleCoor = Vec2(x, y);
-		auto title = _mapLayer->getTileAt(titleCoor);
-		if (title == nullptr) return;
-		if (team_Id == TEAM_FLG_BLUE)
-		{
-			if (disableFlg) {
-				//in case of disable title
-				title->setColor(Color3B::BLUE);
-				auto mTittle = _miniLayer->getTileAt(titleCoor);
-				mTittle->setColor(Color3B::BLUE);
-				title->setName("disable");
-				log("disable title :  %d, %d", x, y);
-				return;
-			}
-			if (title->getColor() != Color3B::GREEN)
-			{
-				title->setColor(Color3B::GREEN);
-				auto mTittle = _miniLayer->getTileAt(titleCoor);
-				mTittle->setColor(Color3B::GREEN);
-				title->setName("green");
-
-			}
-			return;
-		}
-		else
-		{
-			if (disableFlg) {
-				//in case of disable title
-				title->setColor(Color3B::RED);
-				auto mTittle = _miniLayer->getTileAt(titleCoor);
-				mTittle->setColor(Color3B::RED);
-				title->setName("disable");
-				log("disable title :  %d, %d", x, y);
-				return;
-			}
-			if (title->getColor() != Color3B::ORANGE)
-			{
-				title->setColor(Color3B::ORANGE);
-				auto mTittle = _miniLayer->getTileAt(titleCoor);
-				mTittle->setColor(Color3B::ORANGE);
-				mTittle->setName("orange");
-			}
-			return;
-		}
-
+		setTitle(data);
 	});
 
 	/*handler for another unit attack to neutral event*/
@@ -2027,6 +2028,71 @@ void BattleScene::createNodeSVHandler()
 	});
 }
 
+void BattleScene::setTitle(const string& data)
+{
+	//log("set_title");
+	if (_onDestructCalled) return;
+	Document doc;
+	doc.Parse<0>(data.c_str());
+	if (doc.HasParseError()) {
+		log("on: set_title Parse JSOn error");
+		return;
+	}
+
+	int team_Id = doc["team_id"].GetInt();
+	int x = doc["pos_x"].GetInt();
+	int y = doc["pos_y"].GetInt();
+	bool disableFlg = doc["disable"].GetBool();
+	if (x < 0 || x > _mapLayer->getLayerSize().width || y < 0 || y > _mapLayer->getLayerSize().height) {
+		log("Invalid title position");
+		return;
+	}
+	Vec2 titleCoor = Vec2(x, y);
+	auto title = _mapLayer->getTileAt(titleCoor);
+	if (title == nullptr) return;
+	if (team_Id == TEAM_FLG_BLUE)
+	{
+		if (disableFlg) {
+			//in case of disable title
+			title->setColor(Color3B::BLUE);
+			auto mTittle = _miniLayer->getTileAt(titleCoor);
+			mTittle->setColor(Color3B::BLUE);
+			title->setName("disable");
+			log("disable title :  %d, %d", x, y);
+			return;
+		}
+		if (title->getColor() != Color3B::GREEN)
+		{
+			title->setColor(Color3B::GREEN);
+			auto mTittle = _miniLayer->getTileAt(titleCoor);
+			mTittle->setColor(Color3B::GREEN);
+			title->setName("green");
+
+		}
+		return;
+	}
+	else
+	{
+		if (disableFlg) {
+			//in case of disable title
+			title->setColor(Color3B::RED);
+			auto mTittle = _miniLayer->getTileAt(titleCoor);
+			mTittle->setColor(Color3B::RED);
+			title->setName("disable");
+			log("disable title :  %d, %d", x, y);
+			return;
+		}
+		if (title->getColor() != Color3B::ORANGE)
+		{
+			title->setColor(Color3B::ORANGE);
+			auto mTittle = _miniLayer->getTileAt(titleCoor);
+			mTittle->setColor(Color3B::ORANGE);
+			mTittle->setName("orange");
+		}
+		return;
+	}
+
+}
 void BattleScene::towerAttackLogic(Sprite* towerSprite,UserUnitInfo towerData, vector<Sprite*> targetFindList, vector<UserUnitInfo>* unitDataList, string targetUuid, float randomNum)
 {
 
@@ -2167,7 +2233,20 @@ void BattleScene::onEnter()
 	contactListener->onContactPostSolve = CC_CALLBACK_2(BattleScene::onPhysicContactPostSlove, this);
 	dispath->addEventListenerWithSceneGraphPriority(contactListener, this);
 	
+	auto folow = Follow::create(testObject, Rect(FOLLOW_MARGIN, 0, _myMap->getContentSize().width - FOLLOW_MARGIN, _myMap->getContentSize().height));
+	folow->setTag(121);
+	_battleBackground->runAction(folow);
+	auto bolder = Node::create();
+	/*Scene main schedule update init*/
+	//setScale(0.75f);
 
+	scheduleUpdate();
+	this->schedule(schedule_selector(BattleScene::moveLogic), 0.05f);
+	resume();
+
+	if (_gameMode == SOLO_MODE) {
+		runAction(RepeatForever::create(Sequence::create(DelayTime::create(1.0f), CallFuncN::create(CC_CALLBACK_0(BattleScene::neutralUnitMoveInSoloMod, this)), nullptr)));
+	}
 }
 
 void BattleScene::update(float delta)
@@ -2176,7 +2255,7 @@ void BattleScene::update(float delta)
 	_checkTime += delta;
 	//TODO: uncomment to send unit status every 0.07 second - > (100/0.07) update frame per second
 	auto disVtr = testObject->getPosition() - _checkPos;
-	if (_checkTime >= 0.06 && disVtr.length() > 20.0f && _gameMode == MULTI_MODE && _onRespwanFlg == false && _onReconnect == false) {
+	if (_checkTime >= 0.04 && disVtr.length() > 20.0f && _gameMode == MULTI_MODE && _onRespwanFlg == false && _onReconnect == false) {
 		float angle = _mainCharacterIconInMiniMap->getRotation();
 		int direc = detectDirectionBaseOnTouchAngle(angle);
 		BattleAPI::getInstance()->sendMoveEvent(_allAlliedUnitData[0],testObject->getPosition(), direc, testObject->getOnMovingFlg(), testObject->getOnCannonLunchFlg());
@@ -2222,17 +2301,7 @@ void BattleScene::update(float delta)
 
 	fakeZOrder();
 
-	testMoveLogic(testObject, _currentPlayerTeamFlg);
-	if (_gameMode == SOLO_MODE)
-	{
-		for (int i = 0; i < _neutralUnitList.size(); i++)
-		{
-			if (_neutralUnitList[i]->getTag() != 0) {
-				testMoveLogic(_neutralUnitList[i], _neutralUnitList[i]->getTag());
-			}
-		}
-	}
-
+	
 	checkForWarp();
 
 	checkForUsingCannon();
@@ -2253,6 +2322,21 @@ void BattleScene::neutralUnitMoveInSoloMod()
 		neutral->actionMoveCharacter(direc);
 		Vec2 force = Vec2(NEUTRAL_MOVE_SPEED * cos(vec.getAngle()), NEUTRAL_MOVE_SPEED * sin(vec.getAngle()));
 		neutral->getPhysicsBody()->setVelocity(force);
+	}
+}
+
+void BattleScene::moveLogic(float dt)
+{
+	CC_UNUSED_PARAM(dt);
+	testMoveLogic(testObject, _currentPlayerTeamFlg);
+	if (_gameMode == SOLO_MODE)
+	{
+		for (int i = 0; i < _neutralUnitList.size(); i++)
+		{
+			if (_neutralUnitList[i]->getTag() != 0) {
+				testMoveLogic(_neutralUnitList[i], _neutralUnitList[i]->getTag());
+			}
+		}
 	}
 }
 
@@ -2465,7 +2549,7 @@ void BattleScene::checkForWarp()
 
 void BattleScene::closeWormHole(int ingate, int outgate)
 {
-	log("close");
+	//log("close");
 	_wormHoleList[ingate]->stopActionByTag(WORMHOLDROTATE);
 	_wormHoleList[ingate]->setName("CLOSED");
 	_wormHoleList[outgate]->stopActionByTag(WORMHOLDROTATE);
@@ -2474,7 +2558,7 @@ void BattleScene::closeWormHole(int ingate, int outgate)
 
 void BattleScene::openWormHole(int ingate, int outgate)
 {
-	log("open");
+	//log("open");
 	auto action = RepeatForever::create(RotateBy::create(1, 135));
 	action->setTag(WORMHOLDROTATE);
 	auto action2 = action->clone();
@@ -3168,7 +3252,6 @@ void BattleScene::updateTime()
 {
 	time_t currTimer;
 	time(&currTimer);
-
 	int seconds = ceil(difftime(currTimer, timer));
 	if (seconds != _oldSecond && (seconds % 5 == 0)) {
 		_oldSecond = seconds;
@@ -5238,8 +5321,9 @@ BattleScene::BattleScene() :
 BattleScene::~BattleScene()
 {
 	Director::getInstance()->getScheduler()->unschedule(schedule_selector(BattleScene::update), this);
-	NotificationCenter::getInstance()->removeObserver(this, DISCONNECT_MSG);
-	NotificationCenter::getInstance()->removeObserver(this, CONNECTED_MSG);
+	Director::getInstance()->getScheduler()->unschedule(schedule_selector(BattleScene::networkChecker), this);
+	Director::getInstance()->getScheduler()->unschedule(schedule_selector(BattleScene::moveLogic), this);
+	NotificationCenter::getInstance()->removeAllObservers(this);
 	_allAlliedUnitData = {};
 	_allAlliedUnitSprite = {};
 	_allAlliedUnitHpBar = {};
@@ -5436,6 +5520,16 @@ void BattleScene::skillStunAction(Sprite* object, UserSkillInfo skillInfo, int t
 {
 	int teamFlg = 0;
 	vector<Sprite*> effectedUnitSprite;
+
+	if (teamId == _currentPlayerTeamFlg)
+	{
+		effectedUnitSprite = _allEnemyUnitSprite;
+	}
+	else
+	{
+		effectedUnitSprite = _allAlliedUnitSprite;
+	}
+
 	vector<int> units = detectUnitInAoe(object,skillInfo,effectedUnitSprite, 1, false);
 
 	for (auto& i : units)
@@ -6112,20 +6206,28 @@ void BattleScene::rt_attackAnimationandLogic(Document& doc, vector<Sprite*> proc
 								enemyDieAction(j);
 							}
 						}
-
-						if (target == testObject)
-						{
-							showAttackDame(dame, target->getPosition() + Vec2(0, 100), 1);
-							if (!_onMinionHelp)
+						else {
+							if (target == testObject)
 							{
-								_allAlliedUnitData[0].hp -= dame;
-								updateHpAndMpViewLabel();
-								saveDameInfo(dame, i, 0, _currentEnemyTeamFlg);
+								showAttackDame(dame, target->getPosition() + Vec2(0, 100), 1);
+								if (!_onMinionHelp)
+								{
+									_allAlliedUnitData[0].hp -= dame;
+									updateHpAndMpViewLabel();
+									//saveDameInfo(dame, i, 0, _currentEnemyTeamFlg);
+								}
+								if (_allAlliedUnitData[0].hp <= 0) {
+									runRespawnAction(_allEnemyUnitData[i].uuid.c_str());
+								}
 							}
-							if (_allAlliedUnitData[0].hp <= 0) {
-								runRespawnAction(_allEnemyUnitData[i].uuid.c_str());
+							else {
+								//if target not is main unit. Not show dame but need decrease HP
+								targetDataList->at(j).hp -= dame;
+								/*if (targetDataList->at(j).hp <= 0) {
+									unitDieAction()
+								}*/
 							}
-						}
+						}		
 						updateSlider();
 					},removeFollowFLg);
 					//end of animation callback

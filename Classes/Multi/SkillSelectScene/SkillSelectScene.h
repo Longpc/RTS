@@ -47,6 +47,8 @@ private:
 	int _selectedSkillNum = 0;
 	vector<int> _allSelectedSkilId;
 
+	Button * _decideButton;
+
 	///FUNCTIONS///////////////////////////////////////////////////////////////////////
 	virtual void onEnter();
 	virtual void update(float delta);
@@ -64,12 +66,14 @@ private:
 	//virtual void onTouchUnitSlot3(Ref *pSender, Widget::TouchEventType type);
 
 	virtual void onTouchUnit(Ref *pSender, Widget::TouchEventType type);
-	virtual void onSelectUnit(int unitId);
+	virtual void setSelectedSkillINfo(int unitId);
 
 	virtual void decideCallBack(Ref *pSender, Widget::TouchEventType type);
 	virtual void cancelCallBack(Ref *pSender, Widget::TouchEventType type);
 
-	virtual void displayUnit(Button * parent,Label *label, int unitId);
+	virtual void showSkill(Button * parent,Label *label, int unitId);
+
+	virtual void sendSelectedSkillList();
 
 	virtual void onBackButtonClick(Ref *pSender);
 	virtual void nextButtonCallback(Ref *pSender, Widget::TouchEventType type);

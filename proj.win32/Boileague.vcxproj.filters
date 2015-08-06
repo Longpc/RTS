@@ -76,6 +76,9 @@
     <Filter Include="src\Multi\UserSelectScene">
       <UniqueIdentifier>{dbe5f6e0-060a-449e-add1-f3522f40bc51}</UniqueIdentifier>
     </Filter>
+    <Filter Include="src\base\UnitSkillInfoButtonGroup">
+      <UniqueIdentifier>{376b796c-5d77-4fdf-b742-e7c83f44c3e8}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -212,6 +215,15 @@
     </ClCompile>
     <ClCompile Include="..\Classes\Multi\BatleScene\Map.cpp">
       <Filter>src\Multi\BatleScene</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Classes\Server\MapServer.cpp">
+      <Filter>src\Server</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Classes\base\UnitSkillInfoButtonGroup\UnitInfoGroup.cpp">
+      <Filter>src\base\UnitSkillInfoButtonGroup</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Classes\Server\MoveServer.cpp">
+      <Filter>src\Server</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -352,6 +364,15 @@
     </ClInclude>
     <ClInclude Include="..\Classes\Multi\BatleScene\Map.h">
       <Filter>src\Multi\BatleScene</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Classes\Server\MapServer.h">
+      <Filter>src\Server</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Classes\Server\MoveServer.h">
+      <Filter>src\Server</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Classes\base\UnitSkillInfoButtonGroup\UnitInfoGroup.h">
+      <Filter>src\base\UnitSkillInfoButtonGroup</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

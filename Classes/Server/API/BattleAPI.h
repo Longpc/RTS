@@ -14,8 +14,10 @@
 #include "json/writer.h"
 #include "json/stringbuffer.h"
 
+#include <time.h>
 
-
+#include "Server/MapServer.h"
+#include "Server/MoveServer.h"
 using namespace std;
 USING_NS_CC;
 using namespace rapidjson;

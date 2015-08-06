@@ -293,11 +293,25 @@ private:
 	virtual void changeScreenOrient();
 
 	virtual void createNodeSVHandler();
+	virtual void createMapSVHandler();
+	virtual void createMoveSVHandler();
+
+	virtual void setTitle(const string& data);
+	bool _networkCheckerCreated = false;
+	bool _receivedUpdateMsg = false;
+
+	virtual void networkChecker(float dt);
 
 	bool _onReconnect = false;
 	Button * _reconnectButton;
 	virtual void serverDisconnectedNotifyReceivedCallback(Ref *p);
 	virtual void serverConnectedNotifyReceivedCallback(Ref *p);
+
+	virtual void mapServerDisconnectNotifyReceivedCallback(Ref *p);
+	virtual void mapSErverConnectedNotifyReceivedCallback(Ref *p);
+
+	virtual void moveSVDisconnectedNotifyReceivedCallback(Ref *p);
+	virtual void moveSVCOnnectedNotifyReceivedCallback(Ref *p);
 
 	/*create wormhole UI*/
 	virtual void createWormHole();
@@ -446,6 +460,7 @@ private:
 	Vec2 _checkPos = Vec2::ZERO;
 	void neutralUnitMoveInSoloMod();
 
+	void moveLogic(float dt);
 	void testMoveLogic(Sprite* object, int teamFLg);
 
 	/*Change tower nearly title color with tower title*/

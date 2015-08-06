@@ -19,6 +19,7 @@
 #include "network/SocketIO.h"
 
 #include "Server/Server.h"
+#include "Server/MapServer.h"
 
 class ModeSelectScene :public LayerBase
 {

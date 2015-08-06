@@ -54,6 +54,19 @@ struct RoomUser
 	string name;
 };
 
+struct TeamUnit
+{
+	string uuid;
+	int mst_unit_id;
+};
+
+struct TeamSkill
+{
+	string uuid;
+	int user_id;
+	int mst_skill_id;
+};
+
 struct UnitInforNew 
 {
 	int id;
@@ -221,9 +234,21 @@ enum SKILL_RANGE_TYPE
 #define MOVE_KEY "MOVE_MODE"
 #define MOVE_CIRCLE_TYPE "MOVE_CIRCLE_TYPE"
 #define NOVE_CIRCLE_PROPERTY "MOVE_CIRCLE_PROPERTY"
+
+/*Notification messages name*/
+#define TEAM_DATA_UPDATE_MSG "team_data_update"
+#define SELECT_UNIT_END_MSG "Select_unit"
+#define SELECT_SKILL_END_MSG "select_skill"
+#define READY_FOR_BATTLE "Ready"
+
 #define CONNECTED_MSG "Connected"
 #define DISCONNECT_MSG "Disconnect"
+#define MOVESV_CONNECTED_MSG "MV_CONNECTED"
+#define MOVESV_DISCONNECTED_MSG "MV_DISCONNECTED"
+#define MAPSV_CONNECTED_MSG "MAP_CONNECTED"
+#define MAPSV_DISCONNECTED_MSG "MAP_DISCONNECTED"
 
+#define RECONNECT_DELAY 0.5f
 
 #define MINU_CIRCLE_SCALE 2/5
 

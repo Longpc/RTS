@@ -13,24 +13,23 @@ RoomUserModel* RoomUserModel::getInstance() {
 
 bool RoomUserModel::init()
 {
-	setRoomUserList({});
-	setRedTeamUserList({});
-	setBlueTeamUserList({});
-
 	auto sv = NodeServer::getInstance()->getClient();
 
 	//handler for another player join room event
 	sv->on("room_public_connect", [&](SIOClient* client, const std::string& data) {
+		CC_UNUSED_PARAM(client);
 		initDataWhenJoinRoom(data);
 	});
 	//handler for another player disconnect event
 	sv->on("room_public_disconnect", [&](SIOClient* client, const std::string& data) {
+		CC_UNUSED_PARAM(client);
 		log("room_public_disconnect with data: %s", data.c_str());
 		initDataWhenJoinRoom(data);
 	});
 
 	//handler for another player select team event
 	sv->on("room_public_select_team_end", [&](SIOClient * client, const string& data) {
+		CC_UNUSED_PARAM(client);
 		log("team select public data: %s", data.c_str());
 		rapidjson::Document doc;
 		doc.Parse<0>(data.c_str());
@@ -46,21 +45,46 @@ bool RoomUserModel::init()
 			setTeamForUserByUserId(room_id, user_id, team_id);
 			log("data updated");
 			NotificationCenter::getInstance()->postNotification("update_team", (Ref*)(intptr_t)user_id);
+			NotificationCenter::getInstance()->postNotification(TEAM_DATA_UPDATE_MSG, this);
 		}
 		else {
 			log("something wrong: %d", doc.GetType());
 		}
 	});
-
+	sv->on("out_team", [&](SIOClient *c, const string& data) {
+		CC_UNUSED_PARAM(c);
+		log("out team: %s", data.c_str());
+		rapidjson::Document doc;
+		doc.Parse<0>(data.c_str());
+		if (doc.HasParseError()) {
+			log("error parser Json in out_team");
+			return;
+		}
+		if (doc.IsObject()) {
+			auto user_id = doc["user_id"].GetInt();
+			auto room_id = doc["room_id"].GetInt();
+			setTeamForUserByUserId(room_id, user_id, 0);
+			NotificationCenter::getInstance()->postNotification("update_team", (Ref*)(intptr_t)user_id);
+			NotificationCenter::getInstance()->postNotification(TEAM_DATA_UPDATE_MSG, this);
+		}
+	});
 	//handler for another player selected unit event
 	sv->on("room_public_select_unit_end", [&](SIOClient *client, const string& data) {
+		CC_UNUSED_PARAM(client);
 		log("unit select public data: %s", data.c_str());
+		this->setTempData(data.c_str());
+		this->parseTeamData(data);
 
+		NotificationCenter::getInstance()->postNotification(TEAM_DATA_UPDATE_MSG, this);
 	});
 
 	//handler for another player select skill event
 	sv->on("room_public_select_skill_end", [&](SIOClient *client, const string& data) {
+		CC_UNUSED_PARAM(client);
 		log("room_public_select_skill_end: %s", data.c_str());
+		this->setTempData(data.c_str());
+		this->parseTeamData(data);
+		NotificationCenter::getInstance()->postNotification(TEAM_DATA_UPDATE_MSG, this);
 
 	});
 	return true;
@@ -71,6 +95,7 @@ void RoomUserModel::addUserInfoToUserList(RoomUser data)
 	auto a = getRoomUserList();
 	a.push_back(data);
 	setRoomUserList(a);
+	updateTeamUserList();
 }
 
 void RoomUserModel::setTeamForUserByUserId(int room_id, int user_id, int team_id)
@@ -84,6 +109,30 @@ void RoomUserModel::setTeamForUserByUserId(int room_id, int user_id, int team_id
 		}
 	}
 	setRoomUserList(userList);
+	updateTeamUserList();
+}
+
+void RoomUserModel::updateTeamUserList()
+{
+	auto roomUserList = this->getRoomUserList();
+	vector<RoomUser> tempList1;
+	vector<RoomUser> tempList2;
+	for (int i = 0; i < roomUserList.size(); i++)
+	{
+		if (roomUserList[i].team_id == TEAM_FLG_BLUE)
+		{
+			roomUserList[i].name = ListUserAPI::getInstance()->getUserNameByUserId(roomUserList[i].user_id);
+			tempList1.push_back(roomUserList[i]);
+			continue;
+		}
+		if (roomUserList[i].team_id == TEAM_FLG_RED) {
+			roomUserList[i].name = ListUserAPI::getInstance()->getUserNameByUserId(roomUserList[i].user_id);
+			tempList2.push_back(roomUserList[i]);
+			continue;
+		}
+	}
+	this->setBlueTeamUserList(tempList1);
+	this->setRedTeamUserList(tempList2);
 }
 
 RoomUser RoomUserModel::parseJsonToRoomUserData(string data)
@@ -128,10 +177,63 @@ void RoomUserModel::initDataWhenJoinRoom(string jsonData)
 			tempList.push_back(temp);
 		}
 		setRoomUserList(tempList);
+		updateTeamUserList();
 		log("init data when connected completed");
 		NotificationCenter::getInstance()->postNotification("switchUserButton", (Ref*)(intptr_t)doc["selectedId"].GetInt());
 	}
 	else {
 		log("Data type: %d", doc.GetType());
 	}
+}
+
+void RoomUserModel::parseTeamData(const string& data)
+{
+	rapidjson::Document doc;
+	doc.Parse<0>(data.c_str());
+	if (doc.HasParseError()) {
+		log("error parser Json");
+		return;
+	}
+	if (doc.IsObject()) {
+		if (doc["unit"].Size() > 0) 
+		{
+			vector<TeamUnit> tempUnits = {};
+			for (int i = 0; i < doc["unit"].Size(); i ++)
+			{
+				TeamUnit tempU;
+				tempU.mst_unit_id = doc["unit"][rapidjson::SizeType(i)]["mst_unit_id"].GetInt();
+				tempU.uuid = doc["unit"][rapidjson::SizeType(i)]["uuid"].GetString();
+				tempUnits.push_back(tempU);
+			}
+			this->setTeamUnitList(tempUnits);
+		}
+		if (doc["skill"].Size() > 0)
+		{
+			vector<TeamSkill> tempSkills = {};
+			for (int j = 0; j < doc["skill"].Size(); j ++)
+			{
+				TeamSkill tempS;
+				tempS.mst_skill_id = doc["skill"][rapidjson::SizeType(j)]["mst_skill_id"].GetInt();
+				tempS.user_id = doc["skill"][rapidjson::SizeType(j)]["user_id"].GetInt();
+				tempS.uuid = doc["skill"][rapidjson::SizeType(j)]["uuid"].GetString();
+				tempSkills.push_back(tempS);
+			}
+			this->setTeamSkillList(tempSkills);
+		}
+	}
+}
+
+RoomUserModel::RoomUserModel()
+{
+	_roomId = 0;
+	_roomUserList = {};
+	_redTeamUserList = {};
+	_blueTeamUserList = {};
+	_teamSkillList = {};
+	_teamUnitList = {};
+}
+
+RoomUserModel::~RoomUserModel()
+{
+
 }

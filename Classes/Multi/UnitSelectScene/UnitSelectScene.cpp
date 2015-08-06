@@ -1,6 +1,10 @@
 ﻿#pragma execution_character_set("utf-8")
 #include "UnitSelectScene.h"
 
+MultiUnitSelectScene::~MultiUnitSelectScene()
+{
+	NotificationCenter::getInstance()->removeAllObservers(this);
+}
 
 Scene * MultiUnitSelectScene::createScene(int roomId, int pageFlg)
 {
@@ -44,7 +48,7 @@ bool MultiUnitSelectScene::init(int roomId,int pageFlg)
 	
 	_buttonSlot1 = ClipingButtonBase::create("image/navigator/selct_scene_circle.png", "image/screen/unitSelect/inactive.png", "image/screen/unitSelect/active.png");
 	addChild(_buttonSlot1, 100);
-	_buttonSlot1->setPosition(Vec2(_visibleSize.width / 2 - 150, _visibleSize.height - 150));
+	_buttonSlot1->setPosition(Vec2(_visibleSize.width / 2 - 200, _visibleSize.height - 150));
 	_buttonSlot1->setSelected(true);
 	_buttonSlot1->addTouchEvent(CC_CALLBACK_2(MultiUnitSelectScene::onTouchUnitSlot1, this));
 
@@ -66,7 +70,7 @@ bool MultiUnitSelectScene::init(int roomId,int pageFlg)
 
 	_buttonSlot3 = ClipingButtonBase::create("image/navigator/selct_scene_circle.png", "image/screen/unitSelect/inactive.png", "image/screen/unitSelect/active.png");
 	addChild(_buttonSlot3, 100);
-	_buttonSlot3->setPosition(Vec2(_visibleSize.width / 2 + 150, _visibleSize.height - 150));
+	_buttonSlot3->setPosition(Vec2(_visibleSize.width / 2 + 200, _visibleSize.height - 150));
 	_buttonSlot3->addTouchEvent(CC_CALLBACK_2(MultiUnitSelectScene::onTouchUnitSlot3, this));
 	_buttonSlot3->setSelected(false);
 	Button *baseSlot3 = _buttonSlot3->getBackgroundButton();
@@ -84,7 +88,88 @@ bool MultiUnitSelectScene::init(int roomId,int pageFlg)
 	///menu->setPosition(Vec2::ZERO);
 	//addChild(menu);
 	createAllUnitView();
+	for (int i = 0; i < 3; i ++) 
+	{
+		auto group = UnitInfoGroup::create();
+		group->setPosition(Vec2(_visibleSize.width / 2 + (200 * i - 220), _visibleSize.height - 150));
+		this->addChild(group, 100);
+		_allUnitGroup.push_back(group);
+	}
+	NotificationCenter::getInstance()->addObserver(this, CC_CALLFUNCO_SELECTOR(MultiUnitSelectScene::updateContent), TEAM_DATA_UPDATE_MSG, nullptr);
+	updateContent(nullptr);
 	return true;
+}
+
+void MultiUnitSelectScene::updateContent(Ref *p)
+{
+	CC_UNUSED_PARAM(p);
+	//for show detail in unit slot
+	auto userInfo = UserModel::getInstance()->getUserInfo();
+	vector<RoomUser> teamInfo = {};
+	switch (userInfo.team_id)
+	{
+	case TEAM_FLG_BLUE:
+		teamInfo = RoomUserModel::getInstance()->getBlueTeamUserList();
+		break;
+	case TEAM_FLG_RED:
+		teamInfo = RoomUserModel::getInstance()->getRedTeamUserList();
+		break;
+	}
+	auto unitList = RoomUserModel::getInstance()->getTeamUnitList();
+	auto skillList = RoomUserModel::getInstance()->getTeamSkillList();
+	int size = _allUnitGroup.size();
+	if (teamInfo.size() < size)
+	{
+		size = teamInfo.size();
+		for (int i = size; i < _allUnitGroup.size(); i ++)
+		{
+			_allUnitGroup[i]->resetDefaultStatus();
+		} 
+	}
+	for (int i = 0; i < size; i ++)
+	{
+		_allUnitGroup[i]->setPlayerNameLabel(teamInfo[i].name.c_str());
+		_allUnitGroup[i]->setName(teamInfo[i]._uuid.c_str());
+		string uuid = UserModel::getInstance()->getUuId().c_str();
+		if (strcmp(teamInfo[i]._uuid.c_str(), uuid.c_str()) == 0)
+		{
+			_allUnitGroup[i]->setSelected(true);
+		}
+		else {
+			_allUnitGroup[i]->setSelected(false);
+		}
+	}
+	if (unitList.size() < _allUnitGroup.size()) {
+		for (auto &slot : _allUnitGroup)
+		{
+			slot->getUnitButton()->resetClickableButton();
+			slot->getSkillButon(1)->resetClickableButton();
+			slot->getSkillButon(2)->resetClickableButton();
+		}
+	}
+	for (auto &unit : unitList)
+	{
+		for (auto &group : _allUnitGroup)
+		{
+			if (strcmp(unit.uuid.c_str(), group->getName().c_str()) == 0) {
+				group->setUnitIcon(UserUnitModel::getInstance()->getUnitImageByMstUnitItD(unit.mst_unit_id).c_str());
+				break;
+			}
+		}
+	}
+	
+	for (auto &g : _allUnitGroup)
+	{
+		int index = 1;
+		for (auto &skill : skillList)
+		{
+			if (strcmp(skill.uuid.c_str(), g->getName().c_str()) == 0) {
+				g->setSkillIcon(index, UserSkillModel::getInstance()->getSkillInfoById(skill.mst_skill_id).skill_icon_path.c_str());
+				index++;
+			}
+		}
+	}
+
 }
 
 void MultiUnitSelectScene::onEnter()
@@ -100,6 +185,7 @@ void MultiUnitSelectScene::onEnter()
 }
 bool MultiUnitSelectScene::onTouchBegan(Touch *touch, Event *unused_event)
 {
+	CC_UNUSED_PARAM(unused_event);
 	if (_onTouchDisable) return false;
 	_touchBeginPoint = touch->getLocation();
 	//log("layer touch began");
@@ -108,10 +194,13 @@ bool MultiUnitSelectScene::onTouchBegan(Touch *touch, Event *unused_event)
 void MultiUnitSelectScene::onTouchEnded(Touch *touch, Event *unused_event)
 {
 	//log("layer touch ended");
+	CC_UNUSED_PARAM(touch);
+	CC_UNUSED_PARAM(unused_event);
 }
 
 void MultiUnitSelectScene::onTouchMoved(Touch *touch, Event *unused_event)
 {
+	CC_UNUSED_PARAM(unused_event);
 	//log("layer touch move");
 	Vec2 distanVector = _touchBeginPoint - touch->getLocation();
 	if (abs(distanVector.x) > _mainPage->getCustomScrollThreshold()) {
@@ -363,6 +452,7 @@ void MultiUnitSelectScene::decideCallBack(Ref *pSender, Widget::TouchEventType t
 		UserModel::getInstance()->setUserUnitsInfo(_allUnitInfoNew[_onSelectedUnitTag]);
 		onSelectUnit(_onSelectedUnitTag);
 		_onTouchDisable = false;
+		sendSelectUnitInfo();
 		break;
 	}
 	case cocos2d::ui::Widget::TouchEventType::MOVED:
@@ -403,36 +493,6 @@ void MultiUnitSelectScene::nextButtonCallback(Ref *pSender, Widget::TouchEventTy
 		break;
 	case cocos2d::ui::Widget::TouchEventType::ENDED:
 	{
-		if (_decidedUnitId == 0) break;
-
-		UserModel::getInstance()->setSelectedUnitId(_decidedUnitId);
-		auto userData = UserModel::getInstance()->getUserInfo();
-		auto unitData = UserUnitModel::getInstance()->getUnitInfoById(_decidedUnitId);
-		if (_pageFlg == MULTI_MODE)
-		{
-			Document doc;
-			doc.SetObject();
-			Document::AllocatorType& allo = doc.GetAllocator();
-
-			doc.AddMember("room_id", userData.room_id, allo);
-			doc.AddMember("user_id", userData.user_id, allo);
-			doc.AddMember("team_id", userData.team_id, allo);
-			doc.AddMember("unit_id", _decidedUnitId, allo);
-			doc.AddMember("mst_unit", *UserUnitModel::getInstance()->convertFromUserUnitInfoToJson(unitData, allo), allo);
-			string uu = UserModel::getInstance()->getUuId().c_str();
-			doc.AddMember("uuid", uu.c_str(), allo);
-			StringBuffer buff;
-			Writer<StringBuffer> writer(buff);
-			doc.Accept(writer);
-
-			auto client = NodeServer::getInstance()->getClient();
-			if (client == nullptr) return;
-			log("Unit Selected End data: %s", buff.GetString());
-			client->emit("connect_select_unit", buff.GetString());
-			client->on("connect_select_unit_end", [&](SIOClient* client, const std::string& data) {
-				log("select unit end data: %s", data.c_str());
-			});
-		}
 		Director::getInstance()->replaceScene(TransitionMoveInR::create(SCREEN_TRANSI_DELAY, SkillSelectScene::createScene()));
 		break;
 	}
@@ -571,6 +631,84 @@ void MultiUnitSelectScene::rightArrowClickCallback(Ref *pSender, Widget::TouchEv
 		break;
 	}
 }
+
+void MultiUnitSelectScene::sendSelectUnitInfo()
+{
+	if (_decidedUnitId == 0) return;
+
+	UserModel::getInstance()->setSelectedUnitId(_decidedUnitId);
+	auto userData = UserModel::getInstance()->getUserInfo();
+	auto unitData = UserUnitModel::getInstance()->getUnitInfoById(_decidedUnitId);
+	if (_pageFlg == MULTI_MODE)
+	{
+		Document doc;
+		doc.SetObject();
+		Document::AllocatorType& allo = doc.GetAllocator();
+
+		doc.AddMember("room_id", userData.room_id, allo);
+		doc.AddMember("user_id", userData.user_id, allo);
+		doc.AddMember("team_id", userData.team_id, allo);
+		doc.AddMember("unit_id", _decidedUnitId, allo);
+		doc.AddMember("mst_unit", *UserUnitModel::getInstance()->convertFromUserUnitInfoToJson(unitData, allo), allo);
+		string uu = UserModel::getInstance()->getUuId().c_str();
+		doc.AddMember("uuid", uu.c_str(), allo);
+		StringBuffer buff;
+		Writer<StringBuffer> writer(buff);
+		doc.Accept(writer);
+
+		auto client = NodeServer::getInstance()->getClient();
+		if (client == nullptr) return;
+		log("Unit Selected End data: %s", buff.GetString());
+		client->emit("connect_select_unit", buff.GetString());
+		client->on("connect_select_unit_end", [&](SIOClient* client, const std::string& data) {
+			log("select unit end data: %s", data.c_str());
+			RoomUserModel::getInstance()->parseTeamData(data);
+		});
+	}
+}
+
+void MultiUnitSelectScene::sendSElectSkillInfo()
+{
+	auto a = UserModel::getInstance()->getUserInfo();
+	Document doc;
+	doc.SetObject();
+	Document::AllocatorType& allo = doc.GetAllocator();
+
+	doc.AddMember("room_id", a.room_id, allo);
+	doc.AddMember("team_id", a.team_id, allo);
+	doc.AddMember("user_id", a.user_id, allo);
+	doc.AddMember("unit_id", _decidedUnitId, allo);
+	rapidjson::Value listSkill;
+	vector<int> listSkillId;
+	listSkill.SetArray();
+	/*for (int i = 0; i < skills.size(); i++)
+	{
+	listSkill.PushBack(skills[i].mst_skill_id, allo);
+	listSkillId.push_back(skills[i].mst_skill_id);
+
+	//targetList.AddMember("target_unique_id", targetsId[i], allo);
+	}*/
+	doc.AddMember("player_skill_list", listSkill, allo);
+	string uu = UserModel::getInstance()->getUuId().c_str();
+	doc.AddMember("uuid", uu.c_str(), allo);
+
+	StringBuffer buff;
+	Writer<StringBuffer> wt(buff);
+	doc.Accept(wt);
+
+	auto client = NodeServer::getInstance()->getClient();
+	client->emit("connect_select_skill", buff.GetString());
+	string temp = buff.GetString();
+	BattleModel::getInstance()->setPlayerSkills(listSkillId);
+	client->on("connect_select_skill_end", [&, temp](SIOClient* client, const std::string& data) {
+		log("select skill end data: %s", data.c_str());
+	});
+}
+
+
+
+
+
 
 
 

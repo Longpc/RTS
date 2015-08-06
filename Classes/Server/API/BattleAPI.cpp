@@ -31,13 +31,6 @@ bool BattleAPI::init()
 /************************************************************************/
 void BattleAPI::sendMoveEvent(UserUnitInfo unitdata, Vec2 position, int direction, bool movingFlg, bool cannonFlg)
 {
-	
-	auto a = NodeServer::getInstance()->getClient();
-	if (a == nullptr)
-	{ 
-		log("client null in send move event");
-		return;
-	}
 	Document doc;
 	doc.SetObject();
 	auto userData = UserModel::getInstance()->getUserInfo();
@@ -51,12 +44,21 @@ void BattleAPI::sendMoveEvent(UserUnitInfo unitdata, Vec2 position, int directio
 	doc.AddMember("uuid", uu.c_str(), allo);
 	doc.AddMember("direction", direction, allo);
 	doc.AddMember("moving", movingFlg, allo);
-	doc.AddMember("cannon", cannonFlg, allo);
 	doc.AddMember("team_id", userData.team_id, allo);
+	/*time_t sendTime;
+	time(&sendTime);
+	doc.AddMember("time", sendTime, allo);*/
 
 	StringBuffer  buffer;
+
 	Writer<StringBuffer> writer(buffer);
 	doc.Accept(writer);
+	auto a = MoveServer::getInstance()->getClient();
+	if (a == nullptr)
+	{
+		log("client null in send move event");
+		return;
+	}
 
 	//log("send move data: %s", buffer.GetString());
 	a->emit("move", buffer.GetString());
@@ -163,7 +165,7 @@ void BattleAPI::sendSkillEvent(UserSkillInfo skillData, UserUnitInfo attacker, f
 	Writer<StringBuffer> writer(buffer);
 	doc.Accept(writer);
 
-	//log("Skill: %s", buffer.GetString());
+	log("Send skill event with data: %s", buffer.GetString());
 	c->emit("play_skill", buffer.GetString());
 	//c->on("play_skill_end", callback);
 	buffer.Clear();
@@ -378,7 +380,7 @@ void BattleAPI::sendTestMoveLogic(Vec2 titleCordPost)
 	StringBuffer  buffer;
 	Writer<StringBuffer> writer(buffer);
 	doc.Accept(writer);
-	auto sv = NodeServer::getInstance()->getClient();
+	auto sv = MapServer::getInstance()->getClient();
 
 	if (sv == nullptr) {
 		return;

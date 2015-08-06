@@ -7,8 +7,8 @@
 #include "Model/data/UserUnitModel.h"
 #include "Model/data/UserModel.h"
 
+#include "Server/API/ListUserPHPAPI.h"
 #include "Server/Server.h"
-
 #include "base/database/DataUtils.h"
 #include "json/rapidjson.h"
 #include "json/document.h"
@@ -18,20 +18,8 @@ USING_NS_CC;
 using namespace rapidjson;
 using namespace std;
 
-#if CC_TARGET_PLATFORM == CC_PLATFORM_WIN32
-#define BUILDING_MYDLL 12
-#ifdef BUILDING_MYDLL
-#define MYCLASS_DECLSPEC __declspec(dllexport)
-#else
-#define MYCLASS_DECLSPEC __declspec(dllimport)
-#endif
-#endif
 
-#if CC_TARGET_PLATFORM == CC_PLATFORM_ANDROID
-# define MYCLASS_DECLSPEC CC_DLL
-#endif
-
-class MYCLASS_DECLSPEC RoomUserModel :public Ref
+class  RoomUserModel :public Ref
 {
 public:
 	static RoomUserModel * getInstance();
@@ -39,11 +27,20 @@ public:
 		s_RoomModel = nullptr;
 	};
 	bool init();
+	RoomUserModel();
+	~RoomUserModel();
 
 	CC_SYNTHESIZE(int, _roomId, RoomId);
 	CC_SYNTHESIZE(vector<RoomUser>, _roomUserList,RoomUserList);
 	CC_SYNTHESIZE(vector<RoomUser>, _redTeamUserList, RedTeamUserList);
 	CC_SYNTHESIZE(vector<RoomUser>, _blueTeamUserList, BlueTeamUserList);
+	CC_SYNTHESIZE(vector<TeamSkill>, _teamSkillList, TeamSkillList);
+	CC_SYNTHESIZE(vector<TeamUnit>, _teamUnitList, TeamUnitList);
+	/*
+	 * Function to parser and init Team user unit list and team user skill list
+	 */
+	void parseTeamData(const string& data);
+
 	/*this function will parse data received when select user was done. Parsed data will use to
 	create room 's user list*/
 	void initDataWhenJoinRoom(string jsonData);
@@ -52,9 +49,11 @@ public:
 
 	void addUserInfoToUserList(RoomUser data);
 	void setTeamForUserByUserId(int room_id, int user_id, int team_id);
+	void updateTeamUserList();
 
 private:
 	static RoomUserModel * s_RoomModel;
+	CC_SYNTHESIZE(string, _tempData, TempData);
 };
 
 #endif
