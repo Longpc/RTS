@@ -6,6 +6,7 @@
 #include "base/LayerBase.h"
 #include "Multi/TeamSelectScene/MultiTeamSelectScene.h"
 #include "Multi/UnitSelectScene/UnitDetailDialog.h"
+#include "Multi/SkillSelectScene/SkillDetailDialog.h"
 #include "Multi/SkillSelectScene/SkillSelectScene.h"
 #include "ModeSelectScene/ModeSelectScene.h"
 #include "base/baseButton/ClippingButtonBase.h"
@@ -36,10 +37,6 @@ public:
 protected:
 private:
 	///VARIABLES///////////////////////////////////////////////////////////////////////
-	int _onSelectedSlot = 1;
-	int _onSelectedUnitTag = 0;
-	int _decidedUnitId = 0;
-
 	int _roomId;
 	int _pageFlg;
 
@@ -50,27 +47,28 @@ private:
 	UnitInfoGroup *_unitGroup2;
 	UnitInfoGroup *_unitGroup3;
 
-	ClipingButtonBase* _buttonSlot1;
-	ClipingButtonBase* _buttonSlot2;
-	ClipingButtonBase* _buttonSlot3;
-
+	Sprite* _pagebackGround;
 	Button *lArrow;
 	Button *rArrow;
-
-	Label *selectedUnit1Name;
-	Label *selectedUnit2Name;
-	Label *selectedUnit3Name;
 
 	PageView *_mainPage;
 	int _pageNum;
 
-	//vector<UnitInfo> _allUnitInfo;
-	//vector<UnitInforNew> _allUnitInfoNew;
+	vector<UserSkillInfo> _allSkillInfo;
 	vector<UserUnitInfo> _allUnitInfoNew;
 	bool _onTouchDisable;
 	Vec2 _touchBeginPoint;
 
+	int _onSelectSkillButtonIndex = -1;
+	int _selectedSkillNum = 0;
+	vector<int> _allSelectedSkilId = {};
 	int _selectedUnit = 0;
+
+
+	bool _sendUnitFlg = false;
+	bool _sendSkillFlg = false;
+
+	bool _isSentRequest = false;
 
 	///FUNCTIONS///////////////////////////////////////////////////////////////////////
 	virtual void getDataFromDataBase();
@@ -82,34 +80,33 @@ private:
 	bool onTouchBegan(Touch *touch, Event *unused_event);
 	void onTouchEnded(Touch *touch, Event *unused_event);
 	void onTouchMoved(Touch *touch, Event *unused_event);
-	virtual void createAllUnitView();
+	/*to set page view show unit list or skill list 
+	* @type : 1 for unit and 2 for skill
+	*/
+	virtual void createPageView(int type);
 
-	virtual void onTouchUnitSlot1(Ref *pSender, Widget::TouchEventType type);
-	virtual void onTouchUnitSlot2(Ref *pSender, Widget::TouchEventType type);
-	virtual void onTouchUnitSlot3(Ref *pSender, Widget::TouchEventType type);
+	virtual void onTouchUnitButton();
+	virtual void onTouchSkill1Button();
+	virtual void onTouchSkill2Button();
 
-	virtual void onTouchUnit(Ref *pSender, Widget::TouchEventType type);
-	virtual void onSelectUnit(int unitId);
+	virtual void onTouchPageItem(Ref *pSender, Widget::TouchEventType type, int pageType);
 
-	virtual void decideCallBack(Ref *pSender, Widget::TouchEventType type);
-	virtual void cancelCallBack(Ref *pSender, Widget::TouchEventType type);
+	virtual void decideCallBack(int index, int pageType);
+	virtual void cancelCallBack();
 
-	virtual void displayUnit(Button * parent,Label *textView,int unitId);
 
 	virtual void onBackButtonClick(Ref *pSender);
-	virtual void nextButtonCallback(Ref *pSender, Widget::TouchEventType type);
+	virtual void sendReadyButtonCallback(Ref *pSender, Widget::TouchEventType type);
 
-	virtual Button* createSlotBaseSprite(Vec2 pos);
-	virtual Sprite* createUnitNameBg(Vec2 pos);
-	virtual Label* createUniNameLabel(Vec2 pos);
+	virtual void startBattleCallback(SIOClient* client, const std::string& data);
+	virtual void startBattle();
 
 	virtual void pageViewEvent(Ref *pSender, PageView::EventType type);
-	virtual void setSelectedSlot(int slotNum);
 
 	virtual void leftArrowClickCallback(Ref *pSender, Widget::TouchEventType type);
 	virtual void rightArrowClickCallback(Ref *pSender, Widget::TouchEventType type);
 
-	virtual void sendSelectUnitInfo();
+	virtual void sendSelectUnitInfo(int unitId);
 	virtual void sendSElectSkillInfo();
 
 

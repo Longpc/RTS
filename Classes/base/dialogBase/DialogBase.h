@@ -4,8 +4,6 @@
 #include "base/LayerBase.h"
 #include "base/Define.h"
 
-typedef std::function<void(Ref *pSender, Widget::TouchEventType type)> MyTouchEvent;
-
 class DialogBase :public LayerBase
 {
 public:

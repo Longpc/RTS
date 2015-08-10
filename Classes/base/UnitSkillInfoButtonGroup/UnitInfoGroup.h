@@ -27,6 +27,7 @@ public:
 	void setPlayerNameLabel(string name);
 	void setUnitIcon(string imgPath);
 	void setSkillIcon(int buttonIndex, string imgPath);
+	void showReadyForBattle(bool showFlg);
 
 	void resetDefaultStatus();
 protected:

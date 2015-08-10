@@ -5,20 +5,19 @@
 
 #include "Model/data/UserSkillModel.h"
 
-typedef std::function<void(Ref *pSender, Widget::TouchEventType type)> MyTouchEvent;
 
 class SkillDetailDialog :public LayerBase
 {
 public:
-	static SkillDetailDialog* create(UserSkillInfo unit, MyTouchEvent decideCallback, MyTouchEvent ccelCallback);
-	bool init(UserSkillInfo unit, MyTouchEvent decideCallback, MyTouchEvent ccelCallback);
+	static SkillDetailDialog* create(UserSkillInfo unit, MyTouchEventVoid decideCallback, MyTouchEventVoid ccelCallback);
+	bool init(UserSkillInfo unit, MyTouchEventVoid decideCallback, MyTouchEventVoid ccelCallback);
 
 private:
 	///VARIABLES///////////////////////////////////////////////////////////////////////
 	Sprite *statusTab;
 	UserSkillInfo _skillInfo;
-	MyTouchEvent _decideCallback;
-	MyTouchEvent _ccCallback;
+	MyTouchEventVoid _decideCallback;
+	MyTouchEventVoid _ccCallback;
 
 	///FUNCTIONS///////////////////////////////////////////////////////////////////////
 	virtual void closeButtonCallback(Ref *pSender, Widget::TouchEventType type);

@@ -59,7 +59,7 @@ void Cannon::changeTeamStatus(int teamId, bool initFlg)
 		break;
 	}
 	if (!initFlg) {
-		setTexture(TextureCache::getInstance()->addImage(getImagePath()));
+		setTexture(Director::getInstance()->getTextureCache()->addImage(getImagePath()));
 	}
 }
 

@@ -1,8 +1,11 @@
 #ifndef DEFINE_H
 #define DEFINE_H
 #include "cocos2d.h"
-using namespace std;
+#include "ui/CocosGUI.h"
 USING_NS_CC;
+using namespace ui;
+using namespace std;
+
 /*
 User default information
 _name: User name
@@ -11,6 +14,11 @@ _onRoom: Current room where user is playing. Default 0 is idle user
 
 #define DESIGN_RESOLUTION_W 960
 #define DESIGN_RESOLUTION_H 640
+
+
+
+typedef std::function<void(Ref *pSender, Widget::TouchEventType type)> MyTouchEvent;
+typedef std::function<void()> MyTouchEventVoid;
 
 struct Room_User_Unit_Model
 {
@@ -65,6 +73,7 @@ struct TeamSkill
 	string uuid;
 	int user_id;
 	int mst_skill_id;
+	int skill_index;
 };
 
 struct UnitInforNew 
@@ -150,14 +159,21 @@ struct UserBattleInfo
 #define ATTACK_AOE 110.0f
 
 //skill.effect_type values range. 
-#define TYPE_BUFF 1
-#define TYPE_RESTORE 2
-#define TYPE_ATTACK 3
-#define TYPE_POISON 4
-#define TYPE_STUN 5
-#define TYPE_TRAP 6
-#define TYPE_SUMMON 7
-#define TYPE_PET 8
+enum SkillType
+{
+	TYPE_BUFF = 1,
+	TYPE_RESTORE = 2,
+	TYPE_ATTACK = 3,
+	TYPE_POISON = 4,
+	TYPE_STUN = 5,
+	TYPE_TRAP = 6,
+	TYPE_SUMMON = 7,
+	TYPE_PET = 8,
+	TYPE_BLINK = 9
+
+};
+
+
 
 #define TARGET_ALL 1
 #define TARGET_ONE 0

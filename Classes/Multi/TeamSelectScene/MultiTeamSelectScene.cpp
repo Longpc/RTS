@@ -270,6 +270,8 @@ void MultiTeamSelectScene::enterTeam(int teamId)
 	Document doc;
 	doc.SetObject();
 	auto a = UserModel::getInstance()->getUserInfo();
+	a.team_id = teamId;
+	UserModel::getInstance()->setUserInfo(a);
 	Document::AllocatorType& allo = doc.GetAllocator();
 	doc.AddMember("user_id", a.user_id, allo);
 	doc.AddMember("room_id", a.room_id, allo);
@@ -304,6 +306,7 @@ void MultiTeamSelectScene::onBackButtonClick(Ref *pSender)
 	doc.AddMember("room_id", uif.room_id, allo);
 	string uu = UserModel::getInstance()->getUuId().c_str();
 	doc.AddMember("uuid", uu.c_str(), allo);
+	doc.AddMember("team_id", uif.team_id, allo);
 	StringBuffer buff;
 	Writer<StringBuffer> wt(buff);
 	doc.Accept(wt);

@@ -845,8 +845,11 @@ void BattleScene::createContent()
 	addChild(forceOffButton, 100);
 	forceOffButton->addTouchEventListener([&](Ref *p, Widget::TouchEventType type) {
 		if (type == Widget::TouchEventType::ENDED) {
-			NodeServer::destroyInstance();
-			RoomUserModel::destroyInstance();
+			if (_gameMode == MULTI_MODE)
+			{
+				NodeServer::destroyInstance();
+				RoomUserModel::destroyInstance();
+			}
 			Director::getInstance()->replaceScene(TransitionMoveInR::create(SCREEN_TRANSI_DELAY, ModeSelectScene::createScene()));
 		}
 	});
@@ -2623,7 +2626,7 @@ void BattleScene::checkForAutoAttack()
 	/************************************************************************/
 	/* CHECK AUTO ATTACK OF MAIN UNIT                                       */
 	/************************************************************************/
-	if (testObject->getAttackDelayFlag() || _onDelayAttackFlg) 
+	if (testObject->getAttackDelayFlag() || testObject->getAttackDisable() || _onDelayAttackFlg) 
 	{ 
 		return;
 	}
@@ -3798,6 +3801,7 @@ void BattleScene::onPhysicContactPostSlove(PhysicsContact& contact, const Physic
 
 void BattleScene::contactWithWall()
 {
+	testObject->stopAllActionsByTag(BLINK_MOVE_ACTION_TAG);
 	Vec2 veloc = testObject->getPhysicsBody()->getVelocity();
 	_mainCharacterIconInMiniMap->setRotation(-veloc.getAngle() * RAD_DEG + 90);
 	/*int direc = detectDirectionBaseOnTouchAngle(-veloc.getAngle() * RAD_DEG+90);
@@ -4246,7 +4250,7 @@ void BattleScene::playSkillLogicAndAnimation(Sprite* playObject, UserSkillInfo s
 	
 	switch (skill.effect_type)
 	{
-	case TYPE_BUFF:
+	case SkillType::TYPE_BUFF:
 		if (team_id == _currentPlayerTeamFlg) {
 			skillBuffAction(playObject, &_allAlliedUnitData[saveIndex], skill, team_id, saveIndex);
 		}
@@ -4255,23 +4259,23 @@ void BattleScene::playSkillLogicAndAnimation(Sprite* playObject, UserSkillInfo s
 			skillBuffAction(playObject, &_allEnemyUnitData[saveIndex], skill, team_id, saveIndex);
 		}
 		break;
-	case TYPE_RESTORE:
+	case SkillType::TYPE_RESTORE:
 
 		skillRestoreAction(playObject, skill, saveIndex, team_id);
 		break;
-	case TYPE_ATTACK:
+	case SkillType::TYPE_ATTACK:
 		skillAttackAction(playObject, skill, unit, team_id, randNum,angle);
 		break;
-	case TYPE_POISON:
+	case SkillType::TYPE_POISON:
 		skillPoisonAction(playObject, skill, team_id, uuid.c_str());
 		break;
-	case TYPE_STUN:
+	case SkillType::TYPE_STUN:
 		skillStunAction(playObject, skill, team_id);
 		break;
-	case TYPE_TRAP:
+	case SkillType::TYPE_TRAP:
 		skillTrapAction(playObject, skill, team_id);
 		break;
-	case TYPE_SUMMON:
+	case SkillType::TYPE_SUMMON:
 		if (team_id == _currentPlayerTeamFlg) {
 			skillSummonAction(playObject, skill, &_allAlliedUnitData[saveIndex]);
 		}
@@ -4280,7 +4284,7 @@ void BattleScene::playSkillLogicAndAnimation(Sprite* playObject, UserSkillInfo s
 			skillSummonAction(playObject, skill, &_allEnemyUnitData[saveIndex]);
 		}
 		break;
-	case TYPE_PET:
+	case SkillType::TYPE_PET:
 		//skillPetAction
 		if (team_id == _currentPlayerTeamFlg) {
 			skillPetAction(playObject, skill, &_allAlliedUnitData[saveIndex], team_id);
@@ -4288,6 +4292,16 @@ void BattleScene::playSkillLogicAndAnimation(Sprite* playObject, UserSkillInfo s
 		else
 		{
 			skillPetAction(playObject, skill, &_allEnemyUnitData[saveIndex], team_id);
+		}
+		break;
+	case SkillType::TYPE_BLINK:
+		if (team_id == _currentPlayerTeamFlg)
+		{
+			skillBlinkAcion(playObject, unit, skill, _allEnemyUnitSprite, &_allEnemyUnitData, angle, randNum);
+		}
+		else
+		{
+			skillBlinkAcion(playObject, unit, skill, _allAlliedUnitSprite, &_allAlliedUnitData, angle, randNum);
 		}
 		break;
 	}
@@ -5043,6 +5057,88 @@ void BattleScene::skillPetAction(Sprite* casterSprite, UserSkillInfo skill, User
 	}
 }
 
+void BattleScene::skillBlinkAcion(Sprite* object, UserUnitInfo attacker, UserSkillInfo skill, vector<Sprite*> targetList, vector<UserUnitInfo>* targetUnitData, float angle, float randNum)
+{
+	log("skill blink action");
+	vector<int> unitIndex;
+	if (skill.range_distance > 0) {
+
+		unitIndex = detectUnitInAoe(object, skill, targetList, angle, false);
+	}
+
+	auto min = Vec2(skill.range_distance * cos(-angle* DEG_RAD), skill.range_distance * sin(-angle*DEG_RAD));
+	int saveIndex = -1;
+	bool found = false;
+	if (unitIndex.size() > 0)
+	{
+		for (auto & index : unitIndex)
+		{
+			auto distanceVector = targetList[index]->getPosition() - object->getPosition();
+			if (distanceVector.length() < min.length())
+			{
+				min = distanceVector;
+				saveIndex = index;
+				found = true;
+			}
+		}
+	}
+	CallFuncN* callback = nullptr;
+	if (found)
+	{
+		callback = CallFuncN::create([&, object, skill, targetUnitData, saveIndex, targetList, attacker, randNum](Ref *p) {
+			//show dame action;
+			auto cha = (Character*)object;
+			cha->setAttackDisable(false);
+			cha->stopMoveAction();
+			cha->getPhysicsBody()->setVelocity(Vec2::ZERO);
+			auto ta = (Character*)targetList[saveIndex];
+			ta->setAttackDisable(false);
+			int value = 0;
+			switch (skill.correct_type)
+			{
+			case DAME_TYPE_PERCENT:
+				value = attacker.attack*100.0f / skill.corrett_value;
+				break;
+			case DAME_TYPE_PURE:
+				value = skill.corrett_value;
+			default:
+				break;
+			}
+			int dame = 0;
+			dame = (value - targetUnitData->at(saveIndex).defence);
+			float defaultDameRate = caculDameRate(attacker.element, targetUnitData->at(saveIndex).element);
+			dame = ceil(randNum*dame*defaultDameRate);
+
+			if (dame <= 0) dame = 1;
+			showDameAndSkillLogic(p, saveIndex, dame, object, targetList[saveIndex], targetUnitData);
+
+		});
+	}
+	else
+	{
+		callback = CallFuncN::create([&, object](Ref *p) {
+			CC_UNUSED_PARAM(p);
+			auto cha = (Character *)object;
+			cha->setAttackDisable(false);
+			cha->stopMoveAction();
+			cha->getPhysicsBody()->setVelocity(Vec2::ZERO);
+		});
+	}
+	MoveBy* moveACtion = nullptr;
+	if (_myMap->checkPosInsideMap(object->getPosition() + min*0.9f)) {
+		moveACtion = MoveBy::create(0.5f, min*0.9f);
+		moveACtion->setTag(BLINK_MOVE_ACTION_TAG);
+	}
+	else
+	{
+		moveACtion = MoveBy::create(0.1f, Vec2::ZERO);
+	}
+	auto action = Spawn::create(moveACtion, Sequence::create(DelayTime::create(0.45f), callback , nullptr),nullptr);
+	object->runAction(action);
+	auto cha = (Character*)object;
+	cha->setAttackDisable(true);
+
+}
 
 vector<int> BattleScene::detectUnitInAoe(Sprite* mainObj, UserSkillInfo skill, vector<Sprite*> targetList, float angle, bool drawFlg /*= true*/)
 

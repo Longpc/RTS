@@ -40,54 +40,40 @@ bool MultiUnitSelectScene::init(int roomId,int pageFlg)
 	_onTouchDisable = false;
 	auto a = UserModel::getInstance()->getUserInfo();
 	_userNameLabel->setString(a.name.c_str());
-
+	_allSelectedSkilId.push_back(-1);
+	_allSelectedSkilId.push_back(-1);
 
 	UserDefault::getInstance()->setIntegerForKey("MODE", _pageFlg);
 
 	_defaultLabel->setString("ユニットを選択して下さい");
-	
-	_buttonSlot1 = ClipingButtonBase::create("image/navigator/selct_scene_circle.png", "image/screen/unitSelect/inactive.png", "image/screen/unitSelect/active.png");
-	addChild(_buttonSlot1, 100);
-	_buttonSlot1->setPosition(Vec2(_visibleSize.width / 2 - 200, _visibleSize.height - 150));
-	_buttonSlot1->setSelected(true);
-	_buttonSlot1->addTouchEvent(CC_CALLBACK_2(MultiUnitSelectScene::onTouchUnitSlot1, this));
-
-	Button *baseSlot1 = _buttonSlot1->getBackgroundButton();
-	float baseX = baseSlot1->getContentSize().width / 2;
-	baseSlot1->addChild(createUnitNameBg(Vec2(baseX, 0)));
-	selectedUnit1Name = createUniNameLabel(Vec2(baseX, 0));
-	baseSlot1->addChild(selectedUnit1Name);
-
-	_buttonSlot2 = ClipingButtonBase::create("image/navigator/selct_scene_circle.png", "image/screen/unitSelect/inactive.png", "image/screen/unitSelect/active.png");
-	addChild(_buttonSlot2, 100);
-	_buttonSlot2->setPosition(Vec2(_visibleSize.width / 2, _visibleSize.height - 150));
-	_buttonSlot2->addTouchEvent(CC_CALLBACK_2(MultiUnitSelectScene::onTouchUnitSlot2, this));
-	_buttonSlot2->setSelected(false);
-	Button * baseSlot2 = _buttonSlot2->getBackgroundButton();
-	baseSlot2->addChild(createUnitNameBg(Vec2(baseX, 0)));
-	selectedUnit2Name = createUniNameLabel(Vec2(baseX, 0));
-	baseSlot2->addChild(selectedUnit2Name);
-
-	_buttonSlot3 = ClipingButtonBase::create("image/navigator/selct_scene_circle.png", "image/screen/unitSelect/inactive.png", "image/screen/unitSelect/active.png");
-	addChild(_buttonSlot3, 100);
-	_buttonSlot3->setPosition(Vec2(_visibleSize.width / 2 + 200, _visibleSize.height - 150));
-	_buttonSlot3->addTouchEvent(CC_CALLBACK_2(MultiUnitSelectScene::onTouchUnitSlot3, this));
-	_buttonSlot3->setSelected(false);
-	Button *baseSlot3 = _buttonSlot3->getBackgroundButton();
-	baseSlot3->addChild(createUnitNameBg(Vec2(baseX, 0)));
-	selectedUnit3Name = createUniNameLabel(Vec2(baseX, 0));
-	baseSlot3->addChild(selectedUnit3Name);
 
 	auto nextButton = Button::create();
-	nextButton->loadTextureNormal("image/button/new/button_decide.png");
+	nextButton->loadTextureNormal("image/screen/battle.png");
 	nextButton->setPosition(Vec2(_visibleSize.width - 50, _visibleSize.height-100));
 	nextButton->setTouchEnabled(true);
-	nextButton->addTouchEventListener(CC_CALLBACK_2(MultiUnitSelectScene::nextButtonCallback, this));
+	nextButton->addTouchEventListener(CC_CALLBACK_2(MultiUnitSelectScene::sendReadyButtonCallback, this));
 	addChild(nextButton, 10); 
-	//auto menu = Menu::create(slot1, slot2, slot3, nullptr);
-	///menu->setPosition(Vec2::ZERO);
-	//addChild(menu);
-	createAllUnitView();
+	
+	_pagebackGround = Sprite::create("image/screen/unitSelect/back.png");
+	_pagebackGround->setPosition(Vec2(_visibleSize.width / 2, _visibleSize.height / 2 - 120));
+	addChild(_pagebackGround);
+	Size baseSize = _pagebackGround->getContentSize();
+
+	lArrow = Button::create("image/screen/unitSelect/left.png");
+	lArrow->setPosition(Vec2(50, baseSize.height / 2));
+	_pagebackGround->addChild(lArrow);
+	lArrow->setSwallowTouches(true);
+	lArrow->addTouchEventListener(CC_CALLBACK_2(MultiUnitSelectScene::leftArrowClickCallback, this));
+	lArrow->setVisible(false);
+
+	rArrow = Button::create("image/screen/unitSelect/right.png");
+	rArrow->setPosition(Vec2(baseSize.width - 50, baseSize.height / 2));
+	rArrow->setAnchorPoint(Vec2::ANCHOR_MIDDLE_RIGHT);
+	rArrow->addTouchEventListener(CC_CALLBACK_2(MultiUnitSelectScene::rightArrowClickCallback, this));
+	_pagebackGround->addChild(rArrow);
+	rArrow->setSwallowTouches(true);
+
+	
 	for (int i = 0; i < 3; i ++) 
 	{
 		auto group = UnitInfoGroup::create();
@@ -95,14 +81,114 @@ bool MultiUnitSelectScene::init(int roomId,int pageFlg)
 		this->addChild(group, 100);
 		_allUnitGroup.push_back(group);
 	}
-	NotificationCenter::getInstance()->addObserver(this, CC_CALLFUNCO_SELECTOR(MultiUnitSelectScene::updateContent), TEAM_DATA_UPDATE_MSG, nullptr);
-	updateContent(nullptr);
+	if (_pageFlg == MULTI_MODE)
+	{
+		//handler for another player select information
+		NotificationCenter::getInstance()->addObserver(this, CC_CALLFUNCO_SELECTOR(MultiUnitSelectScene::updateContent), TEAM_DATA_UPDATE_MSG, nullptr);
+		//initial show for team select status when connect
+		updateContent(nullptr);
+		//handler for another player select status( ready or not)
+		auto sv = NodeServer::getInstance()->getClient();
+		sv->on("connect_ready", [&](SIOClient * c, const string& data) {
+			CC_UNUSED_PARAM(c);
+			log("public ready data: %s", data.c_str());
+			Document doc;
+			doc.Parse<0>(data.c_str());
+			if (doc.HasParseError()) {
+				log("Parse JSOn error");
+				return;
+			}
+			if (doc.IsObject())
+			{
+				int team_id = doc["team_id"].GetInt();
+				string uuid = doc["uuid"].GetString();
+				if (team_id == UserModel::getInstance()->getUserInfo().team_id)
+				{
+					for (auto &group : _allUnitGroup)
+					{
+						if (strcmp(group->getName().c_str(), uuid.c_str()) == 0)
+						{
+							group->showReadyForBattle(true);
+							break;
+						}
+					}
+				}
+				/*auto roomUserList = RoomUserModel::getInstance()->getRoomUserList();
+				for (int i = 0; i < roomUserList.size(); i ++)
+				{
+					if (strcmp(roomUserList[i]._uuid.c_str(), uuid.c_str()) == 0)
+					{
+						roomUserList[i]._ready = 1;
+						break;
+					}
+				}
+				RoomUserModel::getInstance()->setRoomUserList(roomUserList);*/
+			}
+		});
+		sv->on("public_not_ready", [&](SIOClient *c, const string& data) {
+			CC_UNUSED_PARAM(c);
+			log("public un ready data: %s", data.c_str());
+			Document doc;
+			doc.Parse<0>(data.c_str());
+			if (doc.HasParseError()) {
+				log("Parse JSOn error");
+				return;
+			}
+			if (doc.IsObject())
+			{
+				int team_id = doc["team_id"].GetInt();
+				string uuid = doc["uuid"].GetString();
+				if (team_id == UserModel::getInstance()->getUserInfo().team_id)
+				{
+					for (auto &group : _allUnitGroup)
+					{
+						if (strcmp(group->getName().c_str(), uuid.c_str()) == 0)
+						{
+							group->showReadyForBattle(false);
+							//if current player
+							break;
+						}
+					}
+				}
+				/*auto roomUserList = RoomUserModel::getInstance()->getRoomUserList();
+				for (int i = 0; i < roomUserList.size(); i++)
+				{
+					if (strcmp(roomUserList[i]._uuid.c_str(), uuid.c_str()) == 0)
+					{
+						roomUserList[i]._ready = 0;
+						break;
+					}
+				}
+				RoomUserModel::getInstance()->setRoomUserList(roomUserList);*/
+			}
+		});
+	}
+	else
+	{
+		//in solo mode
+		string uu = UserModel::getInstance()->getUuId().c_str();
+		_allUnitGroup[0]->setName(uu.c_str());
+		_allUnitGroup[0]->setSelected(true);
+		_allUnitGroup[0]->setPlayerNameLabel("My Player");
+		_allUnitGroup[0]->addUnitButtonClickCallback(CC_CALLBACK_0(MultiUnitSelectScene::onTouchUnitButton, this));
+		_allUnitGroup[0]->addSkill1ButtonCLickCallback(CC_CALLBACK_0(MultiUnitSelectScene::onTouchSkill1Button, this));
+		_allUnitGroup[0]->addSkill2ButonClickCallback(CC_CALLBACK_0(MultiUnitSelectScene::onTouchSkill2Button, this));
+
+		_allUnitGroup[1]->setSelected(false);
+		_allUnitGroup[2]->setSelected(false);
+		
+	}
+	createPageView(1);
+
+	
 	return true;
 }
 
 void MultiUnitSelectScene::updateContent(Ref *p)
 {
 	CC_UNUSED_PARAM(p);
+	if (_pageFlg == SOLO_MODE) return;
+	_isSentRequest = false;
 	//for show detail in unit slot
 	auto userInfo = UserModel::getInstance()->getUserInfo();
 	vector<RoomUser> teamInfo = {};
@@ -115,38 +201,54 @@ void MultiUnitSelectScene::updateContent(Ref *p)
 		teamInfo = RoomUserModel::getInstance()->getRedTeamUserList();
 		break;
 	}
-	auto unitList = RoomUserModel::getInstance()->getTeamUnitList();
-	auto skillList = RoomUserModel::getInstance()->getTeamSkillList();
-	int size = _allUnitGroup.size();
+	
+	/*int size = _allUnitGroup.size();
 	if (teamInfo.size() < size)
 	{
 		size = teamInfo.size();
-		for (int i = size; i < _allUnitGroup.size(); i ++)
+		for (int i = size-1; i < _allUnitGroup.size(); i ++)
 		{
 			_allUnitGroup[i]->resetDefaultStatus();
 		} 
+	}*/
+	for (auto &group : _allUnitGroup)
+	{
+		group->resetDefaultStatus();
 	}
-	for (int i = 0; i < size; i ++)
+	for (int i = 0; i < teamInfo.size(); i++)
 	{
 		_allUnitGroup[i]->setPlayerNameLabel(teamInfo[i].name.c_str());
 		_allUnitGroup[i]->setName(teamInfo[i]._uuid.c_str());
-		string uuid = UserModel::getInstance()->getUuId().c_str();
-		if (strcmp(teamInfo[i]._uuid.c_str(), uuid.c_str()) == 0)
+		if (teamInfo[i].name == UserModel::getInstance()->getUserInfo().name)
 		{
 			_allUnitGroup[i]->setSelected(true);
+			_allUnitGroup[i]->addUnitButtonClickCallback(CC_CALLBACK_0(MultiUnitSelectScene::onTouchUnitButton, this));
+			_allUnitGroup[i]->addSkill1ButtonCLickCallback(CC_CALLBACK_0(MultiUnitSelectScene::onTouchSkill1Button, this));
+			_allUnitGroup[i]->addSkill2ButonClickCallback(CC_CALLBACK_0(MultiUnitSelectScene::onTouchSkill2Button, this));
+		
 		}
 		else {
 			_allUnitGroup[i]->setSelected(false);
 		}
-	}
-	if (unitList.size() < _allUnitGroup.size()) {
-		for (auto &slot : _allUnitGroup)
+		if (teamInfo[i]._ready == 1) {
+			_allUnitGroup[i]->showReadyForBattle(true);
+		}
+		else
 		{
-			slot->getUnitButton()->resetClickableButton();
-			slot->getSkillButon(1)->resetClickableButton();
-			slot->getSkillButon(2)->resetClickableButton();
+			_allUnitGroup[i]->showReadyForBattle(false);
 		}
 	}
+	auto unitList = RoomUserModel::getInstance()->getTeamUnitList();
+	auto skillList = RoomUserModel::getInstance()->getTeamSkillList();
+	/*if (unitList.size() < _allUnitGroup.size()) {
+		for (int i = unitList.size(); i < _allUnitGroup.size(); i++)
+		{
+			_allUnitGroup[i]->getUnitButton()->resetClickableButton();
+			_allUnitGroup[i]->getSkillButon(1)->resetClickableButton();
+			_allUnitGroup[i]->getSkillButon(2)->resetClickableButton();
+		}
+	}*/
+
 	for (auto &unit : unitList)
 	{
 		for (auto &group : _allUnitGroup)
@@ -160,12 +262,12 @@ void MultiUnitSelectScene::updateContent(Ref *p)
 	
 	for (auto &g : _allUnitGroup)
 	{
-		int index = 1;
-		for (auto &skill : skillList)
+		int found = 0;
+		for (int i = 0; i < skillList.size() && found < 2; i ++)
 		{
-			if (strcmp(skill.uuid.c_str(), g->getName().c_str()) == 0) {
-				g->setSkillIcon(index, UserSkillModel::getInstance()->getSkillInfoById(skill.mst_skill_id).skill_icon_path.c_str());
-				index++;
+			if (strcmp(skillList[i].uuid.c_str(), g->getName().c_str()) == 0) {
+				g->setSkillIcon(skillList[i].skill_index+1, UserSkillModel::getInstance()->getSkillInfoById(skillList[i].mst_skill_id).skill_icon_path.c_str());
+				found++;
 			}
 		}
 	}
@@ -209,63 +311,37 @@ void MultiUnitSelectScene::onTouchMoved(Touch *touch, Event *unused_event)
 
 }
 
-void MultiUnitSelectScene::onTouchUnitSlot1(Ref *pSender, Widget::TouchEventType type)
+void MultiUnitSelectScene::onTouchUnitButton()
 {
 	if (_onTouchDisable) return;
-	log("slot1");
-	_onSelectedSlot = 1;
-	setSelectedSlot(1);
+	//show Unit Select page view
+	createPageView(1);
+	_defaultLabel->setString("ユニットを選択して下さい");
+	_onSelectSkillButtonIndex = -1;
 }
 
-void MultiUnitSelectScene::onTouchUnitSlot2(Ref *pSender, Widget::TouchEventType type)
+void MultiUnitSelectScene::onTouchSkill1Button()
 {
 	if (_onTouchDisable) return;
-	//log("slot2");
-	_onSelectedSlot = 2;
-	setSelectedSlot(2);
+	//show Skill select page view with select target is skill 1 button
+	if (_onSelectSkillButtonIndex < 0)
+	{
+		createPageView(2);
+	}
+	_defaultLabel->setString("スキルを選択して下さい");
+	_onSelectSkillButtonIndex = 0;
 }
 
-void MultiUnitSelectScene::onTouchUnitSlot3(Ref *pSender, Widget::TouchEventType type)
+void MultiUnitSelectScene::onTouchSkill2Button()
 {
 	if (_onTouchDisable) return;
-	//log("slot3");
-	_onSelectedSlot = 3;
-	setSelectedSlot(3);
-}
-
-void MultiUnitSelectScene::onSelectUnit(int unitId)
-{
-	switch (_onSelectedSlot)
+	//show Skill select page view with select target is skill 1 button
+	if (_onSelectSkillButtonIndex < 0)
 	{
-	case 1:
-	{
-		displayUnit(_buttonSlot1->getClickableButton(), selectedUnit1Name,unitId);
-		break;
+		createPageView(2);
 	}
-	case 2:
-	{
-		displayUnit(_buttonSlot2->getClickableButton(),selectedUnit2Name, unitId);
-		break;
-	}
-	case 3:
-	{
-		displayUnit(_buttonSlot3->getClickableButton(), selectedUnit3Name,unitId);
-		break;
-	}
-	default:
-		break;
-	}
-}
-void MultiUnitSelectScene::displayUnit(Button *parent,Label *textView, int unitId)
-{
-	parent->loadTextureNormal(UserUnitModel::getInstance()->getUnitImageByMstUnitItD(_allUnitInfoNew[unitId].mst_unit_id).c_str());
-	parent->setScale(4.0f);
-	textView->setString(_allUnitInfoNew[unitId].name);
-
-	if (_onSelectedSlot < 3) {
-		_onSelectedSlot++;
-		setSelectedSlot(_onSelectedSlot);
-	}
+	_defaultLabel->setString("スキルを選択して下さい");
+	_onSelectSkillButtonIndex = 1;
 }
 
 void MultiUnitSelectScene::onBackButtonClick(Ref *pSender)
@@ -288,55 +364,40 @@ void MultiUnitSelectScene::onBackButtonClick(Ref *pSender)
 		break;
 	}
 }
-void MultiUnitSelectScene::createAllUnitView()
+
+void MultiUnitSelectScene::createPageView(int type)
 {
-	/*for (int i = 1; i < 6; i++)
-	{
-		std::stringstream path;
-		path << "image/unit/" << i<<".png";
-
-		UnitInfo temp;
-		temp._name = "long";
-		temp._imagePath = path.str().c_str();
-		temp._attack = 100*i;
-		temp._defence = 100*i;
-		temp._hp = 200*i;
-		temp._unitId = i;
-		_allUnitInfo.push_back(temp);
-	}*/
-	auto spite = Sprite::create("image/screen/unitSelect/back.png");
-	spite->setPosition(Vec2(_visibleSize.width/2,_visibleSize.height/2 - 120));
-	addChild(spite);
-	Size baseSize = spite->getContentSize();
-
-	lArrow = Button::create("image/screen/unitSelect/left.png");
-	lArrow->setPosition(Vec2(50, baseSize.height / 2));
-	spite->addChild(lArrow);
-	lArrow->setSwallowTouches(true);
-	lArrow->addTouchEventListener(CC_CALLBACK_2(MultiUnitSelectScene::leftArrowClickCallback, this));
-	lArrow->setVisible(false);
-
-	rArrow = Button::create("image/screen/unitSelect/right.png");
-	rArrow->setPosition(Vec2(baseSize.width - 50, baseSize.height / 2));
-	rArrow->setAnchorPoint(Vec2::ANCHOR_MIDDLE_RIGHT);
-	rArrow->addTouchEventListener(CC_CALLBACK_2(MultiUnitSelectScene::rightArrowClickCallback, this));
-	spite->addChild(rArrow);
-	rArrow->setSwallowTouches(true);
-
+	Size baseSize = _pagebackGround->getContentSize();
 	float space = baseSize.width - 150;
-
+	if (_pagebackGround->getChildByTag(11110) != nullptr)
+	{
+		_mainPage->removeFromParent();
+		_mainPage = nullptr;
+	}
 	_mainPage = PageView::create();
+	_mainPage->setTag(11110);
 	_mainPage->setContentSize(Size(space, baseSize.height - 40));
 	_mainPage->setPosition(Vec2(75,0));
 	_mainPage->removeAllPages();
 
-	_pageNum = (_allUnitInfoNew.size() / 4);
-	if (_pageNum * 4 < _allUnitInfoNew.size()) {
+	int size = 0;
+	if (type == 1)
+	{
+		size = _allUnitInfoNew.size();
+	}
+	else
+	{
+		size = _allSkillInfo.size();
+	}
+
+	_pageNum = (size / 4);
+	if (_pageNum * 4 < size) {
 		_pageNum += 1;
 	}
+	if (_pageNum < 2) rArrow->setVisible(false);
 	log("page num: %d", _pageNum);
 	float baseX = space * 1 / 8;
-	float spaceX = space * 1/4;
+	float spaceX = space * 1 / 4;
 	for (int i = 0; i < _pageNum; i++)
 	{
 		HBox *lay = HBox::create();
@@ -348,13 +409,21 @@ void MultiUnitSelectScene::createAllUnitView()
 		mum->setSwallowsTouches(false);
 		for (int j = 1; j < 5; j++)
 		{
-			if ((j + i * 4-1) < _allUnitInfoNew.size()) {
+			int index = j + i * 4 - 1;
+			if (index < size) {
 				auto sprite = Button::create();
-				sprite->setTag(j + i * 4 - 1);
-				sprite->loadTextureNormal(UserUnitModel::getInstance()->getUnitImageByMstUnitItD(_allUnitInfoNew[j+i*4 - 1].mst_unit_id).c_str());
+				sprite->setTag(index);
+				if (type == 1)
+				{
+					sprite->loadTextureNormal(UserUnitModel::getInstance()->getUnitImageByMstUnitItD(_allUnitInfoNew[j + i * 4 - 1].mst_unit_id).c_str());
+					sprite->setScale(5.0f);
+				}
+				else
+				{
+					sprite->loadTextureNormal(_allSkillInfo[index].skill_icon_path);
+				}
 				sprite->setSwallowTouches(false);
-				sprite->setScale(5.0f);
-				sprite->addTouchEventListener(CC_CALLBACK_2(MultiUnitSelectScene::onTouchUnit, this));
+				sprite->addTouchEventListener(CC_CALLBACK_2(MultiUnitSelectScene::onTouchPageItem, this, type));
 				int yValue = lay->getContentSize().height / 2 + 20;
 				sprite->setPosition(Vec2(baseX + spaceX *(j-1), yValue));
 				mum->addChild(sprite);
@@ -367,45 +436,11 @@ void MultiUnitSelectScene::createAllUnitView()
 	}
 	//_mainPage->removePageAtIndex(0);
 	_mainPage->addEventListener(CC_CALLBACK_2(MultiUnitSelectScene::pageViewEvent, this));
-	spite->addChild(_mainPage);
-
-
-
-	/*auto scroll = extension::ScrollView::create();
-	scroll->setViewSize(Size(spite->getContentSize().width - 100,spite->getContentSize().height));
-	scroll->setPosition(Vec2::ZERO);
-	scroll->setAnchorPoint(Vec2::ANCHOR_BOTTOM_LEFT);
-	scroll->setDirection(extension::ScrollView::Direction::HORIZONTAL);
-	scroll->updateInset();
-	scroll->setVisible(true);
-
-	spite->addChild(scroll);
-	layer = Layer::create();
-	layer->setAnchorPoint(Vec2::ANCHOR_BOTTOM_LEFT);
-	layer->setContentSize(Size(_allUnitInfo.size()*BASE_SPACE_X, spite->getContentSize().height));
-	
-	scroll->setContainer(layer);
-	scroll->setContentOffset(scroll->minContainerOffset());
-
-	float baseMargin = 100;
-	for (int i = 0; i < _allUnitInfo.size(); i++)
-	{
-		auto sprite = Button::create();
-		sprite->setTag(_allUnitInfo[i]._unitId);
-		sprite->loadTextureNormal(_allUnitInfo[i]._imagePath);
-		sprite->setSwallowTouches(false);
-		sprite->addTouchEventListener(CC_CALLBACK_2(MultiUnitSelectScene::onTouchUnit, this));
-		int xValue = (i*0.5);
-		int yValue = (i % 2);
-		sprite->setPosition(Vec2(baseMargin +BASE_SPACE_X*xValue, layer->getContentSize().height-(baseMargin + sprite->getContentSize().height*(i%2)) ));
-		layer->addChild(sprite);
-	}
-	layer->setPosition(Vec2(0, 0));
-	*/
+	_pagebackGround->addChild(_mainPage);
 
 }
 
-void MultiUnitSelectScene::onTouchUnit(Ref *pSender, Widget::TouchEventType type)
+void MultiUnitSelectScene::onTouchPageItem(Ref *pSender, Widget::TouchEventType type, int pageType)
 {
 	if (_onTouchDisable == true) return;
 	
@@ -428,10 +463,38 @@ void MultiUnitSelectScene::onTouchUnit(Ref *pSender, Widget::TouchEventType type
 		if (tag >= (curPageIndex + 1) * 4) return;
 		if (tag < curPageIndex * 4) return;
 
-		_onSelectedUnitTag = tag;
 		_onTouchDisable = true;
-		auto dialog = UnitDetailDialog::create(_allUnitInfoNew[tag], CC_CALLBACK_2(MultiUnitSelectScene::decideCallBack, this), CC_CALLBACK_2(MultiUnitSelectScene::cancelCallBack, this));
-		getParent()->addChild(dialog);
+		if (pageType == 1)
+		{
+			getParent()->addChild(UnitDetailDialog::create(_allUnitInfoNew[tag], CC_CALLBACK_0(MultiUnitSelectScene::decideCallBack, this, tag,pageType), CC_CALLBACK_0(MultiUnitSelectScene::cancelCallBack, this)));
+			_sendUnitFlg = false;
+		}
+		else
+		{
+			getParent()->addChild(SkillDetailDialog::create(_allSkillInfo[tag], CC_CALLBACK_0(MultiUnitSelectScene::decideCallBack, this, tag, pageType), CC_CALLBACK_0(MultiUnitSelectScene::cancelCallBack, this)));
+			_sendSkillFlg = false;
+		}
+		if (_pageFlg == MULTI_MODE)
+		{
+			auto a = UserModel::getInstance()->getUserInfo();
+			Document doc;
+			doc.SetObject();
+			Document::AllocatorType& allo = doc.GetAllocator();
+
+			doc.AddMember("room_id", a.room_id, allo);
+			doc.AddMember("team_id", a.team_id, allo);
+			doc.AddMember("user_id", a.user_id, allo);
+			string uu = UserModel::getInstance()->getUuId().c_str();
+			doc.AddMember("uuid", uu.c_str(), allo);
+
+			StringBuffer buff;
+			Writer<StringBuffer> wt(buff);
+			doc.Accept(wt);
+
+			auto client = NodeServer::getInstance()->getClient();
+			_isSentRequest = false;
+			client->emit("connect_not_ready", buff.GetString());
+		}
 		
 		break;
 	}
@@ -442,34 +505,50 @@ void MultiUnitSelectScene::onTouchUnit(Ref *pSender, Widget::TouchEventType type
 	}
 }
 
-void MultiUnitSelectScene::decideCallBack(Ref *pSender, Widget::TouchEventType type)
+void MultiUnitSelectScene::decideCallBack(int index, int pageType)
 {
-	switch (type)
+	if (pageType == 1)
 	{
-	case cocos2d::ui::Widget::TouchEventType::BEGAN:
-	{
-		_decidedUnitId = _allUnitInfoNew[_onSelectedUnitTag].mst_unit_id;
-		UserModel::getInstance()->setUserUnitsInfo(_allUnitInfoNew[_onSelectedUnitTag]);
-		onSelectUnit(_onSelectedUnitTag);
+		UserModel::getInstance()->setUserUnitsInfo(_allUnitInfoNew[index]);
 		_onTouchDisable = false;
-		sendSelectUnitInfo();
-		break;
+		UserModel::getInstance()->setSelectedUnitId(_allUnitInfoNew[index].mst_unit_id);
+		if (_pageFlg == MULTI_MODE) 
+		{
+			sendSelectUnitInfo(_allUnitInfoNew[index].mst_unit_id);
+		}
+		else
+		{
+			//show unit infor in solo mode
+			_allUnitGroup[0]->setUnitIcon(UserUnitModel::getInstance()->getUnitImageByMstUnitItD(_allUnitInfoNew[index].mst_unit_id).c_str());
+			_sendUnitFlg = true;
+		}
+		createPageView(2);
+		_onSelectSkillButtonIndex = 0;
+		_defaultLabel->setString("スキルを選択して下さい");
 	}
-	case cocos2d::ui::Widget::TouchEventType::MOVED:
-		break;
-	case cocos2d::ui::Widget::TouchEventType::ENDED:
-		break;
-	case cocos2d::ui::Widget::TouchEventType::CANCELED:
-		break;
-	default:
-		break;
+	else 
+	{
+		if (_onSelectSkillButtonIndex >= 0) {
+			_allSelectedSkilId[_onSelectSkillButtonIndex] = index;
+			//for show skill icon in local
+			for (auto &group : _allUnitGroup)
+			{
+				string uu = UserModel::getInstance()->getUuId().c_str();
+				if (strcmp(uu.c_str(), group->getName().c_str()) == 0)
+				{
+					group->setSkillIcon(_onSelectSkillButtonIndex + 1, UserSkillModel::getInstance()->getSkillInfoById(_allSkillInfo[index].mst_skill_id).skill_icon_path.c_str());
+				}
+
+			}
+			if (_onSelectSkillButtonIndex == 0) {
+				_onSelectSkillButtonIndex = 1;
+			}
+			sendSElectSkillInfo();
+		}
 	}
-	
-	
-	
 }
 
-void MultiUnitSelectScene::cancelCallBack(Ref *pSender, Widget::TouchEventType type)
+void MultiUnitSelectScene::cancelCallBack()
 {
 	_onTouchDisable = false;
 }
@@ -479,54 +558,57 @@ void MultiUnitSelectScene::update(float delta)
 	
 }
 
-void MultiUnitSelectScene::nextButtonCallback(Ref *pSender, Widget::TouchEventType type)
+void MultiUnitSelectScene::sendReadyButtonCallback(Ref *pSender, Widget::TouchEventType type)
 {
-	if (_onTouchDisable == true)
-	{
-		return;
-	}
+	if (_onTouchDisable == true || _isSentRequest) return;
 	switch (type)
 	{
-	case cocos2d::ui::Widget::TouchEventType::BEGAN:
-		break;
-	case cocos2d::ui::Widget::TouchEventType::MOVED:
-		break;
 	case cocos2d::ui::Widget::TouchEventType::ENDED:
 	{
-		Director::getInstance()->replaceScene(TransitionMoveInR::create(SCREEN_TRANSI_DELAY, SkillSelectScene::createScene()));
+		if (_sendSkillFlg && _sendUnitFlg)
+		{
+			if (_pageFlg == MULTI_MODE)
+			{
+				auto a = UserModel::getInstance()->getUserInfo();
+				Document doc;
+				doc.SetObject();
+				Document::AllocatorType& allo = doc.GetAllocator();
+
+				doc.AddMember("room_id", a.room_id, allo);
+				doc.AddMember("team_id", a.team_id, allo);
+				doc.AddMember("user_id", a.user_id, allo);
+				doc.AddMember("unit_id", UserModel::getInstance()->getSelectedUnitId(), allo);
+				string uu = UserModel::getInstance()->getUuId().c_str();
+				doc.AddMember("uuid", uu.c_str(), allo);
+
+				StringBuffer buff;
+				Writer<StringBuffer> wt(buff);
+				doc.Accept(wt);
+
+				auto client = NodeServer::getInstance()->getClient();
+				_isSentRequest = true;
+				client->emit("connect_ready", buff.GetString());
+				client->on("room_public_battle_start", CC_CALLBACK_2(MultiUnitSelectScene::startBattleCallback, this));
+			}
+			else {
+				startBattle();
+			}
+		}
 		break;
 	}
-	case cocos2d::ui::Widget::TouchEventType::CANCELED:
-		break;
 	default:
 		break;
 	}
 }
-
-
-Button* MultiUnitSelectScene::createSlotBaseSprite(Vec2 pos)
+void MultiUnitSelectScene::startBattleCallback(SIOClient* client, const std::string& data)
 {
-	auto sp = Button::create();
-	sp->loadTextureNormal("image/screen/unitSelect/inactive.png");
-	sp->setEnabled(false);
-	sp->setPosition(pos);
-	return sp;
+	BattleModel::getInstance()->parserJsonToInitData(data.c_str());
+	startBattle();
 }
 
-Sprite* MultiUnitSelectScene::createUnitNameBg(Vec2 pos)
+void MultiUnitSelectScene::startBattle()
 {
-	auto sp = Sprite::create("image/screen/unitSelect/name.png");
-	sp->setPosition(pos);
-	return sp;
-}
-
-Label* MultiUnitSelectScene::createUniNameLabel(Vec2 pos)
-{
-	auto lb = Label::createWithSystemFont("", JAPANESE_FONT_1_BOLD, 20);
-	lb->setPosition(pos);
-	lb->setHorizontalAlignment(TextHAlignment::CENTER);
-	lb->setColor(Color3B::BLACK);
-	return lb;
+	Director::getInstance()->replaceScene(TransitionMoveInR::create(SCREEN_TRANSI_DELAY, BattleScene::createScene()));
 }
 
 void MultiUnitSelectScene::pageViewEvent(Ref *pSender, PageView::EventType type)
@@ -555,41 +637,10 @@ void MultiUnitSelectScene::pageViewEvent(Ref *pSender, PageView::EventType type)
 	}
 }
 
-void MultiUnitSelectScene::setSelectedSlot(int slotNum)
-{
-	switch (slotNum)
-	{
-	case 1:
-	{
-		_buttonSlot1->setSelected(true);
-		_buttonSlot2->setSelected(false);
-		_buttonSlot3->setSelected(false);
-		break;
-	}
-	case 2:
-	{
-		_buttonSlot2->setSelected(true);
-		_buttonSlot1->setSelected(false);
-		_buttonSlot3->setSelected(false);
-		break;
-	}
-	case 3:
-	{
-		_buttonSlot3->setSelected(true);
-		_buttonSlot1->setSelected(false);
-		_buttonSlot2->setSelected(false);
-		break;
-	}
-	default:
-		break;
-	}
-}
-
 void MultiUnitSelectScene::getDataFromDataBase()
 {
-
-	//_allUnitInfoNew = UnitData::getAllUnitData();
 	_allUnitInfoNew = UserUnitModel::getInstance()->getUserUnitList();
+	_allSkillInfo = UserSkillModel::getInstance()->getPlayerSkillsList();
 }
 
 void MultiUnitSelectScene::leftArrowClickCallback(Ref *pSender, Widget::TouchEventType type)
@@ -632,13 +683,13 @@ void MultiUnitSelectScene::rightArrowClickCallback(Ref *pSender, Widget::TouchEv
 	}
 }
 
-void MultiUnitSelectScene::sendSelectUnitInfo()
+void MultiUnitSelectScene::sendSelectUnitInfo(int unitId)
 {
-	if (_decidedUnitId == 0) return;
+	if (unitId == 0) return;
 
-	UserModel::getInstance()->setSelectedUnitId(_decidedUnitId);
+	
 	auto userData = UserModel::getInstance()->getUserInfo();
-	auto unitData = UserUnitModel::getInstance()->getUnitInfoById(_decidedUnitId);
+	auto unitData = UserUnitModel::getInstance()->getUnitInfoById(unitId);
 	if (_pageFlg == MULTI_MODE)
 	{
 		Document doc;
@@ -648,7 +699,7 @@ void MultiUnitSelectScene::sendSelectUnitInfo()
 		doc.AddMember("room_id", userData.room_id, allo);
 		doc.AddMember("user_id", userData.user_id, allo);
 		doc.AddMember("team_id", userData.team_id, allo);
-		doc.AddMember("unit_id", _decidedUnitId, allo);
+		doc.AddMember("unit_id", unitId, allo);
 		doc.AddMember("mst_unit", *UserUnitModel::getInstance()->convertFromUserUnitInfoToJson(unitData, allo), allo);
 		string uu = UserModel::getInstance()->getUuId().c_str();
 		doc.AddMember("uuid", uu.c_str(), allo);
@@ -662,6 +713,7 @@ void MultiUnitSelectScene::sendSelectUnitInfo()
 		client->emit("connect_select_unit", buff.GetString());
 		client->on("connect_select_unit_end", [&](SIOClient* client, const std::string& data) {
 			log("select unit end data: %s", data.c_str());
+			_sendUnitFlg = true;
 			RoomUserModel::getInstance()->parseTeamData(data);
 		});
 	}
@@ -669,40 +721,60 @@ void MultiUnitSelectScene::sendSelectUnitInfo()
 
 void MultiUnitSelectScene::sendSElectSkillInfo()
 {
-	auto a = UserModel::getInstance()->getUserInfo();
-	Document doc;
-	doc.SetObject();
-	Document::AllocatorType& allo = doc.GetAllocator();
-
-	doc.AddMember("room_id", a.room_id, allo);
-	doc.AddMember("team_id", a.team_id, allo);
-	doc.AddMember("user_id", a.user_id, allo);
-	doc.AddMember("unit_id", _decidedUnitId, allo);
-	rapidjson::Value listSkill;
-	vector<int> listSkillId;
-	listSkill.SetArray();
-	/*for (int i = 0; i < skills.size(); i++)
+	vector<UserSkillInfo> skills;
+	for (auto &var : _allSelectedSkilId)
 	{
-	listSkill.PushBack(skills[i].mst_skill_id, allo);
-	listSkillId.push_back(skills[i].mst_skill_id);
+		if (var < 0)
+		{
+			return;
+		}
+		skills.push_back(_allSkillInfo[var]);
+	}
 
-	//targetList.AddMember("target_unique_id", targetsId[i], allo);
-	}*/
-	doc.AddMember("player_skill_list", listSkill, allo);
-	string uu = UserModel::getInstance()->getUuId().c_str();
-	doc.AddMember("uuid", uu.c_str(), allo);
+	if (UserDefault::getInstance()->getIntegerForKey("MODE") == SOLO_MODE) {
+		UserModel::getInstance()->setSelectedSkillList(skills);
+		_sendSkillFlg = true;
+		return;
+	}
+	else {
+		auto a = UserModel::getInstance()->getUserInfo();
+		Document doc;
+		doc.SetObject();
+		Document::AllocatorType& allo = doc.GetAllocator();
 
-	StringBuffer buff;
-	Writer<StringBuffer> wt(buff);
-	doc.Accept(wt);
+		doc.AddMember("room_id", a.room_id, allo);
+		doc.AddMember("team_id", a.team_id, allo);
+		doc.AddMember("user_id", a.user_id, allo);
+		doc.AddMember("unit_id", UserModel::getInstance()->getSelectedUnitId(), allo);
+		rapidjson::Value listSkill;
+		vector<int> listSkillId;
+		listSkill.SetArray();
+		for (int i = 0; i < skills.size(); i++)
+		{
+			listSkill.PushBack(skills[i].mst_skill_id, allo);
+			listSkillId.push_back(skills[i].mst_skill_id);
 
-	auto client = NodeServer::getInstance()->getClient();
-	client->emit("connect_select_skill", buff.GetString());
-	string temp = buff.GetString();
-	BattleModel::getInstance()->setPlayerSkills(listSkillId);
-	client->on("connect_select_skill_end", [&, temp](SIOClient* client, const std::string& data) {
-		log("select skill end data: %s", data.c_str());
-	});
+			//targetList.AddMember("target_unique_id", targetsId[i], allo);
+		}
+		doc.AddMember("player_skill_list", listSkill, allo);
+		string uu = UserModel::getInstance()->getUuId().c_str();
+		doc.AddMember("uuid", uu.c_str(), allo);
+
+		StringBuffer buff;
+		Writer<StringBuffer> wt(buff);
+		doc.Accept(wt);
+
+		auto client = NodeServer::getInstance()->getClient();
+		log("send select skills data: %s", buff.GetString());
+		client->emit("connect_select_skill", buff.GetString());
+		string temp = buff.GetString();
+		BattleModel::getInstance()->setPlayerSkills(listSkillId);
+		client->on("connect_select_skill_end", [&, temp](SIOClient* client, const std::string& data) {
+			log("select skill end data: %s", data.c_str());
+			RoomUserModel::getInstance()->parseTeamData(data);
+			_sendSkillFlg = true;
+		});
+	}
 }
 
 

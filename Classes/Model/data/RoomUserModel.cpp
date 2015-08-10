@@ -41,11 +41,17 @@ bool RoomUserModel::init()
 			int team_id = doc["team_id"].GetInt();
 			int room_id = doc["room_id"].GetInt();
 			int user_id = doc["user_id"].GetInt();
+			string uuid = doc["uuid"].GetString();
 
 			setTeamForUserByUserId(room_id, user_id, team_id);
+			if (team_id != UserModel::getInstance()->getUserInfo().team_id)
+			{
+				updateTeamUnitSkillList(uuid.c_str());
+			}
+			parseTeamData(data);
 			log("data updated");
 			NotificationCenter::getInstance()->postNotification("update_team", (Ref*)(intptr_t)user_id);
-			NotificationCenter::getInstance()->postNotification(TEAM_DATA_UPDATE_MSG, this);
+			
 		}
 		else {
 			log("something wrong: %d", doc.GetType());
@@ -65,7 +71,6 @@ bool RoomUserModel::init()
 			auto room_id = doc["room_id"].GetInt();
 			setTeamForUserByUserId(room_id, user_id, 0);
 			NotificationCenter::getInstance()->postNotification("update_team", (Ref*)(intptr_t)user_id);
-			NotificationCenter::getInstance()->postNotification(TEAM_DATA_UPDATE_MSG, this);
 		}
 	});
 	//handler for another player selected unit event
@@ -74,8 +79,6 @@ bool RoomUserModel::init()
 		log("unit select public data: %s", data.c_str());
 		this->setTempData(data.c_str());
 		this->parseTeamData(data);
-
-		NotificationCenter::getInstance()->postNotification(TEAM_DATA_UPDATE_MSG, this);
 	});
 
 	//handler for another player select skill event
@@ -84,8 +87,6 @@ bool RoomUserModel::init()
 		log("room_public_select_skill_end: %s", data.c_str());
 		this->setTempData(data.c_str());
 		this->parseTeamData(data);
-		NotificationCenter::getInstance()->postNotification(TEAM_DATA_UPDATE_MSG, this);
-
 	});
 	return true;
 }
@@ -133,6 +134,40 @@ void RoomUserModel::updateTeamUserList()
 	}
 	this->setBlueTeamUserList(tempList1);
 	this->setRedTeamUserList(tempList2);
+
+}
+
+void RoomUserModel::updateTeamUnitSkillList(string uuid)
+{
+	auto teamUnitList = getTeamUnitList();
+	if (teamUnitList.size() > 0) 
+	{
+		for (int i = 0; i < teamUnitList.size(); i ++)
+		{
+			if (strcmp(teamUnitList[i].uuid.c_str(), uuid.c_str()) == 0)
+			{
+				teamUnitList.erase(teamUnitList.begin() + i);
+				break;
+			}
+		}
+	}
+	auto teamSKilList = getTeamSkillList();
+	if (teamSKilList.size() > 0) 
+	{
+		int foundNum = 0;
+		for (int j = 0; j < teamSKilList.size(); j ++)
+		{
+			if (strcmp(teamSKilList[j].uuid.c_str(), uuid.c_str()) == 0)
+			{
+				teamSKilList.erase(teamSKilList.begin() + j);
+				j -= 1;
+				foundNum += 1;
+				if (foundNum == 2) break;
+			}
+		}
+	}
+	setTeamUnitList(teamUnitList);
+	setTeamSkillList(teamSKilList);
 }
 
 RoomUser RoomUserModel::parseJsonToRoomUserData(string data)
@@ -174,6 +209,7 @@ void RoomUserModel::initDataWhenJoinRoom(string jsonData)
 			temp.team_id = doc["data"][i]["team_id"].GetInt();
 			temp.user_id = doc["data"][i]["user_id"].GetInt();
 			temp._uuid = doc["data"][i]["room_user_id"].GetString();
+			temp._ready = doc["data"][i]["ready"].GetInt();
 			tempList.push_back(temp);
 		}
 		setRoomUserList(tempList);
@@ -195,6 +231,7 @@ void RoomUserModel::parseTeamData(const string& data)
 		return;
 	}
 	if (doc.IsObject()) {
+		if (doc["team_id"].GetInt() != UserModel::getInstance()->getUserInfo().team_id) return;
 		if (doc["unit"].Size() > 0) 
 		{
 			vector<TeamUnit> tempUnits = {};
@@ -216,10 +253,12 @@ void RoomUserModel::parseTeamData(const string& data)
 				tempS.mst_skill_id = doc["skill"][rapidjson::SizeType(j)]["mst_skill_id"].GetInt();
 				tempS.user_id = doc["skill"][rapidjson::SizeType(j)]["user_id"].GetInt();
 				tempS.uuid = doc["skill"][rapidjson::SizeType(j)]["uuid"].GetString();
+				tempS.skill_index = doc["skill"][rapidjson::SizeType(j)]["skill_index"].GetInt();
 				tempSkills.push_back(tempS);
 			}
 			this->setTeamSkillList(tempSkills);
 		}
+		NotificationCenter::getInstance()->postNotification(TEAM_DATA_UPDATE_MSG, this);
 	}
 }
 

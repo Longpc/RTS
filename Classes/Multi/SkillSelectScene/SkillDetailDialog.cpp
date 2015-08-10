@@ -1,6 +1,6 @@
 ﻿#pragma execution_character_set("utf-8")
 #include "SkillDetailDialog.h"
-SkillDetailDialog* SkillDetailDialog::create(UserSkillInfo skill, MyTouchEvent decideCallback, MyTouchEvent ccelCallback)
+SkillDetailDialog* SkillDetailDialog::create(UserSkillInfo skill, MyTouchEventVoid decideCallback, MyTouchEventVoid ccelCallback)
 {
 	SkillDetailDialog *p = new SkillDetailDialog();
 	if (p && p->init(skill, decideCallback, ccelCallback)) {
@@ -11,7 +11,7 @@ SkillDetailDialog* SkillDetailDialog::create(UserSkillInfo skill, MyTouchEvent d
 	return NULL;
 }
 
-bool SkillDetailDialog::init(UserSkillInfo unit, MyTouchEvent decideCallback, MyTouchEvent ccelCallback)
+bool SkillDetailDialog::init(UserSkillInfo unit, MyTouchEventVoid decideCallback, MyTouchEventVoid ccelCallback)
 {
 	if (!LayerBase::init()) {
 		return false;
@@ -51,19 +51,35 @@ bool SkillDetailDialog::init(UserSkillInfo unit, MyTouchEvent decideCallback, My
 
 void SkillDetailDialog::decideButtonCallback(Ref *pSender, Widget::TouchEventType type)
 {
-	closeDialog();
-	if (_decideCallback != nullptr) {
-		_decideCallback(pSender, type);
+	switch (type)
+	{
+	case cocos2d::ui::Widget::TouchEventType::ENDED:
+	{
+		closeDialog();
+		if (_decideCallback != nullptr) _decideCallback();
+		break;
 	}
+	default:
+		break;
+	}
+	
 
 }
 
 void SkillDetailDialog::closeButtonCallback(Ref *pSender, Widget::TouchEventType type)
 {
-	closeDialog();
-	if (_ccCallback != nullptr) {
-		_ccCallback(pSender, type);
+	switch (type)
+	{
+	case cocos2d::ui::Widget::TouchEventType::ENDED:
+	{
+		closeDialog();
+		if (_ccCallback != nullptr) _ccCallback();
+		break;
 	}
+	default:
+		break;
+	}
+	
 }
 
 void SkillDetailDialog::closeDialog()

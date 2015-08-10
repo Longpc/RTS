@@ -10,7 +10,8 @@ Character::Character()
 	_characterMoveSpeed(0),
 	_currentAttackActionTag(0),
 	_currentMoveActionTag(0),
-	_attackDelayFlg(false)
+	_attackDelayFlg(false),
+	_onAttackDisable(false)
 {
 	//Contructor
 }
@@ -342,7 +343,7 @@ void Character::birdMode(int index)
 	string p = "image/bird/";
 	p.append(szName);
 
-	Texture2D* text = TextureCache::getInstance()->addImage(p);
+	Texture2D* text = Director::getInstance()->getTextureCache()->addImage(p);
 
 	this->setTexture(text);
 	this->setBirdMode(true);

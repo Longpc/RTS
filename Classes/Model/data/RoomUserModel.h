@@ -50,6 +50,7 @@ public:
 	void addUserInfoToUserList(RoomUser data);
 	void setTeamForUserByUserId(int room_id, int user_id, int team_id);
 	void updateTeamUserList();
+	void updateTeamUnitSkillList(string uuid);
 
 private:
 	static RoomUserModel * s_RoomModel;

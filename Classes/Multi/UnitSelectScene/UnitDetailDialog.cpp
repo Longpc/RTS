@@ -1,7 +1,7 @@
 ﻿#pragma execution_character_set("utf-8")
 #include "UnitDetailDialog.h"
 
-UnitDetailDialog* UnitDetailDialog::create(UserUnitInfo unit, MyTouchEvent decideCallback, MyTouchEvent ccelCallback)
+UnitDetailDialog* UnitDetailDialog::create(UserUnitInfo unit, MyTouchEventVoid decideCallback, MyTouchEventVoid ccelCallback)
 {
 	UnitDetailDialog *p = new UnitDetailDialog();
 	if (p && p->init(unit, decideCallback, ccelCallback)) {
@@ -12,7 +12,7 @@ UnitDetailDialog* UnitDetailDialog::create(UserUnitInfo unit, MyTouchEvent decid
 	return NULL;
 }
 
-bool UnitDetailDialog::init(UserUnitInfo unit, MyTouchEvent decideCallback, MyTouchEvent ccelCallback)
+bool UnitDetailDialog::init(UserUnitInfo unit, MyTouchEventVoid decideCallback, MyTouchEventVoid ccelCallback)
 {
 	if (!LayerBase::init()) {
 		return false;
@@ -53,19 +53,35 @@ bool UnitDetailDialog::init(UserUnitInfo unit, MyTouchEvent decideCallback, MyTo
 
 void UnitDetailDialog::decideButtonCallback(Ref *pSender, Widget::TouchEventType type)
 {
-	closeDialog();
-	if (_decideCallback != nullptr) {
-		_decideCallback(pSender, type);
+	switch (type)
+	{
+	case cocos2d::ui::Widget::TouchEventType::ENDED:
+	{
+		closeDialog();
+		if (_decideCallback) _decideCallback();
+		break; 
+	}
+
+	default:
+		break;
 	}
 
 }
 
 void UnitDetailDialog::closeButtonCallback(Ref *pSender, Widget::TouchEventType type)
 {
-	closeDialog();
-	if (_ccCallback != nullptr) {
-		_ccCallback(pSender, type);
+	switch (type)
+	{
+	case cocos2d::ui::Widget::TouchEventType::ENDED:
+	{
+		closeDialog();
+		if (_ccCallback != nullptr) _ccCallback();
+		break;
 	}
+	default:
+		break;
+	}
+	
 }
 
 void UnitDetailDialog::closeDialog()

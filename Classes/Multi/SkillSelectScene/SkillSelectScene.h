@@ -59,7 +59,7 @@ private:
 	void onTouchEnded(Touch *touch, Event *unused_event);
 	void onTouchMoved(Touch *touch, Event *unused_event);
 
-	virtual void createAllUnitView();
+	virtual void createPageView();
 
 	virtual void onTouchUnitSlot1(Ref *pSender, Widget::TouchEventType type);
 	virtual void onTouchUnitSlot2(Ref *pSender, Widget::TouchEventType type);
@@ -68,8 +68,8 @@ private:
 	virtual void onTouchUnit(Ref *pSender, Widget::TouchEventType type);
 	virtual void setSelectedSkillINfo(int unitId);
 
-	virtual void decideCallBack(Ref *pSender, Widget::TouchEventType type);
-	virtual void cancelCallBack(Ref *pSender, Widget::TouchEventType type);
+	virtual void decideCallBack();
+	virtual void cancelCallBack();
 
 	virtual void showSkill(Button * parent,Label *label, int unitId);
 

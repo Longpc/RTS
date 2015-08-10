@@ -8,12 +8,11 @@
 #include "Model/data/UserSkillModel.h"
 #include "Model/data/UserUnitModel.h"
 
-typedef std::function<void(Ref *pSender, Widget::TouchEventType type)> MyTouchEvent;
 class UnitDetailDialog :public LayerBase
 {
 public:
-	static UnitDetailDialog* create(UserUnitInfo unit, MyTouchEvent decideCallback, MyTouchEvent ccelCallback);
-	bool init(UserUnitInfo unit, MyTouchEvent decideCallback, MyTouchEvent ccelCallback);
+	static UnitDetailDialog* create(UserUnitInfo unit, MyTouchEventVoid decideCallback, MyTouchEventVoid ccelCallback);
+	bool init(UserUnitInfo unit, MyTouchEventVoid decideCallback, MyTouchEventVoid ccelCallback);
 
 private:
 	///VARIABLES///////////////////////////////////////////////////////////////////////
@@ -26,8 +25,8 @@ private:
 	UserUnitInfo _unitInfo;
 	vector<UserSkillInfo> _allUnitSkill;
 
-	MyTouchEvent _decideCallback;
-	MyTouchEvent _ccCallback;
+	MyTouchEventVoid _decideCallback;
+	MyTouchEventVoid _ccCallback;
 
 	///FUNCTIONS///////////////////////////////////////////////////////////////////////
 	virtual void getUnitSkillDataFromDatabase();

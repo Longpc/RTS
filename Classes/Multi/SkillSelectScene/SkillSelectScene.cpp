@@ -67,7 +67,7 @@ bool SkillSelectScene::init()
 	_decideButton->addTouchEventListener(CC_CALLBACK_2(SkillSelectScene::nextButtonCallback, this));
 	addChild(_decideButton, 10);
 
-	createAllUnitView();
+	createPageView();
 
 	return true;
 }
@@ -254,30 +254,14 @@ void SkillSelectScene::onBackButtonClick(Ref *pSender)
 	
 }
 
-void SkillSelectScene::decideCallBack(Ref *pSender, Widget::TouchEventType type)
+void SkillSelectScene::decideCallBack()
 {
-	switch (type)
-	{
-	case cocos2d::ui::Widget::TouchEventType::BEGAN:
-	{
-		setSelectedSkillINfo(_onSelectSkillTag);
-		_onTouchDisable = false;
-		_isSentRequest = false;
-		break;
-	}
-	case cocos2d::ui::Widget::TouchEventType::MOVED:
-		break;
-	case cocos2d::ui::Widget::TouchEventType::ENDED:
-		break;
-	case cocos2d::ui::Widget::TouchEventType::CANCELED:
-		break;
-	default:
-		break;
-	}
-	
+	setSelectedSkillINfo(_onSelectSkillTag);
+	_onTouchDisable = false;
+	_isSentRequest = false;
 }
 
-void SkillSelectScene::cancelCallBack(Ref *pSender, Widget::TouchEventType type)
+void SkillSelectScene::cancelCallBack()
 {
 	_onTouchDisable = false;
 }
@@ -302,7 +286,7 @@ void SkillSelectScene::onTouchUnit(Ref *pSender, Widget::TouchEventType type)
 
 		_onSelectSkillTag = tag;
 		_onTouchDisable = true;
-		auto dialod = SkillDetailDialog::create(_allSkillInfo[tag], CC_CALLBACK_2(SkillSelectScene::decideCallBack, this), CC_CALLBACK_2(SkillSelectScene::cancelCallBack, this));
+		auto dialod = SkillDetailDialog::create(_allSkillInfo[tag], CC_CALLBACK_0(SkillSelectScene::decideCallBack, this), CC_CALLBACK_0(SkillSelectScene::cancelCallBack, this));
 		getParent()->addChild(dialod);
 		_decideButton->setTouchEnabled(false);
 		break;
@@ -422,7 +406,7 @@ Label* SkillSelectScene::createUniNameLabel(Vec2 pos)
 	return lb;
 }
 
-void SkillSelectScene::createAllUnitView()
+void SkillSelectScene::createPageView()
 {
 	
 	auto spite = Sprite::create("image/screen/unitSelect/back.png");

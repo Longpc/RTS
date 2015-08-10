@@ -94,6 +94,25 @@ void UnitInfoGroup::setUnitIcon(string imgPath)
 	this->getUnitClickableButton()->setScale(4.0f);
 }
 
+void UnitInfoGroup::showReadyForBattle(bool showFlg)
+{
+	if (showFlg)
+	{
+		auto sprite = Sprite::create("image/screen/ready_color.png");
+		sprite->setPosition(Vec2(30, -30));
+		sprite->setTag(563);
+		sprite->setScale(0.5f);
+		this->addChild(sprite, 100);
+	}
+	else
+	{
+		while (this->getChildByTag(563))
+		{
+			this->removeChildByTag(563);
+		}
+	}
+}
+
 void UnitInfoGroup::setSkillIcon(int buttonIndex, string imgPath)
 {
 	this->getSkillClickableButton(buttonIndex)->loadTextureNormal(imgPath.c_str());
@@ -101,6 +120,7 @@ void UnitInfoGroup::setSkillIcon(int buttonIndex, string imgPath)
 
 void UnitInfoGroup::onTouchUnitButton(Ref *p, Widget::TouchEventType type)
 {
+	log("unit click");
 	CC_UNUSED_PARAM(p);
 	switch (type)
 	{
@@ -116,6 +136,7 @@ void UnitInfoGroup::onTouchUnitButton(Ref *p, Widget::TouchEventType type)
 
 void UnitInfoGroup::onTouchSkill1Button(Ref *p, Widget::TouchEventType type)
 {
+	log("skill 1 click");
 	CC_UNUSED_PARAM(p);
 	switch (type)
 	{
@@ -131,6 +152,7 @@ void UnitInfoGroup::onTouchSkill1Button(Ref *p, Widget::TouchEventType type)
 
 void UnitInfoGroup::onTouchSkill2Button(Ref *p, Widget::TouchEventType type)
 {
+	log("skill 2 click");
 	CC_UNUSED_PARAM(p);
 	switch (type)
 	{
@@ -146,9 +168,11 @@ void UnitInfoGroup::onTouchSkill2Button(Ref *p, Widget::TouchEventType type)
 
 void UnitInfoGroup::resetDefaultStatus()
 {
+	this->setName("");
 	this->setSelected(false);
 	this->setPlayerNameLabel("");
 	this->getUnitButton()->resetClickableButton();
-	this->getSkillButon(1)->resetClickableButton();
-	this->getSkillButon(2)->resetClickableButton();
+	this->showReadyForBattle(false);
+	_playerSkill1Button->getClickableButton()->loadTextureNormal("image/screen/unitSelect/slot.png");
+	_playerSkill2Button->getClickableButton()->loadTextureNormal("image/screen/unitSelect/slot.png");
 }

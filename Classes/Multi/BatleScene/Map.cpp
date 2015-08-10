@@ -57,6 +57,7 @@ cocos2d::Vec2 MyMap::getTitleCoorForPosition(Vec2 location)
 bool MyMap::checkPosInsideMap(Vec2 pos)
 {
 	if (pos.x < this->getTileSize().width || pos.y < this->getTileSize().height || pos.x > this->getContentSize().width - this->getTileSize().width || pos.y > this->getContentSize().height - this->getTileSize().height) return false;
+	if (this->getLayer("main_layer")->getTileAt(getTitleCoorForPosition(pos)) == nullptr) return false;
 
 	return true;
 }

@@ -11,7 +11,6 @@ USING_NS_CC_EXT;
 using namespace ui;
 using namespace std;
 
-typedef std::function<void(Ref *pSender, Widget::TouchEventType type)> MyTouchEvent;
 class ClipingButtonBase :public Node
 {
 public:

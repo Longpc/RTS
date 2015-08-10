@@ -95,6 +95,8 @@
 #define TRAP_CHECK_ACTION_TAG 2212
 #define TRAP_DAME_ACTION_TAG 2122
 
+#define BLINK_MOVE_ACTION_TAG 544
+
 #define MINION_PARENT_ACTION_TAG 2787
 using namespace cocostudio;
 class BattleScene : public LayerBase
@@ -188,7 +190,7 @@ private:
 	vector<UserSkillInfo> _playerSkills;
 	///CHARACTER///
 
-	int _selectedUnitId;
+	int _selectedUnitId = 1;
 // 	UserUnitInfo _mainCharacterData;
 	UserUnitInfo _saveMainStatusData;
 	vector<UserSkillInfo> _mainCharacterSkillData;
@@ -538,6 +540,7 @@ private:
 
 	virtual void skillPetAction(Sprite* casterSprite, UserSkillInfo skill, UserUnitInfo* casterInfo, int teamFlg);
 
+	virtual void skillBlinkAcion(Sprite* object, UserUnitInfo attacker, UserSkillInfo skill, vector<Sprite*> targetList, vector<UserUnitInfo>* targetUnitData, float angle, float randNUm);
 
 	/*Run logic and effect of attack skills*/
 	virtual void skillAttackAction(Sprite* object, UserSkillInfo skillInfo, UserUnitInfo attacker, int teamId, float randNum, float angle);

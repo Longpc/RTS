@@ -17,11 +17,11 @@
 		<key>APIServer</key>
 		<string>http://52.68.104.55/RTSAPI/</string>
 		<key>NodeJSServer</key>
-		<string>ws://192.168.0.156:8222/</string>
+		<string>ws://52.68.104.55:8222/</string>
 		<key>MapServer</key>
-		<string>ws://192.168.0.156:8000/</string>
+		<string>ws://52.68.104.55:8000/</string>
 		<key>MoveServer</key>
-		<string>ws://192.168.0.156:8001/</string>
+		<string>ws://52.68.104.55:8001/</string>
 	</dict>
 	<key>metadata</key>
 	<dict>
