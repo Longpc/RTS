@@ -113,16 +113,18 @@ bool MultiUnitSelectScene::init(int roomId,int pageFlg)
 						}
 					}
 				}
-				/*auto roomUserList = RoomUserModel::getInstance()->getRoomUserList();
+				auto roomUserList = RoomUserModel::getInstance()->getRoomUserList();
 				for (int i = 0; i < roomUserList.size(); i ++)
 				{
 					if (strcmp(roomUserList[i]._uuid.c_str(), uuid.c_str()) == 0)
 					{
 						roomUserList[i]._ready = 1;
+						log("set ready");
 						break;
 					}
 				}
-				RoomUserModel::getInstance()->setRoomUserList(roomUserList);*/
+				RoomUserModel::getInstance()->setRoomUserList(roomUserList);
+				RoomUserModel::getInstance()->updateTeamUserList();
 			}
 		});
 		sv->on("public_not_ready", [&](SIOClient *c, const string& data) {
@@ -150,16 +152,18 @@ bool MultiUnitSelectScene::init(int roomId,int pageFlg)
 						}
 					}
 				}
-				/*auto roomUserList = RoomUserModel::getInstance()->getRoomUserList();
+				auto roomUserList = RoomUserModel::getInstance()->getRoomUserList();
 				for (int i = 0; i < roomUserList.size(); i++)
 				{
 					if (strcmp(roomUserList[i]._uuid.c_str(), uuid.c_str()) == 0)
 					{
 						roomUserList[i]._ready = 0;
+						log("unset ready");
 						break;
 					}
 				}
-				RoomUserModel::getInstance()->setRoomUserList(roomUserList);*/
+				RoomUserModel::getInstance()->setRoomUserList(roomUserList);
+				RoomUserModel::getInstance()->updateTeamUserList();
 			}
 		});
 	}
@@ -191,6 +195,7 @@ void MultiUnitSelectScene::updateContent(Ref *p)
 	_isSentRequest = false;
 	//for show detail in unit slot
 	auto userInfo = UserModel::getInstance()->getUserInfo();
+	auto uuid = UserModel::getInstance()->getUuId();
 	vector<RoomUser> teamInfo = {};
 	switch (userInfo.team_id)
 	{
@@ -219,7 +224,7 @@ void MultiUnitSelectScene::updateContent(Ref *p)
 	{
 		_allUnitGroup[i]->setPlayerNameLabel(teamInfo[i].name.c_str());
 		_allUnitGroup[i]->setName(teamInfo[i]._uuid.c_str());
-		if (teamInfo[i].name == UserModel::getInstance()->getUserInfo().name)
+		if (teamInfo[i].name ==userInfo.name)
 		{
 			_allUnitGroup[i]->setSelected(true);
 			_allUnitGroup[i]->addUnitButtonClickCallback(CC_CALLBACK_0(MultiUnitSelectScene::onTouchUnitButton, this));
@@ -230,6 +235,7 @@ void MultiUnitSelectScene::updateContent(Ref *p)
 		else {
 			_allUnitGroup[i]->setSelected(false);
 		}
+		log("team ready: %s  - %d", teamInfo[i]._uuid.c_str(), teamInfo[i]._ready);
 		if (teamInfo[i]._ready == 1) {
 			_allUnitGroup[i]->showReadyForBattle(true);
 		}
@@ -255,6 +261,7 @@ void MultiUnitSelectScene::updateContent(Ref *p)
 		{
 			if (strcmp(unit.uuid.c_str(), group->getName().c_str()) == 0) {
 				group->setUnitIcon(UserUnitModel::getInstance()->getUnitImageByMstUnitItD(unit.mst_unit_id).c_str());
+				if (strcmp(unit.uuid.c_str(), uuid.c_str()) == 0) _sendUnitFlg = true;
 				break;
 			}
 		}
@@ -267,6 +274,7 @@ void MultiUnitSelectScene::updateContent(Ref *p)
 		{
 			if (strcmp(skillList[i].uuid.c_str(), g->getName().c_str()) == 0) {
 				g->setSkillIcon(skillList[i].skill_index+1, UserSkillModel::getInstance()->getSkillInfoById(skillList[i].mst_skill_id).skill_icon_path.c_str());
+				if (strcmp(skillList[i].uuid.c_str(), uuid.c_str()) == 0) _sendSkillFlg = true;
 				found++;
 			}
 		}

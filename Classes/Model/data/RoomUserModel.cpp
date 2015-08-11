@@ -48,10 +48,10 @@ bool RoomUserModel::init()
 			{
 				updateTeamUnitSkillList(uuid.c_str());
 			}
-			parseTeamData(data);
+			parseTeamData(data, false);
 			log("data updated");
 			NotificationCenter::getInstance()->postNotification("update_team", (Ref*)(intptr_t)user_id);
-			
+			NotificationCenter::getInstance()->postNotification(TEAM_DATA_UPDATE_MSG, this);
 		}
 		else {
 			log("something wrong: %d", doc.GetType());
@@ -69,8 +69,10 @@ bool RoomUserModel::init()
 		if (doc.IsObject()) {
 			auto user_id = doc["user_id"].GetInt();
 			auto room_id = doc["room_id"].GetInt();
+			auto team_id = doc["team_id"].GetInt();
 			setTeamForUserByUserId(room_id, user_id, 0);
 			NotificationCenter::getInstance()->postNotification("update_team", (Ref*)(intptr_t)user_id);
+			if (team_id == UserModel::getInstance()->getUserInfo().team_id) NotificationCenter::getInstance()->postNotification(TEAM_DATA_UPDATE_MSG, this);
 		}
 	});
 	//handler for another player selected unit event
@@ -87,6 +89,8 @@ bool RoomUserModel::init()
 		log("room_public_select_skill_end: %s", data.c_str());
 		this->setTempData(data.c_str());
 		this->parseTeamData(data);
+		
+
 	});
 	return true;
 }
@@ -222,7 +226,7 @@ void RoomUserModel::initDataWhenJoinRoom(string jsonData)
 	}
 }
 
-void RoomUserModel::parseTeamData(const string& data)
+void RoomUserModel::parseTeamData(const string& data, bool sendNotiFlg)
 {
 	rapidjson::Document doc;
 	doc.Parse<0>(data.c_str());
@@ -258,7 +262,7 @@ void RoomUserModel::parseTeamData(const string& data)
 			}
 			this->setTeamSkillList(tempSkills);
 		}
-		NotificationCenter::getInstance()->postNotification(TEAM_DATA_UPDATE_MSG, this);
+		if(sendNotiFlg) NotificationCenter::getInstance()->postNotification(TEAM_DATA_UPDATE_MSG, this);
 	}
 }
 

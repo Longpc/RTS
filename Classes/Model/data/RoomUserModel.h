@@ -39,7 +39,7 @@ public:
 	/*
 	 * Function to parser and init Team user unit list and team user skill list
 	 */
-	void parseTeamData(const string& data);
+	void parseTeamData(const string& data, bool sendNotiFlg = true);
 
 	/*this function will parse data received when select user was done. Parsed data will use to
 	create room 's user list*/
