@@ -27,7 +27,6 @@ void NodeServer::createInstance(SocketIOCallback connectedCallback /* = nullptr 
 
 NodeServer* NodeServer::getInstance()
 {
-	
 	return s_sharedTestServer;
 }
 

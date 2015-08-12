@@ -191,7 +191,6 @@ bool BattleScene::init()
 		info.name = _allAlliedUnitData[i].name;
 		info.unitId = _allAlliedUnitData[i].mst_unit_id;
 		info.imagePath = UserUnitModel::getInstance()->getUnitImageByMstUnitItD(_allAlliedUnitData[i].mst_unit_id);
-		//_saveBattleInfoAlliedTeam.push_back(info);
 	}
 	/*Size - 1 because we don't save dame dead by tower*/
 	for (int i = 0; i < _allEnemyUnitData.size() - 1; i++)
@@ -199,7 +198,6 @@ bool BattleScene::init()
 		UserBattleInfo enemy;
 		enemy.name = _allEnemyUnitData[i].name;
 		enemy.unitId = _allEnemyUnitData[i].mst_unit_id;
-		//_saveBattleInfoEnemyTeam.push_back(enemy);
 	}
 	
 

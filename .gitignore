@@ -13,3 +13,8 @@ proj.win32/Boileague.opensdf
 proj.win32/Boileague.sdf
 cocos2d/cocos/editor-support/spine/proj.win32/Debug.win32/
 cocos2d/external/Box2D/proj.win32/Debug.win32/
+/cocos2d/cocos/2d/Release.win32
+/cocos2d/cocos/editor-support/spine/proj.win32/Release.win32
+/cocos2d/external/Box2D/proj.win32/Release.win32
+/cocos2d/external/Cocos2dxGAFPlayer-gaf-4.0
+/backup
