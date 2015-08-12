@@ -58,8 +58,8 @@ private:
 	bool _startAPICallback = false;
 
 	///FUNCTIONS///////////////////////////////////////////////////////////////////////
-	virtual void multiButtonCallback(Ref *pSender, Widget::TouchEventType type);
-	virtual void soloButtonCallback(Ref *pSender, Widget::TouchEventType type);
+	virtual void touchButtonCallback(Ref *pSender, Widget::TouchEventType type, int buttonNum);
+
 	/*
 	Check multi-player room can accessible
 	Return: true if accessible / false when full or can't access

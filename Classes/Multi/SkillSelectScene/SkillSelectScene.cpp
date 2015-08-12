@@ -1,6 +1,9 @@
 ﻿#pragma execution_character_set("utf-8")
 #include "SkillSelectScene.h"
 #define SLOT_NUMBER 2
+/************************************************************************/
+/* IN CURRENT VERSION(8/2015). This Class was't used                                                                     */
+/************************************************************************/
 Scene * SkillSelectScene::createScene()
 {
 	auto scene = Scene::create();

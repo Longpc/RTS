@@ -35,6 +35,7 @@ public :
 	CC_SYNTHESIZE(bool, _attackDelayFlg, AttackDelayFlag);
 	CC_SYNTHESIZE(bool, _onMoving, OnMovingFlg);
 	CC_SYNTHESIZE(bool, _onAttackDisable, AttackDisable);
+	CC_SYNTHESIZE(bool, _disableContact, ContactDisable);
 	
 	/*for save neutral unit data in solo mode*/
 	CC_SYNTHESIZE(int, _saveAttackTime, SaveAtttackTime);

@@ -81,14 +81,14 @@ bool ModeSelectScene::init()
 	Button *multiButton = Button::create();
 	multiButton->loadTextureNormal("image/button/new/multi.png");
 	multiButton->setTouchEnabled(true);
-	multiButton->addTouchEventListener(CC_CALLBACK_2(ModeSelectScene::multiButtonCallback, this));
+	multiButton->addTouchEventListener(CC_CALLBACK_2(ModeSelectScene::touchButtonCallback, this, 1));
 	multiButton->setPosition(Vec2(_visibleSize.width * 3 / 4, _visibleSize.height *2/ 3));
 	addChild(multiButton);
 
 	Button *soloButton = Button::create();
 	soloButton->loadTextureNormal("image/button/new/solo.png");
 	soloButton->setTouchEnabled(true);
-	soloButton->addTouchEventListener(CC_CALLBACK_2(ModeSelectScene::soloButtonCallback, this));
+	soloButton->addTouchEventListener(CC_CALLBACK_2(ModeSelectScene::touchButtonCallback, this,2));
 	soloButton->setPosition(Vec2(_visibleSize.width * 3 / 4, _visibleSize.height *1/ 3));
 	addChild(soloButton);
 
@@ -129,58 +129,41 @@ bool ModeSelectScene::init()
 
 
 
-void ModeSelectScene::multiButtonCallback(Ref *pSender, Widget::TouchEventType type)
+void ModeSelectScene::touchButtonCallback(Ref *pSender, Widget::TouchEventType type, int butonNum)
 {
+	CC_UNUSED_PARAM(pSender);
 	if (_onDisableTouch) return;
 	switch (type)
 	{
-	case cocos2d::ui::Widget::TouchEventType::BEGAN:
-		break;
-	case cocos2d::ui::Widget::TouchEventType::MOVED:
-		break;
 	case cocos2d::ui::Widget::TouchEventType::ENDED:
 	{
-		if (checkRoomMember() == true && StartAPI::getInstance()->getServerCallbackFlg()) {
-			NodeServer::createInstance();
-			MapServer::createInstance();
-			MoveServer::createInstace();
-			Director::getInstance()->replaceScene(TransitionMoveInR::create(SCREEN_TRANSI_DELAY, UserSelect::createScene()));
-		} 
+		if (butonNum == 1)
+		{
+			if (checkRoomMember() == true && StartAPI::getInstance()->getServerCallbackFlg()) {
+				NodeServer::createInstance();
+				MapServer::createInstance();
+				MoveServer::createInstace();
+				Director::getInstance()->replaceScene(TransitionMoveInR::create(SCREEN_TRANSI_DELAY, UserSelect::createScene()));
+			}
+		}
+		else
+		{
+			if (StartAPI::getInstance()->getServerCallbackFlg() == true)
+			{
+				Director::getInstance()->replaceScene(TransitionMoveInR::create(SCREEN_TRANSI_DELAY, MultiUnitSelectScene::createScene(1, SOLO_MODE)));
+			}
+			else {
+				log("Waiting for StartAPI callback");
+			}
+		}
+		
 		break;
 	}
-	case cocos2d::ui::Widget::TouchEventType::CANCELED:
-		break;
 	default:
 		break;
 	}
 }
 
-void ModeSelectScene::soloButtonCallback(Ref *pSender, Widget::TouchEventType type)
-{
-	if (_onDisableTouch) return;
-	switch (type)
-	{
-	case cocos2d::ui::Widget::TouchEventType::BEGAN:
-		break;
-	case cocos2d::ui::Widget::TouchEventType::MOVED:
-		break;
-	case cocos2d::ui::Widget::TouchEventType::ENDED:
-	{
-		if (StartAPI::getInstance()->getServerCallbackFlg() == true)
-		{
-			Director::getInstance()->replaceScene(TransitionMoveInR::create(SCREEN_TRANSI_DELAY, MultiUnitSelectScene::createScene(1, SOLO_MODE)));
-		}
-		else {
-			log("Waiting for StartAPI callback");
-		}
-		break;
-	}
-	case cocos2d::ui::Widget::TouchEventType::CANCELED:
-		break;
-	default:
-		break;
-	}
-}
 bool ModeSelectScene::checkRoomMember()
 {
 	return _onAccess;

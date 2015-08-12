@@ -53,8 +53,7 @@ private:
 	
 	virtual void onBackButtonClick(Ref *pSender);
 
-	virtual void redTeamButtonCallback(Ref *pSender, Widget::TouchEventType type);
-	virtual void blueTeamButtonCallback(Ref *pSender, Widget::TouchEventType type);
+	virtual void teamButtonClick(Ref *pSender, Widget::TouchEventType type, int teamId);
 	/*
 	Get room information base on roomID
 	and Show room info in bottom left of scene

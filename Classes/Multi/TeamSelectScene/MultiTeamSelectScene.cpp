@@ -57,14 +57,14 @@ bool MultiTeamSelectScene::init()
 	Button *blueButton = Button::create();
 	blueButton->loadTextureNormal("image/button/new/blue.png");
 	blueButton->setTouchEnabled(true);
-	blueButton->addTouchEventListener(CC_CALLBACK_2(MultiTeamSelectScene::blueTeamButtonCallback, this));
+	blueButton->addTouchEventListener(CC_CALLBACK_2(MultiTeamSelectScene::teamButtonClick, this, TEAM_FLG_BLUE));
 	blueButton->setPosition(Vec2(_visibleSize.width *3 / 4, _blueTeamBg->getPositionY()-blueButton->getContentSize().height/2));
 	addChild(blueButton,2);
 
 	Button *redButton = Button::create();
 	redButton->loadTextureNormal("image/button/new/red.png");
 	redButton->setTouchEnabled(true);
-	redButton->addTouchEventListener(CC_CALLBACK_2(MultiTeamSelectScene::redTeamButtonCallback, this));
+	redButton->addTouchEventListener(CC_CALLBACK_2(MultiTeamSelectScene::teamButtonClick, this, TEAM_FLG_RED));
 	redButton->setPosition(Vec2(_visibleSize.width * 3 / 4, _redTeamBg->getPositionY() - redButton->getContentSize().height / 2));
 	addChild(redButton,2);
 
@@ -88,18 +88,14 @@ bool MultiTeamSelectScene::init()
 }
 
 
-void MultiTeamSelectScene::redTeamButtonCallback(Ref *pSender, Widget::TouchEventType type)
+void MultiTeamSelectScene::teamButtonClick(Ref *pSender, Widget::TouchEventType type, int teamID)
 {
 	switch (type)
 	{
-	case cocos2d::ui::Widget::TouchEventType::BEGAN:
-		break;
-	case cocos2d::ui::Widget::TouchEventType::MOVED:
-		break;
 	case cocos2d::ui::Widget::TouchEventType::ENDED:
 	{
-		if (checkTeamFull(TEAM_FLG_RED) == true) {
-			enterTeam(TEAM_FLG_RED);
+		if (checkTeamFull(teamID) == true) {
+			enterTeam(teamID);
 		}
 		else {
 			//SHOW DIALOG
@@ -108,35 +104,6 @@ void MultiTeamSelectScene::redTeamButtonCallback(Ref *pSender, Widget::TouchEven
 		}
 		break;
 	}
-	case cocos2d::ui::Widget::TouchEventType::CANCELED:
-		break;
-	default:
-		break;
-	}
-}
-
-void MultiTeamSelectScene::blueTeamButtonCallback(Ref *pSender, Widget::TouchEventType type)
-{
-	switch (type)
-	{
-	case cocos2d::ui::Widget::TouchEventType::BEGAN:
-		break;
-	case cocos2d::ui::Widget::TouchEventType::MOVED:
-		break;
-	case cocos2d::ui::Widget::TouchEventType::ENDED:
-	{
-		if (checkTeamFull(TEAM_FLG_BLUE) == true) {
-			enterTeam(TEAM_FLG_BLUE);
-		}
-		else {
-			//SHOW DIALOg
-			auto dialog = MemberFullDialog::create();
-			getParent()->addChild(dialog, 100);
-		}
-		break;
-	}
-	case cocos2d::ui::Widget::TouchEventType::CANCELED:
-		break;
 	default:
 		break;
 	}

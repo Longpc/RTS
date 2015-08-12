@@ -11,7 +11,8 @@ Character::Character()
 	_currentAttackActionTag(0),
 	_currentMoveActionTag(0),
 	_attackDelayFlg(false),
-	_onAttackDisable(false)
+	_onAttackDisable(false),
+	_disableContact(false)
 {
 	//Contructor
 }

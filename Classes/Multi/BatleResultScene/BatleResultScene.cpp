@@ -52,6 +52,7 @@ bool BatleResultScene::init(int winTeam)
 			auto sv = NodeServer::getInstance()->getClient();
 			sv->emit("get_battle_result", "hello");
 			sv->on("battle_result", [&](SIOClient* client, const string data) {
+				CC_UNUSED_PARAM(client);
 				log("battle result with data: %s", data.c_str());
 				if (_isReceiveResponse) return;
 				_isReceiveResponse = true;
@@ -122,12 +123,9 @@ bool BatleResultScene::init(int winTeam)
 
 void BatleResultScene::nextButtonCallback(Ref *pSender, Widget::TouchEventType type)
 {
+	CC_UNUSED_PARAM(pSender);
 	switch (type)
 	{
-	case cocos2d::ui::Widget::TouchEventType::BEGAN:
-		break;
-	case cocos2d::ui::Widget::TouchEventType::MOVED:
-		break;
 	case cocos2d::ui::Widget::TouchEventType::ENDED:
 	{
 		if (_gameMode == MULTI_MODE)
@@ -146,8 +144,6 @@ void BatleResultScene::nextButtonCallback(Ref *pSender, Widget::TouchEventType t
 		Director::getInstance()->replaceScene(TransitionMoveInL::create(SCREEN_TRANSI_DELAY, ModeSelectScene::createScene()));
 		break; 
 	}
-	case cocos2d::ui::Widget::TouchEventType::CANCELED:
-		break;
 	default:
 		break;
 	}
@@ -223,10 +219,6 @@ void BatleResultScene::tabButtonClickCallback(Ref *pSender, Widget::TouchEventTy
 {
 	switch (type)
 	{
-	case cocos2d::ui::Widget::TouchEventType::BEGAN:
-		break;
-	case cocos2d::ui::Widget::TouchEventType::MOVED:
-		break;
 	case cocos2d::ui::Widget::TouchEventType::ENDED:
 	{
 		auto bt = (Button*)(pSender);
@@ -256,8 +248,6 @@ void BatleResultScene::tabButtonClickCallback(Ref *pSender, Widget::TouchEventTy
 		
 		break;
 	}
-	case cocos2d::ui::Widget::TouchEventType::CANCELED:
-		break;
 	default:
 		break;
 	}

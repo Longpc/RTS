@@ -740,7 +740,7 @@ void BattleScene::createContent()
 	_topMenuSprite = Sprite::create("image/screen/battle/status_parts.png");
 	_topMenuSprite->setAnchorPoint(Vec2::ANCHOR_TOP_LEFT);
 	_topMenuSprite->setPosition(Vec2(0, _visibleSize.height));
-	addChild(_topMenuSprite);
+	addChild(_topMenuSprite,5000);
 
 	_mainCharacterHpBar = Slider::create();
 	_mainCharacterHpBar->loadBarTexture("image/screen/battle/hp_base.png");
@@ -884,7 +884,7 @@ void BattleScene::createContent()
 	if (_miniTMXMap != nullptr)
 	{
 		_miniLayer = _miniTMXMap->getLayer("main_layer");
-		addChild(_miniTMXMap,2);
+		addChild(_miniTMXMap,5000);
 		_miniLayer->getTexture()->setAntiAliasTexParameters();
 		_miniTMXMap->setAnchorPoint(Vec2::ANCHOR_TOP_RIGHT);
 		//_miniTMXMap->setPosition(timeViewContainer->getPosition() - Vec2(0, 50));
@@ -919,7 +919,7 @@ void BattleScene::createContent()
 	Size baseSize = _skill1Button->getContentSize();
 
 	_skillButtonParentnode = Node::create();
-	addChild(_skillButtonParentnode);
+	addChild(_skillButtonParentnode, 5000);
 
 
 	/*if (_screenMode == SCREEN_VERTICAL)
@@ -1245,7 +1245,7 @@ void BattleScene::serverConnectedNotifyReceivedCallback(Ref *p)
 	auto client = NodeServer::getInstance()->getClient();
 	client->emit("connect_begin", buff.GetString());
 	client->on("connect_begin_end", [&](SIOClient* client, const std::string& data) {
-		
+		CC_UNUSED_PARAM(client);
 		log("connect begin end data: %s", data.c_str());
 		//NodeServer::getInstance()->setDisconnectCallback(CC_CALLBACK_0(BattleScene::reconnectToNodeServer, this));
 	});
@@ -1269,10 +1269,6 @@ void BattleScene::serverDisconnectedNotifyReceivedCallback(Ref *p)
 		auto bt = (Button*)p;
 		switch (type)
 		{
-		case cocos2d::ui::Widget::TouchEventType::BEGAN:
-			break;
-		case cocos2d::ui::Widget::TouchEventType::MOVED:
-			break;
 		case cocos2d::ui::Widget::TouchEventType::ENDED:
 		{
 			bt->runAction(RepeatForever::create(RotateBy::create(1.0f, 90)));
@@ -1307,8 +1303,6 @@ void BattleScene::serverDisconnectedNotifyReceivedCallback(Ref *p)
 			}*/);			
 			break;
 		}
-		case cocos2d::ui::Widget::TouchEventType::CANCELED:
-			break;
 		default:
 			break;
 		}
@@ -1325,15 +1319,18 @@ void BattleScene::serverDisconnectedNotifyReceivedCallback(Ref *p)
 
 void BattleScene::mapSErverConnectedNotifyReceivedCallback(Ref *p)
 {
+	CC_UNUSED_PARAM(p);
 	log("map server connected");
 	createMapSVHandler();
 }
 
 void BattleScene::mapServerDisconnectNotifyReceivedCallback(Ref *p)
 {
+	CC_UNUSED_PARAM(p);
 	log("map server disconnected");
 	MapServer::destroyInstace();
 	this->runAction(Sequence::create(DelayTime::create(RECONNECT_DELAY), CallFuncN::create([&](Ref* p) {
+		CC_UNUSED_PARAM(p);
 		MapServer::createInstance();
 	}),nullptr));
 	
@@ -1341,14 +1338,17 @@ void BattleScene::mapServerDisconnectNotifyReceivedCallback(Ref *p)
 
 void BattleScene::moveSVCOnnectedNotifyReceivedCallback(Ref *p)
 {
+	CC_UNUSED_PARAM(p);
 	log("move server connected");
 	createMoveSVHandler();
 }
 void BattleScene::moveSVDisconnectedNotifyReceivedCallback(Ref *p)
 {
+	CC_UNUSED_PARAM(p);
 	log("Map server disconnected");
 	MoveServer::destroyInstance();
 	this->runAction(Sequence::create(DelayTime::create(RECONNECT_DELAY), CallFuncN::create([&](Ref* p) {
+		CC_UNUSED_PARAM(p);
 		MoveServer::createInstace();
 	}), nullptr));
 	
@@ -1798,6 +1798,7 @@ void BattleScene::createNodeSVHandler()
 
 	/*Listener for other player attack neutral unit for create attack animation*/
 	sv->on("neutral_unit_attack", [&](SIOClient *client, const string data) {
+		CC_UNUSED_PARAM(client);
 		if (_onDestructCalled) return;
 
 		Document doc;
@@ -3302,6 +3303,8 @@ string BattleScene::makeTimeString(int second) {
 
 bool BattleScene::onTouchBegan(Touch *touch, Event *unused_event)
 {
+	CC_UNUSED_PARAM(unused_event);
+
 	auto touchPoint = touch->getLocation();
 	if (_miniTMXMap->getBoundingBox().containsPoint(touchPoint)) {
 		if (!_onZoomMiniMap) {
@@ -3541,6 +3544,7 @@ void BattleScene::updateMiniMap()
 void BattleScene::onTouchEnded(Touch *touch, Event *unused_event)
 {
 	
+	CC_UNUSED_PARAM(unused_event);
 	if (_allAlliedUnitData[0].isStun) return;
 
 	_touchMoveBeginSprite->setTexture("image/screen/battle/ui_move.png");
@@ -3630,21 +3634,15 @@ void BattleScene::onTouchEnded(Touch *touch, Event *unused_event)
 
 void BattleScene::menuButtonCallback(Ref *pSender, Widget::TouchEventType type)
 {
+	CC_UNUSED_PARAM(pSender);
 	switch (type)
 	{
-	case cocos2d::ui::Widget::TouchEventType::BEGAN:
-		break;
-	case cocos2d::ui::Widget::TouchEventType::MOVED:
-		break;
 	case cocos2d::ui::Widget::TouchEventType::ENDED:
 	{
 		auto dialog = OptionDialog::create(CC_CALLBACK_2(BattleScene::optionDecideCallback, this), CC_CALLBACK_2(BattleScene::optionCancelCallback, this));
 		getParent()->addChild(dialog);
 		break; 
 	}
-
-	case cocos2d::ui::Widget::TouchEventType::CANCELED:
-		break;
 	default:
 		break;
 	}
@@ -3779,7 +3777,15 @@ bool BattleScene::onPhysicContactPreSolve(PhysicsContact& contact, PhysicsContac
 // 	log("contact pre solve");
 	auto spriteA = contact.getShapeA()->getBody()->getNode();
 	auto spriteB = contact.getShapeB()->getBody()->getNode();
+	if ((spriteA->getTag() == BOUND_BORDER_TAG && spriteB == testObject) || (spriteA == testObject && spriteB->getTag() == BOUND_BORDER_TAG))
+	{
+		
+	}
 
+	if ((spriteA->getName() == "NEUTRAL_TOWER" && spriteB == testObject) || (spriteA == testObject && spriteB->getName() == "NEUTRAL_TOWER"))
+	{
+		
+	}
 	return true;
 }
 
@@ -3801,7 +3807,13 @@ void BattleScene::onPhysicContactPostSlove(PhysicsContact& contact, const Physic
 
 void BattleScene::contactWithWall()
 {
-	testObject->stopAllActionsByTag(BLINK_MOVE_ACTION_TAG);
+	if (testObject->getActionByTag(BLINK_ACTION_TAG) != nullptr) {
+		testObject->stopAllActionsByTag(BLINK_ACTION_TAG);
+		testObject->getPhysicsBody()->setVelocity(Vec2::ZERO);
+		testObject->setAttackDisable(false);
+		return;
+	}
+
 	Vec2 veloc = testObject->getPhysicsBody()->getVelocity();
 	_mainCharacterIconInMiniMap->setRotation(-veloc.getAngle() * RAD_DEG + 90);
 	/*int direc = detectDirectionBaseOnTouchAngle(-veloc.getAngle() * RAD_DEG+90);
@@ -3825,6 +3837,10 @@ void BattleScene::contactWithWall()
 void BattleScene::contactWithTower()
 {
 // 	log("contact with neutral tower");
+	if (testObject->getActionByTag(BLINK_ACTION_TAG) != nullptr) {
+		testObject->stopAllActionsByTag(BLINK_ACTION_TAG);
+		testObject->setAttackDisable(false);
+	}
 	testObject->getPhysicsBody()->setVelocity(Vec2::ZERO);
 	testObject->stopMoveAction();
 }
@@ -3880,17 +3896,11 @@ void BattleScene::optionCancelCallback(Ref *pSEnder, Widget::TouchEventType type
 {
 	switch (type)
 	{
-	case cocos2d::ui::Widget::TouchEventType::BEGAN:
-		break;
-	case cocos2d::ui::Widget::TouchEventType::MOVED:
-		break;
 	case cocos2d::ui::Widget::TouchEventType::ENDED:
 	{
 		//_moveMode = UserDefault::getInstance()->getIntegerForKey(MOVE_KEY);
 		break;
 	}
-	case cocos2d::ui::Widget::TouchEventType::CANCELED:
-		break;
 	default:
 		break;
 	}
@@ -3900,10 +3910,6 @@ void BattleScene::debugPhysicButtonCallback(Ref *pSEnder, Widget::TouchEventType
 {
 	switch (type)
 	{
-	case cocos2d::ui::Widget::TouchEventType::BEGAN:
-		break;
-	case cocos2d::ui::Widget::TouchEventType::MOVED:
-		break;
 	case cocos2d::ui::Widget::TouchEventType::ENDED:
 	{
 		auto aoe = testObject->getChildByName("AOE");
@@ -3930,10 +3936,6 @@ void BattleScene::checkMapTestButtonClick(Ref *pSender, Widget::TouchEventType t
 {
 	switch (type)
 	{
-	case cocos2d::ui::Widget::TouchEventType::BEGAN:
-		break;
-	case cocos2d::ui::Widget::TouchEventType::MOVED:
-		break;
 	case cocos2d::ui::Widget::TouchEventType::ENDED:
 	{
 		//changeAnimationImagePathByUnitId();
@@ -3946,8 +3948,6 @@ void BattleScene::checkMapTestButtonClick(Ref *pSender, Widget::TouchEventType t
 		}
 		break;
 	}
-	case cocos2d::ui::Widget::TouchEventType::CANCELED:
-		break;
 	default:
 		break;
 	}
@@ -3956,10 +3956,6 @@ void BattleScene::nextButtonCallback(Ref *pSender, Widget::TouchEventType type)
 {
 	switch (type)
 	{
-	case cocos2d::ui::Widget::TouchEventType::BEGAN:
-		break;
-	case cocos2d::ui::Widget::TouchEventType::MOVED:
-		break;
 	case cocos2d::ui::Widget::TouchEventType::ENDED:
 	{
 		if (!_touchEndButton)
@@ -3975,9 +3971,6 @@ void BattleScene::nextButtonCallback(Ref *pSender, Widget::TouchEventType type)
 		}
 		break;
 	}
-	case cocos2d::ui::Widget::TouchEventType::CANCELED:
-		break;
-
 	default:
 		break;
 	}
@@ -3987,10 +3980,6 @@ void BattleScene::birdButtonCallback(Ref *p, Widget::TouchEventType type)
 {
 	switch (type)
 	{
-	case cocos2d::ui::Widget::TouchEventType::BEGAN:
-		break;
-	case cocos2d::ui::Widget::TouchEventType::MOVED:
-		break;
 	case cocos2d::ui::Widget::TouchEventType::ENDED:
 	{
 		_birdMode = true;
@@ -4017,8 +4006,6 @@ void BattleScene::birdButtonCallback(Ref *p, Widget::TouchEventType type)
 		
 		break;
 	}
-	case cocos2d::ui::Widget::TouchEventType::CANCELED:
-		break;
 	default:
 		break;
 	}
@@ -4116,8 +4103,7 @@ void BattleScene::skill1ButtonCallback(Ref *pSender, Widget::TouchEventType type
 	if (_onRespwanFlg || _allAlliedUnitData[0].isStun) return;
 	Button* bt = dynamic_cast<Button*>(pSender);
 	int tag = bt->getTag();
-	bt->stopActionByTag(TAG_SKILL_AOE);
- 	
+ 
 	UserSkillInfo skill;
 	if (tag == TAG_SKILL_1 || tag == TAG_SKILL_2)
 	{
@@ -4134,8 +4120,6 @@ void BattleScene::skill1ButtonCallback(Ref *pSender, Widget::TouchEventType type
 			_showSkillTargetFlag = true;
 		}
 		
-		break;
-	case cocos2d::ui::Widget::TouchEventType::MOVED:
 		break;
 	case cocos2d::ui::Widget::TouchEventType::ENDED:
 	{
@@ -4775,6 +4759,7 @@ void BattleScene::skillAttackAll(Sprite* object, UserSkillInfo skillInfo, UserUn
 	createSorceryEffect(object, SORCERY_RED);
 }
 void BattleScene::showDameAndSkillLogic(Ref *p, int index, int dame, Sprite* object, Sprite* target, vector<UserUnitInfo>* effectUnitlist) {
+	CC_UNUSED_PARAM(p);
 	showAttackDame(dame, target->getPosition() + Vec2(0, 100), 1);
 	effectUnitlist->at(index).hp -= dame;
 	if (object == testObject) {
@@ -4878,6 +4863,9 @@ void BattleScene::skillTrapAction(Sprite* object, UserSkillInfo skill, int teamI
 	else {
 		color = Color4F::RED;
 	}
+	if (skill.buff_effect_type == 2) {
+		color = Color4F::WHITE;
+	}
 
 	draw->drawCircle(Vec2::ZERO, skill.range_distance, 360.0f, 50, false, color);
 	object->getParent()->addChild(draw);
@@ -4892,12 +4880,12 @@ void BattleScene::skillTrapAction(Sprite* object, UserSkillInfo skill, int teamI
 	if (teamId == _currentPlayerTeamFlg)
 	{
 		log("caster is your team. Check enemy team");
-		checker = RepeatForever::create(Sequence::create(CallFuncN::create(CC_CALLBACK_1(BattleScene::trapSkillChecker, this, object, pos, skill, &_allEnemyUnitData, _allEnemyUnitSprite)), DelayTime::create(0.1f), nullptr));
+		checker = RepeatForever::create(Sequence::create(CallFuncN::create(CC_CALLBACK_1(BattleScene::trapSkillChecker, this, object, pos, skill, &_allEnemyUnitData, _allEnemyUnitSprite, draw)), DelayTime::create(0.1f), nullptr));
 	}
 	else 
 	{
 		log("caster is enemy team. Check your team");
-		checker = RepeatForever::create(Sequence::create(CallFuncN::create(CC_CALLBACK_1(BattleScene::trapSkillChecker, this, object, pos, skill, &_allAlliedUnitData, _allAlliedUnitSprite)), DelayTime::create(0.1f), nullptr));
+		checker = RepeatForever::create(Sequence::create(CallFuncN::create(CC_CALLBACK_1(BattleScene::trapSkillChecker, this, object, pos, skill, &_allAlliedUnitData, _allAlliedUnitSprite, draw)), DelayTime::create(0.1f), nullptr));
 	}
 	checker->setTag(TRAP_CHECK_ACTION_TAG);
 
@@ -4911,14 +4899,15 @@ void BattleScene::skillTrapAction(Sprite* object, UserSkillInfo skill, int teamI
 			log("remove but not null");
 		}
 	}), nullptr);
+	sequence->setTag(TRAP_REMOVE_SEQUECE_TAG);
 	object->runAction(checker);
 	object->runAction(sequence);
 
 
 }
 
-void BattleScene::trapSkillChecker(Ref* p, Sprite* object, Vec2 basePos, UserSkillInfo skill, vector<UserUnitInfo>* targetUnitList, vector<Sprite*> targetSprite) {
-	auto caster = (Sprite*)p;
+void BattleScene::trapSkillChecker(Ref* p, Sprite* object, Vec2 basePos, UserSkillInfo skill, vector<UserUnitInfo>* targetUnitList, vector<Sprite*> targetSprite, DrawNode* skillEffect) {
+	CC_UNUSED_PARAM(p);
 	
 	for (int i = 0; i < targetUnitList->size(); i ++)
 	{
@@ -4926,7 +4915,9 @@ void BattleScene::trapSkillChecker(Ref* p, Sprite* object, Vec2 basePos, UserSki
 		if (distance.getLength() < skill.range_distance) 
 		{
 			//unit trap aoe. check for start trap dame action
-			if (targetSprite[i]->getActionByTag(TRAP_DAME_ACTION_TAG) == nullptr)
+			//if (targetSprite[i]->getActionByTag(TRAP_DAME_ACTION_TAG) == nullptr)
+			//{
+			if (skill.buff_effect_type == 1)
 			{
 				int dame = 0;
 				if (skill.correct_type == DAME_TYPE_PERCENT) {
@@ -4936,15 +4927,33 @@ void BattleScene::trapSkillChecker(Ref* p, Sprite* object, Vec2 basePos, UserSki
 					dame = skill.corrett_value;
 				}
 
-				auto action = RepeatForever::create(Sequence::create(DelayTime::create(1.0f), CallFuncN::create(CC_CALLBACK_1(BattleScene::trapSkillCallback, this, i, dame, object, targetSprite[i], targetUnitList)), nullptr));
-				action->setTag(TRAP_DAME_ACTION_TAG);
-				targetSprite[i]->runAction(action);
+				showDameAndSkillLogic(p, i, dame, object, targetSprite[i], targetUnitList);
+				
 			}
+			else
+			{
+				if (targetSprite[i] == testObject) {
+					auto colorLayer = LayerColor::create(Color4B::BLACK);
+					colorLayer->setPosition(Vec2::ZERO);
+					colorLayer->setContentSize(_visibleSize);
+					addChild(colorLayer, 4999);
+					auto action = FadeOut::create(skill.duration);
+					colorLayer->runAction(Sequence::create(action, RemoveSelf::create(true), nullptr));
+				}
+
+			}
+			skillEffect->removeFromParentAndCleanup(true);
+			object->stopAllActionsByTag(TRAP_CHECK_ACTION_TAG);
+			object->stopAllActionsByTag(TRAP_REMOVE_SEQUECE_TAG);
+				/*auto action = RepeatForever::create(Sequence::create(DelayTime::create(1.0f), CallFuncN::create(CC_CALLBACK_1(BattleScene::trapSkillCallback, this, i, dame, object, targetSprite[i], targetUnitList)), nullptr));
+				action->setTag(TRAP_DAME_ACTION_TAG);
+				targetSprite[i]->runAction(action);*/
+			//}
 		}
-		else {
+		//else {
 			//unit out trap. Check for remove trap dame action
-			targetSprite[i]->stopAllActionsByTag(TRAP_DAME_ACTION_TAG);
-		}
+			//targetSprite[i]->stopAllActionsByTag(TRAP_DAME_ACTION_TAG);
+		//}
 
 	}
 }
@@ -5134,9 +5143,11 @@ void BattleScene::skillBlinkAcion(Sprite* object, UserUnitInfo attacker, UserSki
 		moveACtion = MoveBy::create(0.1f, Vec2::ZERO);
 	}
 	auto action = Spawn::create(moveACtion, Sequence::create(DelayTime::create(0.45f), callback , nullptr),nullptr);
+	action->setTag(BLINK_ACTION_TAG);
 	object->runAction(action);
 	auto cha = (Character*)object;
 	cha->setAttackDisable(true);
+
 
 }
 

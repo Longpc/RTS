@@ -94,8 +94,10 @@
 
 #define TRAP_CHECK_ACTION_TAG 2212
 #define TRAP_DAME_ACTION_TAG 2122
+#define TRAP_REMOVE_SEQUECE_TAG 1214
 
 #define BLINK_MOVE_ACTION_TAG 544
+#define BLINK_ACTION_TAG 2154
 
 #define MINION_PARENT_ACTION_TAG 2787
 using namespace cocostudio;
@@ -532,7 +534,7 @@ private:
 
 	virtual void skillTrapAction(Sprite* object, UserSkillInfo skill, int teamId);
 
-	virtual void trapSkillChecker(Ref* p,Sprite* object, Vec2 basePos, UserSkillInfo skill, vector<UserUnitInfo>* targetUnitList, vector<Sprite*> targetSpriteList);
+	virtual void trapSkillChecker(Ref* p,Sprite* object, Vec2 basePos, UserSkillInfo skill, vector<UserUnitInfo>* targetUnitList, vector<Sprite*> targetSpriteList, DrawNode* skillEffect);
 
 	virtual void trapSkillCallback(Ref * p, int index, int dame, Sprite* object, Sprite* target, vector<UserUnitInfo>* effectUnitlist);
 

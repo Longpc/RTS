@@ -475,12 +475,12 @@ void MultiUnitSelectScene::onTouchPageItem(Ref *pSender, Widget::TouchEventType 
 		if (pageType == 1)
 		{
 			getParent()->addChild(UnitDetailDialog::create(_allUnitInfoNew[tag], CC_CALLBACK_0(MultiUnitSelectScene::decideCallBack, this, tag,pageType), CC_CALLBACK_0(MultiUnitSelectScene::cancelCallBack, this)));
-			_sendUnitFlg = false;
+			//_sendUnitFlg = false;
 		}
 		else
 		{
 			getParent()->addChild(SkillDetailDialog::create(_allSkillInfo[tag], CC_CALLBACK_0(MultiUnitSelectScene::decideCallBack, this, tag, pageType), CC_CALLBACK_0(MultiUnitSelectScene::cancelCallBack, this)));
-			_sendSkillFlg = false;
+			//_sendSkillFlg = false;
 		}
 		if (_pageFlg == MULTI_MODE)
 		{
@@ -522,6 +522,7 @@ void MultiUnitSelectScene::decideCallBack(int index, int pageType)
 		UserModel::getInstance()->setSelectedUnitId(_allUnitInfoNew[index].mst_unit_id);
 		if (_pageFlg == MULTI_MODE) 
 		{
+			_sendUnitFlg = false;
 			sendSelectUnitInfo(_allUnitInfoNew[index].mst_unit_id);
 		}
 		else
@@ -655,17 +656,11 @@ void MultiUnitSelectScene::leftArrowClickCallback(Ref *pSender, Widget::TouchEve
 {
 	switch (type)
 	{
-	case cocos2d::ui::Widget::TouchEventType::BEGAN:
-		break;
-	case cocos2d::ui::Widget::TouchEventType::MOVED:
-		break;
 	case cocos2d::ui::Widget::TouchEventType::ENDED:
 	{
 		_mainPage->scrollToPage(_mainPage->getCurPageIndex() - 1);
 		break;
 	}
-	case cocos2d::ui::Widget::TouchEventType::CANCELED:
-		break;
 	default:
 		break;
 	}
@@ -675,17 +670,11 @@ void MultiUnitSelectScene::rightArrowClickCallback(Ref *pSender, Widget::TouchEv
 {
 	switch (type)
 	{
-	case cocos2d::ui::Widget::TouchEventType::BEGAN:
-		break;
-	case cocos2d::ui::Widget::TouchEventType::MOVED:
-		break;
 	case cocos2d::ui::Widget::TouchEventType::ENDED:
 	{
 		_mainPage->scrollToPage(_mainPage->getCurPageIndex() + 1);
 		break;
 	}
-	case cocos2d::ui::Widget::TouchEventType::CANCELED:
-		break;
 	default:
 		break;
 	}
@@ -720,6 +709,7 @@ void MultiUnitSelectScene::sendSelectUnitInfo(int unitId)
 		log("Unit Selected End data: %s", buff.GetString());
 		client->emit("connect_select_unit", buff.GetString());
 		client->on("connect_select_unit_end", [&](SIOClient* client, const std::string& data) {
+			CC_UNUSED_PARAM(client);
 			log("select unit end data: %s", data.c_str());
 			_sendUnitFlg = true;
 			RoomUserModel::getInstance()->parseTeamData(data);
@@ -745,6 +735,7 @@ void MultiUnitSelectScene::sendSElectSkillInfo()
 		return;
 	}
 	else {
+		_sendSkillFlg = false;
 		auto a = UserModel::getInstance()->getUserInfo();
 		Document doc;
 		doc.SetObject();
@@ -761,8 +752,6 @@ void MultiUnitSelectScene::sendSElectSkillInfo()
 		{
 			listSkill.PushBack(skills[i].mst_skill_id, allo);
 			listSkillId.push_back(skills[i].mst_skill_id);
-
-			//targetList.AddMember("target_unique_id", targetsId[i], allo);
 		}
 		doc.AddMember("player_skill_list", listSkill, allo);
 		string uu = UserModel::getInstance()->getUuId().c_str();
@@ -778,6 +767,7 @@ void MultiUnitSelectScene::sendSElectSkillInfo()
 		string temp = buff.GetString();
 		BattleModel::getInstance()->setPlayerSkills(listSkillId);
 		client->on("connect_select_skill_end", [&, temp](SIOClient* client, const std::string& data) {
+			CC_UNUSED_PARAM(client);
 			log("select skill end data: %s", data.c_str());
 			RoomUserModel::getInstance()->parseTeamData(data);
 			_sendSkillFlg = true;

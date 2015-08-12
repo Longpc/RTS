@@ -31,8 +31,7 @@ private:
 
 	virtual void onBackButtonClick(Ref *pSender);
 	virtual void createContent();
-	virtual void userSelectCallback(Ref *pSender, Widget::TouchEventType type);
-	virtual void switchButton(Ref *p);
+	virtual void userSelectCallback(Ref *pSender, Widget::TouchEventType type, int buttonIndex);
 };
 
 

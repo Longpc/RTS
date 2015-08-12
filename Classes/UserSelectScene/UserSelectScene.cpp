@@ -63,7 +63,7 @@ void UserSelect::createContent()
 		backGround->setTitleColor(Color3B::BLACK);
 		backGround->setTitleFontSize(30);
 		backGround->setTitleText(_userList[i].name.c_str());
-		backGround->addTouchEventListener(CC_CALLBACK_2(UserSelect::userSelectCallback, this));
+		backGround->addTouchEventListener(CC_CALLBACK_2(UserSelect::userSelectCallback, this, i));
 		backGround->setTag(i);
 		int xValue = i % 2;
 		int yvalue = i*0.5;
@@ -79,27 +79,17 @@ void UserSelect::createContent()
 // 		nameLabel->setPosition(backGround->getPosition());
 // 		addChild(nameLabel);
 	}
-
-	NotificationCenter::getInstance()->addObserver(this, CC_CALLFUNCO_SELECTOR(UserSelect::switchButton), "switchUserButton", nullptr);
 }
 
-void UserSelect::switchButton(Ref *p) 
+void UserSelect::userSelectCallback(Ref *pSender, Widget::TouchEventType type, int index)
 {
-
-	log("Notify cation event received: %d");
-}
-void UserSelect::userSelectCallback(Ref *pSender, Widget::TouchEventType type)
-{
+	CC_UNUSED_PARAM(pSender);
 	switch (type)
 	{
-	case cocos2d::ui::Widget::TouchEventType::BEGAN:
-		break;
-	case cocos2d::ui::Widget::TouchEventType::MOVED:
-		break;
 	case cocos2d::ui::Widget::TouchEventType::ENDED:
 	{
 		auto bt = (Button*)pSender;
-		UserModel::getInstance()->setUserInfo(_userList[bt->getTag()]);
+		UserModel::getInstance()->setUserInfo(_userList[index]);
 		UserModel::getInstance()->setRoomId(1);
 		//UserLoginAPI::getInstance()->setLoginCompletedCallback([&](){
 			Document doc;
@@ -130,8 +120,6 @@ void UserSelect::userSelectCallback(Ref *pSender, Widget::TouchEventType type)
 
 		break;
 	}
-	case cocos2d::ui::Widget::TouchEventType::CANCELED:
-		break;
 	default:
 		break;
 	}
@@ -139,5 +127,5 @@ void UserSelect::userSelectCallback(Ref *pSender, Widget::TouchEventType type)
 
 UserSelect::~UserSelect()
 {
-	NotificationCenter::getInstance()->removeObserver(this, "switchUserButton");
+
 }
