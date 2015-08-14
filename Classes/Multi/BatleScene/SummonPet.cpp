@@ -29,6 +29,7 @@ bool SummonPet::init(int characerId)
 	if (!Sprite::init()) {
 		return false;
 	}
+	setCharacterId(characerId);
 	scheduleUpdate();
 	return true;
 }
@@ -46,6 +47,7 @@ void SummonPet::onEnterTransitionDidFinish()
 		sp->getPhysicsBody()->setVelocity(Vec2::ZERO);
 		Vec2 force = Vec2(150 * cos(vec.getAngle()), 150 * sin(vec.getAngle()));
 		sp->getPhysicsBody()->setVelocity(force);
+		rotatePetWithMoveVector(vec);
 		if (!getMoveFlg()) return;
 
 		if (getGameMode() == MULTI_MODE)
@@ -118,4 +120,23 @@ void SummonPet::update(float dt)
 SummonPet::~SummonPet()
 {
 	this->stopAllActions();
+}
+
+void SummonPet::rotatePetWithMoveVector(Vec2 vec)
+{
+	auto angle = -vec.getAngle() *RAD_DEG + 90;
+	int direc = 1;
+	if (caculAvgAngle(0, angle)) direc = 1;
+	if (caculAvgAngle(90, angle)) direc =  4;
+	if (caculAvgAngle(180, angle)) direc = 7;
+	if (caculAvgAngle(270, angle) || caculAvgAngle(-90, angle)) direc = 10;
+	char szName[100] = { 0 };
+	sprintf(szName, "image/new_unit/unit_0%d_%d.png", getCharacterId(), direc);
+	auto text = Director::getInstance()->getTextureCache()->addImage(szName);
+	if (text) this->setTexture(text);
+}
+bool SummonPet::caculAvgAngle(int avg, float angle) {
+	if (angle > avg - 44.9f && angle < avg + 44.9f)
+		return true;
+	return false;
 }

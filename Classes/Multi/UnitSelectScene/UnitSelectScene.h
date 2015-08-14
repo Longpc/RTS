@@ -47,6 +47,7 @@ private:
 	UnitInfoGroup *_unitGroup2;
 	UnitInfoGroup *_unitGroup3;
 
+	Button * nextButton;
 	Sprite* _pagebackGround;
 	Button *lArrow;
 	Button *rArrow;
@@ -73,9 +74,9 @@ private:
 	///FUNCTIONS///////////////////////////////////////////////////////////////////////
 	virtual void getDataFromDataBase();
 	virtual void onEnter();
-	virtual void update(float delta);
 
 	virtual void updateContent(Ref *p);
+	virtual void checkFlag();
 
 	bool onTouchBegan(Touch *touch, Event *unused_event);
 	void onTouchEnded(Touch *touch, Event *unused_event);
@@ -103,8 +104,7 @@ private:
 
 	virtual void pageViewEvent(Ref *pSender, PageView::EventType type);
 
-	virtual void leftArrowClickCallback(Ref *pSender, Widget::TouchEventType type);
-	virtual void rightArrowClickCallback(Ref *pSender, Widget::TouchEventType type);
+	virtual void arrowButonClick(Ref *pSender, Widget::TouchEventType type, int pageScroll);
 
 	virtual void sendSelectUnitInfo(int unitId);
 	virtual void sendSElectSkillInfo();

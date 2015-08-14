@@ -14,6 +14,7 @@ public:
 	Sprite* getTitleAt(Vec2 titleCoor);
 
 	bool checkPosInsideMap(Vec2 pos);
+	bool checkCoodInsideMap(Vec2 coord);
 
 	bool checkTitleCantGet(Vec2 pos);
 private:

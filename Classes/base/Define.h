@@ -126,6 +126,7 @@ struct UserBattleInfo
 	int maxKillCombo = 0;
 	int totalDealDame = 0;
 	int totalReceivedDame = 0;
+	int mapPoint = 0;
 };
 
 
@@ -169,7 +170,8 @@ enum SkillType
 	TYPE_TRAP = 6,
 	TYPE_SUMMON = 7,
 	TYPE_PET = 8,
-	TYPE_BLINK = 9
+	TYPE_BLINK = 9,
+	TYPE_COLOR = 10
 
 };
 

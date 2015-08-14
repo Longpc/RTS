@@ -871,6 +871,29 @@ void BattleScene::createContent()
 	_redTeamTitleNumLabel->setPosition(Vec2(_topMenuSprite->getContentSize().width * 2 / 5 + 5, _topMenuSprite->getContentSize().height / 2 - 3));
 	_topMenuSprite->addChild(_redTeamTitleNumLabel);
 
+	_onePointNumLabel = Label::createWithSystemFont("0", "", 24);
+	_onePointNumLabel->setColor(Color3B::GREEN);
+	_onePointNumLabel->setHorizontalAlignment(TextHAlignment::RIGHT);
+	_onePointNumLabel->setAnchorPoint(Vec2::ANCHOR_MIDDLE_RIGHT);
+	_topMenuSprite->addChild(_onePointNumLabel);
+	_onePointNumLabel->setPosition(Vec2(_topMenuSprite->getContentSize().width - 100, 30));
+
+	_threePointNumLabel = Label::createWithSystemFont("0", "", 24);
+	_threePointNumLabel->setColor(Color3B(78, 197, 255));
+	_threePointNumLabel->setAnchorPoint(Vec2::ANCHOR_MIDDLE_RIGHT);
+	_threePointNumLabel->setHorizontalAlignment(TextHAlignment::RIGHT);
+	_topMenuSprite->addChild(_threePointNumLabel);
+	_threePointNumLabel->setPosition(Vec2(_onePointNumLabel->getPosition() - Vec2(0, 25)));
+
+	_fivePointNumLabel = Label::createWithSystemFont("0", "", 24);
+	_fivePointNumLabel->setColor(Color3B::MAGENTA);
+	_fivePointNumLabel->setHorizontalAlignment(TextHAlignment::RIGHT);
+	_fivePointNumLabel->setAnchorPoint(Vec2::ANCHOR_MIDDLE_RIGHT);
+	_topMenuSprite->addChild(_fivePointNumLabel);
+	_fivePointNumLabel->setPosition(_threePointNumLabel->getPosition() - Vec2(0, 25));
+
+
+
 
 	Sprite *timeViewContainer = Sprite::create("image/screen/battle/time_parts.png");
 	//timeViewContainer->setAnchorPoint(Vec2::ANCHOR_TOP_RIGHT);
@@ -1262,7 +1285,7 @@ void BattleScene::serverDisconnectedNotifyReceivedCallback(Ref *p)
 	_reconnectButton = Button::create();
 	_reconnectButton->loadTextureNormal("reload.png");
 	_reconnectButton->setPosition(_visibleSize / 2);
-	addChild(_reconnectButton, 1000);
+	addChild(_reconnectButton, 5000);
 	_reconnectButton->addTouchEventListener([&](Ref *p, Widget::TouchEventType type) {
 		auto bt = (Button*)p;
 		switch (type)
@@ -1319,6 +1342,8 @@ void BattleScene::mapSErverConnectedNotifyReceivedCallback(Ref *p)
 {
 	CC_UNUSED_PARAM(p);
 	log("map server connected");
+	_mapSVOnReconnect = false;
+	if (_mapSVReconnectButon) _mapSVReconnectButon->removeFromParentAndCleanup(true);
 	createMapSVHandler();
 }
 
@@ -1326,11 +1351,28 @@ void BattleScene::mapServerDisconnectNotifyReceivedCallback(Ref *p)
 {
 	CC_UNUSED_PARAM(p);
 	log("map server disconnected");
-	MapServer::destroyInstace();
-	this->runAction(Sequence::create(DelayTime::create(RECONNECT_DELAY), CallFuncN::create([&](Ref* p) {
-		CC_UNUSED_PARAM(p);
-		MapServer::createInstance();
-	}),nullptr));
+	if (_mapSVOnReconnect) return;
+	_mapSVOnReconnect = true;
+	testObject->stopMoveAction();
+	testObject->getPhysicsBody()->setVelocity(Vec2::ZERO);
+	_mapSVReconnectButon = Button::create();
+	_mapSVReconnectButon->loadTextureNormal("map_server.png");
+	_mapSVReconnectButon->setPosition(Vec2(_visibleSize / 2) - Vec2(100, 0));
+	addChild(_mapSVReconnectButon, 5000);
+	_mapSVReconnectButon->addTouchEventListener([&](Ref *p, Widget::TouchEventType type) {
+		auto bt = (Button*)p;
+		switch (type)
+		{
+		case cocos2d::ui::Widget::TouchEventType::ENDED:
+		{
+			bt->runAction(RepeatForever::create(RotateBy::create(1.0f, 90)));
+			bt->setTouchEnabled(false);
+			MapServer::destroyInstace();
+			MapServer::createInstance();
+		}
+		break;
+		}
+	});
 	
 }
 
@@ -1338,19 +1380,36 @@ void BattleScene::moveSVCOnnectedNotifyReceivedCallback(Ref *p)
 {
 	CC_UNUSED_PARAM(p);
 	log("move server connected");
+	_moveSVOnReconnect = false;
+	if (_moveSVReconnectButton) _moveSVReconnectButton->removeFromParentAndCleanup(true);
 	createMoveSVHandler();
 }
 void BattleScene::moveSVDisconnectedNotifyReceivedCallback(Ref *p)
 {
 	CC_UNUSED_PARAM(p);
-	log("Map server disconnected");
-	MoveServer::destroyInstance();
-	this->runAction(Sequence::create(DelayTime::create(RECONNECT_DELAY), CallFuncN::create([&](Ref* p) {
-		CC_UNUSED_PARAM(p);
-		MoveServer::createInstace();
-	}), nullptr));
-	
-
+	log("move server disconnected");
+	if (_moveSVOnReconnect) return;
+	_moveSVOnReconnect = true;
+	testObject->stopMoveAction();
+	testObject->getPhysicsBody()->setVelocity(Vec2::ZERO);
+	_moveSVReconnectButton = Button::create();
+	_moveSVReconnectButton->loadTextureNormal("move_server.png");
+	_moveSVReconnectButton->setPosition(Vec2(_visibleSize / 2) + Vec2(100, 0));
+	addChild(_moveSVReconnectButton, 5000);
+	_moveSVReconnectButton->addTouchEventListener([&](Ref *p, Widget::TouchEventType type) {
+		auto bt = (Button*)p;
+		switch (type)
+		{
+		case cocos2d::ui::Widget::TouchEventType::ENDED:
+		{
+			bt->runAction(RepeatForever::create(RotateBy::create(1.0f, 90)));
+			bt->setTouchEnabled(false);
+			MoveServer::destroyInstance();
+			MoveServer::createInstace();
+		}
+		break;
+		}
+	});
 }
 void BattleScene::networkChecker(float dt)
 {
@@ -1371,12 +1430,44 @@ void BattleScene::createMapSVHandler()
 	mapSV->on("set_title", [&](SIOClient * cl, const string& data) {
 		CC_UNUSED_PARAM(cl);
 		if (_onDestructCalled) return;
-		setTitle(data);
+		//log("set_title");
+		Document doc;
+		doc.Parse<0>(data.c_str());
+		if (doc.HasParseError()) {
+			log("on: set_title Parse JSOn error");
+			return;
+		}
+
+		int team_Id = doc["team_id"].GetInt();
+		int x = doc["pos_x"].GetInt();
+		int y = doc["pos_y"].GetInt();
+		bool disableFlg = doc["disable"].GetBool();
+		setTitle(team_Id,x,y,disableFlg);
+	});
+
+	mapSV->on("skill_map", [&](SIOClient *c, const string& data) {
+		CC_UNUSED_PARAM(c);
+		if (_onDestructCalled) return;
+		Document doc;
+		doc.Parse<0>(data.c_str());
+		if (doc.HasParseError()) {
+			log("skill map parser error");
+			return;
+		}
+		for (int i = 0; i < doc.Size(); i++)
+		{
+			int team_id = doc[rapidjson::SizeType(i)]["team_id"].GetInt();
+			int x = doc[rapidjson::SizeType(i)]["pos_x"].GetInt();
+			int y = doc[rapidjson::SizeType(i)]["pos_y"].GetInt();
+			bool disableFlg = doc[rapidjson::SizeType(i)]["disable"].GetBool();
+			setTitle(team_id, x, y, disableFlg);
+		}
 	});
 }
 
 void BattleScene::createMoveSVHandler()
 {
+
 	auto moveSV = MoveServer::getInstance()->getClient();
 	if (!moveSV) return;
 	moveSV->on("unit_move", [&](SIOClient* client, const string& data) {
@@ -1474,6 +1565,34 @@ void BattleScene::createNodeSVHandler()
 			log("score update error in doc type");
 		}
 		
+	});
+	sv->on("update_point", [&](SIOClient *c, const string& data) {
+		CC_UNUSED_PARAM(c);
+		if (_onDestructCalled) return;
+
+		Document doc;
+		doc.Parse<0>(data.c_str());
+		if (doc.HasParseError())
+		{
+			log("update score parser JSON error");
+			return;
+		}
+		if (doc.IsObject())
+		{
+			auto onePoint = doc["one"].GetInt();
+			char oneLb[5] = { 0 };
+			sprintf(oneLb, "%d", onePoint);
+			_onePointNumLabel->setString(oneLb);
+			auto threePoint = doc["three"].GetInt();
+			char threeLB[5] = { 0 };
+			sprintf(threeLB, "%d", threePoint);
+			_threePointNumLabel->setString(threeLB);
+			auto fivePoint = doc["five"].GetInt();
+			char fiveLb[5] = { 0 };
+			sprintf(fiveLb, "%d", fivePoint);
+			_fivePointNumLabel->setString(fiveLb);
+			return;
+		}
 	});
 	/*sv->on("battle_update", [&](SIOClient* client, const std::string data){
 		//log("BATTLE UPDATE data: %s", data.c_str());
@@ -1736,7 +1855,19 @@ void BattleScene::createNodeSVHandler()
 	sv->on("set_title", [&](SIOClient *c, const string& data){
 		CC_UNUSED_PARAM(c);
 		if (_onDestructCalled) return;
-		setTitle(data);
+		//log("set_title");
+		Document doc;
+		doc.Parse<0>(data.c_str());
+		if (doc.HasParseError()) {
+			log("on: set_title Parse JSOn error");
+			return;
+		}
+
+		int team_Id = doc["team_id"].GetInt();
+		int x = doc["pos_x"].GetInt();
+		int y = doc["pos_y"].GetInt();
+		bool disableFlg = doc["disable"].GetBool();
+		setTitle(team_Id,x,y,disableFlg);
 	});
 
 	/*handler for another unit attack to neutral event*/
@@ -2030,21 +2161,8 @@ void BattleScene::createNodeSVHandler()
 	});
 }
 
-void BattleScene::setTitle(const string& data)
+void BattleScene::setTitle(int team_Id, int x, int y, bool disableFlg)
 {
-	//log("set_title");
-	if (_onDestructCalled) return;
-	Document doc;
-	doc.Parse<0>(data.c_str());
-	if (doc.HasParseError()) {
-		log("on: set_title Parse JSOn error");
-		return;
-	}
-
-	int team_Id = doc["team_id"].GetInt();
-	int x = doc["pos_x"].GetInt();
-	int y = doc["pos_y"].GetInt();
-	bool disableFlg = doc["disable"].GetBool();
 	if (x < 0 || x > _mapLayer->getLayerSize().width || y < 0 || y > _mapLayer->getLayerSize().height) {
 		log("Invalid title position");
 		return;
@@ -2260,9 +2378,12 @@ void BattleScene::update(float delta)
 	if (_checkTime >= 0.04 && disVtr.length() > 20.0f && _gameMode == MULTI_MODE && _onRespwanFlg == false && _onReconnect == false) {
 		float angle = _mainCharacterIconInMiniMap->getRotation();
 		int direc = detectDirectionBaseOnTouchAngle(angle);
-		BattleAPI::getInstance()->sendMoveEvent(_allAlliedUnitData[0],testObject->getPosition(), direc, testObject->getOnMovingFlg(), testObject->getOnCannonLunchFlg());
-		_checkPos = testObject->getPosition();
-		_checkTime = 0;
+		if (!_moveSVOnReconnect)
+		{
+			BattleAPI::getInstance()->sendMoveEvent(_allAlliedUnitData[0], testObject->getPosition(), direc, testObject->getOnMovingFlg(), testObject->getOnCannonLunchFlg());
+			_checkPos = testObject->getPosition();
+			_checkTime = 0;
+		}
 	}
 	updateMiniMap();
 	updateTime();
@@ -2404,62 +2525,67 @@ void BattleScene::testMoveLogic(Sprite* object, int teamFlg)
 			temp.push_back(cannon);
 		}
 		if (checkTitleNearObject(titlePos, temp, 4)) continue; */
-		if (_myMap->checkTitleCantGet(titlePos)) continue;
-
-		auto title = _mapLayer->getTileAt(titlePos);
-
-		if (title == nullptr) {
-			continue;
-		}
-		if (teamFlg == TEAM_FLG_BLUE) {
-			if (title->getColor() != Color3B::GREEN && strcmp(title->getName().c_str(), "disable") != 0)
-			{				
-				if (_gameMode == MULTI_MODE)
-				{
-					if (strcmp(title->getName().c_str(),"sending")== 0) continue;
-					//log("send test move event");
-					//sendingFlg->push_back(true);
-					title->setName("sending");
-					if (_onReconnect == false)
-					{
-						//log("send");
-						BattleAPI::getInstance()->sendTestMoveLogic(titlePos);
-					}
-					//continue;
-				}
-				//else {
-					title->setColor(Color3B::GREEN);
-					auto mTittle = _miniLayer->getTileAt(titlePos);
-					mTittle->setColor(Color3B::GREEN);
-					continue;
-				//}
-			}
-		}
-		else {
-			if (title->getColor() != Color3B::ORANGE && strcmp(title->getName().c_str(), "disable") != 0)
-			{
-				if (_gameMode == MULTI_MODE) {
-					if (strcmp(title->getName().c_str(),"sending") == 0) continue;
-					//log("send test move event");
-					title->setName("sending");
-					//sendingFlg->push_back(true);
-					if (_onReconnect == false) {
-						//log("send");
-						BattleAPI::getInstance()->sendTestMoveLogic(titlePos);
-					}
-					//continue;
-				}
-				//else {
-					title->setColor(Color3B::ORANGE);
-					auto mTittle = _miniLayer->getTileAt(titlePos);
-					mTittle->setColor(Color3B::ORANGE);
-					continue;
-				//}
-			}
-		}
+		checkTitleAndSendEvent(titlePos, teamFlg);
 	}
 }
 
+
+void BattleScene::checkTitleAndSendEvent(Vec2 titlePos, int teamFlg)
+{
+	if (_myMap->checkTitleCantGet(titlePos)) return;
+
+	auto title = _mapLayer->getTileAt(titlePos);
+
+	if (title == nullptr) {
+		return;
+	}
+	if (teamFlg == TEAM_FLG_BLUE) {
+		if (title->getColor() != Color3B::GREEN && strcmp(title->getName().c_str(), "disable") != 0)
+		{
+			if (_gameMode == MULTI_MODE)
+			{
+				if (strcmp(title->getName().c_str(), "sending") == 0) return;
+				//log("send test move event");
+				//sendingFlg->push_back(true);
+				title->setName("sending");
+				if (_mapSVOnReconnect == false)
+				{
+					//log("send");
+					BattleAPI::getInstance()->sendTestMoveLogic(titlePos);
+				}
+				//continue;
+			}
+			//else {
+			title->setColor(Color3B::GREEN);
+			auto mTittle = _miniLayer->getTileAt(titlePos);
+			mTittle->setColor(Color3B::GREEN);
+			return;
+			//}
+		}
+	}
+	else {
+		if (title->getColor() != Color3B::ORANGE && strcmp(title->getName().c_str(), "disable") != 0)
+		{
+			if (_gameMode == MULTI_MODE) {
+				if (strcmp(title->getName().c_str(), "sending") == 0) return;
+				//log("send test move event");
+				title->setName("sending");
+				//sendingFlg->push_back(true);
+				if (_mapSVOnReconnect == false) {
+					//log("send");
+					BattleAPI::getInstance()->sendTestMoveLogic(titlePos);
+				}
+				//continue;
+			}
+			//else {
+			title->setColor(Color3B::ORANGE);
+			auto mTittle = _miniLayer->getTileAt(titlePos);
+			mTittle->setColor(Color3B::ORANGE);
+			return;
+			//}
+		}
+	}
+}
 void BattleScene::changeTitlesNearObject(Sprite* object, int type, int offset)
 {
 	Color3B color;
@@ -4286,6 +4412,14 @@ void BattleScene::playSkillLogicAndAnimation(Sprite* playObject, UserSkillInfo s
 			skillBlinkAcion(playObject, unit, skill, _allAlliedUnitSprite, &_allAlliedUnitData, angle, randNum);
 		}
 		break;
+	case SkillType::TYPE_COLOR:
+	{
+		if (playObject == testObject)
+		{
+			skillColorAction(skill,angle);
+		}
+		break;
+	}
 	}
 }
 
@@ -4977,7 +5111,8 @@ void BattleScene::drawCakePieSkillAOe(Character* object, UserSkillInfo skill, fl
 	vec.push_back(Vec2(skill.range_distance * cos(angleHeight), skill.range_distance * sin(angleHeight)));
 
 	auto draw = DrawNode::create();
-	draw->drawPoly(&vec[0], 3,true,Color4F::RED);
+	//draw->drawPoly(&vec[0], 3,true,Color4F::RED);
+	draw->drawSolidPoly(&vec[0], vec.size(), Color4F(0, 0, 1, 0.5));
 	object->getParent()->addChild(draw);
 	draw->setPosition(object->getPosition());
 	draw->setTag(DRAW_UNIT);
@@ -4997,13 +5132,14 @@ void BattleScene::skillSummonAction(Sprite* object, UserSkillInfo skill, UserUni
 	parent->setTag(MINION_PARENT_TAG);
 	parent->setScale(2 / IMAGE_SCALE);
 
-	auto red = Sprite::create("image/mini/Red.png");
+	auto path2 = UserUnitModel::getInstance()->getUnitImageByMstUnitItD(unitData->mst_unit_id);
+	auto red = Sprite::create(path2.c_str());
 	red->setTag(MINIONS_TAG);
-	auto green = Sprite::create("image/mini/Green.png");
+	auto green = Sprite::create(path2.c_str());
 	green->setTag(MINIONS_TAG);
-	auto yellow = Sprite::create("image/mini/Yellow.png");
+	auto yellow = Sprite::create(path2.c_str());
 	yellow->setTag(MINIONS_TAG);
-	auto purple = Sprite::create("image/mini/Purple.png");
+	auto purple = Sprite::create(path2.c_str());
 	purple->setTag(MINIONS_TAG);
 
 	red->setPosition(Vec2(35, 0));
@@ -5145,7 +5281,112 @@ void BattleScene::skillBlinkAcion(Sprite* object, UserUnitInfo attacker, UserSki
 	object->runAction(action);
 	auto cha = (Character*)object;
 	cha->setAttackDisable(true);
+}
 
+void BattleScene::skillColorAction(UserSkillInfo skill, float angle)
+{
+	vector<Vec2> savePos;
+	vector<Sprite*> saveTitle;
+	Vec2 pos = _myMap->getTitleCoorForPosition(testObject->getPosition());
+	int countXNum = skill.range_distance / _myMap->getTileSize().width;
+	int countYNum = skill.range_distance / _myMap->getTileSize().height;
+	/*for (int i = -countXNum; i < countXNum; i++)
+	{
+		for (int  j = -(countYNum-1); j <countYNum+1; j ++)
+		{
+			if (_myMap->checkCoodInsideMap(Vec2(i, j) + pos)) {
+				savePos.push_back(Vec2(i, j) + pos);
+				saveTitle.push_back(_myMap->getTitleAt(pos + Vec2(i, j)));
+			}
+		}
+	}
+
+	auto a = detectUnitInAoe(testObject, skill, saveTitle, angle, false);
+	for (auto index : a)
+	{
+		saveTitle[index]->setColor(Color3B::MAGENTA);
+	}
+
+	return;
+	*/
+	switch (skill.range_type)
+	{
+	case SKILL_RANGE_TYPE::RECTANGLE:
+		for (int i = pos.x - countXNum/2; i <= pos.x + countXNum/2; i++)
+		{
+			for (int j = pos.y - countYNum/2; j <= pos.y + countYNum/2; j++)
+			{
+				if (_myMap->checkCoodInsideMap(Vec2(i, j)))
+				{
+					savePos.push_back(Vec2(i, j));
+				}
+			}
+		}
+		break;
+	case SKILL_RANGE_TYPE::FADE_RECTANGLE:
+	{
+
+		break; 
+	}
+	default:
+	{
+		for (int i = - countXNum; i <= countXNum; i++)
+		{
+			for (int j = -countYNum-1; j <= countYNum+1; j++)
+			{
+				if (_myMap->checkCoodInsideMap(pos +Vec2(i, j)))
+				{
+					if (Vec2(i, j).lengthSquared() < countXNum*(countYNum+1))
+					{
+						savePos.push_back(pos + Vec2(i, j));
+					}
+				}
+			}
+		}
+		break;
+	}
+
+
+	}
+	if (_gameMode == SOLO_MODE) {
+		for ( auto &vec : savePos)
+		{
+			checkTitleAndSendEvent(vec, _currentPlayerTeamFlg);
+		}
+		return;
+	}
+	Document doc;
+	doc.SetObject();
+	rapidjson::Value mArray(rapidjson::kArrayType);
+	Document::AllocatorType& allo = doc.GetAllocator();
+
+
+	for (auto &vec :savePos)
+	{
+		if (_myMap->checkCoodInsideMap(vec))
+		{
+			//send set itleto server
+			//checkTitleAndSendEvent(vec, _currentPlayerTeamFlg);
+			rapidjson::Value vPos;
+			vPos.SetObject();
+			vPos.AddMember("x", vec.x, allo);
+			vPos.AddMember("y", vec.y, allo);
+			mArray.PushBack(vPos, allo);
+		}
+	}
+	doc.AddMember("array", mArray, allo);
+	string uu = UserModel::getInstance()->getUuId().c_str();
+	doc.AddMember("uuid", uu.c_str(), allo);
+	doc.AddMember("team_id", _currentPlayerTeamFlg, allo);
+
+	StringBuffer  buffer;
+
+	Writer<StringBuffer> writer(buffer);
+	doc.Accept(writer);
+	auto sv = MapServer::getInstance()->getClient();
+	sv->emit("map_skill", buffer.GetString());
+	buffer.Clear();
+	return;
 
 }
 
@@ -5163,7 +5404,8 @@ vector<int> BattleScene::detectUnitInAoe(Sprite* mainObj, UserSkillInfo skill, v
 
 	case SKILL_RANGE_TYPE::RECTANGLE:
 		if (!drawFlg) break;
-		draw->drawRect(Vec2(-skill.range_distance/2,-skill.range_distance/2), Vec2(skill.range_distance/2, skill.range_distance/2), Color4F::RED);
+		draw->drawSolidRect(Vec2(-skill.range_distance / 2, -skill.range_distance / 2), Vec2(skill.range_distance / 2, skill.range_distance / 2), Color4F(0,0,1,0.5));
+		//draw->drawRect(Vec2(-skill.range_distance/2,-skill.range_distance/2), Vec2(skill.range_distance/2, skill.range_distance/2), Color4F::RED);
 		draw->setPosition(pos/* - Vec2(skill.aoe / 2, skill.aoe / 2)*/);
 		draw->setTag(DRAW_UNIT);
 		break;
@@ -5172,7 +5414,8 @@ vector<int> BattleScene::detectUnitInAoe(Sprite* mainObj, UserSkillInfo skill, v
 		vec.push_back(Vec2(skill.range_distance / 2, -skill.range_distance / 3));
 		vec.push_back(Vec2(0, skill.range_distance * 2 / 3));
 		if (!drawFlg) break;
-		draw->drawPoly(&vec[0], 3, true, Color4F::RED);
+		//draw->drawPoly(&vec[0], 3, true, Color4F::RED);
+		draw->drawSolidPoly(&vec[0], 3, Color4F(0, 0, 1, 0.5));
 		draw->setPosition(pos);
 		draw->setTag(DRAW_UNIT);
 		break;
@@ -5187,7 +5430,8 @@ vector<int> BattleScene::detectUnitInAoe(Sprite* mainObj, UserSkillInfo skill, v
 		vec.push_back(Vec2(0, skill.range_distance / 2));
 		vec.push_back(Vec2(-skill.range_distance / 6, skill.range_distance / 6));
 		if (!drawFlg) break;
-		draw->drawPoly(&vec[0], vec.size(),true, Color4F::MAGENTA);
+		//draw->drawPoly(&vec[0], vec.size(),true, Color4F::MAGENTA);
+		draw->drawSolidPoly(&vec[0], vec.size(), Color4F(0, 0, 1, 0.5));
 		draw->setPosition(pos);
 		draw->setTag(DRAW_UNIT);
 		break;
@@ -5199,7 +5443,8 @@ vector<int> BattleScene::detectUnitInAoe(Sprite* mainObj, UserSkillInfo skill, v
 	case SKILL_RANGE_TYPE::FADE_RECTANGLE:
 		if (!drawFlg) break;
 		draw->setAnchorPoint(Vec2(0,0.5));
-		draw->drawRect(startPoint, startPoint + Vec2(skill.range_distance, mainObj->getBoundingBox().size.height*2), Color4F::YELLOW);
+		//draw->drawRect(startPoint, startPoint + Vec2(skill.range_distance, mainObj->getBoundingBox().size.height*2), Color4F::YELLOW);
+		draw->drawSolidRect(startPoint, startPoint + Vec2(skill.range_distance, mainObj->getBoundingBox().size.height * 2), Color4F(0,0,1,0.5));
 		draw->setPosition(mainObj->getPosition());
 		draw->setTag(DRAW_UNIT);
 		draw->setRotation(angle);
@@ -5208,7 +5453,8 @@ vector<int> BattleScene::detectUnitInAoe(Sprite* mainObj, UserSkillInfo skill, v
 
 	default:
 		if (!drawFlg) break;
-		draw->drawCircle(Vec2::ZERO, skill.range_distance, 360.0f, 50, false, Color4F(200,0,0,50));
+		//draw->drawCircle(Vec2::ZERO, skill.range_distance, 360.0f, 50, false, Color4F(200,0,0,50));
+		draw->drawSolidCircle(Vec2::ZERO, skill.range_distance, 360.0f, 50, Color4F(0, 0, 1, 0.5));
 		draw->setPosition(pos);
 		draw->setTag(DRAW_UNIT);
 		break;

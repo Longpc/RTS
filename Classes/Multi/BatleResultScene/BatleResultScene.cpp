@@ -80,6 +80,7 @@ bool BatleResultScene::init(int winTeam)
 						temp.assistNum = doc[rapidjson::SizeType(i)]["assistNum"].GetInt();
 						temp.maxKillCombo = doc[rapidjson::SizeType(i)]["maxKillCombo"].GetInt();
 						temp.longestKillstreak = doc[rapidjson::SizeType(i)]["longestKillStreak"].GetInt();
+						temp.mapPoint = doc[rapidjson::SizeType(i)]["mapPoint"].GetInt();
 
 
 						if (doc[rapidjson::SizeType(i)]["team_id"].GetInt() == _currentTeam)
@@ -271,7 +272,7 @@ Label* BatleResultScene::createUniNameLabel(Vec2 pos)
 
 void BatleResultScene::createBattleInfo(Sprite *parent, vector<UserBattleInfo> info)
 {
-	string tempStr = "キル\nデス\nアシスト\n連続キル\n同時キル\n与ダメージ\n被ダメージ";
+	string tempStr = "ポイント\nキル\nデス\nアシスト\n連続キル\n同時キル\n与ダメージ\n被ダメージ";
 
 	auto tempLabel = Label::createWithSystemFont(tempStr.c_str(), JAPANESE_FONT_1_REGULAR, 30);
 	tempLabel->setPosition(Vec2(40, parent->getContentSize().height - 50));
@@ -283,7 +284,7 @@ void BatleResultScene::createBattleInfo(Sprite *parent, vector<UserBattleInfo> i
 	for (int i = 0; i < info.size(); i++)
 	{
 		stringstream dm;
-		dm << info[i].killNum << "\n" << info[i].deadNum << "\n" << info[i].assistNum << "\n" << info[i].longestKillstreak << "\n" << info[i].maxKillCombo << "\n" << info[i].totalDealDame << "\n" << info[i].totalReceivedDame;
+		dm << info[i].mapPoint << "\n" << info[i].killNum << "\n" << info[i].deadNum << "\n" << info[i].assistNum << "\n" << info[i].longestKillstreak << "\n" << info[i].maxKillCombo << "\n" << info[i].totalDealDame << "\n" << info[i].totalReceivedDame;
 		auto label = Label::createWithSystemFont(dm.str().c_str(), JAPANESE_FONT_1_BOLD, 30);
 		label->setColor(Color3B::BLACK);
 		label->setPosition(Vec2(270 + 200 * i, parent->getContentSize().height - 50));

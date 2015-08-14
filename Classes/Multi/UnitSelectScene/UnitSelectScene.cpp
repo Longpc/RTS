@@ -47,10 +47,10 @@ bool MultiUnitSelectScene::init(int roomId,int pageFlg)
 
 	_defaultLabel->setString("ユニットを選択して下さい");
 
-	auto nextButton = Button::create();
-	nextButton->loadTextureNormal("image/screen/battle.png");
+	nextButton = Button::create();
+	nextButton->loadTextureNormal("image/screen/battle_disable.png");
 	nextButton->setPosition(Vec2(_visibleSize.width - 50, _visibleSize.height-100));
-	nextButton->setTouchEnabled(true);
+	nextButton->setTouchEnabled(false);
 	nextButton->addTouchEventListener(CC_CALLBACK_2(MultiUnitSelectScene::sendReadyButtonCallback, this));
 	addChild(nextButton, 10); 
 	
@@ -63,13 +63,13 @@ bool MultiUnitSelectScene::init(int roomId,int pageFlg)
 	lArrow->setPosition(Vec2(50, baseSize.height / 2));
 	_pagebackGround->addChild(lArrow);
 	lArrow->setSwallowTouches(true);
-	lArrow->addTouchEventListener(CC_CALLBACK_2(MultiUnitSelectScene::leftArrowClickCallback, this));
+	lArrow->addTouchEventListener(CC_CALLBACK_2(MultiUnitSelectScene::arrowButonClick, this, -1));
 	lArrow->setVisible(false);
 
 	rArrow = Button::create("image/screen/unitSelect/right.png");
 	rArrow->setPosition(Vec2(baseSize.width - 50, baseSize.height / 2));
 	rArrow->setAnchorPoint(Vec2::ANCHOR_MIDDLE_RIGHT);
-	rArrow->addTouchEventListener(CC_CALLBACK_2(MultiUnitSelectScene::rightArrowClickCallback, this));
+	rArrow->addTouchEventListener(CC_CALLBACK_2(MultiUnitSelectScene::arrowButonClick, this, 1));
 	_pagebackGround->addChild(rArrow);
 	rArrow->setSwallowTouches(true);
 
@@ -184,7 +184,7 @@ bool MultiUnitSelectScene::init(int roomId,int pageFlg)
 	}
 	createPageView(1);
 
-	
+	checkFlag();
 	return true;
 }
 
@@ -192,7 +192,6 @@ void MultiUnitSelectScene::updateContent(Ref *p)
 {
 	CC_UNUSED_PARAM(p);
 	if (_pageFlg == SOLO_MODE) return;
-	_isSentRequest = false;
 	//for show detail in unit slot
 	auto userInfo = UserModel::getInstance()->getUserInfo();
 	auto uuid = UserModel::getInstance()->getUuId();
@@ -279,9 +278,20 @@ void MultiUnitSelectScene::updateContent(Ref *p)
 			}
 		}
 	}
-
+	checkFlag();
 }
 
+void MultiUnitSelectScene::checkFlag()
+{
+	if (_sendSkillFlg && _sendUnitFlg && !_isSentRequest) {
+		nextButton->setTouchEnabled(true);
+		nextButton->loadTextureNormal("image/screen/battle.png");
+	}
+	else {
+		nextButton->setTouchEnabled(false);
+		nextButton->loadTextureNormal("image/screen/battle_disable.png");
+	}
+}
 void MultiUnitSelectScene::onEnter()
 {
 	LayerBase::onEnter();
@@ -291,7 +301,6 @@ void MultiUnitSelectScene::onEnter()
 	touchListener->onTouchMoved = CC_CALLBACK_2(MultiUnitSelectScene::onTouchMoved, this);
 	_eventDispatcher->addEventListenerWithSceneGraphPriority(touchListener, this);
 	touchListener->setSwallowTouches(false);
-	scheduleUpdate();
 }
 bool MultiUnitSelectScene::onTouchBegan(Touch *touch, Event *unused_event)
 {
@@ -501,6 +510,7 @@ void MultiUnitSelectScene::onTouchPageItem(Ref *pSender, Widget::TouchEventType 
 
 			auto client = NodeServer::getInstance()->getClient();
 			_isSentRequest = false;
+			checkFlag();
 			client->emit("connect_not_ready", buff.GetString());
 		}
 		
@@ -515,10 +525,11 @@ void MultiUnitSelectScene::onTouchPageItem(Ref *pSender, Widget::TouchEventType 
 
 void MultiUnitSelectScene::decideCallBack(int index, int pageType)
 {
+	_isSentRequest = false;
+	_onTouchDisable = false;
 	if (pageType == 1)
 	{
 		UserModel::getInstance()->setUserUnitsInfo(_allUnitInfoNew[index]);
-		_onTouchDisable = false;
 		UserModel::getInstance()->setSelectedUnitId(_allUnitInfoNew[index].mst_unit_id);
 		if (_pageFlg == MULTI_MODE) 
 		{
@@ -555,16 +566,12 @@ void MultiUnitSelectScene::decideCallBack(int index, int pageType)
 			sendSElectSkillInfo();
 		}
 	}
+	checkFlag();
 }
 
 void MultiUnitSelectScene::cancelCallBack()
 {
 	_onTouchDisable = false;
-}
-
-void MultiUnitSelectScene::update(float delta)
-{
-	
 }
 
 void MultiUnitSelectScene::sendReadyButtonCallback(Ref *pSender, Widget::TouchEventType type)
@@ -596,6 +603,7 @@ void MultiUnitSelectScene::sendReadyButtonCallback(Ref *pSender, Widget::TouchEv
 
 				auto client = NodeServer::getInstance()->getClient();
 				_isSentRequest = true;
+				checkFlag();
 				client->emit("connect_ready", buff.GetString());
 				client->on("room_public_battle_start", CC_CALLBACK_2(MultiUnitSelectScene::startBattleCallback, this));
 			}
@@ -652,13 +660,14 @@ void MultiUnitSelectScene::getDataFromDataBase()
 	_allSkillInfo = UserSkillModel::getInstance()->getPlayerSkillsList();
 }
 
-void MultiUnitSelectScene::leftArrowClickCallback(Ref *pSender, Widget::TouchEventType type)
+void MultiUnitSelectScene::arrowButonClick(Ref *pSender, Widget::TouchEventType type, int pageScroll)
 {
+	CC_UNUSED_PARAM(pSender);
 	switch (type)
 	{
 	case cocos2d::ui::Widget::TouchEventType::ENDED:
 	{
-		_mainPage->scrollToPage(_mainPage->getCurPageIndex() - 1);
+		_mainPage->scrollToPage(_mainPage->getCurPageIndex() + pageScroll);
 		break;
 	}
 	default:
@@ -666,19 +675,7 @@ void MultiUnitSelectScene::leftArrowClickCallback(Ref *pSender, Widget::TouchEve
 	}
 }
 
-void MultiUnitSelectScene::rightArrowClickCallback(Ref *pSender, Widget::TouchEventType type)
-{
-	switch (type)
-	{
-	case cocos2d::ui::Widget::TouchEventType::ENDED:
-	{
-		_mainPage->scrollToPage(_mainPage->getCurPageIndex() + 1);
-		break;
-	}
-	default:
-		break;
-	}
-}
+
 
 void MultiUnitSelectScene::sendSelectUnitInfo(int unitId)
 {
@@ -712,6 +709,7 @@ void MultiUnitSelectScene::sendSelectUnitInfo(int unitId)
 			CC_UNUSED_PARAM(client);
 			log("select unit end data: %s", data.c_str());
 			_sendUnitFlg = true;
+			checkFlag();
 			RoomUserModel::getInstance()->parseTeamData(data);
 		});
 	}
@@ -771,6 +769,7 @@ void MultiUnitSelectScene::sendSElectSkillInfo()
 			log("select skill end data: %s", data.c_str());
 			RoomUserModel::getInstance()->parseTeamData(data);
 			_sendSkillFlg = true;
+			checkFlag();
 		});
 	}
 }

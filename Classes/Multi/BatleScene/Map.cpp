@@ -62,6 +62,13 @@ bool MyMap::checkPosInsideMap(Vec2 pos)
 	return true;
 }
 
+bool MyMap::checkCoodInsideMap(Vec2 coord)
+{
+	if (coord.x < 1 || coord.y < 1 || coord.x >this->getMapSize().width-1 || coord.y > this->getMapSize().height-1) return false;
+	if (this->getLayer("main_layer")->getTileAt(coord) == nullptr) return false;
+	return true;
+}
+
 Sprite* MyMap::getTitleAt(Vec2 titleCoor)
 {
 	return this->getLayer("main_layer")->getTileAt(titleCoor);

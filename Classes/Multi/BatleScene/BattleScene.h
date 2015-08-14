@@ -170,6 +170,10 @@ private:
 	Label *_blueTeamTitleNumLabel;
 	Label *_redTeamTitleNumLabel;
 
+	Label *_onePointNumLabel;
+	Label *_threePointNumLabel;
+	Label *_fivePointNumLabel;
+
 	///ATTACK LOGIC///
 	//Sprite *_autoAttackArea;
 	//Sprite *_skillAOEShowSprite;
@@ -300,7 +304,7 @@ private:
 	virtual void createMapSVHandler();
 	virtual void createMoveSVHandler();
 
-	virtual void setTitle(const string& data);
+	virtual void setTitle(int team_id, int x, int y, bool disable);
 	bool _networkCheckerCreated = false;
 	bool _receivedUpdateMsg = false;
 
@@ -308,6 +312,10 @@ private:
 
 	bool _onReconnect = false;
 	Button * _reconnectButton;
+	Button* _mapSVReconnectButon;
+	bool _mapSVOnReconnect = false;
+	Button* _moveSVReconnectButton;
+	bool _moveSVOnReconnect = false;
 	virtual void serverDisconnectedNotifyReceivedCallback(Ref *p);
 	virtual void serverConnectedNotifyReceivedCallback(Ref *p);
 
@@ -467,6 +475,7 @@ private:
 	void moveLogic(float dt);
 	void testMoveLogic(Sprite* object, int teamFLg);
 
+	void checkTitleAndSendEvent(Vec2 titleCoor, int teamId);
 	/*Change tower nearly title color with tower title*/
 	virtual void changeTitlesNearObject(Sprite* object, int color, int offset);
 
@@ -543,6 +552,8 @@ private:
 	virtual void skillPetAction(Sprite* casterSprite, UserSkillInfo skill, UserUnitInfo* casterInfo, int teamFlg);
 
 	virtual void skillBlinkAcion(Sprite* object, UserUnitInfo attacker, UserSkillInfo skill, vector<Sprite*> targetList, vector<UserUnitInfo>* targetUnitData, float angle, float randNUm);
+
+	virtual void skillColorAction(UserSkillInfo skill, float angle);
 
 	/*Run logic and effect of attack skills*/
 	virtual void skillAttackAction(Sprite* object, UserSkillInfo skillInfo, UserUnitInfo attacker, int teamId, float randNum, float angle);
