@@ -79,6 +79,9 @@
     <Filter Include="src\base\UnitSkillInfoButtonGroup">
       <UniqueIdentifier>{376b796c-5d77-4fdf-b742-e7c83f44c3e8}</UniqueIdentifier>
     </Filter>
+    <Filter Include="src\Multi\BatleScene\BattleInfoPanel">
+      <UniqueIdentifier>{751cf771-9af8-4e79-88da-39afef3d5669}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -224,6 +227,12 @@
     </ClCompile>
     <ClCompile Include="..\Classes\Server\MoveServer.cpp">
       <Filter>src\Server</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Classes\Multi\BatleScene\BattleInfoPanel\InfoPanel.cpp">
+      <Filter>src\Multi\BatleScene\BattleInfoPanel</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Classes\Multi\BatleScene\BattleInfoPanel\InfoPanelItem.cpp">
+      <Filter>src\Multi\BatleScene\BattleInfoPanel</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -373,6 +382,12 @@
     </ClInclude>
     <ClInclude Include="..\Classes\base\UnitSkillInfoButtonGroup\UnitInfoGroup.h">
       <Filter>src\base\UnitSkillInfoButtonGroup</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Classes\Multi\BatleScene\BattleInfoPanel\InfoPanel.h">
+      <Filter>src\Multi\BatleScene\BattleInfoPanel</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Classes\Multi\BatleScene\BattleInfoPanel\InfoPanelItem.h">
+      <Filter>src\Multi\BatleScene\BattleInfoPanel</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

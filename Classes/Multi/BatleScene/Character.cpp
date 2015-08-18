@@ -279,6 +279,7 @@ void Character::actionMoveCharacter(int directionId) {
 			return;
 		}
 	}
+	rotateCharacter(directionId);
 	this->stopAllActionsByTag(this->getCurrentMoveActionTag());
 
 	auto action = Animate::create(createMoveAnimationWithDefine(directionId));
@@ -288,7 +289,6 @@ void Character::actionMoveCharacter(int directionId) {
 	this->setCurrentMoveActionTag(directionId);
 	this->runAction(repeat);
 	setOnMovingFlg(true);
-	setCharacterCurrentDirec(directionId);
 }
 
 void Character::rotateCharacter(int direc) {
@@ -298,7 +298,17 @@ void Character::rotateCharacter(int direc) {
 	sprintf(szName, "image/new_unit/unit_0%d_%d.png", _characterId, imgId);
 	Texture2D *text = Director::getInstance()->getTextureCache()->addImage(szName);
 	this->setTexture(text);
-	setCharacterCurrentDirec(direc);
+	setCharacterCurrentDirec(direc); 
+	if (this->getChildByTag(MINION_PARENT_TAG) != nullptr) {
+		auto child = this->getChildByTag(MINION_PARENT_TAG)->getChildByTag(MINION_PARENT_TAG)->getChildren();
+		for (auto &unit : child)
+		{
+			auto sp = (Sprite*)unit;
+			sp->setTexture(text);
+		}
+	}
+
+
 
 }
 int Character::detectDirectionBaseOnTouchAngle(float angle) {

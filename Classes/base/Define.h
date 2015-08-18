@@ -276,6 +276,9 @@ enum SKILL_RANGE_TYPE
 #define ANIMETE_DELAY 0.15f
 #define ATTACK_ANIMATION_DELAY 1
 
+#define MINION_PARENT_TAG 21241
+#define MINIONS_TAG 2176
+
 #define UI_SCENE_CREATE_FUNC(UIScene) \
 public: \
 static Scene* createScene() \

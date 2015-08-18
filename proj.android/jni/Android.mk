@@ -54,7 +54,9 @@ LOCAL_SRC_FILES := hellocpp/main.cpp \
 				   ../../Classes/Multi/BatleScene/SummonPet.cpp \
 				   ../../Classes/Server/MapServer.cpp \
 				   ../../Classes/Server/MoveServer.cpp \
-				   ../../Classes/base/UnitSkillInfoButtonGroup/UnitInfoGroup.cpp
+				   ../../Classes/base/UnitSkillInfoButtonGroup/UnitInfoGroup.cpp \
+				   ../../Classes/Multi/BatleScene/BattleInfoPanel/InfoPanel.cpp \
+				   ../../Classes/Multi/BatleScene/BattleInfoPanel/InfoPanelItem.cpp
 
 LOCAL_C_INCLUDES := $(LOCAL_PATH)/../../Classes
 

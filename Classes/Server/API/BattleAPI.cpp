@@ -156,8 +156,8 @@ void BattleAPI::sendSkillEvent(UserSkillInfo skillData, UserUnitInfo attacker, f
 	doc.AddMember("uuid", uu.c_str(), allo);
 	auto u = convertUnitDataToJsonObject(attacker, allo);
 	doc.AddMember("mst_unit", *u, allo);
-	auto s = convertSkillDataToJsonObject(skillData, allo);
-	doc.AddMember("mst_skill", *s, allo);
+	//auto s = convertSkillDataToJsonObject(skillData, allo);
+	doc.AddMember("mst_skill_id", skillData.mst_skill_id, allo);
 	doc.AddMember("angle", angle, allo);
 	doc.AddMember("random", random(0.85f, 1.0f), allo);
 
@@ -272,6 +272,9 @@ void BattleAPI::sendDeadEvent(UserUnitInfo unitData,string killerUuid, Vec2 dead
 	
 	sv->emit("dead", buffer.GetString());
 	sv->on("dead_end", callBack);
+	auto mapSV = MapServer::getInstance()->getClient();
+	mapSV->emit("unit_dead", buffer.GetString());
+
 	buffer.Clear();
 	return;
 }
@@ -606,6 +609,7 @@ Document::GenericValue* BattleAPI::convertSkillDataToJsonObject(UserSkillInfo sk
 
 	rapidjson::Value *skillDataValue = new rapidjson::Value();
 	skillDataValue->SetObject();
+	skillDataValue->AddMember("name", skillData.name.c_str(), allo);
 	skillDataValue->AddMember("mst_skill_id", skillData.mst_skill_id, allo);
 	skillDataValue->AddMember("skill_type", skillData.skill_type, allo);
 	skillDataValue->AddMember("mp_cost", skillData.mp_cost, allo);

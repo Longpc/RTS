@@ -740,6 +740,12 @@ void BattleScene::createContent()
 	_topMenuSprite->setPosition(Vec2(0, _visibleSize.height));
 	addChild(_topMenuSprite,5000);
 
+	_mainSkillPanel = InfoPanel::createPanel();
+	_mainSkillPanel->setPosition(Vec2(_topMenuSprite->getContentSize().width * 2 - 120, -100));
+	_mainSkillPanel->setMaxItemNum(5);
+	_topMenuSprite->addChild(_mainSkillPanel,10);
+
+
 	_mainCharacterHpBar = Slider::create();
 	_mainCharacterHpBar->loadBarTexture("image/screen/battle/hp_base.png");
 	_mainCharacterHpBar->setPercent(100);
@@ -1218,6 +1224,7 @@ void BattleScene::changeScreenOrient()
 		_skillButtonParentnode->setRotation(-90.0f);
 		_topMenuSprite->setRotation(-90.0f);
 		_topMenuSprite->setPosition(Vec2(15, 15));
+		_mainSkillPanel->setPosition(Vec2(_topMenuSprite->getContentSize().width + 50, -150));
 
 		for (auto &tower : _neutralTowerList)
 		{
@@ -1231,6 +1238,7 @@ void BattleScene::changeScreenOrient()
 		_skillButtonParentnode->setRotation(0);
 		_topMenuSprite->setRotation(0);
 		_topMenuSprite->setPosition(Vec2(15, _visibleSize.height - 15));
+		_mainSkillPanel->setPosition(Vec2(_topMenuSprite->getContentSize().width * 2 - 120, -100));
 		for (auto &tower : _neutralTowerList)
 		{
 			tower->getParent()->setRotation(0);
@@ -1724,6 +1732,10 @@ void BattleScene::createNodeSVHandler()
 		{
 			int teamId = doc["team_id"].GetInt();
 			string uuid = doc["uuid"].GetString();
+			string killerUuid = doc["killer"].GetString();
+			auto killer = BattleModel::getInstance()->getUnitInforByUuid(killerUuid);
+			auto unit = BattleModel::getInstance()->getUnitInforByUuid(uuid);
+			_mainSkillPanel->addKillInfoItem(killer.mst_unit_id, unit.mst_unit_id, killer.team_id);
 
 			if (teamId == _currentPlayerTeamFlg)
 			{
@@ -1757,8 +1769,8 @@ void BattleScene::createNodeSVHandler()
 			/************************************************************************/
 			/* PARSE SKILL DATA                                                     */
 			/************************************************************************/
-			UserSkillInfo skill;
-			skill.mst_skill_id = doc["mst_skill"]["mst_skill_id"].GetInt();
+			UserSkillInfo skill = UserSkillModel::getInstance()->getSkillInfoById(doc["mst_skill_id"].GetInt());
+			/*skill.mst_skill_id = doc["mst_skill"]["mst_skill_id"].GetInt();
 			skill.skill_type = doc["mst_skill"]["skill_type"].GetInt();
 			skill.mp_cost = doc["mst_skill"]["mp_cost"].GetInt();
 			skill.cooldown_time = doc["mst_skill"]["cooldown_time"].GetInt();
@@ -1771,7 +1783,7 @@ void BattleScene::createNodeSVHandler()
 			skill.duration = doc["mst_skill"]["duration"].GetInt();
 			skill.corrett_value = doc["mst_skill"]["corrett_value"].GetInt();
 			skill.correct_type = doc["mst_skill"]["correct_type"].GetInt();
-
+			skill.name = doc["mst_skill"]["name"].GetString();*/
 			/************************************************************************/
 			/* PARSER UNIT THAT CAST SKILL                                                     */
 			/************************************************************************/
@@ -1852,7 +1864,7 @@ void BattleScene::createNodeSVHandler()
 			}
 		}
 	});
-	sv->on("set_title", [&](SIOClient *c, const string& data){
+	/*sv->on("set_title", [&](SIOClient *c, const string& data){
 		CC_UNUSED_PARAM(c);
 		if (_onDestructCalled) return;
 		//log("set_title");
@@ -1867,8 +1879,9 @@ void BattleScene::createNodeSVHandler()
 		int x = doc["pos_x"].GetInt();
 		int y = doc["pos_y"].GetInt();
 		bool disableFlg = doc["disable"].GetBool();
-		setTitle(team_Id,x,y,disableFlg);
-	});
+		setTitle(team_Id, x, y, disableFlg);
+		
+	});*/
 
 	/*handler for another unit attack to neutral event*/
 	/*
@@ -2547,11 +2560,15 @@ void BattleScene::checkTitleAndSendEvent(Vec2 titlePos, int teamFlg)
 				if (strcmp(title->getName().c_str(), "sending") == 0) return;
 				//log("send test move event");
 				//sendingFlg->push_back(true);
-				title->setName("sending");
+				
 				if (_mapSVOnReconnect == false)
 				{
 					//log("send");
+					title->setName("sending");
 					BattleAPI::getInstance()->sendTestMoveLogic(titlePos);
+				}
+				else {
+					return;
 				}
 				//continue;
 			}
@@ -2569,11 +2586,15 @@ void BattleScene::checkTitleAndSendEvent(Vec2 titlePos, int teamFlg)
 			if (_gameMode == MULTI_MODE) {
 				if (strcmp(title->getName().c_str(), "sending") == 0) return;
 				//log("send test move event");
-				title->setName("sending");
+				
 				//sendingFlg->push_back(true);
 				if (_mapSVOnReconnect == false) {
 					//log("send");
+					title->setName("sending");
 					BattleAPI::getInstance()->sendTestMoveLogic(titlePos);
+				}
+				else {
+					return;
 				}
 				//continue;
 			}
@@ -2610,6 +2631,10 @@ void BattleScene::changeTitlesNearObject(Sprite* object, int type, int offset)
 			_mapLayer->getTileAt(Vec2(i, j))->setColor(color);
 			_miniLayer->getTileAt(Vec2(i, j))->setColor(color);
 		}
+	}
+	if (type != 0)
+	{
+		_mainSkillPanel->addNeutralInfoItem(type, offset/4);
 	}
 }
 
@@ -3046,6 +3071,10 @@ void BattleScene::neutralUnitStatusChange(Character* unit, int team, int index) 
 	unit->changeUnitType(type);
 	unit->setTag(team);
 	_neutralUnitIconInMiniMap[index]->setTexture(texture);
+	if (team > 0 && team < 3)
+	{
+		_mainSkillPanel->addNeutralInfoItem(team, NEUTRAL_TYPE::UNIT);
+	}
 }
 
 void BattleScene::cannonStatusChange(Cannon* cannon, int teamId)
@@ -3257,7 +3286,7 @@ void BattleScene::runRespawnAction(string killerUuid)
 	auto pos =_myMap->getTitleCoorForPosition(testObject->getPosition());
 	if (_gameMode == MULTI_MODE)
 	{
-		if (_onReconnect == false)
+		if (_onReconnect == false && _mapSVOnReconnect == false)
 		{
 			BattleAPI::getInstance()->sendDeadEvent(_allAlliedUnitData[0],killerUuid, pos, [&](SIOClient* client, const std::string json) {
 
@@ -3381,7 +3410,7 @@ void BattleScene::updateTime()
 	time_t currTimer;
 	time(&currTimer);
 	int seconds = ceil(difftime(currTimer, timer));
-	if (seconds != _oldSecond && (seconds % 5 == 0)) {
+	if (seconds != _oldSecond /*&& (seconds % 5 == 0)*/) {
 		_oldSecond = seconds;
 		/*log("CALL");*/
 		autoRestoreHpAndMp();
@@ -4345,6 +4374,9 @@ void BattleScene::playSkill(UserSkillInfo skillData)
 
 void BattleScene::playSkillLogicAndAnimation(Sprite* playObject, UserSkillInfo skill, int team_id, float randNum, string uuid, int saveIndex, UserUnitInfo unit, float angle)
 {
+	_mainSkillPanel->addSkillInfoItem(unit.mst_unit_id, skill.name, team_id);
+
+
 	if (playObject == testObject) {
 		for (auto& e : _allEnemyUnitSprite)
 		{
@@ -5123,30 +5155,37 @@ void BattleScene::skillSummonAction(Sprite* object, UserSkillInfo skill, UserUni
 {
 	auto parentofparent = Node::create();
 	object->addChild(parentofparent, -1);
-	parentofparent->setPosition(8, 3);
+	parentofparent->setPosition(9, 3);
 	parentofparent->setTag(MINION_PARENT_TAG);
 	auto parent = Node::create();
 	parentofparent->addChild(parent);
 	parentofparent->setScaleY(0.5f);
-	parent->runAction(RepeatForever::create(RotateBy::create(1, 75.0f)));
+	parent->runAction(RepeatForever::create(RotateBy::create(1,75.0f)));
 	parent->setTag(MINION_PARENT_TAG);
 	parent->setScale(2 / IMAGE_SCALE);
 
 	auto path2 = UserUnitModel::getInstance()->getUnitImageByMstUnitItD(unitData->mst_unit_id);
 	auto red = Sprite::create(path2.c_str());
 	red->setTag(MINIONS_TAG);
+	red->setScaleY(2);
 	auto green = Sprite::create(path2.c_str());
 	green->setTag(MINIONS_TAG);
+	green->setScaleY(2);
 	auto yellow = Sprite::create(path2.c_str());
 	yellow->setTag(MINIONS_TAG);
+	yellow->setScaleY(2);
 	auto purple = Sprite::create(path2.c_str());
 	purple->setTag(MINIONS_TAG);
+	purple->setScaleY(2);
 
 	red->setPosition(Vec2(35, 0));
+	red->runAction(RepeatForever::create(RotateBy::create(1, -75.0f)));
 	green->setPosition(Vec2(0, 35));
+	green->runAction(RepeatForever::create(RotateBy::create(1, -75.0f)));
 	yellow->setPosition(Vec2(-35, 0));
+	yellow->runAction(RepeatForever::create(RotateBy::create(1, -75.0f)));
 	purple->setPosition(Vec2(0, -35));
-
+	purple->runAction(RepeatForever::create(RotateBy::create(1, -75.0f)));
 	parent->addChild(red, -1);
 	parent->addChild(green, -1);
 	parent->addChild(yellow, -1);
@@ -5160,6 +5199,7 @@ void BattleScene::skillSummonAction(Sprite* object, UserSkillInfo skill, UserUni
 
 	auto cha = (Character*)object;
 	//cha->setMinionTotalHp(minionHP * 4);
+	cha->rotateCharacter(cha->getCharacterCurrentDirec());
 
 	auto action = Sequence::create(DelayTime::create(skill.duration), CallFuncN::create([&, unitData, minionATK, minionHP](Ref* p) {
 		int num = ((Node*)p)->getChildrenCount();

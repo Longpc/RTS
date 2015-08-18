@@ -455,6 +455,8 @@ void MultiUnitSelectScene::createPageView(int type)
 	_mainPage->addEventListener(CC_CALLBACK_2(MultiUnitSelectScene::pageViewEvent, this));
 	_pagebackGround->addChild(_mainPage);
 
+	lArrow->setVisible(false);
+	rArrow->setVisible(true);
 }
 
 void MultiUnitSelectScene::onTouchPageItem(Ref *pSender, Widget::TouchEventType type, int pageType)
@@ -463,13 +465,6 @@ void MultiUnitSelectScene::onTouchPageItem(Ref *pSender, Widget::TouchEventType 
 	
 	switch (type)
 	{
-	case cocos2d::ui::Widget::TouchEventType::BEGAN:
-	{
-		//log("button begin");
-	}
-		break;
-	case cocos2d::ui::Widget::TouchEventType::MOVED:
-		break;
 	case cocos2d::ui::Widget::TouchEventType::ENDED:
 	{
 		//log("button end");
@@ -516,8 +511,6 @@ void MultiUnitSelectScene::onTouchPageItem(Ref *pSender, Widget::TouchEventType 
 		
 		break;
 	}
-	case cocos2d::ui::Widget::TouchEventType::CANCELED:
-		break;
 	default:
 		break;
 	}

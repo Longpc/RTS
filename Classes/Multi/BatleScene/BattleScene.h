@@ -30,6 +30,8 @@
 #include "SummonPet.h"
 #include "Map.h"
 
+#include "Multi/BatleScene/BattleInfoPanel/InfoPanel.h"
+
 #define LOW 1
 #define MID 2
 #define HIGH 3
@@ -82,8 +84,7 @@
 
 #define HPBAR_TAG 1232
 
-#define MINION_PARENT_TAG 21241
-#define MINIONS_TAG 2176
+
 
 #define BOUND_BORDER_TAG 1905
 #define WORMHOLDROTATE 1245
@@ -166,6 +167,9 @@ private:
 	Sprite *_selectTargetSprite;
 
 	Sprite *_topMenuSprite;
+
+	InfoPanel* _mainSkillPanel;
+
 	Node *_skillButtonParentnode;
 	Label *_blueTeamTitleNumLabel;
 	Label *_redTeamTitleNumLabel;
