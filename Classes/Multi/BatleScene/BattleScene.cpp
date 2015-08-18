@@ -2220,7 +2220,7 @@ void BattleScene::setTitle(int team_Id, int x, int y, bool disableFlg)
 			title->setColor(Color3B::ORANGE);
 			auto mTittle = _miniLayer->getTileAt(titleCoor);
 			mTittle->setColor(Color3B::ORANGE);
-			mTittle->setName("orange");
+			title->setName("orange");
 		}
 		return;
 	}
@@ -2388,7 +2388,7 @@ void BattleScene::update(float delta)
 	_checkTime += delta;
 	//TODO: uncomment to send unit status every 0.07 second - > (100/0.07) update frame per second
 	auto disVtr = testObject->getPosition() - _checkPos;
-	if (_checkTime >= 0.04 && disVtr.length() > 20.0f && _gameMode == MULTI_MODE && _onRespwanFlg == false && _onReconnect == false) {
+	if (_checkTime >= 0.038 && disVtr.length() > 20.0f && _gameMode == MULTI_MODE && _onRespwanFlg == false && _onReconnect == false) {
 		float angle = _mainCharacterIconInMiniMap->getRotation();
 		int direc = detectDirectionBaseOnTouchAngle(angle);
 		if (!_moveSVOnReconnect)
@@ -2478,6 +2478,7 @@ void BattleScene::moveLogic(float dt)
 
 void BattleScene::testMoveLogic(Sprite* object, int teamFlg)
 {
+	//if unit is on attack or on respwaning
 	if (_onRespwanFlg || object->getActionByTag(34543) != nullptr) return;
 	vector<Vec2> savePos;
 	auto pos = object->getPosition();
@@ -2517,9 +2518,6 @@ void BattleScene::testMoveLogic(Sprite* object, int teamFlg)
 			i++;
 		}
 	}
-	
-
-
 	for (int i = 0; i < savePos.size(); i ++)
 	{
 		Vec2 titlePos = _myMap->getTitleCoorForPosition(savePos[i]);
@@ -2557,7 +2555,10 @@ void BattleScene::checkTitleAndSendEvent(Vec2 titlePos, int teamFlg)
 		{
 			if (_gameMode == MULTI_MODE)
 			{
-				if (strcmp(title->getName().c_str(), "sending") == 0) return;
+				if (strcmp(title->getName().c_str(), "sending") == 0) {
+					log("skip titlte by sending");
+					return;
+				}
 				//log("send test move event");
 				//sendingFlg->push_back(true);
 				
@@ -2568,6 +2569,7 @@ void BattleScene::checkTitleAndSendEvent(Vec2 titlePos, int teamFlg)
 					BattleAPI::getInstance()->sendTestMoveLogic(titlePos);
 				}
 				else {
+					log("Skip by not connect");
 					return;
 				}
 				//continue;
@@ -2578,6 +2580,9 @@ void BattleScene::checkTitleAndSendEvent(Vec2 titlePos, int teamFlg)
 			mTittle->setColor(Color3B::GREEN);
 			return;
 			//}
+		}
+		else {
+			log("Skip title by color or disable");
 		}
 	}
 	else {
@@ -2604,6 +2609,10 @@ void BattleScene::checkTitleAndSendEvent(Vec2 titlePos, int teamFlg)
 			mTittle->setColor(Color3B::ORANGE);
 			return;
 			//}
+		}
+		else
+		{
+			log("skip title");
 		}
 	}
 }
@@ -3376,6 +3385,7 @@ void BattleScene::runRespawnAction(string killerUuid)
 			}
 			//testObject->setPosition(Vec2(_visibleSize.width, 100)); //need to change to value base on callback from server
 			testObject->setVisible(true);
+			_onRespwanFlg = false;
 			auto follow = Follow::create(testObject, Rect(FOLLOW_MARGIN, 0, _myMap->getContentSize().width - FOLLOW_MARGIN, _myMap->getContentSize().height));
 			follow->setTag(121);
 			_battleBackground->runAction(follow);
