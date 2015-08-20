@@ -3,6 +3,7 @@
 MoveServer* MoveServer::s_shareMoveServer = nullptr;
 void MoveServer::createInstace()
 {
+	log("create move server instance");
 	if (!s_shareMoveServer) {
 		s_shareMoveServer = new (std::nothrow) MoveServer();
 		s_shareMoveServer->init();

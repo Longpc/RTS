@@ -55,7 +55,7 @@ void LayerBase::onEnter()
 	Layer::onEnter();
 
 	auto touchListener = EventListenerTouchOneByOne::create();
-	touchListener->setSwallowTouches(true);
+	touchListener->setSwallowTouches(false);
 	touchListener->onTouchBegan = CC_CALLBACK_2(LayerBase::onTouchBegan, this);
 	touchListener->onTouchEnded = CC_CALLBACK_2(LayerBase::onTouchEnded, this);
 	touchListener->onTouchMoved = CC_CALLBACK_2(LayerBase::onTouchMoved, this);

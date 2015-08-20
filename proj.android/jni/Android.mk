@@ -56,7 +56,9 @@ LOCAL_SRC_FILES := hellocpp/main.cpp \
 				   ../../Classes/Server/MoveServer.cpp \
 				   ../../Classes/base/UnitSkillInfoButtonGroup/UnitInfoGroup.cpp \
 				   ../../Classes/Multi/BatleScene/BattleInfoPanel/InfoPanel.cpp \
-				   ../../Classes/Multi/BatleScene/BattleInfoPanel/InfoPanelItem.cpp
+				   ../../Classes/Multi/BatleScene/BattleInfoPanel/InfoPanelItem.cpp \
+				   ../../Classes/Multi/BatleScene/PathFinder/NodeStep.cpp \
+				   ../../Classes/Multi/BatleScene/PathFinder/PathFinder.cpp
 
 LOCAL_C_INCLUDES := $(LOCAL_PATH)/../../Classes
 

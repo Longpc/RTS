@@ -37,6 +37,9 @@ bool MyMap::init()
 	{
 		drawRectInMap(pos2 - Vec2(2, -2), 4);
 	}
+	//_wallLayer = this->getLayer("wall_layer");
+	//_wallLayer->setVisible(false);
+
 	return true;
 }
 
@@ -74,9 +77,18 @@ Sprite* MyMap::getTitleAt(Vec2 titleCoor)
 	return this->getLayer("main_layer")->getTileAt(titleCoor);
 }
 
-bool MyMap::checkTitleCantGet(Vec2 pos)
+bool MyMap::checkTileCantGet(Vec2 pos)
 {
 	return (checkTitleNearObject(_towerCoor, 8, pos +Vec2(0, -1)) || checkTitleNearObject(_cannonCoor, 4, pos + Vec2(0, -1)));
+}
+
+bool MyMap::checkWallInCoord(Vec2 coord)
+{
+	if (this->getLayer("wall_layer")->getTileAt(coord) != nullptr)
+	{
+		return true;
+	}
+	return false;
 }
 
 bool MyMap::checkTitleNearObject(vector<Vec2> vec, int offset, Vec2 pos)

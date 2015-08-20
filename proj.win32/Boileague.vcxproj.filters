@@ -82,6 +82,9 @@
     <Filter Include="src\Multi\BatleScene\BattleInfoPanel">
       <UniqueIdentifier>{751cf771-9af8-4e79-88da-39afef3d5669}</UniqueIdentifier>
     </Filter>
+    <Filter Include="src\Multi\BatleScene\PathFinder">
+      <UniqueIdentifier>{571389bd-92eb-43f4-b925-ee7f080f7aa0}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -233,6 +236,12 @@
     </ClCompile>
     <ClCompile Include="..\Classes\Multi\BatleScene\BattleInfoPanel\InfoPanelItem.cpp">
       <Filter>src\Multi\BatleScene\BattleInfoPanel</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Classes\Multi\BatleScene\PathFinder\NodeStep.cpp">
+      <Filter>src\Multi\BatleScene\PathFinder</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Classes\Multi\BatleScene\PathFinder\PathFinder.cpp">
+      <Filter>src\Multi\BatleScene\PathFinder</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -388,6 +397,12 @@
     </ClInclude>
     <ClInclude Include="..\Classes\Multi\BatleScene\BattleInfoPanel\InfoPanelItem.h">
       <Filter>src\Multi\BatleScene\BattleInfoPanel</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Classes\Multi\BatleScene\PathFinder\NodeStep.h">
+      <Filter>src\Multi\BatleScene\PathFinder</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Classes\Multi\BatleScene\PathFinder\PathFinder.h">
+      <Filter>src\Multi\BatleScene\PathFinder</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

@@ -1,5 +1,8 @@
 ﻿#ifndef BATLE_SCENE
 #define BATLE_SCENE
+
+#include <thread>
+
 #include "base/LayerBase.h"
 #include "base/Define.h"
 #include "base/MyBodyParser.h"
@@ -31,6 +34,8 @@
 #include "Map.h"
 
 #include "Multi/BatleScene/BattleInfoPanel/InfoPanel.h"
+#include "Multi/BatleScene/PathFinder/NodeStep.h"
+#include "Multi/BatleScene/PathFinder/PathFinder.h"
 
 #define LOW 1
 #define MID 2
@@ -101,6 +106,8 @@
 #define BLINK_ACTION_TAG 2154
 
 #define MINION_PARENT_ACTION_TAG 2787
+
+#define MINIMAP_MOVE_DELAY_ACTION_TAG 121
 using namespace cocostudio;
 class BattleScene : public LayerBase
 {
@@ -120,6 +127,8 @@ private:
 	/************************************************************************/
 	/* VARIABLES                                                            */
 	/************************************************************************/
+	vector<Vec2> sides = {};
+
 	bool _onDestructCalled = false;
 	bool _stopVelocFlg = false;
 	Size _fakeVisibleSize;
@@ -308,7 +317,7 @@ private:
 	virtual void createMapSVHandler();
 	virtual void createMoveSVHandler();
 
-	virtual void setTitle(int team_id, int x, int y, bool disable);
+	virtual void setTileColor(int team_id, int x, int y, bool disable);
 	bool _networkCheckerCreated = false;
 	bool _receivedUpdateMsg = false;
 
@@ -370,7 +379,6 @@ private:
 
 	int _testBirdIndex = 0;
 	bool _birdMode = false;
-	virtual void birdButtonCallback(Ref *p, Widget::TouchEventType type);
 	virtual void nextButtonCallback(Ref *pSender, Widget::TouchEventType type);
 	virtual void menuButtonCallback(Ref *pSender, Widget::TouchEventType type);
 	virtual void skill1ButtonCallback(Ref *pSender, Widget::TouchEventType type);
@@ -380,13 +388,22 @@ private:
 	bool _isCheckMapCallback = true;
 	virtual void checkMapTestButtonClick(Ref *pSender, Widget::TouchEventType type);
 
+	vector<Vec2> _pathResult = {};
+	bool _onAutoMove = false;
+	virtual void miniMapMoveFunction(Ref *p, Vec2 desPos);
+
+	virtual void moveStepAction();
+
+	//rtual void moveThread(Vec2 mapPos);
+
+	virtual void zoomOutMiniMap();
 	///MAIN TOUCH EVENT///
 	virtual bool onTouchBegan(Touch *touch, Event *unused_event);
 	virtual void onTouchMoved(Touch *touch, Event *unused_event);
 	virtual void onTouchEnded(Touch *touch, Event *unused_event);
 	
 	///CHARACTER MOVE LOGIC///
-	/* check the angle between the avg value  +- 22
+	/* check tre angle between the avg value  +- 22
 	*/
 	virtual bool caculAvgAngle(int avg, float angle);
 	/*this function calculate the direction offset base on angle from -90 to 270
@@ -479,9 +496,9 @@ private:
 	void moveLogic(float dt);
 	void testMoveLogic(Sprite* object, int teamFLg);
 
-	void checkTitleAndSendEvent(Vec2 titleCoor, int teamId);
+	void checkTileAndSendEvent(Vec2 titleCoor, int teamId);
 	/*Change tower nearly title color with tower title*/
-	virtual void changeTitlesNearObject(Sprite* object, int color, int offset);
+	virtual void changeTilesNearObject(Sprite* object, int color, int offset);
 
 	//TODO
 	///FAKE  Z Order///
@@ -574,10 +591,8 @@ private:
 
 	virtual void stunEffecAction(Sprite* object, UserSkillInfo skill, int index, vector<UserUnitInfo>* effectUnitDataList);
 
-
 	/*Calculate logic and play effect for poison skill for defined unit base on @index as the index in _allEnemyUnitData*/
 	virtual void poisonEffectAction(Sprite* object, UserSkillInfo skill, vector<UserUnitInfo>* unitList, vector<Sprite*> targetSprite, int teamID , const string casterUuid);
-
 
 	/*End of battle logic*/
 	virtual void endBattle(int winteamId);
@@ -624,9 +639,7 @@ private:
 	virtual void fountainRestoreEffect(Sprite *object, vector<UserUnitInfo>*  unitList, int index);
 	virtual void enemyRespawAction(int index);
 
-
 	/////////ECLIPSE ROTATE EFFECT
-
 	virtual void createSorceryEffect(Sprite* spriteUnit, std::string eclipseFilePath);
 	/*For calculate and display effect status*/
 	virtual void pushStatusImagePath(string imagepath, vector<string> &allImages);
@@ -635,53 +648,6 @@ private:
 
 	/*function to return the index of string was element of he vector<string>*/
 	virtual int findIndexOfString(vector<string> v, string element);
-
-	/*get the tilecoord( title index in the titled map) by the title position*/
-	//virtual Vec2 getTitleCoorForPosition(Vec2 location);
-	
-	/*get the position of the title cell*/
-	//virtual Vec2 getPositionForTitleCoord(Vec2 titleCoord);
-	/*Logic for A start path finding function*/
-	virtual vector<Vec2> AStarPathFindingAlgorithm(Vec2 curentPos, Vec2 destinationPos);
-	virtual bool isValidTileCoord(Vec2 &titleCoord);
-	virtual bool isWallAtTileCoord(Vec2 &titleCoord);
-	virtual PointArray *allWalkableTitlesCoordForTitleCoord(Vec2 titleCoord);
-
-	/************************************************************************/
-	/* CLASS USING FOR DETECT SHORTEST PATH BY A* ALGORITHM                 */
-	/************************************************************************/
-	class ShortestPathStep : public cocos2d::Object
-	{
-	public:
-		ShortestPathStep();
-		~ShortestPathStep();
-
-		static ShortestPathStep *createWithPosition(const Vec2 pos);
-		bool initWithPosition(const Vec2 pos);
-
-		int getFScore() const;
-		bool isEqual(const ShortestPathStep *other) const;
-		std::string getDescription() const;
-
-		CC_SYNTHESIZE(Vec2, _position, Position);
-		CC_SYNTHESIZE(int, _gScore, GScore);
-		CC_SYNTHESIZE(int, _hScore, HScore);
-		CC_SYNTHESIZE(ShortestPathStep*, _parent, Parent);
-	};
-
-	Vector<ShortestPathStep*> _spOpenSteps;
-	Vector<ShortestPathStep*> _spClosedSteps;
-	Vector<ShortestPathStep*> _shortestPath;
-
-	void insertInOpenSteps(ShortestPathStep *step);
-	int computeHScoreFromCoordToCoord(const Vec2 &fromCoord, const Vec2 &toCoord);
-	int costToMoveFromStepToAdjacentStep(const ShortestPathStep *fromStep, const ShortestPathStep *toStep);
-	ssize_t getStepIndex(const Vector<ShortestPathStep*> &steps, const ShortestPathStep *step);
-	void constructPathAndStartAnimationFromStep(ShortestPathStep *step);
-	void moveStepAction();
-
-	void countTime(float dt);
-	float calCulTime = 0.0f;
 
 	///////////////////////////////////////////////////////////
 	// CREATE MINI MOVE CONTROL

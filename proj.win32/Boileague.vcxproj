@@ -169,6 +169,8 @@ xcopy /Y /Q "$(EngineRoot)external\websockets\prebuilt\win32\*.*" "$(OutDir)"</C
     <ClCompile Include="..\Classes\Multi\BatleScene\Effect.cpp" />
     <ClCompile Include="..\Classes\Multi\BatleScene\Map.cpp" />
     <ClCompile Include="..\Classes\Multi\BatleScene\OptionDialog.cpp" />
+    <ClCompile Include="..\Classes\Multi\BatleScene\PathFinder\NodeStep.cpp" />
+    <ClCompile Include="..\Classes\Multi\BatleScene\PathFinder\PathFinder.cpp" />
     <ClCompile Include="..\Classes\Multi\BatleScene\SummonPet.cpp" />
     <ClCompile Include="..\Classes\Multi\BatleScene\Tower.cpp" />
     <ClCompile Include="..\Classes\Multi\MemberFullDialogLayer.cpp" />
@@ -222,6 +224,8 @@ xcopy /Y /Q "$(EngineRoot)external\websockets\prebuilt\win32\*.*" "$(OutDir)"</C
     <ClInclude Include="..\Classes\Multi\BatleScene\Effect.h" />
     <ClInclude Include="..\Classes\Multi\BatleScene\Map.h" />
     <ClInclude Include="..\Classes\Multi\BatleScene\OptionDialog.h" />
+    <ClInclude Include="..\Classes\Multi\BatleScene\PathFinder\NodeStep.h" />
+    <ClInclude Include="..\Classes\Multi\BatleScene\PathFinder\PathFinder.h" />
     <ClInclude Include="..\Classes\Multi\BatleScene\SummonPet.h" />
     <ClInclude Include="..\Classes\Multi\BatleScene\Tower.h" />
     <ClInclude Include="..\Classes\Multi\MemberFullDialogLayer.h" />

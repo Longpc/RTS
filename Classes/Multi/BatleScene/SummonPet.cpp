@@ -69,7 +69,7 @@ void SummonPet::update(float dt)
 	auto titleC = getBattleMap()->getTitleCoorForPosition(pos);
 	//need check nearly object title
 
-	if (getBattleMap()->checkTitleCantGet(titleC)) return;
+	if (getBattleMap()->checkTileCantGet(titleC)) return;
 
 	auto title = getBattleMap()->getTitleAt(titleC);
 	if (title == nullptr) {
