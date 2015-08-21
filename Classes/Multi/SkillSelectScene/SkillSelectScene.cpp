@@ -83,7 +83,7 @@ void SkillSelectScene::onEnter()
 	touchListener->onTouchEnded = CC_CALLBACK_2(SkillSelectScene::onTouchEnded, this);
 	touchListener->onTouchMoved = CC_CALLBACK_2(SkillSelectScene::onTouchMoved, this);
 	_eventDispatcher->addEventListenerWithSceneGraphPriority(touchListener, this);
-	touchListener->setSwallowTouches(true);
+	touchListener->setSwallowTouches(false);
 
 	scheduleUpdate();
 }
@@ -420,7 +420,7 @@ void SkillSelectScene::createPageView()
 	lArrow = Button::create("image/screen/unitSelect/left.png");
 	lArrow->setPosition(Vec2(50, baseSize.height / 2));
 	spite->addChild(lArrow);
-	lArrow->setSwallowTouches(true);
+	lArrow->setSwallowTouches(false);
 	lArrow->addTouchEventListener(CC_CALLBACK_2(SkillSelectScene::leftArrowClickCallback, this));
 	lArrow->setVisible(false);
 
@@ -429,7 +429,7 @@ void SkillSelectScene::createPageView()
 	rArrow->setAnchorPoint(Vec2::ANCHOR_MIDDLE_RIGHT);
 	spite->addChild(rArrow);
 	rArrow->addTouchEventListener(CC_CALLBACK_2(SkillSelectScene::rightArrowClickCallback, this));
-	rArrow->setSwallowTouches(true);
+	rArrow->setSwallowTouches(false);
 
 	float space = baseSize.width - 150;
 

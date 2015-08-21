@@ -62,7 +62,7 @@ bool MultiUnitSelectScene::init(int roomId,int pageFlg)
 	lArrow = Button::create("image/screen/unitSelect/left.png");
 	lArrow->setPosition(Vec2(50, baseSize.height / 2));
 	_pagebackGround->addChild(lArrow);
-	lArrow->setSwallowTouches(true);
+	lArrow->setSwallowTouches(false);
 	lArrow->addTouchEventListener(CC_CALLBACK_2(MultiUnitSelectScene::arrowButonClick, this, -1));
 	lArrow->setVisible(false);
 
@@ -71,7 +71,7 @@ bool MultiUnitSelectScene::init(int roomId,int pageFlg)
 	rArrow->setAnchorPoint(Vec2::ANCHOR_MIDDLE_RIGHT);
 	rArrow->addTouchEventListener(CC_CALLBACK_2(MultiUnitSelectScene::arrowButonClick, this, 1));
 	_pagebackGround->addChild(rArrow);
-	rArrow->setSwallowTouches(true);
+	rArrow->setSwallowTouches(false);
 
 	
 	for (int i = 0; i < 3; i ++) 
@@ -323,7 +323,7 @@ void MultiUnitSelectScene::onTouchMoved(Touch *touch, Event *unused_event)
 	//log("layer touch move");
 	Vec2 distanVector = _touchBeginPoint - touch->getLocation();
 	if (abs(distanVector.x) > _mainPage->getCustomScrollThreshold()) {
-		_onTouchDisable = true;
+		//_onTouchDisable = true;
 	}
 
 }
@@ -422,8 +422,8 @@ void MultiUnitSelectScene::createPageView(int type)
 		lay->setContentSize(Size(baseSize.width - 150, baseSize.height - 40));
 		mum->setContentSize(lay->getContentSize());
 		lay->addChild(mum);
-		lay->setSwallowTouches(false);
-		mum->setSwallowsTouches(false);
+		lay->setSwallowTouches(true);
+		mum->setSwallowsTouches(true);
 		for (int j = 1; j < 5; j++)
 		{
 			int index = j + i * 4 - 1;
@@ -623,7 +623,7 @@ void MultiUnitSelectScene::startBattle()
 
 void MultiUnitSelectScene::pageViewEvent(Ref *pSender, PageView::EventType type)
 {
-
+	if (_onTouchDisable) return;
 	switch (type)
 	{
 	case cocos2d::ui::PageView::EventType::TURNING:
@@ -633,7 +633,6 @@ void MultiUnitSelectScene::pageViewEvent(Ref *pSender, PageView::EventType type)
 		log("page %d",pageIndex);
 		lArrow->setVisible(true);
 		rArrow->setVisible(true);
-		_onTouchDisable = false;
 		if (pageIndex == 0) {
 			lArrow->setVisible(false);
 		}

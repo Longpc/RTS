@@ -4,14 +4,6 @@
 <dict>
 	<key>data</key>
 	<dict>
-		<key>ModeSelect</key>
-		<string>モードを選択して下さい</string>
-		<key>UnitSelect</key>
-		<string>ユニットを選択して下さい</string>
-		<key>SkillSelect</key>
-		<string>スキルを選択してください</string>
-		<key>ServerAddress</key>
-		<string>http://192.168.0.29/cocos2dx/database.db3</string>
 		<key>retry</key>
 		<string>3</string>
 		<key>APIServer</key>
@@ -30,4 +22,3 @@
 	</dict>
 </dict>
 </plist>
-192

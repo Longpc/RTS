@@ -45,6 +45,7 @@ bool SkillDetailDialog::init(UserSkillInfo unit, MyTouchEventVoid decideCallback
 	foreground->addChild(decideButton, 11);
 
 	displayUnitInfo(foreground);
+	this->setSwallowsTouches(true);
 
 	return true;
 }
