@@ -20,9 +20,11 @@ bool StartAPI::init()
 
 		char data[100];
 		sprintf(data, "app_key=%s&user_id=%d", APP_KEY, UserModel::getInstance()->getUserInfo().user_id);
+		log("address %s",data);
 		HttpClientBase::getInstance()->postAPIWithMethodNameAndParam("start.php", data, [&](HttpClient *cl, HttpResponse* response) {			
 			std::vector<char>* data = response->getResponseData();
 			std::string result(data->begin(), data->end());
+			log("callback data: %s", result.c_str());
 			rapidjson::Document doc;
 			doc.Parse<0>(result.c_str());
 			if (doc.HasParseError())
@@ -30,7 +32,7 @@ bool StartAPI::init()
 				log("error in parse json");
 
 			}
-			if (doc.IsObject() && doc.HasMember("data")) {
+			if (doc.IsObject() && doc.HasMember("data") && doc.HasMember("event_name")) {
 				if (strcmp(doc["event_name"].GetString(), "start") == 0) {
 					UserUnitModel::getInstance()->createUserUnitDataFromJson(doc["data"]["unit_list"]);
 					UserSkillModel::getInstance()->createUserSkillDataFromJson(doc["data"]["skill_list"]);
@@ -41,6 +43,9 @@ bool StartAPI::init()
 					}
 
 				}
+			}
+			else {
+				log("Error in json data format!");
 			}
 
 		});

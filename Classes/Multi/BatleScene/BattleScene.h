@@ -127,7 +127,7 @@ private:
 	/************************************************************************/
 	/* VARIABLES                                                            */
 	/************************************************************************/
-	vector<Vec2> sides = {};
+	vector<Vec2> sides;
 
 	bool _onDestructCalled = false;
 	bool _stopVelocFlg = false;
@@ -388,7 +388,7 @@ private:
 	bool _isCheckMapCallback = true;
 	virtual void checkMapTestButtonClick(Ref *pSender, Widget::TouchEventType type);
 
-	vector<Vec2> _pathResult = {};
+	vector<Vec2> _pathResult;
 	bool _onAutoMove = false;
 	virtual void miniMapMoveFunction(Ref *p, Vec2 desPos);
 

@@ -7,13 +7,13 @@
 		<key>retry</key>
 		<string>3</string>
 		<key>APIServer</key>
-		<string>http://52.68.104.55/RTSAPI/</string>
+		<string>http://192.168.3.11/RTSAPI/</string>
 		<key>NodeJSServer</key>
-		<string>ws://52.68.104.55:8222/</string>
+		<string>ws://192.168.3.11:8222/</string>
 		<key>MapServer</key>
-		<string>ws://52.68.104.55:8000/</string>
+		<string>ws://192.168.3.11:8002/</string>
 		<key>MoveServer</key>
-		<string>ws://52.68.104.55:8001/</string>
+		<string>ws://182.168.3.11:8001/</string>
 	</dict>
 	<key>metadata</key>
 	<dict>

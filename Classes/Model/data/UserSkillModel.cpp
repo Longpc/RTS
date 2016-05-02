@@ -32,7 +32,7 @@ vector<UserSkillInfo> UserSkillModel::createUserSkillDataFromJson(rapidjson::Gen
 		info.buff_effect_type = DataUtils::stringToFloat(value[i]["buff_effect_type"].GetString());
 		info.duration = DataUtils::stringToFloat(value[i]["effect_duration"].GetString());
 		info.correct_type = DataUtils::stringToFloat(value[i]["correct_type"].GetString());
-		info.corrett_value = DataUtils::stringToFloat(value[i]["corrett_value"].GetString());
+		info.corrett_value = DataUtils::stringToFloat(value[i]["correct_value"].GetString());
 		info.skill_des = value[i]["description"].GetString();
 		info.image_path = value[i]["image_path"].GetString();
 		info.skill_icon_path = value[i]["skill_icon_path"].GetString();

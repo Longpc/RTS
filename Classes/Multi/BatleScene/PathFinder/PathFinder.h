@@ -31,7 +31,7 @@ private:
 	vector<NodeStep*> _pool;
 	vector<NodeStep*> _poolAvaiable;
 	int _jump;
-	vector<Vec2> sides = {};
+	vector<Vec2> sides;
 	
 	virtual vector<NodeStep*> nodeNeighbours(NodeStep *curentNode);
 	virtual NodeStep* jumpNode(int currentX, int currentY, int directionX, int directionY, NodeStep* start, NodeStep* end);

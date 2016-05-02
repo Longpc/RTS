@@ -28,6 +28,7 @@ void HttpClientBase::postAPIWithMethodNameAndParam(string add, string dataParam 
 	httpRequest->setResponseCallback(callBack);
 	httpRequest->setTag("clientBase");
 	log("POSTING DATA: %s", dataParam.c_str());
+	log("Address: %s", address.c_str());
 	const char* buffer = dataParam.c_str();
 	httpRequest->setRequestData(buffer, strlen(buffer));
 

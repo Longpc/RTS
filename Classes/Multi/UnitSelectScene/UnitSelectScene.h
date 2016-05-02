@@ -62,7 +62,7 @@ private:
 
 	int _onSelectSkillButtonIndex = -1;
 	int _selectedSkillNum = 0;
-	vector<int> _allSelectedSkilId = {};
+	vector<int> _allSelectedSkilId;
 	int _selectedUnit = 0;
 
 
