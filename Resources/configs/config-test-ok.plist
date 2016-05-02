@@ -11,13 +11,13 @@
 		<key>SkillSelect</key>
 		<string>スキルを選択してください</string>
 		<key>ServerAddress</key>
-		<string>http://192.168.0.219/cocos2dx/database.db3</string>
+		<string>http://192.168.3.11/cocos2dx/database.db3</string>
 		<key>retry</key>
 		<string>3</string>
 		<key>APIServer</key>
-		<string>http://52.68.104.55/RTSAPI/</string>
+		<string>http://192.168.3.11/RTSAPI/</string>
 		<key>NodeJSServer</key>
-		<string>ws://192.168.0.219:8222/</string>
+		<string>ws://192.168.3.11:8222/</string>
 	</dict>
 	<key>metadata</key>
 	<dict>
